@@ -6,7 +6,6 @@ import UmlEditor from './components/UmlEditor.vue'
 </script>
 <script>
 // top level vue sets up client
-// TODO look into vue-router to share stuff
 const client = new UmlClient();
 export default {
   data() {

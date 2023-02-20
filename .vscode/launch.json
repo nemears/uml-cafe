@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type":"chrome",
+            "request": "launch",
+            "name": "launch vue app",
+            "url": "http://localhost:8081",
+            "webRoot": "${workspaceFolder}/src"
+        }
+    ]
+}

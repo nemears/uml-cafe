@@ -1,5 +1,8 @@
 <script>
 export default {
+    props: [
+        'client'
+    ],
     data() {
         return {
             bannerOptions: [
@@ -21,7 +24,9 @@ export default {
     <div class="umlBanner">
         <div class="optionsContainer">
             <div class="optionsButton" @click="optionToggle">
-                <svg :fill="optionColor" @mouseover="optionColor='#5c74a1'" @mouseleave="optionColor='#3f5375'" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+                <svg :fill="optionColor" @mouseover="optionColor='#5c74a1'" 
+                    @mouseleave="optionColor='#3f5375'" version="1.1" id="Capa_1" 
+                    xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
                     width="20px" height="20px" viewBox="0 0 124 124" xml:space="preserve">
                     <g>
                         <path d="M112,6H12C5.4,6,0,11.4,0,18s5.4,12,12,12h100c6.6,0,12-5.4,12-12S118.6,6,112,6z"/>
@@ -41,7 +46,7 @@ export default {
 <style>
 .umlBanner {
     flex: 0 1 auto;
-    background-color: rgb(89, 162, 204);
+    background-color: rgb(79, 155, 255);
 }
 .optionsContainer {
     padding: 5px 5px 5px 5px;

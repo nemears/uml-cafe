@@ -1,11 +1,12 @@
 const { VueLoaderPlugin } = require("vue-loader");
 const path = require("path");
+const webpack = require('webpack')
 
 module.exports = {
     mode: 'development',
     entry: 
     {
-        bundle: ['./src/main.js']
+        bundle: ['./src/main.js', 'babel-polyfill']
     },
     module: {
         rules: [
@@ -16,6 +17,10 @@ module.exports = {
             {
                 test: /\.js$/,
                 loader: "babel-loader"
+            },
+            {
+                test: /\.svg$/,
+                loader: "file-loader"
             },
             {
             test: /\.css$/,
@@ -29,7 +34,11 @@ module.exports = {
         path: path.join(__dirname, "dist")
     },
     plugins : [
-        new VueLoaderPlugin()
+        new VueLoaderPlugin(),
+        new webpack.DefinePlugin({
+            __VUE_OPTIONS_API__: false,
+            __VUE_PROD_DEVTOOLS__: false,
+        }),
     ],
     devServer: {
         static: {

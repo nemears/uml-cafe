@@ -24,7 +24,7 @@ export default {
 </script>
 <template>
     <div class="containmentTree">
-        <ContainmentTreePanel v-if="!isFetching" :client="client" :el="head"></ContainmentTreePanel>
+        <ContainmentTreePanel v-if="!isFetching" :client="client" :el="head" :depth="0"></ContainmentTreePanel>
     </div>
 </template>
 <style>
