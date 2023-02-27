@@ -1,24 +1,22 @@
 <script setup>
 import UmlBanner from './components/UmlBanner.vue'
 import ContainmentTree from './components/ContainmentTree.vue'
-import UmlClient from 'uml-js/lib/umlClient'
 import UmlEditor from './components/UmlEditor.vue'
 </script>
 <script>
 // top level vue sets up client
-const client = new UmlClient();
 export default {
   data() {
     return {
-      client: client
+      // client: client
     }
   }
 }
 </script>
 <template>
-  <UmlBanner :client="client"></UmlBanner>
+  <UmlBanner></UmlBanner>
   <div class="parent">
-    <ContainmentTree :client="client"></ContainmentTree>
+    <ContainmentTree></ContainmentTree>
     <UmlEditor></UmlEditor>
   </div>
 </template>

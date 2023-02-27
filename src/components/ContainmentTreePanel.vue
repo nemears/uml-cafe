@@ -1,6 +1,7 @@
 <script>
 import packageImage from './icons/package.svg'
 import classImage from './icons/class.svg'
+import UmlWebClient from 'uml-js/lib/umlClient';
 const clickOutsideDirective = {
     beforeMount: (el, binding) => {
         el.clickOutsideEvent = event => {
@@ -17,8 +18,7 @@ const clickOutsideDirective = {
 export default {
     name: 'ContainmentTreePanel',
     props: [
-        'client',
-        'el',
+        'umlID',
         'depth'
     ],
     mounted() {
@@ -26,6 +26,8 @@ export default {
     },
     data() {
         return {
+            name: '',
+            isFetching: true,
             children: [],
             expanded: false,
             image: packageImage,
@@ -48,16 +50,19 @@ export default {
     },
     methods: {
         async populateDisplayInfo() {
-            switch (this.el.elementType()) {
+            const client = new UmlWebClient(this.$sessionName);
+            const el = await client.get(this.umlID);
+            switch (el.elementType()) {
                 case 'class' : {
+                    
                     this.image = classImage;
                     break;
                 }
                 case 'package' : {
                     // TODO bug here when getting multiple children
                     // iterator fails for everything but last child
-                    for await (let packagedEl of this.el.packagedElements) {
-                        this.children.push(packagedEl);
+                    for (let packagedElID of el.packagedElements.ids()) {
+                        this.children.push(packagedElID);
                     }
                     break;
                 }
@@ -66,10 +71,12 @@ export default {
                     break;
                 }
             }
+            this.name = el.name;
             this.options.push({
                 name: 'rename',
                 action: this.rename()
             });
+            this.isFetching = false;
         },
         childrenToggle() {
             this.expanded = !this.expanded;
@@ -84,16 +91,16 @@ export default {
 }
 </script>
 <template>
-    <div class="containmentTreeBlock">
+    <div class="containmentTreeBlock" v-if="!isFetching">
         <div class="containmentTreePanel" @click="childrenToggle" @contextmenu.capture.prevent 
             @click.right="menuToggle">
             <div :style="indent"></div>
             <img v-bind:src="image"/>
-            <div>{{ el.name }}</div>
+            <div>{{ name }}</div>
         </div>
-        <div v-if="expanded">
-            <ContainmentTreePanel v-for="child in children" :client="client" :el="child" 
-                :depth="depth + 1" :key="child.id"></ContainmentTreePanel>
+        <div v-if="expanded && !isFetching">
+            <ContainmentTreePanel v-for="child in children" :umlID="child" 
+                :depth="depth + 1" :key="child"></ContainmentTreePanel>
         </div>
         <div class="containmentTreeMenu" v-if="menu" v-clickOutside="menuToggle">
             <div class="containmentTreeMenuOption" v-for="option in options" 

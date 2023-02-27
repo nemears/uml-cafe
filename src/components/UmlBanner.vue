@@ -1,8 +1,5 @@
 <script>
 export default {
-    props: [
-        'client'
-    ],
     data() {
         return {
             bannerOptions: [

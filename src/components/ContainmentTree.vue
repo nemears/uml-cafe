@@ -1,11 +1,11 @@
 <script>
 import  ContainmentTreePanel from './ContainmentTreePanel.vue'
+import UmlClient from 'uml-js/lib/umlClient'
 export default {
-    props: ['client'],
     data() {
         return {
             isFetching: true,
-            head: undefined
+            headID: undefined
         }
     },
     mounted() {
@@ -16,7 +16,9 @@ export default {
     },
     methods: {
         async getHeadFromServer() {
-            this.head = await this.client.head();
+            const client = new UmlClient(this.$sessionName);
+            const head = await client.head();
+            this.headID = head.id;
             this.isFetching = false;
         }
     }
@@ -24,7 +26,7 @@ export default {
 </script>
 <template>
     <div class="containmentTree">
-        <ContainmentTreePanel v-if="!isFetching" :client="client" :el="head" :depth="0"></ContainmentTreePanel>
+        <ContainmentTreePanel v-if="!isFetching && headID !== undefined" :umlID="headID" :depth="0"></ContainmentTreePanel>
     </div>
 </template>
 <style>
