@@ -1,3 +1,7 @@
+<script setup>
+import UmlContextMenu from "./UmlContextMenu.vue";
+</script>
+
 <script>
 import packageImage from './icons/package.svg'
 import classImage from './icons/class.svg'
@@ -16,27 +20,31 @@ const clickOutsideDirective = {
     },
 };
 export default {
-    name: 'ContainmentTreePanel',
+    name: "ContainmentTreePanel",
     props: [
-        'umlID',
-        'depth'
+        "umlID",
+        "depth"
     ],
     mounted() {
         this.populateDisplayInfo();
     },
     data() {
         return {
-            name: '',
+            name: "",
             isFetching: true,
             children: [],
             expanded: false,
             image: packageImage,
-            menu: false,
-            options: []
-        }
+            options: [],
+            menu: {
+                left: 0,
+                top: 0,
+                show: false
+            }
+        };
     },
     components: [
-        "ContainmentTreePanel"
+        "ContainmentTreePanel", UmlContextMenu
     ],
     directives: {
         clickOutside: clickOutsideDirective
@@ -44,8 +52,8 @@ export default {
     computed: {
         indent() {
             return {
-                width: 25 * this.depth + 'px'
-            }
+                width: 25 * this.depth + "px"
+            };
         }
     },
     methods: {
@@ -53,12 +61,11 @@ export default {
             const client = new UmlWebClient(this.$sessionName);
             const el = await client.get(this.umlID);
             switch (el.elementType()) {
-                case 'class' : {
-                    
+                case "class": {
                     this.image = classImage;
                     break;
                 }
-                case 'package' : {
+                case "package": {
                     // TODO bug here when getting multiple children
                     // iterator fails for everything but last child
                     for (let packagedElID of el.packagedElements.ids()) {
@@ -66,14 +73,14 @@ export default {
                     }
                     break;
                 }
-                case 'primitiveType' : {
+                case "primitiveType": {
                     this.image = classImage;
                     break;
                 }
             }
             this.name = el.name;
             this.options.push({
-                name: 'rename',
+                name: "rename",
                 action: this.rename()
             });
             this.isFetching = false;
@@ -81,19 +88,24 @@ export default {
         childrenToggle() {
             this.expanded = !this.expanded;
         },
-        menuToggle() {
-            this.menu = !this.menu;
+        openContainmentTreeMenu(evt) {
+            this.menu.left = evt.pageX || evt.clickX;
+            this.menu.top = evt.pageY || evt.clickY;
+            this.menu.show = true;
         },
-        rename() {
-            // TODO
-        }
+        closeContainmentTree() {
+            this.menu.left = 0;
+            this.menu.top = 0;
+            this.menu.show = false;
+        },
+        rename() {}
     }
 }
 </script>
 <template>
     <div class="containmentTreeBlock" v-if="!isFetching">
         <div class="containmentTreePanel" @click="childrenToggle" @contextmenu.capture.prevent 
-            @click.right="menuToggle">
+            @click.right="openContainmentTreeMenu">
             <div :style="indent"></div>
             <img v-bind:src="image"/>
             <div>{{ name }}</div>
@@ -102,12 +114,16 @@ export default {
             <ContainmentTreePanel v-for="child in children" :umlID="child" 
                 :depth="depth + 1" :key="child"></ContainmentTreePanel>
         </div>
-        <div class="containmentTreeMenu" v-if="menu" v-clickOutside="menuToggle">
+        <UmlContextMenu v-if="menu.show" :menu="menu" v-clickOutside="closeContainmentTree">
+            PeePee
+            PooPoo
+        </UmlContextMenu>
+        <!-- <div class="containmentTreeMenu" v-if="menu" v-clickOutside="menuToggle">
             <div class="containmentTreeMenuOption" v-for="option in options" 
                 :key="option.name" @click="option.action">
                 {{ option.name }}
             </div>
-        </div>
+        </div> -->
     </div>
 </template>
 <style>
@@ -120,27 +136,5 @@ export default {
 }
 .containmentTreePanel:hover {
     background-color: #d0dfff;
-}
-.containmentTreeMenu {
-    z-index: 1000;
-    position: absolute;
-    overflow: hidden;
-    border: 1px solid #CCC;
-    white-space: nowrap;
-    font-family: system-ui;
-    background: #FFF;
-    color: #333;
-    border-radius: 5px;
-    padding: 0;
-}
-.containmentTreeMenuOption {
-    padding: 8px 12px;
-    cursor: pointer;
-    list-style-type: none;
-    transition: all .3s ease;
-    user-select: none;
-}
-.containmentTreeMenuOption:hover {
-    background-color: #DEF;
 }
 </style>
