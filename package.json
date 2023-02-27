@@ -8,6 +8,7 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@imengyu/vue3-context-menu": "^1.2.3",
     "diagram-js": "^11.9.1",
     "uml-js": "file:../uml-js",
     "vue": "^3.2.45"
