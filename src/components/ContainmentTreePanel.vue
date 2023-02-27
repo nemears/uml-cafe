@@ -19,7 +19,8 @@ export default {
             children: [],
             expanded: false,
             image: packageImage,
-            options: []
+            options: [],
+            editing: false
         };
     },
     components: [
@@ -30,6 +31,9 @@ export default {
             return {
                 width: 25 * this.depth + "px"
             };
+        },
+        umlName() {
+            return this.name;
         }
     },
     methods: {
@@ -40,12 +44,26 @@ export default {
                         label: "Specification", 
                         onClick: () => {
                             alert("TODO");
-                        },
-                        divided: true
+                        }
                     });
+            const renameOption = {
+                label: 'Rename',
+                onClick: () => {
+                    this.editing = true;
+                    // select text for user
+                    let sel = window.getSelection();
+                    sel.removeAllRanges();
+                    let range = document.createRange();
+                    // TODO below doesn't work for editing text without clicking the
+                    // element again. FIX PLZ
+                    range.selectNodeContents(this.$refs.nameDiv);
+                    sel.addRange(range);
+                }
+            }
             switch (el.elementType()) {
                 case "class": {
                     this.image = classImage;
+                    this.options.push(renameOption);
                     break;
                 }
                 case "package": {
@@ -54,6 +72,10 @@ export default {
                     for (let packagedElID of el.packagedElements.ids()) {
                         this.children.push(packagedElID);
                     }
+                    this.options.push(renameOption);
+                    this.options.push({
+                        divided: true
+                    })
                     this.options.push({
                         label: 'Create Package',
                         onClick: async () => {
@@ -81,6 +103,7 @@ export default {
                 }
                 case "primitiveType": {
                     this.image = classImage;
+                    this.options.push(renameOption);
                     break;
                 }
             }
@@ -90,7 +113,18 @@ export default {
         childrenToggle() {
             this.expanded = !this.expanded;
         },
-        rename() {},
+        async stopRename() {
+            this.editing = false;
+            this.name = this.$refs.nameDiv.innerText || this.$refs.nameDiv.textContent;
+            const client = new UmlWebClient(this.$sessionName);
+            const el = await client.get(this.umlID);
+            el.name = this.name;
+            client.put(el);       
+        },
+        cancelRename() {
+            this.editing = false;
+            this.$forceUpdate();
+        },
         onContextMenu(evt) {
             //prevent the browser's default menu
             evt.preventDefault();
@@ -110,7 +144,8 @@ export default {
             @contextmenu="onContextMenu($event)">
             <div :style="indent"></div>
             <img v-bind:src="image"/>
-            <div>{{ name }}</div>
+            <div ref="nameDiv" :contenteditable="editing" @keydown.enter.prevent="stopRename"
+                @keydown.escape="cancelRename">{{ umlName }}</div>
         </div>
         <div v-if="expanded && !isFetching">
             <ContainmentTreePanel v-for="child in children" :umlID="child" 
