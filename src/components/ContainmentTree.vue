@@ -26,7 +26,8 @@ export default {
 </script>
 <template>
     <div class="containmentTree">
-        <ContainmentTreePanel v-if="!isFetching && headID !== undefined" :umlID="headID" :depth="0"></ContainmentTreePanel>
+        <ContainmentTreePanel v-if="!isFetching && headID !== undefined" :umlID="headID" 
+            :depth="0"></ContainmentTreePanel>
     </div>
 </template>
 <style>
@@ -37,5 +38,6 @@ export default {
     white-space:nowrap;
     height: 100%;
     width: 300px;
+    resize: horizontal;
 }
 </style>

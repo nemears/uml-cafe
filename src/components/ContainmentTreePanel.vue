@@ -1,7 +1,8 @@
 <script>
-import packageImage from './icons/package.svg'
-import classImage from './icons/class.svg'
+import packageImage from './icons/package.svg';
+import classImage from './icons/class.svg';
 import UmlWebClient from 'uml-js/lib/umlClient';
+import propertyImage from './icons/property.svg';
 
 export default {
     name: "ContainmentTreePanel",
@@ -64,6 +65,20 @@ export default {
                 case "class": {
                     this.image = classImage;
                     this.options.push(renameOption);
+                    for (let attributeID of el.ownedAttributes.ids()) {
+                        this.children.push(attributeID);
+                    }
+                    this.options.push({
+                        label: 'Create Property',
+                        onClick: async () => {
+                            const newProperty = await client.post('property');
+                            el.ownedAttributes.add(newProperty);
+                            client.put(newProperty);
+                            client.put(el);
+                            this.children.push(newProperty.id);
+                            this.expanded = true;
+                        }
+                    });
                     break;
                 }
                 case "package": {
@@ -83,7 +98,6 @@ export default {
                             el.packagedElements.add(newPackage);
                             client.put(el);
                             client.put(newPackage);
-                            // await client.get(newPackage.id);
                             this.children.push(newPackage.id);
                             this.expanded = true;
                         }
@@ -103,6 +117,11 @@ export default {
                 }
                 case "primitiveType": {
                     this.image = classImage;
+                    this.options.push(renameOption);
+                    break;
+                }
+                case 'property': {
+                    this.image = propertyImage;
                     this.options.push(renameOption);
                     break;
                 }
