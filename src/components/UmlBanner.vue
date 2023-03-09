@@ -5,7 +5,9 @@ export default {
     data() {
         return {
             optionsEnabled: false,
-            optionColor: '#3f5375'
+            optionColor: '#3f5375',
+            downloadRef: '#',
+            downloadDownload: ''
         }
     },
     emits: ['newModelLoaded'],
@@ -39,6 +41,18 @@ export default {
                     res()
                 }, '1 second');
             });
+        },
+        async saveToFile(event) {
+            const client = new UmlWebClient(this.$sessionName);
+            let fileContent = await client.save();
+            let myFile = new Blob([fileContent], {type: 'text/plain'});
+            window.URL = window.URL || window.webkitURL;
+            this.downloadRef = window.URL.createObjectURL(myFile);
+            this.downloadDownload = 'model.yml';
+            setTimeout(() => {
+                this.$refs.saveA.click();
+                this.optionsEnabled = false;
+            }, '500 milliseconds');
         }
     }
 }
@@ -65,9 +79,10 @@ export default {
             <input ref="loadFromFileFileInput" type="file" style="position: absolute; top: -100px;" @change="loadFromFileInput" >
             Load from file
         </div>
-        <div class="optionsOption">
+        <div class="optionsOption" @click="saveToFile">
             Save to file
         </div>
+        <a :href="downloadRef" :download="downloadDownload" ref="saveA" style="display: none;"></a>
     </div>
 </template>
 <style>
