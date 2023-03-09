@@ -40,7 +40,7 @@ export default {
     methods: {
         async populateDisplayInfo() {
             const client = new UmlWebClient(this.$sessionName);
-            const el = await client.get(this.umlID);
+            let el = await client.get(this.umlID);
             this.options.push({ 
                         label: "Specification", 
                         onClick: () => {
@@ -75,6 +75,7 @@ export default {
                             el.ownedAttributes.add(newProperty);
                             client.put(newProperty);
                             client.put(el);
+                            el = await client.get(el.id);
                             this.children.push(newProperty.id);
                             this.expanded = true;
                         }
@@ -98,6 +99,7 @@ export default {
                             el.packagedElements.add(newPackage);
                             client.put(el);
                             client.put(newPackage);
+                            el = await client.get(el.id);
                             this.children.push(newPackage.id);
                             this.expanded = true;
                         }
@@ -109,6 +111,7 @@ export default {
                             el.packagedElements.add(newClass);
                             client.put(el);
                             client.put(newClass);
+                            el = await client.get(el.id);
                             this.children.push(newClass.id);
                             this.expanded = true;
                         }
