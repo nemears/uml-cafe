@@ -10,6 +10,9 @@ export default {
         "umlID",
         "depth"
     ],
+    emits: [
+        'specification'
+    ],
     mounted() {
         this.populateDisplayInfo();
     },
@@ -43,8 +46,8 @@ export default {
             let el = await client.get(this.umlID);
             this.options.push({ 
                         label: "Specification", 
-                        onClick: () => {
-                            alert("TODO");
+                        onClick: async () => {
+                            this.$emit('specification', await client.get(this.umlID));
                         }
                     });
             const renameOption = {
@@ -156,13 +159,20 @@ export default {
                 y: evt.y,
                 items: this.options
             });
+        },
+        propogateSpecification(spec) {
+            this.$emit('specification', spec);
+        },
+        async specification() {
+            const client = new UmlWebClient(this.$sessionName);
+            this.$emit('specification', await client.get(this.umlID));
         }
     }
 }
 </script>
 <template>
     <div class="containmentTreeBlock" v-if="!isFetching">
-        <div class="containmentTreePanel" @click="childrenToggle" 
+        <div class="containmentTreePanel" @click="childrenToggle" @dblclick="specification"
             @contextmenu="onContextMenu($event)">
             <div :style="indent"></div>
             <img v-bind:src="image"/>
@@ -171,7 +181,7 @@ export default {
         </div>
         <div v-if="expanded && !isFetching">
             <ContainmentTreePanel v-for="child in children" :umlID="child" 
-                :depth="depth + 1" :key="child"></ContainmentTreePanel>
+                :depth="depth + 1" :key="child" @specification="propogateSpecification"></ContainmentTreePanel>
         </div>
     </div>
 </template>

@@ -3,6 +3,7 @@ import UmlBanner from './components/UmlBanner.vue'
 import ContainmentTreePanel from './components/ContainmentTreePanel.vue'
 import UmlEditor from './components/UmlEditor.vue'
 import UmlClient from 'uml-js/lib/umlClient'
+import UmlWebClient from 'uml-js/lib/umlClient';
 </script>
 <script>
 // top level vue sets up client
@@ -10,7 +11,14 @@ export default {
   data() {
     return {
       headID: '',
-      isFetching: true
+      isFetching: true,
+      tabs : [
+        {
+          label: 'Welcome!',
+          id: 'VQvHG72Z_FjNQlEeeFEcrX1v6RRy',
+          isActive: true
+        }
+      ]
     }
   },
   mounted() {
@@ -23,6 +31,19 @@ export default {
       const head = await client.head();
       this.headID = head.id;
       this.isFetching = false;
+    },
+    specification(el) {
+      if (this.tabs.find(tab => tab.id === el.id)) { // no duplicates
+        return;
+      }
+      for (let tab of this.tabs) {
+        tab.isActive = false;
+      }
+      this.tabs.push({
+        label: el.name !== undefined && el.name !== '' ? el.name : el.id,
+        id: el.id,
+        isActive: true
+      });
     }
   }
 }
@@ -30,21 +51,27 @@ export default {
 <template>
   <UmlBanner @new-model-loaded="getHeadFromServer"></UmlBanner>
   <div class="parent">
-    <div class="containmentTree">
-        <ContainmentTreePanel v-if="!isFetching && headID !== undefined" :umlID="headID" 
-            :depth="0"></ContainmentTreePanel>
+    <div>
+      <div style="height:34px;background-color: #f5f7fd;"></div>
+      <div class="containmentTree">
+          <ContainmentTreePanel v-if="!isFetching && headID !== undefined" :umlID="headID" 
+              :depth="0" @specification="specification"></ContainmentTreePanel>
+      </div>
     </div>
-    <UmlEditor></UmlEditor>
+    <UmlEditor :tabs="tabs"></UmlEditor>
   </div>
 </template>
 <style>
 .parent {
-  height: 100%;
+  flex: 1 1 auto;
+  width: 100%;
+  display: flex;
+  overflow: hidden;
 }
 .containmentTree{
     flex: 0 1 300px;
     background-color: #e7ecff;
-    overflow: auto;
+    overflow: scroll;
     white-space:nowrap;
     height: 100%;
     width: 300px;
