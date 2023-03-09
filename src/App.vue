@@ -3,7 +3,6 @@ import UmlBanner from './components/UmlBanner.vue'
 import ContainmentTreePanel from './components/ContainmentTreePanel.vue'
 import UmlEditor from './components/UmlEditor.vue'
 import UmlClient from 'uml-js/lib/umlClient'
-import UmlWebClient from 'uml-js/lib/umlClient';
 </script>
 <script>
 // top level vue sets up client
@@ -52,7 +51,7 @@ export default {
   <UmlBanner @new-model-loaded="getHeadFromServer"></UmlBanner>
   <div class="parent">
     <div>
-      <div style="height:34px;background-color: #f5f7fd;"></div>
+      <div style="height:34px;background-color: #131416;"></div>
       <div class="containmentTree">
           <ContainmentTreePanel v-if="!isFetching && headID !== undefined" :umlID="headID" 
               :depth="0" @specification="specification"></ContainmentTreePanel>
@@ -70,7 +69,8 @@ export default {
 }
 .containmentTree{
     flex: 0 1 300px;
-    background-color: #e7ecff;
+    color: azure;
+    background-color: #2d3035;
     overflow: scroll;
     white-space:nowrap;
     height: 100%;

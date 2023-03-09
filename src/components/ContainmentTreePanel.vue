@@ -194,6 +194,6 @@ export default {
     display: flex;
 }
 .containmentTreePanel:hover {
-    background-color: #d0dfff;
+    background-color: #464952;
 }
 </style>

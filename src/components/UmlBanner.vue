@@ -5,7 +5,7 @@ export default {
     data() {
         return {
             optionsEnabled: false,
-            optionColor: '#3f5375',
+            optionColor: '#2d3035',
             downloadRef: '#',
             downloadDownload: ''
         }
@@ -61,7 +61,7 @@ export default {
     <div class="umlBanner">
         <div class="optionsContainer">
             <div class="optionsButton" @click="optionToggle">
-                <svg :fill="optionColor" @mouseover="optionColor='#5c74a1'" 
+                <svg :fill="optionColor" @mouseover="optionColor='#131416'" 
                     @mouseleave="optionColor='#3f5375'" version="1.1" id="Capa_1" 
                     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
                     width="20px" height="20px" viewBox="0 0 124 124" xml:space="preserve">
@@ -88,7 +88,7 @@ export default {
 <style>
 .umlBanner {
     flex: 0 1 auto;
-    background-color: rgb(79, 155, 255);
+    background-color: #131416;
 }
 .optionsContainer {
     padding: 5px 5px 5px 5px;

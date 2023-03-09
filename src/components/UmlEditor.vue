@@ -50,23 +50,28 @@ export default {
     .tabContainer {
         float: left;
         width: 100%;
-        background-color: #f5f7fd
+        background-color: #131416;
     }
     .tab {
         display: flex;
         align-items:center;
+        color: azure;
         float: left;
+        background-color: #464952;
     }
     .activeTab {
         vertical-align: middle;
         float: left;
-        background-color: #e7ecff;
+        background-color: #2d3035;
+    }
+    .activeTab:hover {
+        background-color: #383c46;
     }
     .tab:hover {
-        background-color: #d0dfff;
+        background-color: rgb(89, 94, 109);
     }
     .activeEditor {
-        background-color: #e7ecff;
+        background-color: #2d3035;
         height: 100%;
         clear:both;
     }
