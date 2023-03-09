@@ -1,18 +1,44 @@
 <script>
+import UmlWebClient from 'uml-js/lib/umlClient';
+
 export default {
     data() {
         return {
-            bannerOptions: [
-                'Load from file',
-                'Save to file'
-            ],
             optionsEnabled: false,
             optionColor: '#3f5375'
         }
     },
+    emits: ['newModelLoaded'],
     methods: {
         optionToggle() {
             this.optionsEnabled = !this.optionsEnabled;
+        },
+        loadFromFile() {
+            this.$refs.loadFromFileFileInput.click();
+        },
+        async loadFromFileInput(event) {
+            let file = event.target.files[0];
+            let reader = new FileReader();
+            let fileAsStr = await new Promise((res, rej) => {
+                reader.onload = () => {
+                    res(reader.result);
+                };
+                reader.onerror = () => {
+                    rej(reader.error);
+                };
+                reader.readAsText(file);
+            });
+            const client = new UmlWebClient(this.$sessionName)
+            client.load(fileAsStr);
+
+            // TODO update containment tree and close tabs of specs and diagrams
+            await new Promise( res => {
+                setTimeout(() => {
+                    this.$emit('newModelLoaded');
+                    this.optionsEnabled = false;
+                    res()
+                }, '1 second');
+            });
         }
     }
 }
@@ -35,8 +61,12 @@ export default {
         </div>
     </div>
     <div class="dropdown" v-if="optionsEnabled">
-        <div v-for="options in bannerOptions" :key="options" class="optionsOption">
-            {{ options }}
+        <div class="optionsOption" @click="loadFromFile">
+            <input ref="loadFromFileFileInput" type="file" style="position: absolute; top: -100px;" @change="loadFromFileInput" >
+            Load from file
+        </div>
+        <div class="optionsOption">
+            Save to file
         </div>
     </div>
 </template>
