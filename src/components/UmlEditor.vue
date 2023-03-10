@@ -101,6 +101,7 @@ export default {
         float: left;
         width: 100%;
         background-color: #131416;
+        min-height: 34px;
     }
     .tab {
         display: flex;

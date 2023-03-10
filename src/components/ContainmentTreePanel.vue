@@ -54,14 +54,14 @@ export default {
                 label: 'Rename',
                 onClick: () => {
                     this.editing = true;
-                    // select text for user
-                    let sel = window.getSelection();
-                    sel.removeAllRanges();
-                    let range = document.createRange();
-                    // TODO below doesn't work for editing text without clicking the
-                    // element again. FIX PLZ
-                    range.selectNodeContents(this.$refs.nameDiv);
-                    sel.addRange(range);
+                    setTimeout(() => {
+                        // select text for user
+                        let sel = window.getSelection();
+                        sel.removeAllRanges();
+                        let range = document.createRange();
+                        range.selectNodeContents(this.$refs.nameDiv);
+                        sel.addRange(range);
+                    }, '0.1 seconds');
                 }
             }
             switch (el.elementType()) {
@@ -148,7 +148,8 @@ export default {
         },
         cancelRename() {
             this.editing = false;
-            this.$forceUpdate();
+            // TODO set name back to original!
+            // TODO fix me fix me!
         },
         onContextMenu(evt) {
             //prevent the browser's default menu
@@ -178,6 +179,7 @@ export default {
             <img v-bind:src="image"/>
             <div ref="nameDiv" :contenteditable="editing" @keydown.enter.prevent="stopRename"
                 @keydown.escape="cancelRename">{{ umlName }}</div>
+                <!-- TODO we need some sort of handling for a click-outside of this div directive to cancel rename TODO -->
         </div>
         <div v-if="expanded && !isFetching">
             <ContainmentTreePanel v-for="child in children" :umlID="child" 
