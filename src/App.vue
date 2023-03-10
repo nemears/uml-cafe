@@ -35,6 +35,7 @@ export default {
     },
     specification(el) {
       if (this.tabs.find(tab => tab.id === el.id)) { // no duplicates
+        this.specificationTab = el.id;
         return;
       }
       for (let tab of this.tabs) {

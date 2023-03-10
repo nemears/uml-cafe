@@ -1,5 +1,6 @@
 <script>
 import CloseSymbol from './icons/close_symbol.svg';
+import SpecificationPage from './SpecificationPage.vue';
 import WelcomePage from './WelcomePage.vue';
 export default {
     props: [
@@ -38,12 +39,17 @@ export default {
             this.focus(newRecentTab);
         },
         specificationTab(newRecentTab, oldRecentTab) {
-            this.focus(newRecentTab);
+            this.recentTab = newRecentTab;
         }
     },
     methods: {
         remove(id) {
-            this.tabs.splice(this.tabs.findIndex(tab => tab.id === id), 1);
+            const tabIndex = this.tabs.findIndex(tab => tab.id === id);
+            const tab = this.tabs[tabIndex];
+            this.tabs.splice(tabIndex , 1);
+            if (tab.isActive) {
+                this.recentTab = this.tabs[tabIndex - 1].id;
+            }
         },
         focus(id) {
             for (let tab of this.tabs) {
@@ -69,7 +75,7 @@ export default {
             this.recentTab = id;
         }
     },
-    components: { WelcomePage }
+    components: { WelcomePage, SpecificationPage }
 }
 </script>
 <template>
@@ -82,6 +88,7 @@ export default {
         </div>
         <div class="activeEditor">
             <WelcomePage v-if="welcome"></WelcomePage>
+            <SpecificationPage v-if="specification" :uml-i-d="recentTab"></SpecificationPage>
         </div>
     </div>
 </template>
@@ -117,5 +124,6 @@ export default {
         background-color: #2d3035;
         height: 100%;
         clear:both;
+        padding: 10px;
     }
 </style>
