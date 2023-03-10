@@ -15,9 +15,11 @@ export default {
         {
           label: 'Welcome!',
           id: 'VQvHG72Z_FjNQlEeeFEcrX1v6RRy',
-          isActive: true
+          isActive: true,
+          type: 'Welcome'
         }
-      ]
+      ],
+      specificationTab: ''
     }
   },
   mounted() {
@@ -41,8 +43,10 @@ export default {
       this.tabs.push({
         label: el.name !== undefined && el.name !== '' ? el.name : el.id,
         id: el.id,
-        isActive: true
+        isActive: true,
+        type: 'Specification'
       });
+      this.specificationTab = el.id;
     }
   }
 }
@@ -57,7 +61,7 @@ export default {
               :depth="0" @specification="specification"></ContainmentTreePanel>
       </div>
     </div>
-    <UmlEditor :tabs="tabs"></UmlEditor>
+    <UmlEditor :tabs="tabs" :specificationTab="specificationTab"></UmlEditor>
   </div>
 </template>
 <style>
