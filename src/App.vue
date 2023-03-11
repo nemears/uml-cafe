@@ -62,7 +62,7 @@ export default {
               :depth="0" @specification="specification"></ContainmentTreePanel>
       </div>
     </div>
-    <UmlEditor :tabs="tabs" :specificationTab="specificationTab"></UmlEditor>
+    <UmlEditor :tabs="tabs" :specificationTab="specificationTab" @specification="specification"></UmlEditor>
   </div>
 </template>
 <style>

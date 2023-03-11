@@ -7,6 +7,7 @@ export default {
         "tabs",
         "specificationTab"
     ],
+    emits: ['specification'],
     data() {
         return {
             closeSymbol: CloseSymbol,
@@ -73,7 +74,10 @@ export default {
         },
         updateTab(id) {
             this.recentTab = id;
-        }
+        },
+        propogateSpecification(spec) {
+            this.$emit('specification', spec);
+        },
     },
     components: { WelcomePage, SpecificationPage }
 }
@@ -88,7 +92,7 @@ export default {
         </div>
         <div class="activeEditor">
             <WelcomePage v-if="welcome"></WelcomePage>
-            <SpecificationPage v-if="specification" :uml-i-d="recentTab"></SpecificationPage>
+            <SpecificationPage v-if="specification" :uml-i-d="recentTab" @specification="propogateSpecification"></SpecificationPage>
         </div>
     </div>
 </template>

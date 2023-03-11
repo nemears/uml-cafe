@@ -1,8 +1,11 @@
 <script>
 import UmlWebClient from 'uml-js/lib/umlClient';
-
+import ElementType from './specComponents/ElementType.vue';
+import StringData from './specComponents/StringData.vue';
+import SetData from './specComponents/SetData.vue';
 export default {
     props: ['umlID'],
+    emits: ['specification'],
     data() {
         return {
             elementType: '',
@@ -28,14 +31,22 @@ export default {
             const client = new UmlWebClient(this.$sessionName);
             const el = await client.get(this.umlID);
             this.elementType = el.elementType();
+            this.elementData.ownedElements = [];
             for await(let ownedElement of el.ownedElements) {
-
+                this.elementData.ownedElements.push({
+                    img: undefined,
+                    label: ownedElement.name !== undefined && ownedElement.name !== '' ? ownedElement.name : ownedElement.id,
+                    id: ownedElement.id
+                })
             }
             // TODO check if named element
             this.namedElementData = {
                 name: el.name
             };
-        }
+        },
+        propogateSpecification(spec) {
+            this.$emit('specification', spec);
+        },
     },
     computed: {
         elementLabel() {
@@ -45,7 +56,8 @@ export default {
                 return this.umlID;
             }
         },
-    }
+    },
+    components: { ElementType, StringData, SetData }
 }
 </script>
 <template>
@@ -53,18 +65,10 @@ export default {
         <h1>
             Specification of {{ elementType }} {{ elementLabel }}
         </h1>
-        <div class="elementTypeDiv">
-            <div>
-                <h3>
-                    Element properties:
-                </h3>
-            </div>
-            <div>
-                <div>
-                    ID : {{ umlID }}
-                </div>
-            </div>
-        </div>
+        <ElementType :element-type="'Element'">
+            <StringData :label="'ID'" :initial-data="umlID" :read-only="true"></StringData>
+            <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" @specification="propogateSpecification"></SetData>
+        </ElementType>
     </div>
 </template>
 <style>
@@ -72,10 +76,7 @@ export default {
     border: solid #525258;
     border-width: 2px;
     padding: 10px;
-}
-.elementTypeDiv {
-    border: solid #525258;
-    border-width: 2px;
-    padding: 10px;
+    margin:auto;
+    width: 1000px
 }
 </style>
