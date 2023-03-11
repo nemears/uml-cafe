@@ -35,8 +35,7 @@ export default {
     min-width: 700px;
     color: azure;
     background-color: #222427;
-    border: solid #525258;
-    border-width: 2px;
+    border: none;
     font-size: 18px;
 }
 .stringInputLabel {

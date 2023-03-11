@@ -51,9 +51,8 @@ export default {
 .setElement {
     width: 700px;
     background-color: #222427;
-    border: solid #525258;
-    border-width: 2px;
     min-height: 24px;
+    display: flex;
 }
 .setElement:hover {
     background-color: #292c30;

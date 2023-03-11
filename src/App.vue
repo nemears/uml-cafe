@@ -3,6 +3,7 @@ import UmlBanner from './components/UmlBanner.vue'
 import ContainmentTreePanel from './components/ContainmentTreePanel.vue'
 import UmlEditor from './components/UmlEditor.vue'
 import UmlClient from 'uml-js/lib/umlClient'
+import getImage from './GetUmlImage.vue'
 </script>
 <script>
 // top level vue sets up client
@@ -45,7 +46,8 @@ export default {
         label: el.name !== undefined && el.name !== '' ? el.name : el.id,
         id: el.id,
         isActive: true,
-        type: 'Specification'
+        type: 'Specification',
+        img: getImage(el)
       });
       this.specificationTab = el.id;
     }

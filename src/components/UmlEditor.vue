@@ -86,6 +86,7 @@ export default {
     <div class="umlEditor">
         <div class="tabContainer">
             <div v-for="tab in tabs" :key="tab.id" class="tab" :class="tab.isActive ? 'activeTab' : 'tab'" @click="updateTab(tab.id)">
+                <img v-bind:src="tab.img" v-if="tab.img !== undefined" class="tabImage"/>
                 <div style="float:left;padding:5px;">{{ tab.label }}</div>
                 <img v-bind:src="closeSymbol" @click.stop="remove(tab.id)" style="padding:5px"/>
             </div>
@@ -113,6 +114,9 @@ export default {
         color: azure;
         float: left;
         background-color: #464952;
+    }
+    .tabImage {
+        padding-left: 5px;
     }
     .activeTab {
         vertical-align: middle;

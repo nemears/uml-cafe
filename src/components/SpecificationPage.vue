@@ -3,12 +3,14 @@ import UmlWebClient from 'uml-js/lib/umlClient';
 import ElementType from './specComponents/ElementType.vue';
 import StringData from './specComponents/StringData.vue';
 import SetData from './specComponents/SetData.vue';
+import getImage from '../GetUmlImage.vue';
 export default {
     props: ['umlID'],
     emits: ['specification'],
     data() {
         return {
             elementType: '',
+            elementImage: undefined,
             elementData: {
                 ownedElements : [],
                 owner : undefined,
@@ -31,10 +33,11 @@ export default {
             const client = new UmlWebClient(this.$sessionName);
             const el = await client.get(this.umlID);
             this.elementType = el.elementType();
+            this.elementImage = getImage(el);
             this.elementData.ownedElements = [];
             for await(let ownedElement of el.ownedElements) {
                 this.elementData.ownedElements.push({
-                    img: undefined,
+                    img: getImage(ownedElement),
                     label: ownedElement.name !== undefined && ownedElement.name !== '' ? ownedElement.name : ownedElement.id,
                     id: ownedElement.id
                 })
@@ -46,7 +49,7 @@ export default {
         },
         propogateSpecification(spec) {
             this.$emit('specification', spec);
-        },
+        }
     },
     computed: {
         elementLabel() {
@@ -62,9 +65,12 @@ export default {
 </script>
 <template>
     <div class="mainDiv">
-        <h1>
-            Specification of {{ elementType }} {{ elementLabel }}
-        </h1>
+        <div class="headerDiv">
+            <h1>
+                Specification of {{ elementType }} {{ elementLabel }}
+            </h1>
+            <img v-bind:src="elementImage" v-if="elementImage !== undefined" class="headerImage"/>
+        </div>
         <ElementType :element-type="'Element'">
             <StringData :label="'ID'" :initial-data="umlID" :read-only="true"></StringData>
             <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" @specification="propogateSpecification"></SetData>
@@ -78,5 +84,13 @@ export default {
     padding: 10px;
     margin:auto;
     width: 1000px
+}
+.headerDiv {
+    display: flex;
+}
+.headerImage {
+    height: 50px;
+    width: 50px;
+    padding-left: 10px;
 }
 </style>
