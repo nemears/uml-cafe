@@ -88,7 +88,7 @@ export default {
 <style>
 .umlBanner {
     flex: 0 1 auto;
-    background-color: #131416;
+    background-color: var(--vt-c-black);;
 }
 .optionsContainer {
     padding: 5px 5px 5px 5px;

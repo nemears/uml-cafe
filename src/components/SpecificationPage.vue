@@ -6,7 +6,7 @@ import SetData from './specComponents/SetData.vue';
 import getImage from '../GetUmlImage.vue';
 export default {
     props: ['umlID'],
-    emits: ['specification'],
+    emits: ['specification', 'dataChange'],
     data() {
         return {
             elementType: '',
@@ -42,13 +42,31 @@ export default {
                     id: ownedElement.id
                 })
             }
-            // TODO check if named element
-            this.namedElementData = {
-                name: el.name
-            };
+            const owner = await el.owner.get();
+            if (owner !== undefined) {
+                this.elementData.owner = {
+                    img: getImage(owner),
+                    label: owner.name !== undefined && owner.name !== '' ? owner.name : owner.id,
+                    id: owner.id
+                }
+            }
+            // TODO rest of ELEMENT
+
+
+            if (el.isSubClassOf('namedElement')) {
+                this.namedElementData = {
+                    name: el.name
+                };
+            }
         },
         propogateSpecification(spec) {
             this.$emit('specification', spec);
+        },
+        propogateDataChange(dataChange) {
+            if (dataChange.type === 'name') {
+                this.namedElementData.name = dataChange.value;
+            }
+            this.$emit('dataChange', dataChange);
         }
     },
     computed: {
@@ -72,8 +90,11 @@ export default {
             <img v-bind:src="elementImage" v-if="elementImage !== undefined" class="headerImage"/>
         </div>
         <ElementType :element-type="'Element'">
-            <StringData :label="'ID'" :initial-data="umlID" :read-only="true"></StringData>
+            <StringData :label="'ID'" :initial-data="umlID" :read-only="true" :umlid="umlID" :type="'id'" @data-change="propogateDataChange"></StringData>
             <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" @specification="propogateSpecification"></SetData>
+        </ElementType>
+        <ElementType :element-type="'Named Element'" v-if="namedElementData !== undefined">
+            <StringData :label="'Name'" :initial-data="namedElementData.name" :read-only="false" :umlid="umlID" :type="'name'" @data-change="propogateDataChange"></StringData>
         </ElementType>
     </div>
 </template>
@@ -83,7 +104,8 @@ export default {
     border-width: 2px;
     padding: 10px;
     margin:auto;
-    width: 1000px
+    width: 1000px;
+    overflow: auto;
 }
 .headerDiv {
     display: flex;

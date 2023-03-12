@@ -7,7 +7,7 @@ export default {
         "tabs",
         "specificationTab"
     ],
-    emits: ['specification'],
+    emits: ['specification', 'dataChange'],
     data() {
         return {
             closeSymbol: CloseSymbol,
@@ -49,6 +49,11 @@ export default {
             const tab = this.tabs[tabIndex];
             this.tabs.splice(tabIndex , 1);
             if (tab.isActive) {
+                if (tabIndex === 0) {
+                    this.welcome = false;
+                    this.specification = false;
+                    this.diagram = false;
+                }
                 this.recentTab = this.tabs[tabIndex - 1].id;
             }
         },
@@ -78,6 +83,16 @@ export default {
         propogateSpecification(spec) {
             this.$emit('specification', spec);
         },
+        propogateDataChange(dataChange) {
+            if (dataChange.type === 'name') {
+                this.tabs.forEach(tab => {
+                    if (tab.id === dataChange.id) {
+                        tab.label = dataChange.value;
+                    }
+                });
+            }
+            this.$emit('dataChange', dataChange);
+        }
     },
     components: { WelcomePage, SpecificationPage }
 }
@@ -93,7 +108,7 @@ export default {
         </div>
         <div class="activeEditor">
             <WelcomePage v-if="welcome"></WelcomePage>
-            <SpecificationPage v-if="specification" :uml-i-d="recentTab" @specification="propogateSpecification"></SpecificationPage>
+            <SpecificationPage v-if="specification" :uml-i-d="recentTab" @specification="propogateSpecification" @data-change="propogateDataChange"></SpecificationPage>
         </div>
     </div>
 </template>
@@ -105,15 +120,14 @@ export default {
     .tabContainer {
         float: left;
         width: 100%;
-        background-color: #131416;
+        background-color: var(--vt-c-black);
         min-height: 34px;
     }
     .tab {
         display: flex;
         align-items:center;
-        color: azure;
         float: left;
-        background-color: #464952;
+        background-color: var(--vt-c-dark-dark);
     }
     .tabImage {
         padding-left: 5px;
@@ -127,7 +141,7 @@ export default {
         background-color: #383c46;
     }
     .tab:hover {
-        background-color: rgb(89, 94, 109);
+        background-color: var(--vt-c-dark-soft);
     }
     .activeEditor {
         background-color: #2d3035;

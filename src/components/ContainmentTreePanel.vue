@@ -8,7 +8,8 @@ export default {
     name: "ContainmentTreePanel",
     props: [
         "umlID",
-        "depth"
+        "depth",
+        'dataChange'
     ],
     emits: [
         'specification'
@@ -38,6 +39,25 @@ export default {
         },
         umlName() {
             return this.name;
+        }
+    },
+    watch: {
+        dataChange(newDataChange, oldDataChange) {
+            if (newDataChange === undefined) {
+                return;
+            }
+            if (newDataChange.id === undefined) {
+                console.warn('data change made without id');
+                return;
+            }
+            if (newDataChange.id !== this.umlID) {
+                // TODO may have to do something here
+                return;
+            }
+            if (newDataChange.type === 'name') {
+                this.name = newDataChange.value;
+            }
+            // TODO
         }
     },
     methods: {
@@ -183,7 +203,7 @@ export default {
         </div>
         <div v-if="expanded && !isFetching">
             <ContainmentTreePanel v-for="child in children" :umlID="child" 
-                :depth="depth + 1" :key="child" @specification="propogateSpecification"></ContainmentTreePanel>
+                :depth="depth + 1" :data-change="dataChange" :key="child" @specification="propogateSpecification"></ContainmentTreePanel>
         </div>
     </div>
 </template>
@@ -196,6 +216,6 @@ export default {
     display: flex;
 }
 .containmentTreePanel:hover {
-    background-color: #464952;
+    background-color: var(--vt-c-dark-soft);
 }
 </style>

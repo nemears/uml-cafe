@@ -21,9 +21,10 @@ export default {
 <style>
 .elementTypeDiv {
     display: block;
-    border: solid #525258;
-    border-width: 2px;
     padding: 10px;
+}
+.elementTypeDiv:hover {
+    background-color: #34383f;
 }
 .elementTypeLabel {
     font-size: 30px;
