@@ -4,6 +4,7 @@ import ElementType from './specComponents/ElementType.vue';
 import StringData from './specComponents/StringData.vue';
 import SetData from './specComponents/SetData.vue';
 import getImage from '../GetUmlImage.vue';
+import SingletonData from './specComponents/SingletonData.vue';
 export default {
     props: ['umlID'],
     emits: ['specification', 'dataChange'],
@@ -18,7 +19,8 @@ export default {
                 appliedStereotypes: [],
                 // etc...
             },
-            namedElementData : undefined
+            namedElementData : undefined,
+            isFetching: true
         }
     },
     mounted() {
@@ -36,6 +38,7 @@ export default {
     },
     methods: {
         async reloadSpec() {
+            this.isFetching = true;
             const client = new UmlWebClient(this.$sessionName);
             const el = await client.get(this.umlID);
             this.elementType = el.elementType();
@@ -55,6 +58,8 @@ export default {
                     label: owner.name !== undefined && owner.name !== '' ? owner.name : owner.id,
                     id: owner.id
                 }
+            } else {
+                this.elementData.owner = undefined;
             }
             // TODO rest of ELEMENT
 
@@ -64,6 +69,7 @@ export default {
                     name: el.name
                 };
             }
+            this.isFetching = false;
         },
         propogateSpecification(spec) {
             this.$emit('specification', spec);
@@ -84,11 +90,11 @@ export default {
             }
         },
     },
-    components: { ElementType, StringData, SetData }
+    components: { ElementType, StringData, SetData, SingletonData }
 }
 </script>
 <template>
-    <div class="mainDiv">
+    <div class="mainDiv" v-if="!isFetching">
         <div class="headerDiv">
             <h1>
                 Specification of {{ elementType }} {{ elementLabel }}
@@ -97,7 +103,9 @@ export default {
         </div>
         <ElementType :element-type="'Element'">
             <StringData :label="'ID'" :initial-data="umlID" :read-only="true" :umlid="umlID" :type="'id'" @data-change="propogateDataChange"></StringData>
-            <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']" @specification="propogateSpecification"></SetData>
+            <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']" 
+                    @specification="propogateSpecification"></SetData>
+            <SingletonData :label="'Owner'" :inital-data="elementData.owner" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
         </ElementType>
         <ElementType :element-type="'Named Element'" v-if="namedElementData !== undefined">
             <StringData :label="'Name'" :initial-data="namedElementData.name" :read-only="false" :umlid="umlID" :type="'name'" 

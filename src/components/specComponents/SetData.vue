@@ -71,6 +71,7 @@ export default {
 <style>
 .setInputContainer {
     display: flex;
+    padding-bottom: 10px;
 }
 .setLabel {
     min-width: 200px;
