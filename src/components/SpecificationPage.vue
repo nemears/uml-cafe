@@ -68,7 +68,68 @@ export default {
                 this.namedElementData = {
                     name: el.name
                 };
+                const namespace = await el.namespace.get();
+                if (namespace !== undefined) {
+                    this.namedElementData.namespace = {
+                        img: getImage(namespace),
+                        label: namespace.name !== undefined && namespace.name !== '' ? namespace.name : namespace.id,
+                        id: namespace.id
+                    }
+                }
+            } else {
+                this.namedElementData = undefined;
             }
+
+            if (el.isSubClassOf('namespace')) {
+                this.namespaceData = {};
+                this.namespaceData.members = [];
+                for await (let member of el.members) {
+                    this.namespaceData.members.push({
+                        img: getImage(member),
+                        label: member.name !== undefined && member.name !== '' ? member.name : member.id,
+                        id: member.id
+                    });
+                }
+                this.namespaceData.ownedMembers = [];
+                for await (let member of el.ownedMembers) {
+                    this.namespaceData.ownedMembers.push({
+                        img: getImage(member),
+                        label: member.name !== undefined && member.name !== '' ? member.name : member.id,
+                        id: member.id
+                    });
+                }
+            } else {
+                this.namespaceData = undefined;
+            }
+
+            if (el.isSubClassOf('packageableElement')) {
+                this.packageableElementData = {};
+                const owningPackage = await el.owningPackage.get();
+                if (owningPackage !== undefined) {
+                    this.packageableElementData.owningPackage = {
+                        img: getImage(owningPackage),
+                        label: owningPackage.name !== undefined && owningPackage.name !== '' ? owningPackage.name : owningPackage.id,
+                        id: owningPackage.id
+                    };
+                }
+            } else {
+                this.packageableElementData = undefined;
+            }
+
+            if (el.isSubClassOf('package')) {
+                this.packageData = {};
+                this.packageData.packagedElements = [];
+                for await (let packagedElement of el.packagedElements) {
+                    this.packageData.packagedElements.push({
+                        img: getImage(packagedElement),
+                        label: packagedElement.name !== undefined && packagedElement.name !== '' ? packagedElement.name : packagedElement.id,
+                        id: packagedElement.id
+                    });
+                }
+            } else {
+                this.packageData = undefined;
+            }
+
             this.isFetching = false;
         },
         propogateSpecification(spec) {
@@ -110,6 +171,20 @@ export default {
         <ElementType :element-type="'Named Element'" v-if="namedElementData !== undefined">
             <StringData :label="'Name'" :initial-data="namedElementData.name" :read-only="false" :umlid="umlID" :type="'name'" 
             @data-change="propogateDataChange"></StringData>
+            <SingletonData :label="'Namespace'" :inital-data="namedElementData.namespace" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+        </ElementType>
+        <ElementType :element-type="'Namespace'" v-if="namespaceData !== undefined">
+            <SetData :label="'Members'" :initial-data="namespaceData.members" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']"
+                    @specification="propogateSpecification"></SetData>
+            <SetData :label="'Owned Members'" :initial-data="namespaceData.ownedMembers" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']"
+                        @specification="propogateSpecification"></SetData>
+        </ElementType>
+        <ElementType :element-type="'Packageable Element'" v-if="packageableElementData !== undefined">
+            <SingletonData :label="'OwningPackage'" :inital-data="packageableElementData.owningPackage" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+        </ElementType>
+        <ElementType :element-type="'Package'" v-if="packageData !== undefined">
+            <SetData :label="'Packaged Elements'" :initial-data="packageData.packagedElements" :umlid="umlID" :subsets="['packagedElements']"
+                    @specification="propogateSpecification"></SetData>
         </ElementType>
     </div>
 </template>
@@ -120,6 +195,7 @@ export default {
     padding: 10px;
     margin:auto;
     width: 1000px;
+    height: 100%;
     overflow: auto;
 }
 .headerDiv {
