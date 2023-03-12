@@ -97,7 +97,7 @@ export default {
         </div>
         <ElementType :element-type="'Element'">
             <StringData :label="'ID'" :initial-data="umlID" :read-only="true" :umlid="umlID" :type="'id'" @data-change="propogateDataChange"></StringData>
-            <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" @specification="propogateSpecification"></SetData>
+            <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']" @specification="propogateSpecification"></SetData>
         </ElementType>
         <ElementType :element-type="'Named Element'" v-if="namedElementData !== undefined">
             <StringData :label="'Name'" :initial-data="namedElementData.name" :read-only="false" :umlid="umlID" :type="'name'" 

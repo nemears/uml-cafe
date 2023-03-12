@@ -102,6 +102,12 @@ export default {
                             el = await client.get(el.id);
                             this.children.push(newProperty.id);
                             this.expanded = true;
+                            this.$emit('dataChange', {
+                                id: el.id,
+                                type: 'add',
+                                set: 'ownedAttributes',
+                                el: newProperty.id
+                            });
                         }
                     });
                     break;
@@ -126,6 +132,12 @@ export default {
                             el = await client.get(el.id);
                             this.children.push(newPackage.id);
                             this.expanded = true;
+                            this.$emit('dataChange', {
+                                id: el.id,
+                                type: 'add',
+                                set: 'packagedElements',
+                                el: newPackage.id
+                            });
                         }
                     });
                     this.options.push({
@@ -138,6 +150,12 @@ export default {
                             el = await client.get(el.id);
                             this.children.push(newClass.id);
                             this.expanded = true;
+                            this.$emit('dataChange', {
+                                id: el.id,
+                                type: 'add',
+                                set: 'packagedElements',
+                                el: newClass.id
+                            });
                         }
                     })
                     break;
