@@ -12,7 +12,8 @@ export default {
         'dataChange'
     ],
     emits: [
-        'specification'
+        'specification',
+        'dataChange'
     ],
     mounted() {
         this.populateDisplayInfo();
@@ -164,7 +165,12 @@ export default {
             const client = new UmlWebClient(this.$sessionName);
             const el = await client.get(this.umlID);
             el.name = this.name;
-            client.put(el);       
+            client.put(el);
+            this.$emit('dataChange', {
+                id: this.umlID,
+                type: 'name',
+                value: this.name
+            });
         },
         cancelRename() {
             this.editing = false;
@@ -183,6 +189,9 @@ export default {
         },
         propogateSpecification(spec) {
             this.$emit('specification', spec);
+        },
+        propogateDataChange(dataChange) {
+            this.$emit('dataChange', dataChange);
         },
         async specification() {
             const client = new UmlWebClient(this.$sessionName);
@@ -203,7 +212,7 @@ export default {
         </div>
         <div v-if="expanded && !isFetching">
             <ContainmentTreePanel v-for="child in children" :umlID="child" 
-                :depth="depth + 1" :data-change="dataChange" :key="child" @specification="propogateSpecification"></ContainmentTreePanel>
+                :depth="depth + 1" :data-change="dataChange" :key="child" @specification="propogateSpecification" @data-change="propogateDataChange"></ContainmentTreePanel>
         </div>
     </div>
 </template>

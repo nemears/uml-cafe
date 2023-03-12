@@ -4,6 +4,7 @@ import ContainmentTreePanel from './components/ContainmentTreePanel.vue'
 import UmlEditor from './components/UmlEditor.vue'
 import UmlClient from 'uml-js/lib/umlClient'
 import getImage from './GetUmlImage.vue'
+import { computed } from 'vue'
 </script>
 <script>
 // top level vue sets up client
@@ -22,6 +23,11 @@ export default {
 			],
 			specificationTab: '',
 			recentDataChange: {}
+		}
+	},
+	provide() {
+		return {
+			dataChange: computed(() => this.recentDataChange)
 		}
 	},
 	mounted() {
@@ -51,7 +57,8 @@ export default {
 				img: getImage(el)
 			});
 			this.specificationTab = el.id;
-		}, dataChange(dataChange) {
+		},
+		dataChange(dataChange) {
 			this.recentDataChange = dataChange;
 		}
 	}
@@ -64,7 +71,7 @@ export default {
 			<div style="height:34px;background-color: var(--vt-c-black);"></div>
 			<div class="containmentTree">
 				<ContainmentTreePanel v-if="!isFetching && headID !== undefined" :umlID="headID" 
-					:depth="0" :data-change="recentDataChange" @specification="specification"></ContainmentTreePanel>
+					:depth="0" :data-change="recentDataChange" @specification="specification" @data-change="dataChange"></ContainmentTreePanel>
 			</div>
 			<div class="bottomBar"></div>
 		</div>

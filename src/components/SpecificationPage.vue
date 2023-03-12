@@ -7,6 +7,7 @@ import getImage from '../GetUmlImage.vue';
 export default {
     props: ['umlID'],
     emits: ['specification', 'dataChange'],
+    inject: ['dataChange'],
     data() {
         return {
             elementType: '',
@@ -26,6 +27,11 @@ export default {
     watch: {
         umlID(newID, oldID) {
             this.reloadSpec();
+        },
+        dataChange(newDataChange, oldDataChange) {
+            if (newDataChange.id === this.umlID && newDataChange.type === 'name') {
+                this.namedElementData.name = newDataChange.value;
+            }
         }
     },
     methods: {
@@ -94,7 +100,8 @@ export default {
             <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" @specification="propogateSpecification"></SetData>
         </ElementType>
         <ElementType :element-type="'Named Element'" v-if="namedElementData !== undefined">
-            <StringData :label="'Name'" :initial-data="namedElementData.name" :read-only="false" :umlid="umlID" :type="'name'" @data-change="propogateDataChange"></StringData>
+            <StringData :label="'Name'" :initial-data="namedElementData.name" :read-only="false" :umlid="umlID" :type="'name'" 
+            @data-change="propogateDataChange"></StringData>
         </ElementType>
     </div>
 </template>

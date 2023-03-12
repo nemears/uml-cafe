@@ -3,6 +3,7 @@ import UmlWebClient from 'uml-js/lib/umlClient';
 
 export default {
     props: ['label', 'initialData', 'readOnly', 'type', 'umlid'],
+    inject: ['dataChange'],
     data() {
         return {
             data: ''
@@ -15,6 +16,11 @@ export default {
     watch: {
         initialData(newInitalData, oldInitialData) {
             this.data = newInitalData;
+        },
+        dataChange(newDataChange, oldDataChange) {
+            if (newDataChange.type === this.type && newDataChange.id === this.umlid) {
+                this.data = newDataChange.value;
+            }
         }
     },
     methods: {

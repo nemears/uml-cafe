@@ -1,4 +1,6 @@
 <script>
+import e from 'cors';
+import UmlWebClient from 'uml-js/lib/umlClient';
 import CloseSymbol from './icons/close_symbol.svg';
 import SpecificationPage from './SpecificationPage.vue';
 import WelcomePage from './WelcomePage.vue';
@@ -7,6 +9,7 @@ export default {
         "tabs",
         "specificationTab"
     ],
+    inject: ['dataChange'],
     emits: ['specification', 'dataChange'],
     data() {
         return {
@@ -41,6 +44,19 @@ export default {
         },
         specificationTab(newRecentTab, oldRecentTab) {
             this.recentTab = newRecentTab;
+        },
+        dataChange(newDataChange, oldDataChange) {
+            if (newDataChange.type === 'name') {
+                this.tabs.forEach(tab => {
+                    if (tab.id === newDataChange.id) {
+                        if (newDataChange.value === '') {
+                            tab.label = tab.id;
+                        } else {
+                            tab.label = newDataChange.value;
+                        }
+                    }
+                });
+            }
         }
     },
     methods: {
