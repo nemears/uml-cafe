@@ -130,6 +130,76 @@ export default {
                 this.packageData = undefined;
             }
 
+            if (el.isSubClassOf('property')) {
+                this.propertyData = {};
+                const clazz = await el.clazz.get();
+                if (clazz !== undefined) {
+                    this.propertyData.clazz = {
+                        img: getImage(clazz),
+                        label: clazz.name !== undefined && clazz.name !== '' ? clazz.name : clazz.id,
+                        id: clazz.id
+                    }
+                }
+            } else {
+                this.propertyData = undefined;
+            }
+
+            if (el.isSubClassOf('classifier')) {
+                this.classifierData = {};
+                this.classifierData.attributes = [];
+                for await (let attribute of el.attributes) {
+                    this.classifierData.attributes.push({
+                        img: getImage(attribute),
+                        label: attribute.name !== undefined && attribute.name !== '' ? attribute.name : attribute.id,
+                        id: attribute.id
+                    })
+                }
+            } else {
+                this.classifierData = undefined;
+            }
+
+            if (el.isSubClassOf('primitiveType')) {
+                this.primitiveTypeData = {};
+                this.primitiveTypeData.ownedAttributes = [];
+                for await (let attribute of el.ownedAttributes) {
+                    this.primitiveTypeData.attributes.push({
+                        img: getImage(attribute),
+                        label: attribute.name !== undefined && attribute.name !== '' ? attribute.name : attribute.id,
+                        id: attribute.id
+                    })
+                }
+            } else {
+                this.primitiveTypeData = undefined;
+            }
+
+            if (el.isSubClassOf('structuredClassifier')) {
+                this.structuredClassifierData = {};
+                this.structuredClassifierData.ownedAttributes = [];
+                for await (let attribute of el.ownedAttributes) {
+                    this.structuredClassifierData.ownedAttributes.push({
+                        img: getImage(attribute),
+                        label: attribute.name !== undefined && attribute.name !== '' ? attribute.name : attribute.id,
+                        id: attribute.id
+                    })
+                }
+            } else {
+                this.structuredClassifierData = undefined;
+            }
+
+            if (el.isSubClassOf('class')) {
+                this.classData = {};
+                this.classData.ownedAttributes = [];
+                for await (let attribute of el.ownedAttributes) {
+                    this.classData.ownedAttributes.push({
+                        img: getImage(attribute),
+                        label: attribute.name !== undefined && attribute.name !== '' ? attribute.name : attribute.id,
+                        id: attribute.id
+                    })
+                }
+            } else {
+                this.classData = undefined;
+            }
+
             this.isFetching = false;
         },
         propogateSpecification(spec) {
@@ -173,6 +243,9 @@ export default {
             @data-change="propogateDataChange"></StringData>
             <SingletonData :label="'Namespace'" :inital-data="namedElementData.namespace" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
         </ElementType>
+        <ElementType :element-type="'Property'" v-if="propertyData !== undefined">
+            <SingletonData :label="'Class'" :inital-data="propertyData.clazz" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+        </ElementType>
         <ElementType :element-type="'Namespace'" v-if="namespaceData !== undefined">
             <SetData :label="'Members'" :initial-data="namespaceData.members" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']"
                     @specification="propogateSpecification"></SetData>
@@ -186,6 +259,22 @@ export default {
             <SetData :label="'Packaged Elements'" :initial-data="packageData.packagedElements" :umlid="umlID" :subsets="['packagedElements']"
                     @specification="propogateSpecification"></SetData>
         </ElementType>
+        <ElementType :elementType="'Classifier'" v-if="classifierData !== undefined">
+            <SetData :label="'Attributes'" :initial-data="classifierData.attributes" :umlid="umlID" :subsets="['ownedAttributes']"
+                        @specification="propogateSpecification"></SetData>
+        </ElementType>
+        <ElementType :elementType="'Primitive Type'" v-if="primitiveTypeData !== undefined">
+            <SetData :label="'Owned Attributes'" :initial-data="primitiveTypeData.ownedAttributes" :umlid="umlID" :subsets="['ownedAttributes']"
+                        @specification="propogateSpecification"></SetData>
+        </ElementType>
+        <ElementType :elementType="'Structured Classifier'" v-if="structuredClassifierData !== undefined">
+            <SetData :label="'Owned Attributes'" :initial-data="structuredClassifierData.ownedAttributes" :umlid="umlID" :subsets="['ownedAttributes']"
+                        @specification="propogateSpecification"></SetData>
+        </ElementType>
+        <ElementType :elementType="'Class'" v-if="classData !== undefined">
+            <SetData :label="'Owned Attributes'" :initial-data="classData.ownedAttributes" :umlid="umlID" :subsets="['ownedAttributes']"
+                        @specification="propogateSpecification"></SetData>
+        </ElementType>
     </div>
 </template>
 <style>
@@ -195,7 +284,7 @@ export default {
     padding: 10px;
     margin:auto;
     width: 1000px;
-    height: 100%;
+    height: 90vh;
     overflow: auto;
 }
 .headerDiv {
