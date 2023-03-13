@@ -41,6 +41,13 @@ export default {
                     label: el.name !== undefined && el.name !== '' ? el.name : el.id,
                     img: getImage(el)
                 });
+            } else if (newDataChange.type === 'delete') {
+                const el = this.data.find((data) => {
+                    return data.id === newDataChange.id;
+                });
+                if (el !== undefined) {
+                    this.data.splice(this.data.indexOf(el), 1);
+                }
             }
         }
     },

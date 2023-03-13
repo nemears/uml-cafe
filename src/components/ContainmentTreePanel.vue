@@ -88,6 +88,7 @@ export default {
             switch (el.elementType()) {
                 case "class": {
                     this.image = classImage;
+                    renameOption.divided = true;
                     this.options.push(renameOption);
                     for (let attributeID of el.ownedAttributes.ids()) {
                         this.children.push(attributeID);
@@ -118,10 +119,8 @@ export default {
                     for (let packagedElID of el.packagedElements.ids()) {
                         this.children.push(packagedElID);
                     }
+                    renameOption.divided = true;
                     this.options.push(renameOption);
-                    this.options.push({
-                        divided: true
-                    })
                     this.options.push({
                         label: 'Create Package',
                         onClick: async () => {
@@ -171,7 +170,21 @@ export default {
                     break;
                 }
             }
-            this.name = el.name;
+
+            this.options[this.options.length - 1].divided = true;
+
+            this.options.push({
+                label: 'Delete',
+                onClick: () => {
+                    client.deleteElement(el);
+                    this.$emit('dataChange', {
+                        id: this.umlID,
+                        type: 'delete'
+                    })
+                }
+            })
+
+            this.name = el.name; // this will have to change eventually
             this.isFetching = false;
         },
         childrenToggle() {
@@ -209,6 +222,18 @@ export default {
             this.$emit('specification', spec);
         },
         propogateDataChange(dataChange) {
+            if (dataChange.type === 'delete') {
+                let childToDeleteIndex = 0;
+                for (let child of this.children) {
+                    if (child === dataChange.id) {
+                        break;
+                    }
+                    childToDeleteIndex++;
+                }
+                if (childToDeleteIndex < this.children.length) {
+                    this.children.splice(childToDeleteIndex, 1);
+                }
+            }
             this.$emit('dataChange', dataChange);
         },
         async specification() {

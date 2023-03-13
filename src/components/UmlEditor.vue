@@ -56,6 +56,9 @@ export default {
                         }
                     }
                 });
+            } else if (newDataChange.type === 'delete') {
+                const tab = this.tabs.find(tab => tab.id === newDataChange.id);
+                this.remove(tab.id);
             }
         }
     },
