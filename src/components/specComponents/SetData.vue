@@ -1,5 +1,4 @@
 <script>
-import UmlWebClient from 'uml-js/lib/umlClient';
 import getImage from '../../GetUmlImage.vue';
 
 export default {
@@ -34,8 +33,7 @@ export default {
                 newDataChange.id === this.umlid && 
                 this.subsets.includes(newDataChange.set)
             ) {
-                const client = new UmlWebClient(this.$sessionName);
-                const el = await client.get(newDataChange.el);
+                const el = await this.$umlWebClient.get(newDataChange.el);
                 this.data.push({
                     id: newDataChange.el,
                     label: el.name !== undefined && el.name !== '' ? el.name : el.id,
@@ -53,8 +51,7 @@ export default {
     },
     methods: {
         async specification(id) {
-            const client = new UmlWebClient(this.$sessionName);
-            this.$emit('specification', await client.get(id));
+            this.$emit('specification', await this.$umlWebClient.get(id));
         }
     }
 }

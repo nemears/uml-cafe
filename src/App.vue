@@ -2,7 +2,6 @@
 import UmlBanner from './components/UmlBanner.vue'
 import ContainmentTreePanel from './components/ContainmentTreePanel.vue'
 import UmlEditor from './components/UmlEditor.vue'
-import UmlClient from 'uml-js/lib/umlClient'
 import getImage from './GetUmlImage.vue'
 import { computed } from 'vue'
 </script>
@@ -36,8 +35,7 @@ export default {
 	methods: {
 		async getHeadFromServer() {
 			this.isFetching = true;
-			const client = new UmlClient(this.$sessionName);
-			const head = await client.head();
+			const head = await this.$umlWebClient.head();
 			this.headID = head.id;
 			this.isFetching = false;
 		},

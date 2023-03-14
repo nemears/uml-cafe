@@ -1,6 +1,4 @@
 <script>
-import UmlWebClient from 'uml-js/lib/umlClient';
-
 export default {
     props: ['label', 'initialData', 'readOnly', 'type', 'umlid'],
     inject: ['dataChange'],
@@ -26,10 +24,9 @@ export default {
     methods: {
         async submitDataChange() {
             this.data = this.$refs.stringInput.value;
-            const client = new UmlWebClient(this.$sessionName);
-            const el = await client.get(this.umlid);
+            const el = await this.$umlWebClient.get(this.umlid);
             el[this.type] = this.data; // this may be dangerous in the future
-            client.put(el);
+            this.$umlWebClient.put(el);
             this.$emit('dataChange', {
                 id: this.umlid,
                 type: this.type,

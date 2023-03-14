@@ -1,6 +1,4 @@
 <script>
-import e from 'cors';
-import UmlWebClient from 'uml-js/lib/umlClient';
 import CloseSymbol from './icons/close_symbol.svg';
 import SpecificationPage from './SpecificationPage.vue';
 import WelcomePage from './WelcomePage.vue';
@@ -58,7 +56,9 @@ export default {
                 });
             } else if (newDataChange.type === 'delete') {
                 const tab = this.tabs.find(tab => tab.id === newDataChange.id);
-                this.remove(tab.id);
+                if (tab !== undefined) {
+                    this.remove(tab.id);
+                }
             }
         }
     },

@@ -1,5 +1,4 @@
 <script>
-import UmlWebClient from 'uml-js/lib/umlClient';
 export default {
     props: ['label', 'umlID', 'initalData'],
     emits: ['specification'],
@@ -42,8 +41,7 @@ export default {
             if (this.valID === undefined) {
                 return;
             }
-            const client = new UmlWebClient(this.$sessionName);
-            this.$emit('specification', await client.get(this.valID));
+            this.$emit('specification', await this.$umlWebClient.get(this.valID));
         }
     }
 }

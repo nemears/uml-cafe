@@ -1,5 +1,4 @@
 <script>
-import UmlWebClient from 'uml-js/lib/umlClient';
 import ElementType from './specComponents/ElementType.vue';
 import StringData from './specComponents/StringData.vue';
 import SetData from './specComponents/SetData.vue';
@@ -39,8 +38,7 @@ export default {
     methods: {
         async reloadSpec() {
             this.isFetching = true;
-            const client = new UmlWebClient(this.$sessionName);
-            const el = await client.get(this.umlID);
+            const el = await this.$umlWebClient.get(this.umlID);
             this.elementType = el.elementType();
             this.elementImage = getImage(el);
             this.elementData.ownedElements = [];

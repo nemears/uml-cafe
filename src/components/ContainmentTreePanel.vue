@@ -1,7 +1,6 @@
 <script>
 import packageImage from './icons/package.svg';
 import classImage from './icons/class.svg';
-import UmlWebClient from 'uml-js/lib/umlClient';
 import propertyImage from './icons/property.svg';
 
 export default {
@@ -63,12 +62,11 @@ export default {
     },
     methods: {
         async populateDisplayInfo() {
-            const client = new UmlWebClient(this.$sessionName);
-            let el = await client.get(this.umlID);
+            let el = await this.$umlWebClient.get(this.umlID);
             this.options.push({ 
                         label: "Specification", 
                         onClick: async () => {
-                            this.$emit('specification', await client.get(this.umlID));
+                            this.$emit('specification', await this.$umlWebClient.get(this.umlID));
                         }
                     });
             const renameOption = {
@@ -96,11 +94,11 @@ export default {
                     this.options.push({
                         label: 'Create Property',
                         onClick: async () => {
-                            const newProperty = await client.post('property');
+                            const newProperty = await this.$umlWebClient.post('property');
                             el.ownedAttributes.add(newProperty);
-                            client.put(newProperty);
-                            client.put(el);
-                            el = await client.get(el.id);
+                            this.$umlWebClient.put(newProperty);
+                            this.$umlWebClient.put(el);
+                            el = await this.$umlWebClient.get(el.id);
                             this.children.push(newProperty.id);
                             this.expanded = true;
                             this.$emit('dataChange', {
@@ -124,11 +122,11 @@ export default {
                     this.options.push({
                         label: 'Create Package',
                         onClick: async () => {
-                            const newPackage = await client.post('package');
+                            const newPackage = await this.$umlWebClient.post('package');
                             el.packagedElements.add(newPackage);
-                            client.put(el);
-                            client.put(newPackage);
-                            el = await client.get(el.id);
+                            this.$umlWebClient.put(el);
+                            this.$umlWebClient.put(newPackage);
+                            el = await this.$umlWebClient.get(el.id);
                             this.children.push(newPackage.id);
                             this.expanded = true;
                             this.$emit('dataChange', {
@@ -142,11 +140,11 @@ export default {
                     this.options.push({
                         label: 'Create Class',
                         onClick: async () => {
-                            const newClass = await client.post('class');
+                            const newClass = await this.$umlWebClient.post('class');
                             el.packagedElements.add(newClass);
-                            client.put(el);
-                            client.put(newClass);
-                            el = await client.get(el.id);
+                            this.$umlWebClient.put(el);
+                            this.$umlWebClient.put(newClass);
+                            el = await this.$umlWebClient.get(el.id);
                             this.children.push(newClass.id);
                             this.expanded = true;
                             this.$emit('dataChange', {
@@ -176,7 +174,7 @@ export default {
             this.options.push({
                 label: 'Delete',
                 onClick: () => {
-                    client.deleteElement(el);
+                    this.$umlWebClient.deleteElement(el);
                     this.$emit('dataChange', {
                         id: this.umlID,
                         type: 'delete'
@@ -193,10 +191,9 @@ export default {
         async stopRename() {
             this.editing = false;
             this.name = this.$refs.nameDiv.innerText || this.$refs.nameDiv.textContent;
-            const client = new UmlWebClient(this.$sessionName);
-            const el = await client.get(this.umlID);
+            const el = await this.$umlWebClient.get(this.umlID);
             el.name = this.name;
-            client.put(el);
+            this.$umlWebClient.put(el);
             this.$emit('dataChange', {
                 id: this.umlID,
                 type: 'name',
@@ -237,8 +234,7 @@ export default {
             this.$emit('dataChange', dataChange);
         },
         async specification() {
-            const client = new UmlWebClient(this.$sessionName);
-            this.$emit('specification', await client.get(this.umlID));
+            this.$emit('specification', await this.$umlWebClient.get(this.umlID));
         }
     }
 }

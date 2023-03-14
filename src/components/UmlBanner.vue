@@ -1,6 +1,4 @@
 <script>
-import UmlWebClient from 'uml-js/lib/umlClient';
-
 export default {
     data() {
         return {
@@ -30,8 +28,7 @@ export default {
                 };
                 reader.readAsText(file);
             });
-            const client = new UmlWebClient(this.$sessionName)
-            client.load(fileAsStr);
+            this.$umlWebClient.load(fileAsStr);
 
             // TODO update containment tree and close tabs of specs and diagrams
             await new Promise( res => {
@@ -43,8 +40,7 @@ export default {
             });
         },
         async saveToFile(event) {
-            const client = new UmlWebClient(this.$sessionName);
-            let fileContent = await client.save();
+            let fileContent = await this.$umlWebClient.save();
             let myFile = new Blob([fileContent], {type: 'text/plain'});
             window.URL = window.URL || window.webkitURL;
             this.downloadRef = window.URL.createObjectURL(myFile);
