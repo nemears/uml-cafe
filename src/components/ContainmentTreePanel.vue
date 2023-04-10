@@ -1,7 +1,6 @@
 <script>
 import packageImage from './icons/package.svg';
-import classImage from './icons/class.svg';
-import propertyImage from './icons/property.svg';
+import getImage from '../GetUmlImage.vue';
 
 export default {
     name: "ContainmentTreePanel",
@@ -63,62 +62,61 @@ export default {
     methods: {
         async populateDisplayInfo() {
             let el = await this.$umlWebClient.get(this.umlID);
+            this.image = getImage(el);
             this.options.push({ 
                         label: "Specification", 
                         onClick: async () => {
                             this.$emit('specification', await this.$umlWebClient.get(this.umlID));
                         }
                     });
-            const renameOption = {
-                label: 'Rename',
-                onClick: () => {
-                    this.editing = true;
-                    setTimeout(() => {
-                        // select text for user
-                        let sel = window.getSelection();
-                        sel.removeAllRanges();
-                        let range = document.createRange();
-                        range.selectNodeContents(this.$refs.nameDiv);
-                        sel.addRange(range);
-                    }, '0.1 seconds');
-                }
+            if (el.isSubClassOf('namedElement')) {
+                this.options.push({
+                    label: 'Rename',
+                    onClick: () => {
+                        this.editing = true;
+                        setTimeout(() => {
+                            // select text for user
+                            let sel = window.getSelection();
+                            sel.removeAllRanges();
+                            let range = document.createRange();
+                            range.selectNodeContents(this.$refs.nameDiv);
+                            sel.addRange(range);
+                        }, '0.1 seconds');
+                    },
+                    divided: true
+                });
             }
-            switch (el.elementType()) {
-                case "class": {
-                    this.image = classImage;
-                    renameOption.divided = true;
-                    this.options.push(renameOption);
-                    for (let attributeID of el.ownedAttributes.ids()) {
-                        this.children.push(attributeID);
-                    }
-                    this.options.push({
-                        label: 'Create Property',
-                        onClick: async () => {
-                            const newProperty = await this.$umlWebClient.post('property');
-                            el.ownedAttributes.add(newProperty);
-                            this.$umlWebClient.put(newProperty);
-                            this.$umlWebClient.put(el);
-                            el = await this.$umlWebClient.get(el.id);
-                            this.children.push(newProperty.id);
-                            this.expanded = true;
-                            this.$emit('dataChange', {
-                                id: el.id,
-                                type: 'add',
-                                set: 'ownedAttributes',
-                                el: newProperty.id
-                            });
-                        }
-                    });
-                    break;
+            // creation options
+            if (el.isSubClassOf('class')) {
+                for (let generalizationID of el.generalizations.ids()) {
+                    this.children.push(generalizationID);
                 }
-                case "package": {
-                    // TODO bug here when getting multiple children
-                    // iterator fails for everything but last child
-                    for (let packagedElID of el.packagedElements.ids()) {
+                for (let attributeID of el.ownedAttributes.ids()) {
+                    this.children.push(attributeID);
+                }
+                this.options.push({
+                    label: 'Create Property',
+                    onClick: async () => {
+                        const newProperty = await this.$umlWebClient.post('property');
+                        el.ownedAttributes.add(newProperty);
+                        this.$umlWebClient.put(newProperty);
+                        this.$umlWebClient.put(el);
+                        el = await this.$umlWebClient.get(el.id);
+                        this.children.push(newProperty.id);
+                        this.expanded = true;
+                        this.$emit('dataChange', {
+                            id: el.id,
+                            type: 'add',
+                            set: 'ownedAttributes',
+                            el: newProperty.id
+                        });
+                    }
+                });
+            }
+            if (el.isSubClassOf('package')) {
+                for (let packagedElID of el.packagedElements.ids()) {
                         this.children.push(packagedElID);
                     }
-                    renameOption.divided = true;
-                    this.options.push(renameOption);
                     this.options.push({
                         label: 'Create Package',
                         onClick: async () => {
@@ -154,19 +152,7 @@ export default {
                                 el: newClass.id
                             });
                         }
-                    })
-                    break;
-                }
-                case "primitiveType": {
-                    this.image = classImage;
-                    this.options.push(renameOption);
-                    break;
-                }
-                case 'property': {
-                    this.image = propertyImage;
-                    this.options.push(renameOption);
-                    break;
-                }
+                    });
             }
 
             this.options[this.options.length - 1].divided = true;
