@@ -2,6 +2,7 @@
 import CloseSymbol from './icons/close_symbol.svg';
 import SpecificationPage from './SpecificationPage.vue';
 import WelcomePage from './WelcomePage.vue';
+import DiagramPage from './DiagramPage.vue';
 export default {
     props: [
         "tabs",
@@ -113,7 +114,7 @@ export default {
             this.$emit('dataChange', dataChange);
         }
     },
-    components: { WelcomePage, SpecificationPage }
+    components: { WelcomePage, SpecificationPage, DiagramPage }
 }
 </script>
 <template>
@@ -128,6 +129,7 @@ export default {
         <div class="activeEditor">
             <WelcomePage v-if="welcome"></WelcomePage>
             <SpecificationPage v-if="specification" :uml-i-d="recentTab" @specification="propogateSpecification" @data-change="propogateDataChange"></SpecificationPage>
+            <DiagramPage v-if="diagram"></DiagramPage>
         </div>
     </div>
 </template>

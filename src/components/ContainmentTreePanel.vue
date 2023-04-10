@@ -1,6 +1,7 @@
 <script>
 import packageImage from './icons/package.svg';
 import getImage from '../GetUmlImage.vue';
+import classDiagramImage from './icons/class_diagram.svg';
 
 export default {
     name: "ContainmentTreePanel",
@@ -11,7 +12,8 @@ export default {
     ],
     emits: [
         'specification',
-        'dataChange'
+        'dataChange',
+        'diagram'
     ],
     mounted() {
         this.populateDisplayInfo();
@@ -24,7 +26,8 @@ export default {
             expanded: false,
             image: packageImage,
             options: [],
-            editing: false
+            editing: false,
+            diagram: false
         };
     },
     components: [
@@ -62,7 +65,17 @@ export default {
     methods: {
         async populateDisplayInfo() {
             let el = await this.$umlWebClient.get(this.umlID);
-            this.image = getImage(el);
+            if (el.appliedStereotypes.size() > 0) {
+                for await (let stereotypeInst of el.appliedStereotypes) {
+                    if (stereotypeInst.classifiers.contains('Diagram_nuc1IC2Cavgoa4zMBlVq')) {
+                        this.diagram = true;
+                        this.image = classDiagramImage;
+                    }
+                }
+            }
+            if (!this.diagram) {
+                this.image = getImage(el);
+            }
             this.options.push({ 
                         label: "Specification", 
                         onClick: async () => {
@@ -87,6 +100,32 @@ export default {
                 });
             }
             // creation options
+
+            // create diagrams
+            if (el.isSubClassOf('package')) {
+                this.options.push({
+                    label: 'Create Class Diagram',
+                    onClick: async () => {
+                        const diagramClass = await this.$umlWebClient.post('class');
+                        el.packagedElements.add(diagramClass);
+                        diagramClass.name = el.name;
+                        const diagramStereotypeInstance = await this.$umlWebClient.post('instanceSpecification');
+                        diagramStereotypeInstance.classifiers.add(await this.$umlWebClient.get('Diagram_nuc1IC2Cavgoa4zMBlVq'));
+                        // TODO slots
+                        diagramClass.appliedStereotypes.add(diagramStereotypeInstance);
+                        this.$umlWebClient.put(el);
+                        this.$umlWebClient.put(diagramClass);
+                        this.$umlWebClient.put(diagramStereotypeInstance);
+                        await this.$umlWebClient.get(diagramClass.id);
+                        this.children.push(diagramClass.id);
+                        this.$emit('diagram', diagramClass);
+                    }
+                })
+            }
+
+            this.options[this.options.length - 1].divided = true;
+
+            // create elements
             if (el.isSubClassOf('class')) {
                 for (let generalizationID of el.generalizations.ids()) {
                     this.children.push(generalizationID);
@@ -219,8 +258,15 @@ export default {
             }
             this.$emit('dataChange', dataChange);
         },
+        propogateDiagram(diagramClass) {
+            this.$emit('diagram', diagramClass);
+        },
         async specification() {
-            this.$emit('specification', await this.$umlWebClient.get(this.umlID));
+            if (this.diagram) {
+                this.$emit('diagram', await this.$umlWebClient.get(this.umlID));
+            } else {
+                this.$emit('specification', await this.$umlWebClient.get(this.umlID));
+            }
         }
     }
 }
@@ -237,7 +283,8 @@ export default {
         </div>
         <div v-if="expanded && !isFetching">
             <ContainmentTreePanel v-for="child in children" :umlID="child" 
-                :depth="depth + 1" :data-change="dataChange" :key="child" @specification="propogateSpecification" @data-change="propogateDataChange"></ContainmentTreePanel>
+                :depth="depth + 1" :data-change="dataChange" :key="child" @specification="propogateSpecification" 
+                @data-change="propogateDataChange" @diagram="propogateDiagram"></ContainmentTreePanel>
         </div>
     </div>
 </template>

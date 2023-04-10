@@ -3,6 +3,7 @@ import UmlBanner from './components/UmlBanner.vue'
 import ContainmentTreePanel from './components/ContainmentTreePanel.vue'
 import UmlEditor from './components/UmlEditor.vue'
 import getImage from './GetUmlImage.vue'
+import classDiagramImage from './components/icons/class_diagram.svg';
 import { computed } from 'vue'
 </script>
 <script>
@@ -58,6 +59,23 @@ export default {
 		},
 		dataChange(dataChange) {
 			this.recentDataChange = dataChange;
+		},
+		diagram(diagramClass) {
+			if (this.tabs.find(tab => tab.id === diagramClass.id)) { // no duplicates
+				this.specificationTab = diagramClass.id;
+				return;
+			}
+			for (let tab of this.tabs) {
+				tab.isActive = false;
+			}
+			this.tabs.push({
+				label: diagramClass.name !== undefined && diagramClass.name !== '' ? diagramClass.name : diagramClass.id,
+				id: diagramClass.id,
+				isActive: true,
+				type: 'Diagram',
+				img: classDiagramImage
+			});
+			this.specificationTab = diagramClass.id;
 		}
 	}
 }
@@ -69,7 +87,8 @@ export default {
 			<div style="height:34px;background-color: var(--vt-c-black);"></div>
 			<div class="containmentTree">
 				<ContainmentTreePanel v-if="!isFetching && headID !== undefined" :umlID="headID" 
-					:depth="0" :data-change="recentDataChange" @specification="specification" @data-change="dataChange"></ContainmentTreePanel>
+					:depth="0" :data-change="recentDataChange" @specification="specification" 
+					@data-change="dataChange" @diagram="diagram"></ContainmentTreePanel>
 			</div>
 			<div class="bottomBar"></div>
 		</div>
