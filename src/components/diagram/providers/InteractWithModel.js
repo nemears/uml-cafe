@@ -1,4 +1,4 @@
-export default function InteractWithModel(eventBus) {
+export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter, diagramContext) {
     eventBus.on('shape.added', async function(event) {
         if (!event.element.newUMLElement) {
             return;
@@ -7,14 +7,12 @@ export default function InteractWithModel(eventBus) {
         const classID = event.element.elementID;
 
         let clazz = await umlWebClient.post('class', {id:classID});
-
-        clazz.name = "clazz";
-
+        diagramContext.context.packagedElements.add(clazz);
         umlWebClient.put(clazz);
-
+        umlWebClient.put(diagramContext.context);
         let newClazz = await umlWebClient.get(classID);
-
         console.log(newClazz.name);
+        diagramEmitter.fire('shape.added', event);
         
 
         // send message to server
@@ -115,4 +113,4 @@ export default function InteractWithModel(eventBus) {
     });
 }
 
-InteractWithModel.$inject = ['eventBus'];
+InteractWithModel.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext'];

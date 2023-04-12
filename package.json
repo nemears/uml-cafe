@@ -10,6 +10,7 @@
   "dependencies": {
     "@imengyu/vue3-context-menu": "^1.2.3",
     "diagram-js": "^11.9.1",
+    "events": "^3.3.0",
     "uml-js": "file:../uml-js",
     "vue": "^3.2.45"
   },

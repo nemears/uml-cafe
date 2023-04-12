@@ -58,8 +58,9 @@ export default {
             }
             if (newDataChange.type === 'name') {
                 this.name = newDataChange.value;
+            } else if (newDataChange.type === 'add') {
+                this.children.push(newDataChange.el);
             }
-            // TODO
         }
     },
     methods: {

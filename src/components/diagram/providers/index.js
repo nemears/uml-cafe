@@ -6,7 +6,6 @@ import UMLRenderer from './UMLRenderer';
 import ClassLabel from './ClassLabel';
 import GeneralizationHandler from './relationships/GeneralizationHandler';
 import DirectedComposition from './relationships/DirectedComposition';
-// import UmlWebClient from 'uml-js/lib/umlClient';
 
 export default {
   __init__: [
@@ -18,7 +17,6 @@ export default {
     'interactWithModel',
     'umlRenderer',
     'classLabel',
-    // 'umlWebClient'
   ],
   generalizationHandler: ['type', GeneralizationHandler],
   directedComposition: ['type', DirectedComposition],
@@ -28,5 +26,4 @@ export default {
   interactWithModel: ['type', InteractWithModel],
   umlRenderer: ['type', UMLRenderer],
   classLabel: ['type', ClassLabel],
-  // umlWebClient: ['type', UmlWebClient]
 };

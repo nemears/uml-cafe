@@ -44,8 +44,48 @@ export function Editor(options) {
   const {
     container,
     umlWebClient,
+    emitter,
+    context,
     additionalModules = []
   } = options;
+
+  class DiagramUmlClient  {
+    client = umlWebClient;
+    async post(type, options) {
+      return await this.client.post(type, options);
+    }
+    async get(id) {
+      return await this.client.get(id);
+    }
+    async put(el) {
+      return await this.client.put(el);
+    }
+    async head() {
+      return await this.client.head();
+    }
+  }
+
+  class DiagramEmitter {
+    emitter = emitter;
+    fire(eventName, event) {
+      emitter.emit(eventName, event);
+    }
+  }
+
+  class DiagramContext {
+    context = context;
+  }
+
+  const umlClientModule = {
+    __init__: [
+      'umlWebClient',
+      'diagramEmitter',
+      'diagramContext',
+    ],
+    umlWebClient: ['type', DiagramUmlClient],
+    diagramEmitter: ['type', DiagramEmitter],
+    diagramContext: ['type', DiagramContext],
+  };
 
   // default modules provided by the toolbox
   const builtinModules = [
@@ -68,7 +108,8 @@ export function Editor(options) {
   // our own modules, contributing controls, customizations, and more
   const customModules = [
     ProvidersModule,
-    ElementStyleModule
+    ElementStyleModule,
+    umlClientModule,
   ];
 
   return new Diagram({

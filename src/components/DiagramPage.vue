@@ -1,13 +1,20 @@
 <script>
 import { Editor } from './diagram/editor';
+const EventEmitter = require('events');
 export default {
     data() {
         return {};
     },
-    mounted() {
+    props: ['umlID'],
+    emits: ['dataChange'],
+    async mounted() {
+        const emitter = new EventEmitter();
+        const diagramClass = await this.$umlWebClient.get(this.umlID);
         const diagram = new Editor({
             container: this.$refs.diagram,
-            umlWebClient: this.$umlWebClient
+            umlWebClient: this.$umlWebClient,
+            emitter: emitter,
+            context: await diagramClass.owningPackage.get(),
         });
         const canvas = diagram.get('canvas');
         const elementFactory = diagram.get('elementFactory');
@@ -17,7 +24,18 @@ export default {
 
         canvas.setRootElement(root);
 
-        var eventBus = diagram.get('eventBus');
+        // TODO set up diagram with shapes
+
+        const diagramPage = this;
+        // handle emits from diagram to update rest of app
+        emitter.on('shape.added', function(event) {
+            diagramPage.$emit('dataChange', {
+                            id: diagramClass.owningPackage.id(),
+                            type: 'add',
+                            set: 'packagedElements',
+                            el: event.element.elementID
+                        });
+        });
     }
 }
 </script>
