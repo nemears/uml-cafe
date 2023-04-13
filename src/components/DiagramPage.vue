@@ -37,11 +37,20 @@ export default {
                             el: event.element.elementID
                         });
         });
+    },
+    methods: {
+        onDrop(event, list) {
+            console.log('dropped on diagram');
+            // TODO draw element on diagram
+        }
     }
 }
 </script>
 <template>
-    <div ref="diagram" class="diagramContainer"></div>
+    <div ref="diagram" class="diagramContainer" 
+        @drop="onDrop($event, 1)"
+        @dragover.prevent
+        @dragenter.prevent></div>
 </template>
 <style>
 .diagramContainer {

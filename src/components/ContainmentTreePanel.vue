@@ -60,7 +60,7 @@ export default {
                 this.name = newDataChange.value;
             } else if (newDataChange.type === 'add') {
                 const me = await this.$umlWebClient.get(this.umlID);
-                if (me.ownedElements.contains(newDataChange.el)) {
+                if (this.children.includes(newDataChange.el)) {
                     return;
                 }
                 this.children.push(newDataChange.el);
@@ -203,12 +203,13 @@ export default {
 
             this.options.push({
                 label: 'Delete',
-                onClick: () => {
+                onClick: async () => {
+                    const owner = await el.owner.get();
                     this.$umlWebClient.deleteElement(el);
                     this.$emit('dataChange', {
                         id: this.umlID,
                         type: 'delete'
-                    })
+                    });
                 }
             })
 
@@ -273,8 +274,10 @@ export default {
                 this.$emit('specification', await this.$umlWebClient.get(this.umlID));
             }
         },
-        async startDrag(event, item) {
-            event.umlElement = await this.$umlWebClient.get(this.umlID);
+        startDrag(event, item) {
+            event.dataTransfer.setData('umlID', this.umlID);
+            event.dataTransfer.dropEffect = 'copy';
+            event.dataTransfer.effectAllowed = 'all';
             console.log('dragging');
         }
     }
@@ -282,13 +285,17 @@ export default {
 </script>
 <template>
     <div class="containmentTreeBlock" v-if="!isFetching">
-        <div class="containmentTreePanel" :class="{notEditable: !editing}" @click="childrenToggle" @dblclick="specification"
-            @contextmenu="onContextMenu($event)" @dragstart="startDrag($event, item)">
+        <div class="containmentTreePanel" :class="{notEditable: !editing}" 
+            @click="childrenToggle" 
+            @dblclick="specification"
+            @contextmenu="onContextMenu($event)" >
             <div :style="indent"></div>
-            <img v-bind:src="image"/>
-            <div ref="nameDiv" :contenteditable="editing" @keydown.enter.prevent="stopRename"
-                @keydown.escape="cancelRename">{{ umlName }}</div>
-                <!-- TODO we need some sort of handling for a click-outside of this div directive to cancel rename TODO -->
+            <div draggable="true" style="display:flex" @dragstart="startDrag($event, item)">
+                <img v-bind:src="image" draggable="false"/>
+                <div ref="nameDiv" :contenteditable="editing" @keydown.enter.prevent="stopRename"
+                    @keydown.escape="cancelRename">{{ umlName }}</div>
+                    <!-- TODO we need some sort of handling for a click-outside of this div directive to cancel rename TODO -->
+            </div>
         </div>
         <div v-if="expanded && !isFetching">
             <ContainmentTreePanel v-for="child in children" :umlID="child" 

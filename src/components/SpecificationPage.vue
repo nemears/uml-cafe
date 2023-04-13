@@ -253,13 +253,13 @@ export default {
             <StringData :label="'ID'" :initial-data="umlID" :read-only="true" :umlid="umlID" :type="'id'" @data-change="propogateDataChange"></StringData>
             <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']" 
                     @specification="propogateSpecification"></SetData>
-            <SingletonData :label="'Owner'" :inital-data="elementData.owner" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+            <SingletonData :label="'Owner'" :readonly="true" :inital-data="elementData.owner" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
             <SetData :label="'Applied Stereotypes'" :initial-data="elementData.appliedStereotypes" :umlid="umlID" @specification="propogateSpecification"></SetData>
         </ElementType>
         <ElementType :element-type="'Named Element'" v-if="namedElementData !== undefined">
             <StringData :label="'Name'" :initial-data="namedElementData.name" :read-only="false" :umlid="umlID" :type="'name'" 
             @data-change="propogateDataChange"></StringData>
-            <SingletonData :label="'Namespace'" :inital-data="namedElementData.namespace" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+            <SingletonData :label="'Namespace'" :readonly="true" :inital-data="namedElementData.namespace" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
         </ElementType>
         <ElementType :element-type="'Typed Element'" v-if="typedElementData !== undefined">
             <SingletonData :label="'Type'" :inital-data="typedElementData.type" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
