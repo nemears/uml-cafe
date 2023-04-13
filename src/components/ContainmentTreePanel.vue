@@ -44,7 +44,7 @@ export default {
         }
     },
     watch: {
-        dataChange(newDataChange, oldDataChange) {
+        async dataChange(newDataChange, oldDataChange) {
             if (newDataChange === undefined) {
                 return;
             }
@@ -59,6 +59,10 @@ export default {
             if (newDataChange.type === 'name') {
                 this.name = newDataChange.value;
             } else if (newDataChange.type === 'add') {
+                const me = await this.$umlWebClient.get(this.umlID);
+                if (me.ownedElements.contains(newDataChange.el)) {
+                    return;
+                }
                 this.children.push(newDataChange.el);
             }
         }
@@ -107,19 +111,19 @@ export default {
                 this.options.push({
                     label: 'Create Class Diagram',
                     onClick: async () => {
-                        const diagramClass = await this.$umlWebClient.post('class');
-                        el.packagedElements.add(diagramClass);
-                        diagramClass.name = el.name;
+                        const diagramPackage = await this.$umlWebClient.post('package');
+                        el.packagedElements.add(diagramPackage);
+                        diagramPackage.name = el.name;
                         const diagramStereotypeInstance = await this.$umlWebClient.post('instanceSpecification');
                         diagramStereotypeInstance.classifiers.add(await this.$umlWebClient.get('Diagram_nuc1IC2Cavgoa4zMBlVq'));
                         // TODO slots
-                        diagramClass.appliedStereotypes.add(diagramStereotypeInstance);
+                        diagramPackage.appliedStereotypes.add(diagramStereotypeInstance);
                         this.$umlWebClient.put(el);
-                        this.$umlWebClient.put(diagramClass);
+                        this.$umlWebClient.put(diagramPackage);
                         this.$umlWebClient.put(diagramStereotypeInstance);
-                        await this.$umlWebClient.get(diagramClass.id);
-                        this.children.push(diagramClass.id);
-                        this.$emit('diagram', diagramClass);
+                        await this.$umlWebClient.get(diagramPackage.id);
+                        this.children.push(diagramPackage.id);
+                        this.$emit('diagram', diagramPackage);
                     }
                 })
             }
@@ -268,14 +272,18 @@ export default {
             } else {
                 this.$emit('specification', await this.$umlWebClient.get(this.umlID));
             }
+        },
+        async startDrag(event, item) {
+            event.umlElement = await this.$umlWebClient.get(this.umlID);
+            console.log('dragging');
         }
     }
 }
 </script>
 <template>
     <div class="containmentTreeBlock" v-if="!isFetching">
-        <div class="containmentTreePanel" @click="childrenToggle" @dblclick="specification"
-            @contextmenu="onContextMenu($event)">
+        <div class="containmentTreePanel" :class="{notEditable: !editing}" @click="childrenToggle" @dblclick="specification"
+            @contextmenu="onContextMenu($event)" @dragstart="startDrag($event, item)">
             <div :style="indent"></div>
             <img v-bind:src="image"/>
             <div ref="nameDiv" :contenteditable="editing" @keydown.enter.prevent="stopRename"
@@ -296,6 +304,12 @@ export default {
 .containmentTreePanel {
     vertical-align: middle;
     display: flex;
+}
+.notEditable {
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
 }
 .containmentTreePanel:hover {
     background-color: var(--vt-c-dark-soft);

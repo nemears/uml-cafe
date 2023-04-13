@@ -9,12 +9,13 @@ export default {
     emits: ['dataChange'],
     async mounted() {
         const emitter = new EventEmitter();
-        const diagramClass = await this.$umlWebClient.get(this.umlID);
+        const diagramPackage = await this.$umlWebClient.get(this.umlID);
         const diagram = new Editor({
             container: this.$refs.diagram,
             umlWebClient: this.$umlWebClient,
             emitter: emitter,
-            context: await diagramClass.owningPackage.get(),
+            context: await diagramPackage.owningPackage.get(),
+            diagramElement: diagramPackage
         });
         const canvas = diagram.get('canvas');
         const elementFactory = diagram.get('elementFactory');
@@ -30,7 +31,7 @@ export default {
         // handle emits from diagram to update rest of app
         emitter.on('shape.added', function(event) {
             diagramPage.$emit('dataChange', {
-                            id: diagramClass.owningPackage.id(),
+                            id: diagramPackage.owningPackage.id(),
                             type: 'add',
                             set: 'packagedElements',
                             el: event.element.elementID

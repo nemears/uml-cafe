@@ -41,24 +41,35 @@ export default {
             const el = await this.$umlWebClient.get(this.umlID);
             this.elementType = el.elementType();
             this.elementImage = getImage(el);
-            this.elementData.ownedElements = [];
-            for await(let ownedElement of el.ownedElements) {
-                this.elementData.ownedElements.push({
-                    img: getImage(ownedElement),
-                    label: ownedElement.name !== undefined && ownedElement.name !== '' ? ownedElement.name : ownedElement.id,
-                    id: ownedElement.id
-                })
-            }
-            const owner = await el.owner.get();
-            if (owner !== undefined) {
-                this.elementData.owner = {
-                    img: getImage(owner),
-                    label: owner.name !== undefined && owner.name !== '' ? owner.name : owner.id,
-                    id: owner.id
+            
+            // helper lambdas
+            const reloadSingleton = async (elementTypeData, singleton, singletonName) => {
+                const singletonValue = await singleton.get();
+                if (singletonValue !== undefined) {
+                    elementTypeData[singletonName] = {
+                        img: getImage(singletonValue),
+                        label: singletonValue.name !== undefined ? singletonValue.name : '',
+                        id: singletonValue.id
+                    }
+                } else {
+                    elementTypeData[singletonName] = undefined;
                 }
-            } else {
-                this.elementData.owner = undefined;
-            }
+            };
+
+            const reloadSet = async (elementTypeData, set, setName) => {
+                elementTypeData[setName] = [];
+                for await (let element of set) {
+                    elementTypeData[setName].push({
+                        img: getImage(element),
+                        label: element.name !== undefined ? element.name : '',
+                        id: element.id
+                    });
+                }
+            };
+
+            reloadSet(this.elementData, el.ownedElements, 'ownedElements');
+            reloadSingleton(this.elementData, el.owner, 'owner');
+            reloadSet(this.elementData, el.appliedStereotypes, 'appliedStereotypes');
             // TODO rest of ELEMENT
 
 
@@ -66,14 +77,7 @@ export default {
                 this.namedElementData = {
                     name: el.name
                 };
-                const namespace = await el.namespace.get();
-                if (namespace !== undefined) {
-                    this.namedElementData.namespace = {
-                        img: getImage(namespace),
-                        label: namespace.name !== undefined && namespace.name !== '' ? namespace.name : namespace.id,
-                        id: namespace.id
-                    }
-                }
+                reloadSingleton(this.namedElementData, el.namespace, 'namespace');
             } else {
                 this.namedElementData = undefined;
             }
@@ -98,6 +102,13 @@ export default {
                 }
             } else {
                 this.namespaceData = undefined;
+            }
+
+            if (el.isSubClassOf('typedElement')) {
+                this.typedElementData = {};
+                reloadSingleton(this.typedElementData, el.type, 'type');
+            } else {
+                this.typedElementData = undefined;
             }
 
             if (el.isSubClassOf('packageableElement')) {
@@ -126,6 +137,14 @@ export default {
                 }
             } else {
                 this.packageData = undefined;
+            }
+
+            if (el.isSubClassOf('multiplicityElement')) {
+                this.multiplicityElementData = {};
+                reloadSingleton(this.multiplicityElementData, el.lowerValue, 'lowerValue');
+                reloadSingleton(this.multiplicityElementData, el.upperValue, 'upperValue');
+            } else {
+                this.multiplicityElementData = undefined;
             }
 
             if (el.isSubClassOf('property')) {
@@ -235,11 +254,19 @@ export default {
             <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']" 
                     @specification="propogateSpecification"></SetData>
             <SingletonData :label="'Owner'" :inital-data="elementData.owner" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+            <SetData :label="'Applied Stereotypes'" :initial-data="elementData.appliedStereotypes" :umlid="umlID" @specification="propogateSpecification"></SetData>
         </ElementType>
         <ElementType :element-type="'Named Element'" v-if="namedElementData !== undefined">
             <StringData :label="'Name'" :initial-data="namedElementData.name" :read-only="false" :umlid="umlID" :type="'name'" 
             @data-change="propogateDataChange"></StringData>
             <SingletonData :label="'Namespace'" :inital-data="namedElementData.namespace" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+        </ElementType>
+        <ElementType :element-type="'Typed Element'" v-if="typedElementData !== undefined">
+            <SingletonData :label="'Type'" :inital-data="typedElementData.type" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+        </ElementType>
+        <ElementType :element-type="'Multiplicity Element'" v-if="multiplicityElementData !== undefined">
+            <SingletonData :label="'Lower Value'" :inital-data="multiplicityElementData.lowerValue" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+            <SingletonData :label="'Upper Value'" :inital-data="multiplicityElementData.upperValue" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
         </ElementType>
         <ElementType :element-type="'Property'" v-if="propertyData !== undefined">
             <SingletonData :label="'Class'" :inital-data="propertyData.clazz" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>

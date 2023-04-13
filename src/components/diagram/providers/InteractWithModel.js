@@ -4,14 +4,20 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
             return;
         }
 
+        // create new uml class
         const classID = event.element.elementID;
-
         let clazz = await umlWebClient.post('class', {id:classID});
         diagramContext.context.packagedElements.add(clazz);
         umlWebClient.put(clazz);
         umlWebClient.put(diagramContext.context);
-        let newClazz = await umlWebClient.get(classID);
-        console.log(newClazz.name);
+        await umlWebClient.get(classID);
+
+        // create shape
+        // const shapeInstance = await umlWebClient.post('instanceSpecification');
+        // shapeInstance.classifers.add(await umlWebClient.get('&7qxHqMCh5Cwd3&s053vQD&xPsAK'));
+        // const xInstance = await umlWebClient.post('instanceSpecification');
+        // xInstance.classifiers.add(await umlWebClient.get())
+        
         diagramEmitter.fire('shape.added', event);
         
 
