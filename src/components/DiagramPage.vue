@@ -27,6 +27,53 @@ export default {
 
         // TODO set up diagram with shapes
 
+        // draw all shapes
+        for await (let packagedEl of diagramPackage.packagedElements) {
+            if (!packagedEl.isSubClassOf('instanceSpecification')) {
+                continue;
+            }
+            if (!packagedEl.classifiers.contains('&7qxHqMCh5Cwd3&s053vQD&xPsAK')) {
+                continue;
+            }
+            // draw shape
+            let pointInstance = undefined;
+            let widthValue = undefined;
+            let heightValue = undefined;
+            let elementID = undefined;
+            for await (let slot of packagedEl.slots) {
+                if (slot.definingFeature.id() === 'bHizRf2FLBphg0iYSQsXnbn_BJ2c') {
+                    pointInstance = await (await slot.values.front()).instance.get();
+                } else if (slot.definingFeature.id() === 'MbxzX87yGS4s8kl&FehOVttIWs2q') {
+                    widthValue = (await slot.values.front()).value;
+                } else if (slot.definingFeature.id() === 'pmvMVFeRTg6QF87n8ey97MIyopwb') {
+                    heightValue = (await slot.values.front()).value;
+                } else if (slot.definingFeature.id() === '5aQ4hcDk32eSc3R&84uIyACddmu0') {
+                    elementID = (await slot.values.front()).value;
+                }
+            }
+
+            let xValue = undefined;
+            let yValue = undefined;
+            for await (let slot of pointInstance.slots) {
+                if (slot.definingFeature.id() === 'TL9YRNP&uSq5O&ZX0BNUqSl3uHTO') {
+                    xValue = (await slot.values.front()).value;
+                } else if (slot.definingFeature.id() === 'WQEwSh2OYmb1Yj2Hu5Fdk_S6qFP5') {
+                    yValue = (await slot.values.front()).value;
+                }
+            }
+
+            const shape = elementFactory.createShape({
+                x: xValue,
+                y: yValue,
+                width: widthValue,
+                height: heightValue,
+                elementID: elementID,
+                shapeID: packagedEl.id,
+                newUMLElement: false
+            });
+            canvas.addShape(shape);
+        }
+
         const diagramPage = this;
         // handle emits from diagram to update rest of app
         emitter.on('shape.added', function(event) {
