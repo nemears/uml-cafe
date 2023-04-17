@@ -24,8 +24,8 @@ const ElementStyleModule = {
   __init__: [
     [ 'defaultRenderer', function(defaultRenderer) {
       // override default styles
-      defaultRenderer.CONNECTION_STYLE = { fill: 'none', strokeWidth: 5, stroke: 'var(--vscode-foreground)' };
-      defaultRenderer.SHAPE_STYLE = { fill: '#ff9955ff', stroke: 'var(--vscode-foreground)', strokeWidth: 2 };
+      defaultRenderer.CONNECTION_STYLE = { fill: 'none', strokeWidth: 5, stroke: 'var(--vt-c-black-soft)' };
+      defaultRenderer.SHAPE_STYLE = { fill: '#ff9955ff', stroke: 'var(--vt-c-black-soft)', strokeWidth: 2 };
       defaultRenderer.FRAME_STYLE = { fill: 'none', stroke: '#000', strokeDasharray: 4, strokeWidth: 2 };
     } ]
   ]
@@ -70,6 +70,9 @@ export function Editor(options) {
     emitter = emitter;
     fire(eventName, event) {
       emitter.emit(eventName, event);
+    }
+    on(name, logic) {
+      emitter.on(name, logic);
     }
   }
 

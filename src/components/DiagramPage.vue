@@ -3,17 +3,27 @@ import { Editor } from './diagram/editor';
 const EventEmitter = require('events');
 export default {
     data() {
-        return {};
+        return {
+            emitter : undefined
+        };
     },
     props: ['umlID'],
     emits: ['dataChange'],
+    inject: ['dataChange'],
+    watch : {
+        dataChange(newDataChange, oldDataChange) {
+            if (newDataChange.type === 'name') {
+                this.emitter.emit('rename', newDataChange);
+            }
+        }
+    },
     async mounted() {
-        const emitter = new EventEmitter();
+        const scopedEmitter = new EventEmitter();
         const diagramPackage = await this.$umlWebClient.get(this.umlID);
         const diagram = new Editor({
             container: this.$refs.diagram,
             umlWebClient: this.$umlWebClient,
-            emitter: emitter,
+            emitter: scopedEmitter,
             context: await diagramPackage.owningPackage.get(),
             diagramElement: diagramPackage
         });
@@ -62,6 +72,9 @@ export default {
                 }
             }
 
+            const elShapeIsRepresenting = await this.$umlWebClient.get(elementID);
+            const name = elShapeIsRepresenting.name ? elShapeIsRepresenting.name : '';
+
             const shape = elementFactory.createShape({
                 x: xValue,
                 y: yValue,
@@ -69,6 +82,8 @@ export default {
                 height: heightValue,
                 elementID: elementID,
                 shapeID: packagedEl.id,
+                name: name,
+                umlType: elShapeIsRepresenting.elementType(),
                 newUMLElement: false
             });
             canvas.addShape(shape);
@@ -76,7 +91,7 @@ export default {
 
         const diagramPage = this;
         // handle emits from diagram to update rest of app
-        emitter.on('shape.added', function(event) {
+        scopedEmitter.on('shape.added', function(event) {
             diagramPage.$emit('dataChange', {
                             id: diagramPackage.owningPackage.id(),
                             type: 'add',
@@ -84,6 +99,7 @@ export default {
                             el: event.element.elementID
                         });
         });
+        this.emitter = Object.freeze(scopedEmitter);
     },
     methods: {
         onDrop(event, list) {

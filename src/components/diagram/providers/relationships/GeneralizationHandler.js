@@ -10,16 +10,16 @@ export default class GeneralizationHandler extends Relationship {
                 return;
             }
 
-            vscode.postMessage({
-                createGeneralization:
-                {
-                    id: event.context.relationship.elementID,
-                    shape: event.context.relationship.shapeID,
-                    waypoints: event.context.relationship.waypoints,
-                    source: event.context.source.shapeID,
-                    target: event.context.target.shapeID
-                }
-            });
+            // vscode.postMessage({
+            //     createGeneralization:
+            //     {
+            //         id: event.context.relationship.elementID,
+            //         shape: event.context.relationship.shapeID,
+            //         waypoints: event.context.relationship.waypoints,
+            //         source: event.context.source.shapeID,
+            //         target: event.context.target.shapeID
+            //     }
+            // });
         }.bind(this));
     }
 

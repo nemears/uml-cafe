@@ -1,5 +1,6 @@
 export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter, diagramContext) {
-    eventBus.on('shape.added', async function(event) {
+
+    const asyncCreateShape = async (event) => {
         if (!event.element.newUMLElement) {
             return;
         }
@@ -11,6 +12,8 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         umlWebClient.put(clazz);
         umlWebClient.put(diagramContext.context);
         await umlWebClient.get(classID);
+
+        diagramEmitter.fire('shape.added', event);
 
         // create shape
         const shapeInstance = await umlWebClient.post('instanceSpecification', {id:event.element.shapeID});
@@ -71,8 +74,10 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         umlWebClient.put(widthValue);
         umlWebClient.put(elementIdSlot);
         umlWebClient.put(elementIdValue);
+    };
 
-        diagramEmitter.fire('shape.added', event);
+    eventBus.on('shape.added',  function(event) {
+        asyncCreateShape(event);
     });
 
     eventBus.on('shape.remove', (event) => {
@@ -125,38 +130,6 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         // get point instance
         const shapeInstance = await umlWebClient.get(event.shape.shapeID);
         adjustPoint(event, shapeInstance);
-
-
-        // vscode.postMessage({
-        //     moveShape:
-        //     {
-        //         shape: event.shape.shapeID,
-        //         x: event.shape.x,
-        //         y: event.shape.y
-        //     }
-        // });
-        // if (event.shape.incoming) {
-        //     for (let path of event.shape.incoming) {
-        //         vscode.postMessage({
-        //             movePath:
-        //             {
-        //                 path: path.shapeID,
-        //                 waypoints: path.waypoints
-        //             }
-        //         });
-        //     }
-        // }
-        // if (event.shape.outgoing) {
-        //     for (let path of event.shape.outgoing) {
-        //         vscode.postMessage({
-        //             movePath:
-        //             {
-        //                 path: path.shapeID,
-        //                 waypoints: path.waypoints
-        //             }
-        //         });
-        //     }
-        // }
     });
 
     eventBus.on('resize.end', async (event) => {
@@ -172,22 +145,6 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
                 value.value = event.shape.height;
                 umlWebClient.put(value);
             }
-        }
-    });
-
-    eventBus.on('element.dblclick', function(event) {
-        if (event.element.classLabel) {
-            vscode.postMessage({
-                nameElement:
-                {
-                    id: event.element.labelTarget.elementID,
-                    name: event.element.labelTarget.name ? event.element.labelTarget.name : ''
-                }
-            });
-        } else if (event.element.umlType === 'class' || event.element.umlType === 'generalization') {
-            vscode.postMessage({
-                specification: event.element.elementID
-            });
         }
     });
 }

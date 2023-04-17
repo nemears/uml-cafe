@@ -3,7 +3,7 @@ import { randomID } from "../umlUtil";
 /**
  * A example palette provider.
  */
- export default class ClassDiagramPaletteProvider {
+export default class ClassDiagramPaletteProvider {
   constructor(create, elementFactory, lassoTool, palette) {
     this._create = create;
     this._elementFactory = elementFactory;
