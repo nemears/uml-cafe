@@ -54,6 +54,7 @@ export default {
                 } else {
                     elementTypeData[singletonName] = undefined;
                 }
+                return elementTypeData;
             };
 
             const reloadSet = async (elementTypeData, set, setName) => {
@@ -65,9 +66,10 @@ export default {
                         id: element.id
                     });
                 }
+                return elementTypeData;
             };
 
-            reloadSet(this.elementData, el.ownedElements, 'ownedElements');
+            await reloadSet(this.elementData, el.ownedElements, 'ownedElements');
             reloadSingleton(this.elementData, el.owner, 'owner');
             reloadSet(this.elementData, el.appliedStereotypes, 'appliedStereotypes');
             // TODO rest of ELEMENT
@@ -80,6 +82,29 @@ export default {
                 reloadSingleton(this.namedElementData, el.namespace, 'namespace');
             } else {
                 this.namedElementData = undefined;
+            }
+
+            if (el.isSubClassOf('relationship')) {
+                this.relationshipData = {};
+                await reloadSet(this.relationshipData, el.relatedElements, 'relatedElements');
+            } else {
+                this.relationshipData = undefined;
+            }
+
+            if (el.isSubClassOf('directedRelationship')) {
+                this.directedRelationshipData = {};
+                await reloadSet(this.directedRelationshipData, el.targets, 'targets');
+                await reloadSet(this.directedRelationshipData, el.sources, 'sources');
+            } else {
+                this.directedRelationshipData = undefined;
+            }
+
+            if (el.isSubClassOf('generalization')) {
+                this.generalizationData = {};
+                await reloadSingleton(this.generalizationData, el.specific, 'specific');
+                await reloadSingleton(this.generalizationData, el.general, 'general');
+            } else {
+                this.generalizationData = undefined;
             }
 
             if (el.isSubClassOf('namespace')) {
@@ -163,6 +188,7 @@ export default {
 
             if (el.isSubClassOf('classifier')) {
                 this.classifierData = {};
+                await reloadSet(this.classifierData, el.generalizations, 'generalizations');
                 this.classifierData.attributes = [];
                 for await (let attribute of el.attributes) {
                     this.classifierData.attributes.push({
@@ -251,7 +277,7 @@ export default {
         </div>
         <ElementType :element-type="'Element'">
             <StringData :label="'ID'" :initial-data="umlID" :read-only="true" :umlid="umlID" :type="'id'" @data-change="propogateDataChange"></StringData>
-            <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']" 
+            <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements', 'generalizations']" 
                     @specification="propogateSpecification"></SetData>
             <SingletonData :label="'Owner'" :readonly="true" :inital-data="elementData.owner" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
             <SetData :label="'Applied Stereotypes'" :initial-data="elementData.appliedStereotypes" :umlid="umlID" @specification="propogateSpecification"></SetData>
@@ -260,6 +286,17 @@ export default {
             <StringData :label="'Name'" :initial-data="namedElementData.name" :read-only="false" :umlid="umlID" :type="'name'" 
             @data-change="propogateDataChange"></StringData>
             <SingletonData :label="'Namespace'" :readonly="true" :inital-data="namedElementData.namespace" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+        </ElementType>
+        <ElementType :element-type="'Relationship'" v-if="relationshipData !== undefined">
+            <SetData :label="'Related Elements'" :readonly="true" :initial-data="relationshipData.relatedElements" :umlid="umlID" @specification="propogateSpecification" :subsets="['general', 'specific']"></SetData>
+        </ElementType>
+        <ElementType :element-type="'Directed Relationship'" v-if="directedRelationshipData !== undefined">
+            <SetData :label="'Targets'" :readonly="true" :initial-data="directedRelationshipData.targets" :umlid="umlID" @specification="propogateSpecification"></SetData>
+            <SetData :label="'Sources'" :readonly="true" :initial-data="directedRelationshipData.sources" :umlid="umlID" @specification="propogateSpecification"></SetData>
+        </ElementType>
+        <ElementType :element-type="'Generalization'" v-if="generalizationData !== undefined">
+            <SingletonData :label="'Specific'" :inital-data="generalizationData.specific" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+            <SingletonData :label="'General'" :inital-data="generalizationData.general" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
         </ElementType>
         <ElementType :element-type="'Typed Element'" v-if="typedElementData !== undefined">
             <SingletonData :label="'Type'" :inital-data="typedElementData.type" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
@@ -285,6 +322,7 @@ export default {
                     @specification="propogateSpecification"></SetData>
         </ElementType>
         <ElementType :elementType="'Classifier'" v-if="classifierData !== undefined">
+            <SetData :label="'Generalizations'" :initial-data="classifierData.generalizations" :umlid="umlID" :subsets="['generalizations']" @specification="propogateSpecification"></SetData>
             <SetData :label="'Attributes'" :initial-data="classifierData.attributes" :umlid="umlID" :subsets="['ownedAttributes']"
                         @specification="propogateSpecification"></SetData>
         </ElementType>

@@ -126,8 +126,8 @@ export function createArrow(line) {
 export default class UMLRenderer extends BaseRenderer {
     constructor(eventBus) {
         super(eventBus);
-        this.CONNECTION_STYLE = { fill: 'none', strokeWidth: 2, stroke: 'var(--vt-c-white-soft)' };
-        this.LABEL_STYLE = { fill: 'none', stroke: 'var(--vt-c-white-soft)', strokeWidth: 0 };
+        this.CONNECTION_STYLE = { fill: 'none', strokeWidth: 2, stroke: 'var(--vt-c-black)' };
+        this.LABEL_STYLE = { fill: 'none', stroke: 'var(--vt-c-black)', strokeWidth: 0 };
         this.textUtil = new TextUtil({
             style: {
                 fontFamily: 'Arial, sans-serif',
@@ -192,7 +192,7 @@ export default class UMLRenderer extends BaseRenderer {
             ], assign({}, this.CONNECTION_STYLE, attrs || {}));
             var arrowTipPath = svgCreate('polyline');
             svgAttr(arrowTipPath, {
-                style: 'fill:var(--vt-c-white-soft);stroke:var(--vt-c-white-soft);',
+                style: 'fill:var(--vt-c-black);stroke:var(--vt-c-black);',
                 points: `${arrow[0].x},${arrow[0].y} ${arrow[1].x},${arrow[1].y} ${arrow[2].x},${arrow[2].y}`
             });
 
@@ -224,7 +224,7 @@ export default class UMLRenderer extends BaseRenderer {
                 }
             ];
             svgAttr(diamond, {
-                style: 'fill:var(--vt-c-white-soft);stroke:var(--vt-c-white-soft);',
+                style: 'fill:var(--vt-c-black);stroke:var(--vt-c-black);',
                 points: `${points[0].x},${points[0].y} ${points[1].x},${points[1].y} ${points[2].x},${points[2].y} ${points[3].x},${points[3].y}`
             });
 

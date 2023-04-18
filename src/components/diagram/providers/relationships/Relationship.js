@@ -10,7 +10,6 @@ export default class Relationship {
     constructor(eventName, eventBus, dragging, canvas, elementFactory) {
         this.eventName = eventName;
         this.dragging = dragging;
-        const root = canvas.getRootElement();
 
         eventBus.on(`${eventName}.hover`, (event) => {
             // based off of diagram-js/lib/features/connect
@@ -54,7 +53,7 @@ export default class Relationship {
                 target: event.context.target,
                 umlType: eventName
             });
-            canvas.addConnection(relationship, root);
+            canvas.addConnection(relationship, canvas.getRootElement());
             event.context.relationship = relationship;
             canvas.removeMarker(event.context.hover, 'connect-ok');
         });
