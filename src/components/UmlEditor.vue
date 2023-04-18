@@ -45,20 +45,22 @@ export default {
             this.recentTab = newRecentTab;
         },
         dataChange(newDataChange, oldDataChange) {
-            if (newDataChange.type === 'name') {
-                this.tabs.forEach(tab => {
-                    if (tab.id === newDataChange.id) {
-                        if (newDataChange.value === '') {
-                            tab.label = '< >';
-                        } else {
-                            tab.label = newDataChange.value;
+            for (let data of newDataChange.data) {
+                if (data.type === 'name') {
+                    this.tabs.forEach(tab => {
+                        if (tab.id === data.id) {
+                            if (data.value === '') {
+                                tab.label = '< >';
+                            } else {
+                                tab.label = data.value;
+                            }
                         }
+                    });
+                } else if (data.type === 'delete') {
+                    const tab = this.tabs.find(tab => tab.id === data.id);
+                    if (tab !== undefined) {
+                        this.remove(tab.id);
                     }
-                });
-            } else if (newDataChange.type === 'delete') {
-                const tab = this.tabs.find(tab => tab.id === newDataChange.id);
-                if (tab !== undefined) {
-                    this.remove(tab.id);
                 }
             }
         }

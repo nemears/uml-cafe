@@ -25,11 +25,13 @@ export default {
             }
         },
         dataChange(newDataChange, oldDataChange) {
-            if (newDataChange.id === this.valID && newDataChange.type === 'name') {
-                if (newDataChange.value === '') {
-                    this.valLabel = this.valID;
-                } else {
-                    this.valLabel = newDataChange.value;
+            for (let data of newDataChange.data) {
+                if (data.id === this.valID && data.type === 'name') {
+                    if (data.value === '') {
+                        this.valLabel = this.valID;
+                    } else {
+                        this.valLabel = data.value;
+                    }
                 }
             }
         }

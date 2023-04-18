@@ -18,33 +18,35 @@ export default {
             this.data = newInitialData;
         },
         async dataChange(newDataChange, oldDataChange) {
-            if (newDataChange.type === 'name') {
-                this.data.forEach(el => {
-                    if (el.id === newDataChange.id) {
-                        if (newDataChange.value === '') {
-                            el.label = el.id;
-                        } else {
-                            el.label = newDataChange.value;
+            for (let data of newDataChange.data) {
+                if (data.type === 'name') {
+                    this.data.forEach(el => {
+                        if (el.id === data.id) {
+                            if (data.value === '') {
+                                el.label = el.id;
+                            } else {
+                                el.label = data.value;
+                            }
                         }
+                    });
+                } else if (
+                    data.type === 'add' && 
+                    data.id === this.umlid && 
+                    this.subsets.includes(data.set)
+                ) {
+                    const el = await this.$umlWebClient.get(data.el);
+                    this.data.push({
+                        id: data.el,
+                        label: el.name !== undefined && el.name !== '' ? el.name : '',
+                        img: getImage(el)
+                    });
+                } else if (data.type === 'delete') {
+                    const el = this.data.find((data) => {
+                        return data.id === data.id;
+                    });
+                    if (el !== undefined) {
+                        this.data.splice(this.data.indexOf(el), 1);
                     }
-                });
-            } else if (
-                newDataChange.type === 'add' && 
-                newDataChange.id === this.umlid && 
-                this.subsets.includes(newDataChange.set)
-            ) {
-                const el = await this.$umlWebClient.get(newDataChange.el);
-                this.data.push({
-                    id: newDataChange.el,
-                    label: el.name !== undefined && el.name !== '' ? el.name : '',
-                    img: getImage(el)
-                });
-            } else if (newDataChange.type === 'delete') {
-                const el = this.data.find((data) => {
-                    return data.id === newDataChange.id;
-                });
-                if (el !== undefined) {
-                    this.data.splice(this.data.indexOf(el), 1);
                 }
             }
         }

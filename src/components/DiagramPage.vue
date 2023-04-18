@@ -13,8 +13,10 @@ export default {
     inject: ['dataChange'],
     watch : {
         dataChange(newDataChange, oldDataChange) {
-            if (newDataChange.type === 'name') {
-                this.emitter.emit('rename', newDataChange);
+            for (let data of newDataChange.data) {
+                if (data.type === 'name') {
+                    this.emitter.emit('rename', data);
+                }
             }
         }
     },
@@ -135,11 +137,15 @@ export default {
         // handle emits from diagram to update rest of app
         scopedEmitter.on('shape.added', function(event) {
             diagramPage.$emit('dataChange', {
-                            id: diagramPackage.owningPackage.id(),
-                            type: 'add',
-                            set: 'packagedElements',
-                            el: event.element.elementID
-                        });
+                data: [
+                    {
+                        id: diagramPackage.owningPackage.id(),
+                        type: 'add',
+                        set: 'packagedElements',
+                        el: event.element.elementID
+                    }
+                ]                
+            });
         });
         scopedEmitter.on('generalization.end', (event) => {
             diagramPage.$emit('dataChange', event);

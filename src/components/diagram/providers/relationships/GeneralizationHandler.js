@@ -19,10 +19,14 @@ export default class GeneralizationHandler extends Relationship {
             umlWebClient.put(generalization);
             umlWebClient.put(specific);
             diagramEmitter.fire('generalization.end', {
-                type: 'add',
-                id: specific.id,
-                set: 'generalizations',
-                el: generalization.id
+                data: [
+                    {
+                        type: 'add',
+                        id: specific.id,
+                        set: 'generalizations',
+                        el: generalization.id
+                    }
+                ]
             });
 
             // create shape

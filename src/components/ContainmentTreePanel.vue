@@ -44,30 +44,34 @@ export default {
         }
     },
     watch: {
-        async dataChange(newDataChange, oldDataChange) {
-            const handleNewData = async () => {
-                if (newDataChange === undefined) {
-                    return;
-                }
-                if (newDataChange.id === undefined) {
-                    console.warn('data change made without id');
-                    return;
-                }
-                if (newDataChange.id !== this.umlID) {
-                    // TODO may have to do something here
-                    return;
-                }
-                if (newDataChange.type === 'name') {
-                    this.name = newDataChange.value;
-                } else if (newDataChange.type === 'add') {
-                    const me = await this.$umlWebClient.get(this.umlID);
-                    if (this.children.includes(newDataChange.el)) {
-                        return;
+        dataChange: {
+            handler(newDataChange) {
+                const handleNewData = async () => {
+                    for (let data of newDataChange.data) {
+                        if (data === undefined) {
+                            return;
+                        }
+                        if (data.id === undefined) {
+                            console.warn('data change made without id');
+                            return;
+                        }
+                        if (data.id !== this.umlID) {
+                            // TODO may have to do something here
+                            continue;
+                        }
+                        if (data.type === 'name') {
+                            this.name = data.value;
+                        } else if (data.type === 'add') {
+                            const me = await this.$umlWebClient.get(this.umlID);
+                            if (this.children.includes(data.el)) {
+                                continue;
+                            }
+                            this.children.push(data.el);
+                        }
                     }
-                    this.children.push(newDataChange.el);
-                }
-            };
+                };
             handleNewData();
+            }
         }
     },
     methods: {
@@ -153,10 +157,14 @@ export default {
                         this.children.push(newProperty.id);
                         this.expanded = true;
                         this.$emit('dataChange', {
-                            id: el.id,
-                            type: 'add',
-                            set: 'ownedAttributes',
-                            el: newProperty.id
+                            data: [
+                                {
+                                    id: el.id,
+                                    type: 'add',
+                                    set: 'ownedAttributes',
+                                    el: newProperty.id
+                                }
+                            ]
                         });
                     }
                 });
@@ -181,10 +189,14 @@ export default {
                             this.children.push(newPackage.id);
                             this.expanded = true;
                             this.$emit('dataChange', {
-                                id: el.id,
-                                type: 'add',
-                                set: 'packagedElements',
-                                el: newPackage.id
+                                data: [
+                                    {
+                                        id: el.id,
+                                        type: 'add',
+                                        set: 'packagedElements',
+                                        el: newPackage.id
+                                    }
+                                ]
                             });
                         }
                     });
@@ -199,10 +211,14 @@ export default {
                             this.children.push(newClass.id);
                             this.expanded = true;
                             this.$emit('dataChange', {
-                                id: el.id,
-                                type: 'add',
-                                set: 'packagedElements',
-                                el: newClass.id
+                                data: [
+                                    {
+                                        id: el.id,
+                                        type: 'add',
+                                        set: 'packagedElements',
+                                        el: newClass.id
+                                    }
+                                ]
                             });
                         }
                     });
@@ -216,8 +232,12 @@ export default {
                     const owner = await el.owner.get();
                     this.$umlWebClient.deleteElement(el);
                     this.$emit('dataChange', {
-                        id: this.umlID,
-                        type: 'delete'
+                        data: [
+                            {
+                                id: this.umlID,
+                                type: 'delete'
+                            }
+                        ]
                     });
                 }
             })
@@ -235,9 +255,13 @@ export default {
             el.name = this.name;
             this.$umlWebClient.put(el);
             this.$emit('dataChange', {
-                id: this.umlID,
-                type: 'name',
-                value: this.name
+                data: [
+                    {
+                        id: this.umlID,
+                        type: 'name',
+                        value: this.name
+                    }
+                ]
             });
         },
         cancelRename() {

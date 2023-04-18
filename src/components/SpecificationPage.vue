@@ -30,8 +30,10 @@ export default {
             this.reloadSpec();
         },
         dataChange(newDataChange, oldDataChange) {
-            if (newDataChange.id === this.umlID && newDataChange.type === 'name') {
-                this.namedElementData.name = newDataChange.value;
+            for (let data of newDataChange.data) {
+                if (data.id === this.umlID && data.type === 'name') {
+                    this.namedElementData.name = data.value;
+                }
             }
         }
     },

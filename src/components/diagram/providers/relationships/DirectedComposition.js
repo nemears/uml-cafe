@@ -29,33 +29,37 @@ export default class DirectedComposition extends Relationship {
             umlWebClient.put(clazz);
             umlWebClient.put(diagramContext.context);
 
-            // update rest of app (doesn't work right now)
+            // update rest of app
             diagramEmitter.fire('directedComposition.end', {
-                type: 'add',
-                id: diagramContext.context.id,
-                set: 'packageableElements',
-                el: association.id
+                data: [
+                    {
+                        type: 'add',
+                        id: diagramContext.context.id,
+                        set: 'packageableElements',
+                        el: association.id
+                    }, 
+                    {
+                        type: 'add',
+                        id: clazz.id,
+                        set: 'ownedAttributes',
+                        el: memberEnd.id
+                    },
+                    {
+                        type: 'add',
+                        id: association.id,
+                        set: 'memberEnds',
+                        el: memberEnd.id
+                    },
+                    {
+                        type: 'add',
+                        id: association.id,
+                        set: 'ownedEnds',
+                        el: ownedEnd.id
+                    }
+                ]
             });
-            diagramEmitter.fire('directedComposition.end', {
-                type: 'add',
-                id: clazz.id,
-                set: 'ownedAttributes',
-                el: memberEnd.id
-            });
-            // diagramEmitter.fire('directedComposition.end', {
-            //     type: 'add',
-            //     id: association.id,
-            //     set: 'memberEnds',
-            //     el: memberEnd.id
-            // });
-            // diagramEmitter.fire('directedComposition.end', {
-            //     type: 'add',
-            //     id: association.id,
-            //     set: 'ownedEnds',
-            //     el: ownedEnd.id
-            // });
 
-            // TODO create shapes
+            // create shapes
             await this.createPath(event, umlWebClient, diagramContext);
         });
     }

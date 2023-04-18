@@ -16,8 +16,10 @@ export default {
             this.data = newInitalData;
         },
         dataChange(newDataChange, oldDataChange) {
-            if (newDataChange.type === this.type && newDataChange.id === this.umlid) {
-                this.data = newDataChange.value;
+            for (let data of newDataChange.data) {
+                if (data.type === this.type && data.id === this.umlid) {
+                    this.data = data.value;
+                }
             }
         }
     },
@@ -28,9 +30,13 @@ export default {
             el[this.type] = this.data; // this may be dangerous in the future
             this.$umlWebClient.put(el);
             this.$emit('dataChange', {
-                id: this.umlid,
-                type: this.type,
-                value: this.data
+                data: [
+                    {
+                        id: this.umlid,
+                        type: this.type,
+                        value: this.data
+                    }
+                ]
             });
         }
     }
