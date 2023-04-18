@@ -49,7 +49,7 @@ export default {
 				tab.isActive = false;
 			}
 			this.tabs.push({
-				label: el.name !== undefined && el.name !== '' ? el.name : el.id,
+				label: el.name !== undefined && el.name !== '' ? el.name : '< >',
 				id: el.id,
 				isActive: true,
 				type: 'Specification',

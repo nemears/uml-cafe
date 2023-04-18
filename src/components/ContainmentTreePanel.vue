@@ -45,26 +45,29 @@ export default {
     },
     watch: {
         async dataChange(newDataChange, oldDataChange) {
-            if (newDataChange === undefined) {
-                return;
-            }
-            if (newDataChange.id === undefined) {
-                console.warn('data change made without id');
-                return;
-            }
-            if (newDataChange.id !== this.umlID) {
-                // TODO may have to do something here
-                return;
-            }
-            if (newDataChange.type === 'name') {
-                this.name = newDataChange.value;
-            } else if (newDataChange.type === 'add') {
-                const me = await this.$umlWebClient.get(this.umlID);
-                if (this.children.includes(newDataChange.el)) {
+            const handleNewData = async () => {
+                if (newDataChange === undefined) {
                     return;
                 }
-                this.children.push(newDataChange.el);
-            }
+                if (newDataChange.id === undefined) {
+                    console.warn('data change made without id');
+                    return;
+                }
+                if (newDataChange.id !== this.umlID) {
+                    // TODO may have to do something here
+                    return;
+                }
+                if (newDataChange.type === 'name') {
+                    this.name = newDataChange.value;
+                } else if (newDataChange.type === 'add') {
+                    const me = await this.$umlWebClient.get(this.umlID);
+                    if (this.children.includes(newDataChange.el)) {
+                        return;
+                    }
+                    this.children.push(newDataChange.el);
+                }
+            };
+            handleNewData();
         }
     },
     methods: {
@@ -122,6 +125,7 @@ export default {
                         this.$umlWebClient.put(diagramPackage);
                         this.$umlWebClient.put(diagramStereotypeInstance);
                         await this.$umlWebClient.get(diagramPackage.id);
+                        this.expanded = true;
                         this.children.push(diagramPackage.id);
                         this.$emit('diagram', diagramPackage);
                     }
@@ -156,6 +160,11 @@ export default {
                         });
                     }
                 });
+            }
+            if (el.isSubClassOf('association')) {
+                for (let propertyID of el.ownedEnds.ids()) {
+                    this.children.push(propertyID);
+                }
             }
             if (el.isSubClassOf('package')) {
                 for (let packagedElID of el.packagedElements.ids()) {

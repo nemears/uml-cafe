@@ -36,7 +36,7 @@ export default {
                 const el = await this.$umlWebClient.get(newDataChange.el);
                 this.data.push({
                     id: newDataChange.el,
-                    label: el.name !== undefined && el.name !== '' ? el.name : el.id,
+                    label: el.name !== undefined && el.name !== '' ? el.name : '',
                     img: getImage(el)
                 });
             } else if (newDataChange.type === 'delete') {

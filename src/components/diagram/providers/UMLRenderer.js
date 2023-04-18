@@ -138,7 +138,7 @@ export default class UMLRenderer extends BaseRenderer {
     }
 
     canRender(element) {
-        return element.classLabel || element.umlType && (element.umlType === 'generalization' || element.umlType === 'directedComposition');
+        return element.classLabel || element.umlType && (element.umlType === 'generalization' || element.umlType === 'association');
     }
 
     drawConnection(gfx, element, attrs) {
@@ -179,7 +179,7 @@ export default class UMLRenderer extends BaseRenderer {
             svgAppend(group, line);
             svgAppend(gfx, group);
             return group;
-        } else if (element.umlType === 'directedComposition') {
+        } else if (element.umlType === 'association') {
             // todo, segmented line
             const lineBetweenShapes = getLine(element.source, element.target);
             const arrow = createArrow(lineBetweenShapes);

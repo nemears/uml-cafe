@@ -144,6 +144,9 @@ export default {
         scopedEmitter.on('generalization.end', (event) => {
             diagramPage.$emit('dataChange', event);
         });
+        scopedEmitter.on('directedComposition.end', (event) => {
+                diagramPage.$emit('dataChange', event);
+        });
         this.emitter = Object.freeze(scopedEmitter);
     },
     methods: {

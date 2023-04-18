@@ -109,22 +109,8 @@ export default {
 
             if (el.isSubClassOf('namespace')) {
                 this.namespaceData = {};
-                this.namespaceData.members = [];
-                for await (let member of el.members) {
-                    this.namespaceData.members.push({
-                        img: getImage(member),
-                        label: member.name !== undefined && member.name !== '' ? member.name : member.id,
-                        id: member.id
-                    });
-                }
-                this.namespaceData.ownedMembers = [];
-                for await (let member of el.ownedMembers) {
-                    this.namespaceData.ownedMembers.push({
-                        img: getImage(member),
-                        label: member.name !== undefined && member.name !== '' ? member.name : member.id,
-                        id: member.id
-                    });
-                }
+                await reloadSet(this.namespaceData, el.members, 'members');
+                await reloadSet(this.namespaceData, el.ownedMembers, 'ownedMembers');
             } else {
                 this.namespaceData = undefined;
             }
@@ -138,28 +124,14 @@ export default {
 
             if (el.isSubClassOf('packageableElement')) {
                 this.packageableElementData = {};
-                const owningPackage = await el.owningPackage.get();
-                if (owningPackage !== undefined) {
-                    this.packageableElementData.owningPackage = {
-                        img: getImage(owningPackage),
-                        label: owningPackage.name !== undefined && owningPackage.name !== '' ? owningPackage.name : owningPackage.id,
-                        id: owningPackage.id
-                    };
-                }
+                reloadSingleton(this.packageableElementData, el.owningPackage, 'owningPackage');
             } else {
                 this.packageableElementData = undefined;
             }
 
             if (el.isSubClassOf('package')) {
                 this.packageData = {};
-                this.packageData.packagedElements = [];
-                for await (let packagedElement of el.packagedElements) {
-                    this.packageData.packagedElements.push({
-                        img: getImage(packagedElement),
-                        label: packagedElement.name !== undefined && packagedElement.name !== '' ? packagedElement.name : packagedElement.id,
-                        id: packagedElement.id
-                    });
-                }
+                await reloadSet(this.packageData, el.packagedElements, 'packagedElements');
             } else {
                 this.packageData = undefined;
             }
@@ -174,14 +146,10 @@ export default {
 
             if (el.isSubClassOf('property')) {
                 this.propertyData = {};
-                const clazz = await el.clazz.get();
-                if (clazz !== undefined) {
-                    this.propertyData.clazz = {
-                        img: getImage(clazz),
-                        label: clazz.name !== undefined && clazz.name !== '' ? clazz.name : clazz.id,
-                        id: clazz.id
-                    }
-                }
+                await reloadSingleton(this.propertyData, el.clazz, 'clazz');
+                await reloadSingleton(this.propertyData, el.dataType, 'dataType');
+                await reloadSingleton(this.propertyData, el.owningAssociation, 'owningAssociation');
+                await reloadSingleton(this.propertyData, el.association, 'association');
             } else {
                 this.propertyData = undefined;
             }
@@ -189,58 +157,40 @@ export default {
             if (el.isSubClassOf('classifier')) {
                 this.classifierData = {};
                 await reloadSet(this.classifierData, el.generalizations, 'generalizations');
-                this.classifierData.attributes = [];
-                for await (let attribute of el.attributes) {
-                    this.classifierData.attributes.push({
-                        img: getImage(attribute),
-                        label: attribute.name !== undefined && attribute.name !== '' ? attribute.name : attribute.id,
-                        id: attribute.id
-                    })
-                }
+                await reloadSet(this.classifierData, el.features, 'features');
+                await reloadSet(this.classifierData, el.attributes, 'attributes');
             } else {
                 this.classifierData = undefined;
             }
 
             if (el.isSubClassOf('primitiveType')) {
                 this.primitiveTypeData = {};
-                this.primitiveTypeData.ownedAttributes = [];
-                for await (let attribute of el.ownedAttributes) {
-                    this.primitiveTypeData.attributes.push({
-                        img: getImage(attribute),
-                        label: attribute.name !== undefined && attribute.name !== '' ? attribute.name : attribute.id,
-                        id: attribute.id
-                    })
-                }
+                await reloadSet(this.primitiveTypeData, el.ownedAttributes, 'ownedAttributes');
             } else {
                 this.primitiveTypeData = undefined;
             }
 
             if (el.isSubClassOf('structuredClassifier')) {
                 this.structuredClassifierData = {};
-                this.structuredClassifierData.ownedAttributes = [];
-                for await (let attribute of el.ownedAttributes) {
-                    this.structuredClassifierData.ownedAttributes.push({
-                        img: getImage(attribute),
-                        label: attribute.name !== undefined && attribute.name !== '' ? attribute.name : attribute.id,
-                        id: attribute.id
-                    })
-                }
+                await reloadSet(this.structuredClassifierData, el.ownedAttributes, 'ownedAttributes');
             } else {
                 this.structuredClassifierData = undefined;
             }
 
             if (el.isSubClassOf('class')) {
                 this.classData = {};
-                this.classData.ownedAttributes = [];
-                for await (let attribute of el.ownedAttributes) {
-                    this.classData.ownedAttributes.push({
-                        img: getImage(attribute),
-                        label: attribute.name !== undefined && attribute.name !== '' ? attribute.name : attribute.id,
-                        id: attribute.id
-                    })
-                }
+                await reloadSet(this.classData, el.ownedAttributes, 'ownedAttributes');
             } else {
                 this.classData = undefined;
+            }
+
+            if (el.isSubClassOf('association')) {
+                this.associationData = {};
+                await reloadSet(this.associationData, el.memberEnds, 'memberEnds');
+                await reloadSet(this.associationData, el.ownedEnds, 'ownedEnds');
+                await reloadSet(this.associationData, el.navigableOwnedEnds, 'navigableOwnedEnds');
+            } else {
+                this.associationData = undefined;
             }
 
             this.isFetching = false;
@@ -307,6 +257,9 @@ export default {
         </ElementType>
         <ElementType :element-type="'Property'" v-if="propertyData !== undefined">
             <SingletonData :label="'Class'" :inital-data="propertyData.clazz" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+            <SingletonData :label="'DataType'" :inital-data="propertyData.dataType" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+            <SingletonData :label="'Owning Association'" :inital-data="propertyData.owningAssociation" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+            <SingletonData :label="'Association'" :inital-data="propertyData.association" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
         </ElementType>
         <ElementType :element-type="'Namespace'" v-if="namespaceData !== undefined">
             <SetData :label="'Members'" :initial-data="namespaceData.members" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']"
@@ -332,6 +285,14 @@ export default {
         </ElementType>
         <ElementType :elementType="'Structured Classifier'" v-if="structuredClassifierData !== undefined">
             <SetData :label="'Owned Attributes'" :initial-data="structuredClassifierData.ownedAttributes" :umlid="umlID" :subsets="['ownedAttributes']"
+                        @specification="propogateSpecification"></SetData>
+        </ElementType>
+        <ElementType :element-type="'Association'" v-if="associationData !== undefined">
+            <SetData :label="'Member Ends'" :initial-data="associationData.memberEnds" :umlid="umlID" :subsets="['ownedEnds', 'navigableOwnedEnds']"
+                        @specification="propogateSpecification"></SetData>
+            <SetData :label="'Owned Ends'" :initial-data="associationData.ownedEnds" :umlid="umlID" :subsets="['navigableOwnedEnds']"
+                        @specification="propogateSpecification"></SetData>
+            <SetData :label="'Navigable Owned Ends'" :initial-data="associationData.navigableOwnedEnds" :umlid="umlID"
                         @specification="propogateSpecification"></SetData>
         </ElementType>
         <ElementType :elementType="'Class'" v-if="classData !== undefined">

@@ -49,7 +49,7 @@ export default {
                 this.tabs.forEach(tab => {
                     if (tab.id === newDataChange.id) {
                         if (newDataChange.value === '') {
-                            tab.label = tab.id;
+                            tab.label = '< >';
                         } else {
                             tab.label = newDataChange.value;
                         }
