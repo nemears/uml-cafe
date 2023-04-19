@@ -5,12 +5,13 @@ const EventEmitter = require('events');
 export default {
     data() {
         return {
-            emitter : undefined
+            emitter : undefined,
+            recentDraginfo: undefined,
         };
     },
     props: ['umlID'],
     emits: ['dataChange'],
-    inject: ['dataChange'],
+    inject: ['dataChange', 'draginfo'],
     watch : {
         dataChange(newDataChange, oldDataChange) {
             for (let data of newDataChange.data) {
@@ -18,6 +19,9 @@ export default {
                     this.emitter.emit('rename', data);
                 }
             }
+        },
+        draginfo(newDraginfo) {
+            this.recentDraginfo = newDraginfo;
         }
     },
     async mounted() {
@@ -156,9 +160,19 @@ export default {
         this.emitter = Object.freeze(scopedEmitter);
     },
     methods: {
+        dragEnter(event, list) {
+            console.log('dragent');
+            this.emitter.emit('dragenter', {
+                draginfo: this.recentDraginfo,
+                event: event,
+            });
+        },
+        dragLeave(event, list) {
+
+        },
         onDrop(event, list) {
             console.log('dropped on diagram');
-            // TODO draw element on diagram
+            
         }
     }
 }
@@ -167,7 +181,8 @@ export default {
     <div ref="diagram" class="diagramContainer" 
         @drop="onDrop($event, 1)"
         @dragover.prevent
-        @dragenter.prevent></div>
+        @dragenter.prevent="dragEnter"
+        @dragleave.prevent="dragLeave"></div>
 </template>
 <style>
 .diagramContainer {

@@ -13,7 +13,8 @@ export default {
     emits: [
         'specification',
         'dataChange',
-        'diagram'
+        'diagram',
+        'draginfo',
     ],
     mounted() {
         this.populateDisplayInfo();
@@ -27,7 +28,8 @@ export default {
             image: packageImage,
             options: [],
             editing: false,
-            diagram: false
+            diagram: false,
+            elementType: undefined,
         };
     },
     components: [
@@ -77,6 +79,7 @@ export default {
     methods: {
         async populateDisplayInfo() {
             let el = await this.$umlWebClient.get(this.umlID);
+            this.elementType = el.elementType();
             if (el.appliedStereotypes.size() > 0) {
                 for await (let stereotypeInst of el.appliedStereotypes) {
                     if (stereotypeInst.classifiers.contains('Diagram_nuc1IC2Cavgoa4zMBlVq')) {
@@ -312,6 +315,13 @@ export default {
             event.dataTransfer.dropEffect = 'copy';
             event.dataTransfer.effectAllowed = 'all';
             console.log('dragging');
+            this.$emit('draginfo', {
+                id: this.umlID,
+                elementType: this.elementType,
+            });
+        },
+        propogateDraginfo(draginfo) {
+            this.$emit('draginfo', draginfo);
         }
     }
 }
@@ -331,9 +341,15 @@ export default {
             </div>
         </div>
         <div v-if="expanded && !isFetching">
-            <ContainmentTreePanel v-for="child in children" :umlID="child" 
-                :depth="depth + 1" :data-change="dataChange" :key="child" @specification="propogateSpecification" 
-                @data-change="propogateDataChange" @diagram="propogateDiagram"></ContainmentTreePanel>
+            <ContainmentTreePanel v-for="child in children" 
+                    :umlID="child" 
+                    :depth="depth + 1" 
+                    :data-change="dataChange" 
+                    :key="child" 
+                    @specification="propogateSpecification" 
+                    @data-change="propogateDataChange" 
+                    @diagram="propogateDiagram"
+                    @draginfo="propogateDraginfo"></ContainmentTreePanel>
         </div>
     </div>
 </template>

@@ -25,12 +25,17 @@ export default {
 			specificationTab: '',
 			recentDataChange: {
 				data: []
-			}
+			},
+			recentDraginfo: {
+				id: nullID(),
+				element: 'element',
+			},
 		}
 	},
 	provide() {
 		return {
-			dataChange: computed(() => this.recentDataChange)
+			dataChange: computed(() => this.recentDataChange),
+			draginfo: computed(() => this.recentDraginfo),
 		}
 	},
 	mounted() {
@@ -79,6 +84,9 @@ export default {
 				img: classDiagramImage
 			});
 			this.specificationTab = diagramClass.id;
+		},
+		dragInfo(draginfo) {
+			this.recentDraginfo = draginfo;
 		}
 	}
 }
@@ -89,9 +97,15 @@ export default {
 		<div>
 			<div style="height:34px;background-color: var(--vt-c-black);"></div>
 			<div class="containmentTree">
-				<ContainmentTreePanel v-if="!isFetching && headID !== undefined" :umlID="headID" 
-					:depth="0" :data-change="recentDataChange" @specification="specification" 
-					@data-change="dataChange" @diagram="diagram"></ContainmentTreePanel>
+				<ContainmentTreePanel 
+					v-if="!isFetching && headID !== undefined" 
+					:umlID="headID" 
+					:depth="0" 
+					:data-change="recentDataChange" 
+					@specification="specification" 
+					@data-change="dataChange" 
+					@diagram="diagram"
+					@draginfo="dragInfo"></ContainmentTreePanel>
 			</div>
 			<div class="bottomBar"></div>
 		</div>
