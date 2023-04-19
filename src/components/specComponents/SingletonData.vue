@@ -81,7 +81,6 @@ export default {
             }
         },
         createElement(event) {
-            console.log('todo create element!');
             this.creationPopUp = true;
         },
         closePopUp(el) {

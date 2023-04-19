@@ -284,11 +284,22 @@ export default {
             <SingletonData :label="'OwningPackage'" :inital-data="packageableElementData.owningPackage" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
         </ElementType>
         <ElementType :element-type="'Package'" v-if="packageData !== undefined">
-            <SetData :label="'Packaged Elements'" :initial-data="packageData.packagedElements" :umlid="umlID" :subsets="['packagedElements']"
-                    @specification="propogateSpecification"></SetData>
+            <SetData    :label="'Packaged Elements'" 
+                        :initial-data="packageData.packagedElements" 
+                        :umlid="umlID" 
+                        :subsets="['packagedElements']"
+                        :creatable="{types:['class', 'package'], set:'packagedElements'}" 
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SetData>
         </ElementType>
         <ElementType :elementType="'Classifier'" v-if="classifierData !== undefined">
-            <SetData :label="'Generalizations'" :initial-data="classifierData.generalizations" :umlid="umlID" :subsets="['generalizations']" @specification="propogateSpecification"></SetData>
+            <SetData    :label="'Generalizations'" 
+                        :initial-data="classifierData.generalizations" 
+                        :umlid="umlID" 
+                        :subsets="['generalizations']" 
+                        :creatable="{types:['generalization'], set: 'generalizations'}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SetData>
             <SetData :label="'Attributes'" :initial-data="classifierData.attributes" :umlid="umlID" :subsets="['ownedAttributes']"
                         @specification="propogateSpecification"></SetData>
         </ElementType>
@@ -309,8 +320,13 @@ export default {
                         @specification="propogateSpecification"></SetData>
         </ElementType>
         <ElementType :elementType="'Class'" v-if="classData !== undefined">
-            <SetData :label="'Owned Attributes'" :initial-data="classData.ownedAttributes" :umlid="umlID" :subsets="['ownedAttributes']"
-                        @specification="propogateSpecification"></SetData>
+            <SetData    :label="'Owned Attributes'" 
+                        :initial-data="classData.ownedAttributes" 
+                        :umlid="umlID" 
+                        :subsets="['ownedAttributes']"
+                        :creatable="{types:['property'], set: 'ownedAttributes'}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SetData>
         </ElementType>
     </div>
 </template>
