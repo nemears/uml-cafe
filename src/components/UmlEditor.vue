@@ -151,6 +151,10 @@ export default {
         align-items:center;
         float: left;
         background-color: var(--vt-c-dark-dark);
+        -webkit-user-select: none; /* Safari */        
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE10+/Edge */
+        user-select: none; /* Standard */
     }
     .tabImage {
         padding-left: 5px;

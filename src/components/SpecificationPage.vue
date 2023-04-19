@@ -4,6 +4,7 @@ import StringData from './specComponents/StringData.vue';
 import SetData from './specComponents/SetData.vue';
 import getImage from '../GetUmlImage.vue';
 import SingletonData from './specComponents/SingletonData.vue';
+import IntegerData from './specComponents/IntegerData.vue';
 export default {
     props: ['umlID'],
     emits: ['specification', 'dataChange'],
@@ -124,6 +125,13 @@ export default {
                 this.typedElementData = undefined;
             }
 
+            if (el.isSubClassOf('literalInt')) {
+                this.literalIntData = {};
+                this.literalIntData.value = el.value;
+            } else {
+                this.literalIntData = undefined;
+            }
+
             if (el.isSubClassOf('packageableElement')) {
                 this.packageableElementData = {};
                 reloadSingleton(this.packageableElementData, el.owningPackage, 'owningPackage');
@@ -216,7 +224,7 @@ export default {
             }
         },
     },
-    components: { ElementType, StringData, SetData, SingletonData }
+    components: { ElementType, StringData, SetData, SingletonData, IntegerData }
 }
 </script>
 <template>
@@ -253,9 +261,12 @@ export default {
         <ElementType :element-type="'Typed Element'" v-if="typedElementData !== undefined">
             <SingletonData :label="'Type'" :inital-data="typedElementData.type" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
         </ElementType>
+        <ElementType :element-type="'Literal Int'" v-if="literalIntData !== undefined">
+            <IntegerData :label="'Value'" :initial-data="literalIntData.value" :umlid="umlID" :type="'value'"></IntegerData>
+        </ElementType>
         <ElementType :element-type="'Multiplicity Element'" v-if="multiplicityElementData !== undefined">
-            <SingletonData :label="'Lower Value'" :inital-data="multiplicityElementData.lowerValue" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
-            <SingletonData :label="'Upper Value'" :inital-data="multiplicityElementData.upperValue" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+            <SingletonData :label="'Lower Value'" :createable="{types:['literalInt'], set:'lowerValue'}" :inital-data="multiplicityElementData.lowerValue" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+            <SingletonData :label="'Upper Value'" :createable="{types:['literalInt', 'literalUnlimitedNatural'], set:'upperValue'}" :inital-data="multiplicityElementData.upperValue" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
         </ElementType>
         <ElementType :element-type="'Property'" v-if="propertyData !== undefined">
             <SingletonData :label="'Class'" :inital-data="propertyData.clazz" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>

@@ -4,6 +4,8 @@
   --vt-c-white-soft: #f8f8f8;
   --vt-c-white-mute: #f2f2f2;
 
+  --vt-c-off-white: #c6dfff;
+
   --vt-c-dark: #2d3035;
   --vt-c-dark-soft: #464952;
   --vt-c-dark-dark: #222427;
@@ -24,6 +26,10 @@
   --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
   --vt-c-text-dark-1: var(--vt-c-white);
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+
+  --open-uml-selection-dark-1 :  #222427;
+  --open-uml-selection-dark-2 : #292c30;
+
 }
 
 /* semantic color variables for this project */

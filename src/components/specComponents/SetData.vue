@@ -84,11 +84,12 @@ export default {
 }
 .setElement {
     width: 700px;
-    background-color: #222427;
+    background-color: var(--open-uml-selection-dark-1);
     min-height: 24px;
     display: flex;
+    padding-left: 5px;
 }
 .setElement:hover {
-    background-color: #292c30;
+    background-color: var(--open-uml-selection-dark-2);
 }
 </style>

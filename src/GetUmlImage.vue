@@ -5,8 +5,11 @@ import PropertySVG from './components/icons/property.svg';
 import AssociationSVG from './components/icons/association.svg';
 import GeneralizationSVG from './components/icons/generalization.svg';
 import StereotypeSVG from './components/icons/stereotype.svg';
+import LiteralIntSVG from './components/icons/literal_int.svg';
+import LiteralUnlimitedNaturalSVG from './components/icons/literal_unlimited_natural.svg';
 export default function getImage(el) {
-    switch(el.elementType()) {
+    let elementType = typeof el === 'string' ? el : el.elementType();
+    switch(elementType) {
         case 'association' : {
             return AssociationSVG;
         }
@@ -21,6 +24,12 @@ export default function getImage(el) {
         }
         case 'generalization': {
             return GeneralizationSVG;
+        }
+        case 'literalInt': {
+            return LiteralIntSVG;
+        }
+        case 'literalUnlimitedNatural': {
+            return LiteralUnlimitedNaturalSVG;
         }
         case 'package': {
             return PackageSVG;
