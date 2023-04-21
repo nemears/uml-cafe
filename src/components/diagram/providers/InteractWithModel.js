@@ -59,7 +59,7 @@ export async function createClassShape(shape, umlWebClient, diagramContext) {
     umlWebClient.put(elementIdValue);
 }
 
-export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter, diagramContext) {
+export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter, diagramContext, elementRegistry, modeling) {
 
     const asyncCreateShape = async (event) => {
         if (!event.element.newUMLElement) {
@@ -87,29 +87,14 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         asyncCreateShape(event);
     });
 
-    eventBus.on('shape.remove', (event) => {
-        // if (event.element.classLabel) {
-        //     return;
-        // }
-        // vscode.postMessage({
-        //     removeShape : {
-        //         id: event.element.shapeID
-        //     }
-        // });
-        // for (let path of event.element.incoming) {
-        //     vscode.postMessage({
-        //         removeShape : {
-        //             id: path.shapeID
-        //         }
-        //     });
-        // }
-        // for (let path of event.element.outgoing) {
-        //     vscode.postMessage({
-        //         removeShape : {
-        //             id: path.shapeID
-        //         }
-        //     });
-        // }
+    eventBus.on('shape.remove', async (event) => {
+        if (!event.element.deletedFromModel && !event.element.classLabel) {
+            const shapeEl = await umlWebClient.get(event.element.id);
+            if (shapeEl) {
+                umlWebClient.deleteElement(shapeEl);
+                umlWebClient.put(diagramContext.diagram);
+            }
+        }
     });
 
     const adjustPoint = async (event, shapeInstance) => {
@@ -154,6 +139,18 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
             }
         }
     });
+
+    diagramEmitter.on('removeShape', (data) => {
+        if (data.shapes) {
+            for (const shape of data.shapes) {
+                const element = elementRegistry.get(shape);
+                element.deletedFromModel = true;
+                // if (element) {
+                    modeling.removeElements([ element ].concat(element.incoming).concat(element.outgoing));
+                // }
+            }
+        }
+    });
 }
 
-InteractWithModel.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext'];
+InteractWithModel.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'elementRegistry', 'modeling'];

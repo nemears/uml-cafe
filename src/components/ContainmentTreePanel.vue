@@ -286,16 +286,18 @@ export default {
             this.$emit('specification', spec);
         },
         propogateDataChange(dataChange) {
-            if (dataChange.type === 'delete') {
-                let childToDeleteIndex = 0;
-                for (let child of this.children) {
-                    if (child === dataChange.id) {
-                        break;
+            for (let data of dataChange.data) {
+                if (data.type === 'delete') {
+                    let childToDeleteIndex = 0;
+                    for (let child of this.children) {
+                        if (child === data.id) {
+                            break;
+                        }
+                        childToDeleteIndex++;
                     }
-                    childToDeleteIndex++;
-                }
-                if (childToDeleteIndex < this.children.length) {
-                    this.children.splice(childToDeleteIndex, 1);
+                    if (childToDeleteIndex < this.children.length) {
+                        this.children.splice(childToDeleteIndex, 1);
+                    }
                 }
             }
             this.$emit('dataChange', dataChange);

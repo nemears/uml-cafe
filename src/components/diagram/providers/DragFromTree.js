@@ -9,6 +9,7 @@ export default class DragFromTree {
                 var shape = elementFactory.createShape({
                     width: 100,
                     height: 80,
+                    id: shapeID,
                     elementID: event.draginfo.id,
                     shapeID: shapeID,
                     newUMLElement: false,

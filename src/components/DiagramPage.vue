@@ -17,6 +17,8 @@ export default {
             for (let data of newDataChange.data) {
                 if (data.type === 'name') {
                     this.emitter.emit('rename', data);
+                } else if (data.type === 'delete') {
+                    this.emitter.emit('removeShape', data);
                 }
             }
         },
@@ -89,6 +91,7 @@ export default {
                     y: yValue,
                     width: widthValue,
                     height: heightValue,
+                    id: packagedEl.id,
                     elementID: elementID,
                     shapeID: packagedEl.id,
                     name: name,
@@ -147,6 +150,11 @@ export default {
                         type: 'add',
                         set: 'packagedElements',
                         el: event.element.elementID
+                    },
+                    {
+                        id: event.element.elementID,
+                        type: 'shape',
+                        shape: event.element.shapeID, 
                     }
                 ]                
             });

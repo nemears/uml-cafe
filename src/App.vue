@@ -30,6 +30,7 @@ export default {
 				id: nullID(),
 				element: 'element',
 			},
+			diagramShapes : {}
 		}
 	},
 	provide() {
@@ -67,6 +68,41 @@ export default {
 		},
 		dataChange(dataChange) {
 			this.recentDataChange = dataChange;
+			for (let data of dataChange.data) {
+				if (data.type === 'shape') {
+					if (this.diagramShapes[data.id] === undefined) {
+						this.diagramShapes[data.id] = [];
+					}
+					this.diagramShapes[data.id].push(data.shape);
+				} else if (data.type === 'delete') {
+					data.shapes = this.diagramShapes[data.id];
+
+					const deletShapesFromModel = async () => {
+						for (const shape of data.shapes) {
+							const shapeEl = await this.$umlWebClient.get(shape);
+							const diagramEl = await shapeEl.owningPackage.get();
+							this.$umlWebClient.deleteElement(shapeEl);
+							this.$umlWebClient.put(diagramEl);
+						}
+						
+						delete this.diagramShapes[data.id];
+					};
+					if (data.shapes) {
+						deletShapesFromModel();
+					} else {
+						for (const shapes in this.diagramShapes) {
+							for (const shape in this.diagramShapes[shapes]) {
+								if (shape === data.id) {
+									this.diagramShapes[shapes].splice(shapes.indexOf(shape), 1);
+								}
+								if (shapes.length === 0) {
+									delete this.diagramShapes[shapes];
+								}
+							}
+						}
+					}
+				}
+			}
 		},
 		diagram(diagramClass) {
 			if (this.tabs.find(tab => tab.id === diagramClass.id)) { // no duplicates

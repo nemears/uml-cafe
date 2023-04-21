@@ -64,6 +64,9 @@ export function Editor(options) {
     async head() {
       return await this.client.head();
     }
+    async deleteElement(el) {
+      this.client.deleteElement(el);
+    }
   }
 
   class DiagramEmitter {

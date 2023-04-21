@@ -44,6 +44,7 @@ export default class ClassDiagramPaletteProvider {
             var shape = elementFactory.createShape({
               width: 100,
               height: 80,
+              id: shapeID,
               elementID: classID,
               shapeID: shapeID,
               newUMLElement: true,
