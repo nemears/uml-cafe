@@ -7,8 +7,12 @@ import UMLRenderer from './UMLRenderer';
 import ClassLabel from './ClassLabel';
 import GeneralizationHandler from './relationships/GeneralizationHandler';
 import DirectedComposition from './relationships/DirectedComposition';
+import ConnectionModule from 'diagram-js/lib/features/connect';
 
 export default {
+  __depends__: [
+    ConnectionModule
+  ],
   __init__: [
     'generalizationHandler',
     'directedComposition',
