@@ -115,9 +115,9 @@ export function Editor(options) {
 
   // our own modules, contributing controls, customizations, and more
   const customModules = [
+    umlClientModule,
     ProvidersModule,
     ElementStyleModule,
-    umlClientModule,
   ];
 
   return new Diagram({

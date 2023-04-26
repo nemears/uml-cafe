@@ -80,3 +80,5 @@ export default class ClassDiagramPaletteProvider {
     };
   }
 }
+
+ClassDiagramPaletteProvider.$inject = ['create', 'elementFactory', 'lassoTool', 'palette'];

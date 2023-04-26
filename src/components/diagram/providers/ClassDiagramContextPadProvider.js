@@ -67,3 +67,5 @@ export default class ClassDiagramContextPadProvider {
     } 
   }
 }
+
+ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'modeling', 'generalizationHandler', 'directedComposition'];

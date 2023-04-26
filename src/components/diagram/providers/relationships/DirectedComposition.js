@@ -68,3 +68,5 @@ export default class DirectedComposition extends Relationship {
         return context.hover.umlType && context.hover.umlType === 'class';
     };
 }
+
+DirectedComposition.$inject = ['eventBus', 'dragging', 'canvas', 'elementFactory', 'umlWebClient', 'diagramEmitter', 'diagramContext'];

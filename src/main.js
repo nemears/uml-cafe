@@ -10,7 +10,7 @@ import { UmlWebClient } from 'uml-js';
 const sessionName = 'session-' + randomID();
 const app = createApp(App);
 app.config.globalProperties.$sessionName = sessionName;
-app.config.globalProperties.$umlWebClient = new UmlWebClient(sessionName);
+app.config.globalProperties.$umlWebClient = new UmlWebClient({server: sessionName});
 app.config.unwrapInjectedRef = true;
 app.mount('#app');
 app.use(ContextMenu);

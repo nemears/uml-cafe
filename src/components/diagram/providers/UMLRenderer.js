@@ -261,3 +261,5 @@ export default class UMLRenderer extends BaseRenderer {
         }
     }
 }
+
+UMLRenderer.$inject = ['eventBus'];

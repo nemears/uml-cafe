@@ -7,13 +7,17 @@ import UMLRenderer from './UMLRenderer';
 import ClassLabel from './ClassLabel';
 import GeneralizationHandler from './relationships/GeneralizationHandler';
 import DirectedComposition from './relationships/DirectedComposition';
-import ConnectionModule from 'diagram-js/lib/features/connect';
+// import ConnectionModule from 'diagram-js/lib/features/connect';
+// import Relationship from './relationships/Relationship';
+// import Dragging from 'diagram-js/lib/features/dragging';
 
 export default {
-  __depends__: [
-    ConnectionModule
-  ],
+  // __depends__: [
+  //   ConnectionModule,
+  //   Dragging
+  // ],
   __init__: [
+    // 'relationship',
     'generalizationHandler',
     'directedComposition',
     'classDiagramContextPadProvider',
@@ -24,6 +28,7 @@ export default {
     'umlRenderer',
     'classLabel',
   ],
+  // relationship: ['type', Relationship],
   generalizationHandler: ['type', GeneralizationHandler],
   directedComposition: ['type', DirectedComposition],
   classDiagramContextPadProvider: [ 'type', ClassDiagramContextPadProvider ],

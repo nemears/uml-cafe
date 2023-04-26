@@ -36,3 +36,5 @@ export default class ClassLabel {
         });
     }
 }
+
+ClassLabel.$inject = ['elementFactory', 'eventBus', 'canvas', 'diagramEmitter', 'graphicsFactory'];

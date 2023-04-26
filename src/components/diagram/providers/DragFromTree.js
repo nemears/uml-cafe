@@ -21,3 +21,5 @@ export default class DragFromTree {
         })
     }
 }
+
+DragFromTree.$inject = ['create', 'elementFactory', 'diagramEmitter'];
