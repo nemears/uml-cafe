@@ -41,6 +41,24 @@ export default {
 	},
 	mounted() {
 		this.getHeadFromServer();
+
+		this.$umlWebClient.onUpdate = async (element) => {
+			// TODO this will become more complicated
+			const owner = await element.owner.get();
+			if (owner !== undefined) {
+				this.recentDataChange = {
+					data: [
+						{
+							id: owner.id,
+							type: 'add',
+							set: 'packagedElements',
+							el: element.id
+						},
+					]                
+				};
+			}
+			
+		}
 	},
 	methods: {
 		async getHeadFromServer() {

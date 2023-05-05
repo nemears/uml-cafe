@@ -11,6 +11,7 @@ let sessionName = 'session-' + randomID();
 // this is some logic to determine wether we are accessing an already created project or if we are in a new state.
 if (document.URL.match('.\/projects\/.')) {
     sessionName = document.URL.match('(?<=\/projects\/).*')[0];
+    sessionName = sessionName.slice(0, sessionName.length - 1);
     const umlWebClient = new UmlWebClient({server: sessionName});
     const app = createApp(App);
     app.config.globalProperties.$sessionName = sessionName;

@@ -298,6 +298,8 @@ export default {
                     if (childToDeleteIndex < this.children.length) {
                         this.children.splice(childToDeleteIndex, 1);
                     }
+                } else if (data.type === 'add' && data.id === this.umlID) {
+                    this.children.push(data.element);
                 }
             }
             this.$emit('dataChange', dataChange);
