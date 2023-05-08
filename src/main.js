@@ -24,6 +24,10 @@ if (document.URL.match('.\/projects\/.')) {
     const umlWebClient = new UmlWebClient({server: sessionName});
     const waitForServerAndForwardUrl = async () => {
         await umlWebClient.reserve();
+        let beginningOfURL = document.URL;
+        if (beginningOfURL.slice(-1) === '/') {
+            beginningOfURL = beginningOfURL.slice(0, beginningOfURL.length -1);
+        }
         window.location.replace(document.URL + '/projects/' + sessionName);
     }
     waitForServerAndForwardUrl();
