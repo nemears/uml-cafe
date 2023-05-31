@@ -23,7 +23,7 @@
                 <a href="https://github.com/nemears/uml-user-service">uml-user-sercvices</a> The web facing api that allows for sessions per user and shared project states.
             </p>
             <p>
-                Contact: after I set up an email server ;)
+                Contact: nickmears2@gmail.com
             </p>
         </div>
     </div>
@@ -31,6 +31,7 @@
 <style>
 .scrollable {
     overflow-y: auto;
+    height: 80vh;
 }
 .welcomeText {
     font-size: 75px;

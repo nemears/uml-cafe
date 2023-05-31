@@ -1,11 +1,21 @@
 <script>
+import hamburgerSVG from './icons/hamburger.svg';
+import hamburgerHoverSVG from './icons/hamburger_hover.svg';
+import classSVG from './icons/class.svg'
+const packageJSON = require('../../package.json');
+
 export default {
     data() {
         return {
             optionsEnabled: false,
             optionColor: '#2d3035',
             downloadRef: '#',
-            downloadDownload: ''
+            downloadDownload: '',
+            hamburgerHover: false,
+            hamburgerSVG: hamburgerSVG,
+            hamburgerHoverSVG: hamburgerHoverSVG,
+            version: packageJSON.version,
+            websiteImage: classSVG,
         }
     },
     emits: ['newModelLoaded'],
@@ -49,24 +59,23 @@ export default {
                 this.$refs.saveA.click();
                 this.optionsEnabled = false;
             }, '500 milliseconds');
+        },
+        toggleHamburgerHover() {
+            this.hamburgerHover = !this.hamburgerHover;
         }
     }
 }
 </script>
 <template>
     <div class="umlBanner">
+        <div class="titleContainer">
+            <img v-bind:src="websiteImage"/>
+            open-uml v{{ version }}
+        </div>
         <div class="optionsContainer">
             <div class="optionsButton" @click="optionToggle">
-                <svg :fill="optionColor" @mouseover="optionColor='#131416'" 
-                    @mouseleave="optionColor='#3f5375'" version="1.1" id="Capa_1" 
-                    xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-                    width="20px" height="20px" viewBox="0 0 124 124" xml:space="preserve">
-                    <g>
-                        <path d="M112,6H12C5.4,6,0,11.4,0,18s5.4,12,12,12h100c6.6,0,12-5.4,12-12S118.6,6,112,6z"/>
-                        <path d="M112,50H12C5.4,50,0,55.4,0,62c0,6.6,5.4,12,12,12h100c6.6,0,12-5.4,12-12C124,55.4,118.6,50,112,50z"/>
-                        <path d="M112,94H12c-6.6,0-12,5.4-12,12s5.4,12,12,12h100c6.6,0,12-5.4,12-12S118.6,94,112,94z"/>
-                    </g>
-                </svg>
+                <img v-bind:src="hamburgerSVG" v-if="!hamburgerHover" @mouseenter="toggleHamburgerHover"/>
+                <img v-bind:src="hamburgerHoverSVG" v-if="hamburgerHover" @mouseleave="toggleHamburgerHover"/>
             </div>
         </div>
     </div>
@@ -85,6 +94,14 @@ export default {
 .umlBanner {
     flex: 0 1 auto;
     background-color: var(--vt-c-black);;
+}
+.titleContainer {
+    vertical-align: middle;
+    padding-left: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    display: flex;
+    float: left;
 }
 .optionsContainer {
     padding: 5px 5px 5px 5px;

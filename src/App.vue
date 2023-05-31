@@ -175,8 +175,8 @@ export default {
 .containmentTree{
     flex: 0 1 300px;
     overflow: auto;
-    width: 300px;
-	height: 800px;
+    width: 30vw;
+	height: 80vh;
 }
 .bottomBar {
 	background-color: var(--vt-c-black);;

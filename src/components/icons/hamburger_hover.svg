@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.1"
+   id="Capa_1"
+   width="20px"
+   height="20px"
+   viewBox="0 0 124 124"
+   xml:space="preserve"
+   sodipodi:docname="hamburger_hover.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   id="defs53" /><sodipodi:namedview
+   id="namedview51"
+   pagecolor="#ffffff"
+   bordercolor="#000000"
+   borderopacity="0.25"
+   inkscape:showpageshadow="2"
+   inkscape:pageopacity="0.0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#d1d1d1"
+   showgrid="false"
+   inkscape:zoom="11.8"
+   inkscape:cx="9.9576271"
+   inkscape:cy="10.042373"
+   inkscape:window-width="1876"
+   inkscape:window-height="1126"
+   inkscape:window-x="0"
+   inkscape:window-y="0"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="g48" />
+<g
+   id="g48"
+   style="stroke-width:0.9982;stroke-dasharray:none">
+    <path
+   d="M112,6H12C5.4,6,0,11.4,0,18s5.4,12,12,12h100c6.6,0,12-5.4,12-12S118.6,6,112,6z"
+   id="path42"
+   style="stroke-width:0.9982;stroke-dasharray:none;fill:#9095a0;fill-opacity:1" />
+    <path
+   d="M112,50H12C5.4,50,0,55.4,0,62c0,6.6,5.4,12,12,12h100c6.6,0,12-5.4,12-12C124,55.4,118.6,50,112,50z"
+   id="path44"
+   style="stroke-width:0.9982;stroke-dasharray:none;fill:#9095a0;fill-opacity:1" />
+    <path
+   d="M112,94H12c-6.6,0-12,5.4-12,12s5.4,12,12,12h100c6.6,0,12-5.4,12-12S118.6,94,112,94z"
+   id="path46"
+   style="stroke-width:0.9982;stroke-dasharray:none;fill:#9095a0;fill-opacity:1" />
+</g>
+</svg>
