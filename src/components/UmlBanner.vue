@@ -93,7 +93,8 @@ export default {
 <style>
 .umlBanner {
     flex: 0 1 auto;
-    background-color: var(--vt-c-black);;
+    background-color: var(--vt-c-black);
+    max-height: 10vh;
 }
 .titleContainer {
     vertical-align: middle;

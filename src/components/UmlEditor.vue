@@ -145,6 +145,7 @@ export default {
         width: 100%;
         background-color: var(--vt-c-black);
         min-height: 34px;
+	max-height: 10vh;
     }
     .tab {
         display: flex;
