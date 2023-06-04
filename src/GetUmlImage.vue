@@ -7,6 +7,8 @@ import GeneralizationSVG from './components/icons/generalization.svg';
 import StereotypeSVG from './components/icons/stereotype.svg';
 import LiteralIntSVG from './components/icons/literal_int.svg';
 import LiteralUnlimitedNaturalSVG from './components/icons/literal_unlimited_natural.svg';
+import InstanceSpecificationSVG from './components/icons/instance_specification.svg';
+import SlotSVG from './components/icons/slot.svg';
 export default function getImage(el) {
     let elementType = typeof el === 'string' ? el : el.elementType();
     switch(elementType) {
@@ -25,6 +27,9 @@ export default function getImage(el) {
         case 'generalization': {
             return GeneralizationSVG;
         }
+	case 'instanceSpecification': {
+            return InstanceSpecificationSVG;
+	}
         case 'literalInt': {
             return LiteralIntSVG;
         }
@@ -42,6 +47,9 @@ export default function getImage(el) {
         }
         case 'property': {
             return PropertySVG;
+        }
+        case 'slot': {
+            return SlotSVG;
         }
         case 'stereotype': {
             return StereotypeSVG;

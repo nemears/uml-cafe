@@ -78,6 +78,14 @@ export default {
                 this.valLabel = elementDragged.name !== undefined && elementDragged.name !== '' ? elementDragged.name : elementDragged.id;
                 this.valID = elementDragged.id;
                 // TODO emit data change
+            } else if (this.label === 'Defining Feature' && elementDragged.isSubClassOf('property')) { // TODO change
+                me.definingFeature.set(elementDragged);
+                this.$umlWebClient.put(me);
+                this.$umlWebClient.put(elementDragged);
+                this.img = getImage(elementDragged);
+                this.valLabel = elementDragged.name !== undefined && elementDragged.name !== '' ? elementDragged.name : elementDragged.id; 
+                this.valID = elementDragged.id;
+		// TODO abstract this
             }
         },
         createElement(event) {

@@ -177,6 +177,34 @@ export default {
                     this.children.push(propertyID);
                 }
             }
+            if (el.isSubClassOf('instanceSpecification')) {
+                for (let slotID of el.slots.ids()) {
+                    this.children.push(slotID);
+                }
+                this.options.push({
+                   label: 'Create Slot',
+                    onClick: async () => {
+                        const newSlot= await this.$umlWebClient.post('slot');
+                        el.slots.add(newSlot);
+                        this.$umlWebClient.put(newSlot);
+                        this.$umlWebClient.put(el);
+                        el = await this.$umlWebClient.get(el.id);
+                        this.children.push(newSlot.id);
+                        this.expanded = true;
+                        this.$emit('dataChange', {
+                            data: [
+                                {
+                                    id: el.id,
+                                    type: 'add',
+                                    set: 'slots',
+                                    el: newSlot.id
+                                }
+                            ]
+                        });
+                    }
+ 
+                });
+            }
             if (el.isSubClassOf('package')) {
                 for (let packagedElID of el.packagedElements.ids()) {
                         this.children.push(packagedElID);
@@ -225,6 +253,29 @@ export default {
                             });
                         }
                     });
+		    this.options.push({
+			label: 'Create Instance Specification',
+			onClick: async () => {
+			    const newInstance = await this.$umlWebClient.post('instanceSpecification');
+                            el.packagedElements.add(newInstance);
+                            this.$umlWebClient.put(el);
+                            this.$umlWebClient.put(newInstance);
+                            el = await this.$umlWebClient.get(el.id);
+                            this.children.push(newInstance.id);
+                            this.expanded = true;
+                            this.$emit('dataChange', {
+                                data: [
+                                    {
+                                        id: el.id,
+                                        type: 'add',
+                                        set: 'packagedElements',
+                                        el: newInstance.id
+                                    }
+                                ]
+                            });
+ 
+			}
+		    });
             }
 
             this.options[this.options.length - 1].divided = true;

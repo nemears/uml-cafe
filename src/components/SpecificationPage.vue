@@ -146,6 +146,24 @@ export default {
                 this.packageData = undefined;
             }
 
+            if (el.isSubClassOf('instanceSpecification')) {
+		this.instanceSpecificationData = {};
+                await reloadSet(this.instanceSpecificationData, el.classifiers, 'classifiers');
+		await reloadSet(this.instanceSpecificationData, el.slots, 'slots');
+                // TODO specifications
+            } else {
+                this.instanceSpecificationData = undefined;
+            }
+
+            if (el.isSubClassOf('slot')) {
+                this.slotData = {};
+		await reloadSingleton(this.slotData, el.owningInstance, 'owningInstance');
+		await reloadSet(this.slotData, el.values, 'values');
+                await reloadSingleton(this.slotData, el.definingFeature, 'definingFeature');
+            } else {
+                this.slotData = undefined;
+            }
+
             if (el.isSubClassOf('multiplicityElement')) {
                 this.multiplicityElementData = {};
                 reloadSingleton(this.multiplicityElementData, el.lowerValue, 'lowerValue');
@@ -282,7 +300,10 @@ export default {
                             @specification="propogateSpecification"></SetData>
             </ElementType>
             <ElementType :element-type="'Packageable Element'" v-if="packageableElementData !== undefined">
-                <SingletonData :label="'OwningPackage'" :inital-data="packageableElementData.owningPackage" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+                <SingletonData :label="'OwningPackage'" 
+                               :inital-data="packageableElementData.owningPackage" 
+                               :uml-i-d="umlID" 
+                               @specification="propogateSpecification"></SingletonData>
             </ElementType>
             <ElementType :element-type="'Package'" v-if="packageData !== undefined">
                 <SetData    :label="'Packaged Elements'" 
@@ -292,6 +313,43 @@ export default {
                             :creatable="{types:['class', 'package'], set:'packagedElements'}" 
                             @specification="propogateSpecification"
                             @data-change="propogateDataChange"></SetData>
+            </ElementType>
+            <ElementType :element-type="'Instance Specification'" v-if="instanceSpecificationData !== undefined">
+                <SetData   :label="'Classifiers'"
+                           :initial-data="instanceSpecificationData.classifiers"
+                           :umlid="umlID"
+                           :subsets="[]"
+                           @specification="propogateSpecification"
+                           @data-change="propogateDataChange"></SetData>
+		<SetData   :label="'Slots'"
+                           :initial-data="instanceSpecificationData.slots"
+                           :umlid="umlID"
+                           :subsets="[]"
+                           :creatable="{types:['slot'], set:'slots'}"
+                           @specification="propogateSpecification"
+                           @data-change="propogateDataChange"></SetData>
+
+            </ElementType>
+            <ElementType :element-type="'Slot'" v-if="slotData !== undefined">
+                <SingletonData
+                           :label="'Owning Instance'"
+                           :inital-data="slotData.owningInstance"
+                           :uml-i-d="umlID" 
+                           @specification="propogateSpecification"
+                           @data-change="propogateDataChange"></SingletonData>
+                <SetData   :label="'Values'"
+                           :initial-data="slotData.values"
+                           :umlid="umlID"
+                           :subsets="[]"
+                           :creatable="{types:['literalInt', 'literalNull', 'literalReal', 'literalString', 'literalUnlimitedNatural'], set:'values'}"
+                           @specification="propogateSpecification"
+                           @data-change="propogateDataChange"></SetData>
+                <SingletonData
+                           :label="'Defining Feature'"
+                           :inital-data="slotData.definingFeature"
+                           :uml-i-d="umlID"
+                           @specification="propogateSpecification"
+                           @data-change="propogateDataChange"></SingletonData>
             </ElementType>
             <ElementType :elementType="'Classifier'" v-if="classifierData !== undefined">
                 <SetData    :label="'Generalizations'" 
