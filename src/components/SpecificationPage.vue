@@ -278,7 +278,12 @@ export default {
                 <SingletonData :label="'General'" :inital-data="generalizationData.general" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
             </ElementType>
             <ElementType :element-type="'Typed Element'" v-if="typedElementData !== undefined">
-                <SingletonData :label="'Type'" :inital-data="typedElementData.type" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+                <SingletonData 
+                               :label="'Type'" 
+                               :inital-data="typedElementData.type" 
+                               :uml-i-d="umlID" 
+                               :singleton-data="{setName:'type',validTypes:['classifier']}" 
+                               @specification="propogateSpecification"></SingletonData>
             </ElementType>
             <ElementType :element-type="'Literal Int'" v-if="literalIntData !== undefined">
                 <IntegerData :label="'Value'" :initial-data="literalIntData.value" :umlid="umlID" :type="'value'"></IntegerData>
@@ -348,6 +353,7 @@ export default {
                            :label="'Defining Feature'"
                            :inital-data="slotData.definingFeature"
                            :uml-i-d="umlID"
+                           :singleton-data="{ setName: 'definingFeature', validTypes: ['property'] }"
                            @specification="propogateSpecification"
                            @data-change="propogateDataChange"></SingletonData>
             </ElementType>

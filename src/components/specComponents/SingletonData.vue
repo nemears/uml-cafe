@@ -2,7 +2,7 @@
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
 export default {
-    props: ['label', 'umlID', 'initalData', 'readonly', 'createable'],
+    props: ['label', 'umlID', 'initalData', 'readonly', 'createable', 'singletonData'],
     emits: ['specification'],
     inject: ['dataChange'],
     data() {
@@ -70,7 +70,30 @@ export default {
             const elementID = event.dataTransfer.getData('umlid');
             const me = await this.$umlWebClient.get(this.umlID);
             const elementDragged = await this.$umlWebClient.get(elementID);
-            if (this.label === 'Type' && elementDragged.isSubClassOf('classifier')) {
+            
+            // determine if element dragged in is valid
+            let isValidElement = false;
+            for (let type of this.singletonData.validTypes) {
+                if (elementDragged.isSubClassOf(type)) {
+                   isValidElement = true;
+                }
+            }
+
+            if (isValidElement) {
+                // TODO check if there is an element there already
+                me[this.singletonData.setName].set(elementDragged);
+                this.$umlWebClient.put(me);
+                this.$umlWebClient.put(elementDragged);
+                this.img = getImage(elementDragged);
+                this.valLabel = elementDragged.name !== undefined && elementDragged.name !== '' ? elementDragged.name : elementDragged.id;
+                this.valID = elementDragged.id;
+                // TODO emit data change
+ 
+            } else {
+                console.warn('bad element dragged in, TODO alert user!');
+            }
+
+            /*if (this.label === 'Type' && elementDragged.isSubClassOf('classifier')) {
                 me.type.set(elementDragged);
                 this.$umlWebClient.put(me);
                 this.$umlWebClient.put(elementDragged);
@@ -86,7 +109,7 @@ export default {
                 this.valLabel = elementDragged.name !== undefined && elementDragged.name !== '' ? elementDragged.name : elementDragged.id; 
                 this.valID = elementDragged.id;
 		// TODO abstract this
-            }
+            }*/
         },
         createElement(event) {
             this.creationPopUp = true;
