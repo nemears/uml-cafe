@@ -2,13 +2,14 @@
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
 export default {
-    props: ['label', 'initialData', 'umlid', 'subsets', 'creatable'],
+    props: ['label', 'initialData', 'umlid', 'subsets', 'creatable', "setData"],
     inject: ['dataChange'],
     emits: ['specification', 'dataChange'],
     data() {
         return {
             data: [],
             createPopUp: false,
+            drag: false,
         };
     },
     mounted() {
@@ -81,6 +82,40 @@ export default {
                     }
                 ]
             });
+        },
+        dragenter(event) {
+            this.drag = true;
+        },
+        dragleave(event) {
+            this.drag = false;
+        },
+        async drop(event) {
+
+            this.drag = false;
+
+            const elementID = event.dataTransfer.getData('umlid');
+            const me = await this.$umlWebClient.get(this.umlid);
+            const elementDragged = await this.$umlWebClient.get(elementID);
+
+            let isValidType = false;
+            for (let type of this.setData.validTypes) {
+                if (elementDragged.isSubClassOf(type)) {
+                    isValidType = true;
+                }
+            } 
+            
+            if (isValidType) {
+                me[this.setData.setName].add(elementDragged);
+                this.$umlWebClient.put(me);
+                this.$umlWebClient.put(elementDragged);
+                this.data.push({
+                    img: getImage(elementDragged),
+                    id: elementDragged.id,
+                    label: elementDragged.name !== undefined ? elementDragged.name : '' 
+                });
+            } else {
+                console.warn('TODO show client error');
+            }
         }
     },
     components: { CreationPopUp }
@@ -91,7 +126,11 @@ export default {
         <div class="setLabel">
             {{  label }}
         </div>
-        <div>
+        <div :class="{dragElement: drag}"
+             @dragenter.prevent="dragenter($event)"
+             @dragleave.prevent="dragleave($event)"
+             @drop="drop($event)"
+             @dragover.prevent>
             <div class="setElement" v-for="el in data" :key="el.id" @dblclick="specification(el.id)">
                 <img v-if="el.img !== undefined" :src="el.img"/>
                 <div>
@@ -140,6 +179,10 @@ export default {
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
+}
+.dragElement{
+    border: 1px solid;
+    border-color: #5ac3ff;
 }
 .createButton:hover {
     background-color: var(--vt-c-off-white);

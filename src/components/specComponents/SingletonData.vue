@@ -92,24 +92,6 @@ export default {
             } else {
                 console.warn('bad element dragged in, TODO alert user!');
             }
-
-            /*if (this.label === 'Type' && elementDragged.isSubClassOf('classifier')) {
-                me.type.set(elementDragged);
-                this.$umlWebClient.put(me);
-                this.$umlWebClient.put(elementDragged);
-                this.img = getImage(elementDragged);
-                this.valLabel = elementDragged.name !== undefined && elementDragged.name !== '' ? elementDragged.name : elementDragged.id;
-                this.valID = elementDragged.id;
-                // TODO emit data change
-            } else if (this.label === 'Defining Feature' && elementDragged.isSubClassOf('property')) { // TODO change
-                me.definingFeature.set(elementDragged);
-                this.$umlWebClient.put(me);
-                this.$umlWebClient.put(elementDragged);
-                this.img = getImage(elementDragged);
-                this.valLabel = elementDragged.name !== undefined && elementDragged.name !== '' ? elementDragged.name : elementDragged.id; 
-                this.valID = elementDragged.id;
-		// TODO abstract this
-            }*/
         },
         createElement(event) {
             this.creationPopUp = true;

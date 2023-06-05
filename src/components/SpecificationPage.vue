@@ -324,6 +324,7 @@ export default {
                            :initial-data="instanceSpecificationData.classifiers"
                            :umlid="umlID"
                            :subsets="[]"
+                           :set-data="{setName:'classifiers',validTypes:['classifier']}"
                            @specification="propogateSpecification"
                            @data-change="propogateDataChange"></SetData>
 		<SetData   :label="'Slots'"
