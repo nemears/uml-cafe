@@ -399,8 +399,6 @@ export default {
 </template>
 <style>
 .mainDiv {
-    border: solid #525258;
-    border-width: 2px;
     padding: 10px;
     margin:auto;
     height: 80vh;
@@ -408,6 +406,8 @@ export default {
     overflow-y: auto;
 }
 .horizontalScroll{
+    border: solid #525258;
+    border-width: 2px;
     overflow-x: auto;
     width: 1000px;
 }
