@@ -300,6 +300,9 @@ export default {
             this.isFetching = false;
         },
         childrenToggle() {
+            if (this.diagram) {
+                return;
+            }
             this.expanded = !this.expanded;
         },
         async stopRename() {
