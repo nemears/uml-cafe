@@ -16,12 +16,14 @@ export default {
             hamburgerHoverSVG: hamburgerHoverSVG,
             version: packageJSON.version,
             websiteImage: classSVG,
+            loginEnabled: false,
         }
     },
     emits: ['newModelLoaded'],
     methods: {
         optionToggle() {
             this.optionsEnabled = !this.optionsEnabled;
+            this.loginEnabled = false;
         },
         loadFromFile() {
             this.$refs.loadFromFileFileInput.click();
@@ -62,6 +64,22 @@ export default {
         },
         toggleHamburgerHover() {
             this.hamburgerHover = !this.hamburgerHover;
+        },
+        toggleLogin() {
+            this.optionsEnabled = false;
+            this.loginEnabled = !this.loginEnabled;
+        },
+        async login() {
+            this.loginEnabled = false;
+            const user = this.$refs.userInput.value;
+            const password = this.$refs.passwordInput.value;
+            this.$umlWebClient.login(user, password).catch(() => {
+                this.$umlWebClient.login('0', undefined);
+            })
+
+        },
+        signup() {
+            
         }
     }
 }
@@ -87,7 +105,27 @@ export default {
         <div class="optionsOption" @click="saveToFile">
             Save to file
         </div>
+        <div class="optionsOption" @click="toggleLogin">
+            Log In
+        </div>
+        <div class="optionsOption" @click="signup">
+            Sign Up
+        </div>
         <a :href="downloadRef" :download="downloadDownload" ref="saveA" style="display: none;"></a>
+    </div>
+    <div class="loginArea" v-if="loginEnabled">
+        <h2>
+            Log In
+        </h2>
+        <form>
+            <label for="'userInput'">username: </label>
+            <input type="text" id="'userInput'" name="'userInput'" ref="userInput">
+            <br>
+            <label for="'userInput'">password: </label>
+            <input type="password" id="'passwordInput'" name="'passwordInput'" ref="passwordInput">
+            <br>
+            <input type="button" value="Log In" @click="login">
+        </form>
     </div>
 </template>
 <style>
@@ -131,5 +169,16 @@ export default {
     color: #333;
     border-radius: 5px;
     padding: 0;
+}
+.loginArea {
+    overflow: auto;
+    position: absolute;
+    right: 25px;
+    z-index: 1000;
+    background-color: var(--vt-c-black);
+    display: block;
+    padding: 5px;
+    border: solid var(--vt-c-dark-soft);
+    border-radius: 10px;
 }
 </style>

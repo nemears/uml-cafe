@@ -179,7 +179,7 @@ export default {
 	height: 80vh;
 }
 .bottomBar {
-	background-color: var(--vt-c-black);;
+	background-color: var(--vt-c-black);
 	height: 100%;
 }
 </style>

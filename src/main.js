@@ -6,11 +6,11 @@ import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { UmlWebClient } from 'uml-js';
 
-let sessionName = 'session-' + randomID();
+let sessionName = '/sessions/' + randomID();
 
 // this is some logic to determine wether we are accessing an already created project or if we are in a new state.
-if (document.URL.match('.\/projects\/.')) {
-    sessionName = document.URL.match('(?<=\/projects\/).*')[0];
+if (location.pathname != "/") {
+    sessionName = location.pathname;
     sessionName = sessionName.slice(0, sessionName.length - 1);
     const umlWebClient = new UmlWebClient({server: sessionName});
     const app = createApp(App);
@@ -28,7 +28,7 @@ if (document.URL.match('.\/projects\/.')) {
         if (beginningOfURL.slice(-1) === '/') {
             beginningOfURL = beginningOfURL.slice(0, beginningOfURL.length -1);
         }
-        window.location.replace(beginningOfURL + '/projects/' + sessionName);
+        window.location.replace(beginningOfURL + sessionName);
     }
     waitForServerAndForwardUrl();
 }
