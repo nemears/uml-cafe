@@ -11,14 +11,36 @@ let sessionName = '/sessions/' + randomID();
 // this is some logic to determine wether we are accessing an already created project or if we are in a new state.
 if (location.pathname != "/") {
     sessionName = location.pathname;
-    sessionName = sessionName.slice(0, sessionName.length - 1);
-    const umlWebClient = new UmlWebClient({server: sessionName});
-    const app = createApp(App);
-    app.config.globalProperties.$sessionName = sessionName;
-    app.config.globalProperties.$umlWebClient = umlWebClient;
-    app.config.unwrapInjectedRef = true;
-    app.mount('#app');
-    app.use(ContextMenu);
+
+    // check for stashed user and passwordHash
+    const user = sessionStorage.getItem('user');
+    sessionStorage.removeItem('user');
+    const passwordHash = sessionStorage.getItem('passwordHash');
+    sessionStorage.removeItem('passwordHash');
+
+    const umlWebClient = new UmlWebClient({
+        server: sessionName,
+        user: user,
+        passwordHash: passwordHash,
+    })
+    umlWebClient.initializationPromise.catch((err) => {
+        try {
+            const errObj = JSON.parse(err);
+            if (errObj.error.code && errObj.error.code == 1) {
+                // prompt login
+                console.log("todo prompt login based off of code")
+            }
+        } catch (parseErr) {
+            
+        }
+    }).then(() => {
+        const app = createApp(App);
+        app.config.globalProperties.$sessionName = sessionName;
+        app.config.globalProperties.$umlWebClient = umlWebClient;
+        app.config.unwrapInjectedRef = true;
+        app.mount('#app');
+        app.use(ContextMenu);
+    });
 } else {
     // todo create new session
     const umlWebClient = new UmlWebClient({server: sessionName});

@@ -3,8 +3,8 @@ import hamburgerSVG from './icons/hamburger.svg';
 import hamburgerHoverSVG from './icons/hamburger_hover.svg';
 import classSVG from './icons/class.svg'
 const packageJSON = require('../../package.json');
-import PopUp from './bannerComponents/PopUp.vue';
-
+import FreezeAndPopUp from './bannerComponents/FreezeAndPopUp.vue';
+import UserSelector from './bannerComponents/UserSelector.vue';
 export default {
     data() {
         return {
@@ -19,10 +19,18 @@ export default {
             websiteImage: classSVG,
             loginEnabled: false,
             signupEnabled: false,
+            createProjectEnabled: false,
             signUpErrorMessage: undefined,
             loginErrorMessage: undefined,
+            createProjectWarningMessage: undefined,
             user: undefined
         };
+    },
+    mounted() {
+        // TODO check if we need to enable login on startup
+        this.$umlWebClient.initializationPromise.catch((err) => {
+            this.toggleLogin();
+        });
     },
     emits: ["newModelLoaded"],
     methods: {
@@ -87,6 +95,7 @@ export default {
                 if (successfulLogin) {
                     this.user = this.$umlWebClient.user;
                     this.loginEnabled = false;
+                    this.$emit("newModelLoaded");
                 }
             });
         },
@@ -122,6 +131,34 @@ export default {
             }).then(() => {
                 this.user = this.$umlWebClient.user;
             });
+        },
+        toggleCreateProject() {
+            this.createProjectEnabled = !this.createProjectEnabled;
+            this.optionsEnabled = false;
+            this.createProjectWarningMessage = undefined;
+        },
+        async createProject() {
+            // TODO
+            if (this.$umlWebClient.user === undefined || this.$umlWebClient.user === '0') {
+                // show error
+                this.createProjectWarningMessage = 'must be logged in to create a project!';
+                return
+            }
+
+            await this.$umlWebClient.login(undefined, undefined, {
+                server: '/' + this.$umlWebClient.user + '/' + this.$refs.projectIdentifier.value,
+                create: true,
+            });
+            // todo set project visibility
+            // todo add users with edit privleges
+            // todo add users with view privleges
+            sessionStorage.setItem('user', this.$umlWebClient.user);
+            sessionStorage.setItem('passwordHash', this.$umlWebClient.options.passwordHash);
+            window.location.replace('/' + this.$umlWebClient.user + '/' + this.$refs.projectIdentifier.value);
+        },
+        closeLoginAndGoToSignUp() {
+            this.toggleLogin();
+            this.toggleSignup();
         }
     },
     computed: {
@@ -131,7 +168,7 @@ export default {
             }
         }
     },
-    components: { PopUp }
+    components: { FreezeAndPopUp, UserSelector }
 }
 </script>
 <template>
@@ -159,6 +196,9 @@ export default {
         <div class="optionsOption" @click="saveToFile">
             Save to file
         </div>
+        <div class="optionsOption" @click="toggleCreateProject">
+            Create Project
+        </div>
         <div class="optionsOption" @click="toggleLogin">
             Log In
         </div>
@@ -167,41 +207,97 @@ export default {
         </div>
         <a :href="downloadRef" :download="downloadDownload" ref="saveA" style="display: none;"></a>
     </div>
-    <PopUp :header="'Log In'" :toggle="toggleLogin" v-if="loginEnabled" @keydown.enter="login">
+    <FreezeAndPopUp :label="'Log In'" :toggle="toggleLogin" v-if="loginEnabled" @keydown.enter="login">
         <form>
             <label for="'logInUserInput'">username: </label>
-            <input type="text" id="'logInUserInput'" name="'logInUserInput'" ref="logInUserInput">
+            <input class="inputStyle" type="text" id="'logInUserInput'" name="'logInUserInput'" ref="logInUserInput">
             <br>
             <label for="'logInPasswordInput'">password: </label>
-            <input type="password" id="'logInPasswordInput'" name="'logInPasswordInput'" ref="logInPasswordInput">
+            <input class="inputStyle" type="password" id="'logInPasswordInput'" name="'logInPasswordInput'" ref="logInPasswordInput">
             <br>
             <div style="vertical-align:middle;">
                 <div v-if="loginErrorMessage !== undefined" class="signUpError">
                     {{ loginErrorMessage }}
                 </div>
-                <input type="button" value="Log In" @click="login">
+                <input class="inputButton" type="button" value="Log In" @click="login">
             </div>
+            <hr>
+            <input class="inputButton" type="button" value="Sign Up" @click="closeLoginAndGoToSignUp">
         </form>
-    </PopUp>
-    <PopUp :header="'Sign Up'" :toggle="toggleSignup" v-if="signupEnabled" @keydown.enter="signup">
+    </FreezeAndPopUp>
+    <FreezeAndPopUp :label="'Sign Up'" :toggle="toggleSignup" v-if="signupEnabled" @keydown.enter="signup">
         <form>
             <label for="'signUpUserInput'">username: </label>
-            <input type="text" id="'signUpUserInput'" name="'signUpUserInput'" ref="signUpUserInput">
+            <input class="inputStyle" type="text" id="'signUpUserInput'" name="'signUpUserInput'" ref="signUpUserInput">
             <br>
             <label for="'signUpPasswordInput'">password: </label>
-            <input type="password" id="'signUpPasswordInput'" name="'signUpPasswordInput'" ref="signUpPasswordInput">
+            <input class="inputStyle" type="password" id="'signUpPasswordInput'" name="'signUpPasswordInput'" ref="signUpPasswordInput">
             <br>
-            <label for="'signUpPasswordInput2'">password: </label>
-            <input type="password" id="'signUpPasswordInput2'" name="'signUpPasswordInput2'" ref="signUpPasswordInput2">
+            <label for="'signUpPasswordInput2'">retype password: </label>
+            <input class="inputStyle" type="password" id="'signUpPasswordInput2'" name="'signUpPasswordInput2'" ref="signUpPasswordInput2">
             <br>
             <div style="vertical-align:middle;">
                 <div v-if="signUpErrorMessage !== undefined" class="signUpError">
                     {{ signUpErrorMessage }}
                 </div>
-                <input type="button" value="Sign Up" @click="signup">
+                <input class="inputButton" type="button" value="Sign Up" @click="signup">
             </div>
         </form>
-    </PopUp>
+    </FreezeAndPopUp>
+    <FreezeAndPopUp :label="'Create Project'" :toggle="toggleCreateProject" v-if="createProjectEnabled">
+        <p>
+            Creating a new project allows your project to become persistent on this server. Being persistent means that the url will always be the same, and as long as the server is up your project will be accessible via the internet. This allows for easy sharing of models in different view modes. You may also grant other users permissions to see or write to the project you have created. Just give the project an identifier and choose the permissions and your project should be ready to build and share.
+        </p>
+        <hr>
+        <form>
+            <div class="floatFormOption">
+                <label for="'projectIdentifier'">Project Identifier : </label>
+                <p>
+                    The Project Identifier is used for the url that you can share and the name of the model file if you download it.
+                </p>
+                <input class="inputStyle" type="text" 
+                       id="'projectIdentifier'" 
+                       name="'projectIdentifier'" 
+                       ref="projectIdentifier"
+                       value="Project">
+            </div>
+            <div class="floatFormOption">
+                <label for="visibilitySelect">
+                    Project Visibility:
+                </label>
+                <p>
+                    The Project Visibility establishes a general rule to who can view this project. If it is private then only you and who you add to the editors and viewers list can edit and view it. If it is Read-Only Public that means that anyone with the link can see the project and walk around it but cannot edit it. If it is Public then anyone can view or edit the project if they have the link.
+                </p>
+                <select class="inputStyle" name="visibilitySelect" id="visibilitySelect" ref="visibilitySelect">
+                    <option value="private">Private</option>
+                    <option value="readonly">Read-Only Public</option>
+                    <option value="public">Public</option>
+                </select>
+            </div>
+            <div class="floatFormOption">
+                <UserSelector :label="'Edit List'">
+                    <p>
+                        The list of users on the server that can edit the project. They will be able to create and delete from your project. This list has no effect if your project is Public.
+                    </p>
+                </UserSelector>
+            </div>
+            <div class="floatFormOption">
+                <UserSelector :label="'View List'">
+                    <p>
+                        The list of users on the server that can view the project. They will be able to navigate around the project and view all of the details within it. They will not however be allowed to make any changes to the Project.
+                    </p>
+                </UserSelector>
+            </div>
+            <div class="floatFormOption">
+                <div class="createProjectDiv">
+                    <input class="inputButton" type="button" value="Create" @click="createProject">
+                </div>
+                <div class="createProjectError" v-if="createProjectWarningMessage !== undefined">
+                    {{ createProjectWarningMessage }}
+                </div>
+            </div>
+        </form>
+    </FreezeAndPopUp>
 </template>
 <style>
 .umlBanner {
@@ -222,13 +318,13 @@ export default {
     float: right;
 }
 .optionsOption {
-    padding: 5px 5px 5px 5px;
+    padding: 5px 15px;
     /* background-color: #d8dee8; */
     font-family: system-ui;
     position: relative;
 }
 .optionsOption:hover {
-    background-color: #DEF;
+    background-color: var(--mx-menu-hover-backgroud);
 }
 .dropdown {
     /* display: none; */
@@ -253,5 +349,45 @@ export default {
     margin-left: 5px;
     z-index: 2;
     float: right;
+}
+.createProjectError {
+    background-color: #ff4343;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-top: 5px;
+    margin-left: 5px;
+    z-index: 2;
+    float: left;
+}
+.floatFormOption {
+    padding: 5px 15px;
+}
+hr {
+    margin: 20px 0px;
+}
+.inputStyle {
+    width: 46vw;
+    background-color: var(--open-uml-selection-dark-1);
+    min-height: 24px;
+    display: flex;
+    padding-left: 5px;
+    border: none;
+    color: var( --vt-c-text-light-1);
+}
+.inputStyle:hover {
+    background-color: var(--vt-c-dark-soft);
+}
+.createProjectDiv {
+    float: right;
+}
+.inputButton {
+    background-color: var(--open-uml-selection-dark-1);
+    border: none;
+    color: var( --vt-c-text-light-1);
+    height: 2em;
+    border-radius: 10px;
+}
+.inputButton:hover {
+    background-color: var(--vt-c-dark-soft);
 }
 </style>
