@@ -156,7 +156,7 @@ export default {
         },
         async createProject() {
             // TODO
-            if (this.$umlWebClient.user === undefined || this.$umlWebClient.user === '0') {
+            if (!this.$umlWebClient.user || this.$umlWebClient.user === '0') {
                 // show error
                 this.createProjectWarningMessage = 'must be logged in to create a project!';
                 return
@@ -208,6 +208,10 @@ export default {
             }
         },
         updateProjectSettings() {
+            if (this.$umlWebClient.user != location.pathname.split('/')[1]) {
+                this.projectSettingsWarningMessage = 'Cannot update project, not owner!';
+                return;
+            }
             const projectVisibility = this.getVisibility();
             const removedEditUsers = [];
             const addedEditUsers = [];
@@ -245,6 +249,8 @@ export default {
                         remove: removedViewUsers
                     }
                 }
+            }).catch((err) => {
+                this.projectSettingsWarningMessage = err.message;
             });
             this.toggleProjectSettings();
         }
@@ -267,6 +273,10 @@ export default {
             <div :style="gapStyle"></div>
             <div v-if="user !== undefined">
                 Logged in as {{ user }}
+            </div>
+            <div :style="gapStyle"></div>
+            <div v-if="$umlWebClient.readonly">
+                readonly
             </div>
         </div>
         <div class="optionsContainer">

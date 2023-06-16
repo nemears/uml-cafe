@@ -93,6 +93,10 @@ export default {
 
             this.drag = false;
 
+            if (this.$umlWebClient.readonly) {
+                return;
+            }
+
             const elementID = event.dataTransfer.getData('umlid');
             const me = await this.$umlWebClient.get(this.umlid);
             const elementDragged = await this.$umlWebClient.get(elementID);
@@ -137,14 +141,25 @@ export default {
                     {{ el.label }}
                 </div>
             </div>
-            <div class="setElement" v-if="creatable || data.length === 0" @dblclick="createElement">
-                <div class="createToolTip" v-if="creatable">
+            <div class="setElement" 
+                 v-if="creatable || data.length === 0" 
+                  @dblclick="createElement">
+                <div class="createToolTip" 
+                     :class="{ readOnlyToolTip : $umlWebClient.readonly }" 
+                     v-if="creatable">
                     double click to create an element
                 </div>
-                <div class="createButton" v-if="creatable" @click="createElement">
+                <div class="createButton" 
+                     :class="{ readOnlyButton : $umlWebClient.readonly}" 
+                     v-if="creatable" 
+                     @click="createElement">
                     +
                 </div>
-                <CreationPopUp v-if="createPopUp" :types="creatable.types" :set="creatable.set" :umlid="umlid" @closePopUp="closePopUp"></CreationPopUp>
+                <CreationPopUp v-if="createPopUp && !$umlWebClient.readonly" 
+                               :types="creatable.types" 
+                               :set="creatable.set" 
+                               :umlid="umlid" 
+                               @closePopUp="closePopUp"></CreationPopUp>
             </div>
         </div>
     </div>
@@ -193,5 +208,12 @@ export default {
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
+}
+.readOnlyToolTip {
+    color: var(--vt-c-divider-dark-1);
+}
+.readOnlyButton {
+    color: var(--vt-c-divider-dark-1);
+    background-color: var(--vt-c-dark-soft);
 }
 </style>

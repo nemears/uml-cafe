@@ -4,16 +4,20 @@ import { randomID } from "uml-js/lib/element";
  * A example palette provider.
  */
 export default class ClassDiagramPaletteProvider {
-  constructor(create, elementFactory, lassoTool, palette) {
+  constructor(create, elementFactory, lassoTool, palette, umlWebClient) {
     this._create = create;
     this._elementFactory = elementFactory;
     this._lassoTool = lassoTool;
     this._palette = palette;
+    this.umlWebClient = umlWebClient;
   
     palette.registerProvider(this);
   }
 
   getPaletteEntries() {
+    if (this.umlWebClient.client.readonly) {
+      return {};
+    }
     var create = this._create,
     elementFactory = this._elementFactory,
     lassoTool = this._lassoTool;
@@ -81,4 +85,4 @@ export default class ClassDiagramPaletteProvider {
   }
 }
 
-ClassDiagramPaletteProvider.$inject = ['create', 'elementFactory', 'lassoTool', 'palette'];
+ClassDiagramPaletteProvider.$inject = ['create', 'elementFactory', 'lassoTool', 'palette', 'umlWebClient'];

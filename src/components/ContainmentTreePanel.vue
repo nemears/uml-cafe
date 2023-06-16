@@ -100,6 +100,7 @@ export default {
             if (el.isSubClassOf('namedElement')) {
                 this.options.push({
                     label: 'Rename',
+                    disabled: this.$umlWebClient.readonly,
                     onClick: () => {
                         this.editing = true;
                         setTimeout(() => {
@@ -120,6 +121,7 @@ export default {
             if (el.isSubClassOf('package')) {
                 this.options.push({
                     label: 'Create Class Diagram',
+                    disabled: this.$umlWebClient.readonly,
                     onClick: async () => {
                         const diagramPackage = await this.$umlWebClient.post('package');
                         el.packagedElements.add(diagramPackage);
@@ -151,6 +153,7 @@ export default {
                 }
                 this.options.push({
                     label: 'Create Property',
+                    disabled: this.$umlWebClient.readonly,
                     onClick: async () => {
                         const newProperty = await this.$umlWebClient.post('property');
                         el.ownedAttributes.add(newProperty);
@@ -183,6 +186,7 @@ export default {
                 }
                 this.options.push({
                    label: 'Create Slot',
+                   disabled: this.$umlWebClient.readonly,
                     onClick: async () => {
                         const newSlot= await this.$umlWebClient.post('slot');
                         el.slots.add(newSlot);
@@ -211,6 +215,7 @@ export default {
                     }
                     this.options.push({
                         label: 'Create Package',
+                        disabled: this.$umlWebClient.readonly,
                         onClick: async () => {
                             const newPackage = await this.$umlWebClient.post('package');
                             el.packagedElements.add(newPackage);
@@ -233,6 +238,7 @@ export default {
                     });
                     this.options.push({
                         label: 'Create Class',
+                        disabled: this.$umlWebClient.readonly,
                         onClick: async () => {
                             const newClass = await this.$umlWebClient.post('class');
                             el.packagedElements.add(newClass);
@@ -253,35 +259,36 @@ export default {
                             });
                         }
                     });
-		    this.options.push({
-			label: 'Create Instance Specification',
-			onClick: async () => {
-			    const newInstance = await this.$umlWebClient.post('instanceSpecification');
-                            el.packagedElements.add(newInstance);
-                            this.$umlWebClient.put(el);
-                            this.$umlWebClient.put(newInstance);
-                            el = await this.$umlWebClient.get(el.id);
-                            this.children.push(newInstance.id);
-                            this.expanded = true;
-                            this.$emit('dataChange', {
-                                data: [
-                                    {
-                                        id: el.id,
-                                        type: 'add',
-                                        set: 'packagedElements',
-                                        el: newInstance.id
-                                    }
-                                ]
-                            });
- 
-			}
-		    });
+                this.options.push({
+                    label: 'Create Instance Specification',
+                    disabled: this.$umlWebClient.readonly,
+                    onClick: async () => {
+                        const newInstance = await this.$umlWebClient.post('instanceSpecification');
+                        el.packagedElements.add(newInstance);
+                        this.$umlWebClient.put(el);
+                        this.$umlWebClient.put(newInstance);
+                        el = await this.$umlWebClient.get(el.id);
+                        this.children.push(newInstance.id);
+                        this.expanded = true;
+                        this.$emit('dataChange', {
+                            data: [
+                                {
+                                    id: el.id,
+                                    type: 'add',
+                                    set: 'packagedElements',
+                                    el: newInstance.id
+                                }
+                            ]
+                        });
+                    }
+                });
             }
 
             this.options[this.options.length - 1].divided = true;
 
             this.options.push({
                 label: 'Delete',
+                disabled: this.$umlWebClient.readonly,
                 onClick: async () => {
                     const owner = await el.owner.get();
                     this.$umlWebClient.deleteElement(el);

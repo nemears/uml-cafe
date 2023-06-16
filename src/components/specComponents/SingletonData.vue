@@ -64,7 +64,7 @@ export default {
             const wasA_BadDrag = this.badDrag;
             this.drag = false;
             this.badDrag = false;
-            if (wasA_BadDrag) {
+            if (wasA_BadDrag || this.$umlWebClient.readonly) {
                 return;
             }
             const elementID = event.dataTransfer.getData('umlid');
@@ -130,7 +130,7 @@ export default {
             <div class="createButton" v-if="createable" @click="createElement">
                 +
             </div>
-            <CreationPopUp v-if="creationPopUp" :types="createable.types" :set="createable.set" :umlid="umlID" @closePopUp="closePopUp"></CreationPopUp>
+            <CreationPopUp v-if="creationPopUp && !$umlWebClient.readonly" :types="createable.types" :set="createable.set" :umlid="umlID" @closePopUp="closePopUp"></CreationPopUp>
         </div>
     </div>
 </template>

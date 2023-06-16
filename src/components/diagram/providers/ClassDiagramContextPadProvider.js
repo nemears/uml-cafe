@@ -2,16 +2,20 @@
  * A example context pad provider.
  */
 export default class ClassDiagramContextPadProvider {
-  constructor(connect, contextPad, modeling, generalizationHandler, directedComposition) {
+  constructor(connect, contextPad, modeling, generalizationHandler, directedComposition, umlWebClient) {
     this._connect = connect;
     this._modeling = modeling;
     this._generalizationHandler = generalizationHandler;
     this._directedComposition = directedComposition;
+    this.umlWebClient = umlWebClient;
   
     contextPad.registerProvider(this);
   }
 
   getContextPadEntries(element) {
+    if (this.umlWebClient.client.readonly) {
+      return {};
+    }
     var connect = this._connect,
     modeling = this._modeling,
     generalizationHandler = this._generalizationHandler,
@@ -63,9 +67,9 @@ export default class ClassDiagramContextPadProvider {
           }
         }
       };
-      return {};
-    } 
+    }
+    return {};
   }
 }
 
-ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'modeling', 'generalizationHandler', 'directedComposition'];
+ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'modeling', 'generalizationHandler', 'directedComposition', 'umlWebClient'];
