@@ -1,11 +1,6 @@
 <script>
 export default {
-    props: ['label'],
-    data() {
-        return {
-            users: []
-        }
-    },
+    props: ['label', 'users'],
     methods: {
         addUser() {
             const userValue = this.$refs.userSelectorInput.value;
@@ -17,8 +12,8 @@ export default {
             // check if user exists
             // TODO
 
-            this.users.push(userValue);
             this.$refs.userSelectorInput.value = '';
+            this.users.push(userValue);
         },
         rightClick(e) {
             //prevent the browser's default menu
@@ -30,7 +25,7 @@ export default {
                 items: [{
                     label: 'Remove',
                     onClick: () => {
-                        this.users = this.users.filter(u => u !== e.target.innerText);
+                        this.users.splice(this.users.indexOf(e.target.innerText), 1);
                     }
                 }]
             });

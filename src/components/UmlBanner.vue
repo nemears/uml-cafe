@@ -20,10 +20,16 @@ export default {
             loginEnabled: false,
             signupEnabled: false,
             createProjectEnabled: false,
+            projectSettingsEnabled: false,
             signUpErrorMessage: undefined,
             loginErrorMessage: undefined,
             createProjectWarningMessage: undefined,
-            user: undefined
+            projectSettingsWarningMessage: undefined,
+            user: undefined,
+            editUsers: [],
+            viewUsers: [],
+            editUsersInit: undefined,
+            viewUsersInit: undefined,
         };
     },
     mounted() {
@@ -89,7 +95,7 @@ export default {
             let successfulLogin = true;
             this.$umlWebClient.login(user, password).catch((err) => {
                 this.$umlWebClient.login("0", undefined);
-                this.loginErrorMessage = err;
+                this.loginErrorMessage = JSON.parse(err).error.message;
                 successfulLogin = false;
             }).then(() => {
                 if (successfulLogin) {
@@ -137,6 +143,17 @@ export default {
             this.optionsEnabled = false;
             this.createProjectWarningMessage = undefined;
         },
+        getVisibility() {
+            let projectVisibility = this.$refs.visibilitySelect.options[this.$refs.visibilitySelect.selectedIndex].text;
+            if (projectVisibility === "Public") {
+                projectVisibility = "public";
+            } else if (projectVisibility === "Read-Only Public") {
+                projectVisibility = "readonly";
+            } else if (projectVisibility === "Private") {
+                projectVisibility = "private";
+            }
+            return projectVisibility;
+        },
         async createProject() {
             // TODO
             if (this.$umlWebClient.user === undefined || this.$umlWebClient.user === '0') {
@@ -149,9 +166,22 @@ export default {
                 server: '/' + this.$umlWebClient.user + '/' + this.$refs.projectIdentifier.value,
                 create: true,
             });
-            // todo set project visibility
-            // todo add users with edit privleges
-            // todo add users with view privleges
+
+            // get visibility
+            let projectVisibility = this.getVisibility();
+
+            this.$umlWebClient.updateProjectConfig({
+                project: {
+                    visibility: projectVisibility,
+                    edit: {
+                        add: this.editUsers
+                    },
+                    view: {
+                        add: this.viewUsers
+                    }
+                }
+            });
+
             sessionStorage.setItem('user', this.$umlWebClient.user);
             sessionStorage.setItem('passwordHash', this.$umlWebClient.options.passwordHash);
             window.location.replace('/' + this.$umlWebClient.user + '/' + this.$refs.projectIdentifier.value);
@@ -159,6 +189,64 @@ export default {
         closeLoginAndGoToSignUp() {
             this.toggleLogin();
             this.toggleSignup();
+        },
+        toggleProjectSettings() {
+            this.projectSettingsEnabled = !this.projectSettingsEnabled;
+            this.optionsEnabled = false;
+            this.projectSettingsWarningMessage = undefined;
+            if (this.projectSettingsEnabled) {
+                // fetch current settings from the server
+                this.$umlWebClient.getProjectConfig().catch((err) => {
+                    this.projectSettingsWarningMessage = JSON.parse(err.error.message);
+                }).then((projectConfig) => {
+                    this.$refs.visibilitySelect.value = projectConfig.project.visibility;
+                    this.editUsers = projectConfig.project.edit;
+                    this.viewUsers = projectConfig.project.view;
+                    this.editUsersInit = this.editUsers.slice();
+                    this.viewUsersInit = this.viewUsers.slice();
+                });
+            }
+        },
+        updateProjectSettings() {
+            const projectVisibility = this.getVisibility();
+            const removedEditUsers = [];
+            const addedEditUsers = [];
+            const removedViewUsers = [];
+            const addedViewUsers = [];
+            for (const initUser of this.editUsersInit) {
+                if (!this.editUsers.includes(initUser)) {
+                    removedEditUsers.push(initUser);
+                }
+            }
+            for (const user of this.editUsers) {
+                if (!this.editUsersInit.includes(user)) {
+                    addedEditUsers.push(user);
+                }
+            }
+            for (const initUser of this.viewUsersInit) {
+                if (!this.viewUsers.includes(initUser)) {
+                    removedViewUsers.push(initUser);
+                }
+            }
+            for (const user of this.viewUsers) {
+                if (!this.viewUsersInit.includes(user)) {
+                    addedViewUsers.push(user);
+                }
+            }
+            this.$umlWebClient.updateProjectConfig({
+                project: {
+                    visibility: projectVisibility,
+                    edit: {
+                        add: addedEditUsers,
+                        remove: removedEditUsers
+                    },
+                    view: {
+                        add: addedViewUsers,
+                        remove: removedViewUsers
+                    }
+                }
+            });
+            this.toggleProjectSettings();
         }
     },
     computed: {
@@ -198,6 +286,9 @@ export default {
         </div>
         <div class="optionsOption" @click="toggleCreateProject">
             Create Project
+        </div>
+        <div class="optionsOption" @click="toggleProjectSettings">
+            Project Settings
         </div>
         <div class="optionsOption" @click="toggleLogin">
             Log In
@@ -275,14 +366,14 @@ export default {
                 </select>
             </div>
             <div class="floatFormOption">
-                <UserSelector :label="'Edit List'">
+                <UserSelector :label="'Edit List'" :users="editUsers">
                     <p>
                         The list of users on the server that can edit the project. They will be able to create and delete from your project. This list has no effect if your project is Public.
                     </p>
                 </UserSelector>
             </div>
             <div class="floatFormOption">
-                <UserSelector :label="'View List'">
+                <UserSelector :label="'View List'" :users="viewUsers">
                     <p>
                         The list of users on the server that can view the project. They will be able to navigate around the project and view all of the details within it. They will not however be allowed to make any changes to the Project.
                     </p>
@@ -294,6 +385,49 @@ export default {
                 </div>
                 <div class="createProjectError" v-if="createProjectWarningMessage !== undefined">
                     {{ createProjectWarningMessage }}
+                </div>
+            </div>
+        </form>
+    </FreezeAndPopUp>
+    <FreezeAndPopUp :label="'Project Settings'" v-if="projectSettingsEnabled" :toggle="toggleProjectSettings">
+        <p>
+            These are the current settings that the project has. Only the user who created and owns the project may alter these settings.
+        </p>
+        <hr>
+        <form>
+            <div class="floatFormOption">
+                <label for="visibilitySelect">
+                    Project Visibility:
+                </label>
+                <p>
+                    The Project Visibility establishes a general rule to who can view this project. If it is private then only you and who you add to the editors and viewers list can edit and view it. If it is Read-Only Public that means that anyone with the link can see the project and walk around it but cannot edit it. If it is Public then anyone can view or edit the project if they have the link.
+                </p>
+                <select class="inputStyle" name="visibilitySelect" id="visibilitySelect" ref="visibilitySelect">
+                    <option value="private">Private</option>
+                    <option value="readonly">Read-Only Public</option>
+                    <option value="public">Public</option>
+                </select>
+            </div>
+            <div class="floatFormOption">
+                <UserSelector :label="'Edit List'" :users="editUsers">
+                    <p>
+                        The list of users on the server that can edit the project. They will be able to create and delete from your project. This list has no effect if your project is Public.
+                    </p>
+                </UserSelector>
+            </div>
+            <div class="floatFormOption">
+                <UserSelector :label="'View List'" :users="viewUsers">
+                    <p>
+                        The list of users on the server that can view the project. They will be able to navigate around the project and view all of the details within it. They will not however be allowed to make any changes to the Project.
+                    </p>
+                </UserSelector>
+            </div>
+            <div class="floatFormOption">
+                <div class="createProjectDiv">
+                    <input class="inputButton" type="button" value="Update" @click="updateProjectSettings">
+                </div>
+                <div class="createProjectError" v-if="projectSettingsWarningMessage !== undefined">
+                    {{ projectSettingsWarningMessage }}
                 </div>
             </div>
         </form>
