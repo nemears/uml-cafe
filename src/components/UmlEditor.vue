@@ -9,7 +9,7 @@ export default {
         "specificationTab"
     ],
     inject: ['dataChange'],
-    emits: ['specification', 'dataChange'],
+    emits: ['specification', 'dataChange', 'closeTab'],
     data() {
         return {
             closeSymbol: CloseSymbol,
@@ -78,6 +78,7 @@ export default {
                 }
                 this.recentTab = this.tabs[tabIndex - 1].id;
             }
+            this.$emit('closeTab', id);
         },
         focus(id) {
             for (let tab of this.tabs) {

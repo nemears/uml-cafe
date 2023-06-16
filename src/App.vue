@@ -137,10 +137,19 @@ export default {
 				type: 'Diagram',
 				img: classDiagramImage
 			});
-			this.specificationTab = diagramClass.id;
+			if (this.specificationTab === diagramClass.id) {
+				this.specificationTab = '0';
+			} else {
+				this.specificationTab = diagramClass.id;
+			}
 		},
 		dragInfo(draginfo) {
 			this.recentDraginfo = draginfo;
+		},
+		closeTab(id) {
+			if (this.specificationTab === id) {
+				this.specificationTab = this.tabs[this.tabs.length - 1].id;
+			}
 		}
 	}
 }
@@ -163,7 +172,11 @@ export default {
 			</div>
 			<div class="bottomBar"></div>
 		</div>
-		<UmlEditor :tabs="tabs" :specificationTab="specificationTab" @specification="specification" @data-change="dataChange"></UmlEditor>
+		<UmlEditor :tabs="tabs" 
+				   :specificationTab="specificationTab" 
+				   @specification="specification" 
+				   @data-change="dataChange"
+				   @close-tab="closeTab"></UmlEditor>
 	</div>
 </template>
 <style>
