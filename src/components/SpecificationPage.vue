@@ -400,8 +400,7 @@ export default {
 <style>
 .mainDiv {
     padding: 10px;
-    margin:auto;
-    height: 80vh;
+    /* margin:auto; */
     width: 69vw;
     overflow-y: auto;
 }

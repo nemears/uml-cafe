@@ -155,44 +155,50 @@ export default {
 }
 </script>
 <template>
-	<UmlBanner @new-model-loaded="getHeadFromServer"></UmlBanner>
-	<div class="parent">
-		<div>
-			<div style="height:34px;background-color: var(--vt-c-black);"></div>
-			<div class="containmentTree">
-				<ContainmentTreePanel 
-					v-if="!isFetching && headID !== undefined" 
-					:umlID="headID" 
-					:depth="0" 
-					:data-change="recentDataChange" 
-					@specification="specification" 
-					@data-change="dataChange" 
-					@diagram="diagram"
-					@draginfo="dragInfo"></ContainmentTreePanel>
+	<div style="display: flex;flex-direction: column;height:100vh;overflow: hidden;">
+		<UmlBanner @new-model-loaded="getHeadFromServer"></UmlBanner>
+		<div class="parent">
+			<div class="leftBar">
+				<div style="flex:0 0 34px;background-color: var(--vt-c-black);order:0;"></div>
+				<div class="containmentTree">
+					<ContainmentTreePanel 
+						v-if="!isFetching && headID !== undefined" 
+						:umlID="headID" 
+						:depth="0" 
+						:data-change="recentDataChange" 
+						@specification="specification" 
+						@data-change="dataChange" 
+						@diagram="diagram"
+						@draginfo="dragInfo"></ContainmentTreePanel>
+				</div>
 			</div>
-			<div class="bottomBar"></div>
+			<UmlEditor  :tabs="tabs" 
+						:specificationTab="specificationTab" 
+						@specification="specification" 
+						@data-change="dataChange"
+						@close-tab="closeTab"></UmlEditor>
 		</div>
-		<UmlEditor :tabs="tabs" 
-				   :specificationTab="specificationTab" 
-				   @specification="specification" 
-				   @data-change="dataChange"
-				   @close-tab="closeTab"></UmlEditor>
 	</div>
 </template>
 <style>
 .parent {
-	flex: 1 1 auto;
+	flex: 1 0 ;
 	width: 100%;
 	display: flex;
+	overflow: hidden;
 }
 .containmentTree{
-    flex: 0 1 300px;
-    overflow: auto;
+	order: 1;
+	overflow: auto;
     width: 30vw;
-	height: 80vh;
+	flex-grow: 1;
+	max-height: 100%;
+	display: flex;
+	flex-direction: column;
 }
-.bottomBar {
-	background-color: var(--vt-c-black);
-	height: 100%;
+.leftBar {
+	display: flex;
+	flex-direction: column;
+	overflow: visible;
 }
 </style>

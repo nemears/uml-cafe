@@ -139,14 +139,15 @@ export default {
 <style>
     .umlEditor {
         flex: 1 1 auto;
-        display: block;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
     }
     .tabContainer {
         float: left;
-        width: 100%;
         background-color: var(--vt-c-black);
-        min-height: 34px;
-	    max-height: 10vh;
+        float: 0 0 34px;
+        overflow: hidden;
     }
     .tab {
         display: flex;
@@ -174,8 +175,11 @@ export default {
     }
     .activeEditor {
         background-color: #2d3035;
-        height: 100%;
+        /* height: 100%; */
         clear:both;
         padding: 10px;
+        flex: 1 1;
+        overflow: hidden;
+        display: flex;
     }
 </style>

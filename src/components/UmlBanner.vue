@@ -92,6 +92,10 @@ export default {
         async login() {
             const user = this.$refs.logInUserInput.value;
             const password = this.$refs.logInPasswordInput.value;
+            if (user.length === 0) {
+                this.loginErrorMessage = 'Invalid username';
+                return;
+            }
             let successfulLogin = true;
             this.$umlWebClient.login(user, password).catch((err) => {
                 this.$umlWebClient.login("0", undefined);
@@ -126,7 +130,7 @@ export default {
                 return;
             }
 
-            if (user.length === 0 || user === 'sessions' || user === '0') {
+            if (user.length === 0 || user === 'sessions' || user === '0' || user === 'js' || user === 'css' || user === 'img') {
                 this.signUpErrorMessage = 'invalid username!';
                 return;
             } 
@@ -136,6 +140,7 @@ export default {
                 return;
             }).then(() => {
                 this.user = this.$umlWebClient.user;
+                this.toggleSignup();
             });
         },
         toggleCreateProject() {
