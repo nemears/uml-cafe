@@ -162,14 +162,14 @@ export default {
 				<div style="flex:0 0 34px;background-color: var(--vt-c-black);order:0;"></div>
 				<div class="containmentTree">
 					<ContainmentTreePanel 
-						v-if="!isFetching && headID !== undefined" 
-						:umlID="headID" 
-						:depth="0" 
-						:data-change="recentDataChange" 
-						@specification="specification" 
-						@data-change="dataChange" 
-						@diagram="diagram"
-						@draginfo="dragInfo"></ContainmentTreePanel>
+							v-if="!isFetching && headID !== undefined" 
+							:umlID="headID" 
+							:depth="0" 
+							:data-change="recentDataChange" 
+							@specification="specification" 
+							@data-change="dataChange" 
+							@diagram="diagram"
+							@draginfo="dragInfo"></ContainmentTreePanel>
 				</div>
 			</div>
 			<UmlEditor  :tabs="tabs" 
@@ -190,11 +190,10 @@ export default {
 .containmentTree{
 	order: 1;
 	overflow: auto;
-    width: 30vw;
 	flex-grow: 1;
-	max-height: 100%;
-	display: flex;
-	flex-direction: column;
+	/* display: flex; */
+	/* flex-direction: column; */
+	width: 300px;
 }
 .leftBar {
 	display: flex;

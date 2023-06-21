@@ -38,7 +38,8 @@ export default {
     computed: {
         indent() {
             return {
-                width: 25 * this.depth + "px"
+                width: 25 * this.depth + "px",
+                overflow: 'visible'
             };
         },
         umlName() {
@@ -392,16 +393,23 @@ export default {
 }
 </script>
 <template>
-    <div class="containmentTreeBlock" v-if="!isFetching">
-        <div class="containmentTreePanel" :class="{notEditable: !editing}" 
-            @click="childrenToggle" 
-            @dblclick="specification"
-            @contextmenu="onContextMenu($event)" >
+    <div class="containmentTreeBlock" v-if="!isFetching" :class="{notFirstBlock: depth !== 0}">
+        <div class="containmentTreePanel" 
+             :class="{notEditable: !editing}" 
+             @click="childrenToggle" 
+             @dblclick="specification"
+             @contextmenu="onContextMenu($event)" >
             <div :style="indent"></div>
-            <div draggable="true" style="display:flex" @dragstart="startDrag($event, item)">
+            <div style="display:inline-flex;" 
+                 draggable="true" 
+                 @dragstart="startDrag($event, item)">
                 <img v-bind:src="image" draggable="false"/>
-                <div ref="nameDiv" :contenteditable="editing" @keydown.enter.prevent="stopRename"
-                    @keydown.escape="cancelRename">{{ umlName }}</div>
+                <div style="display:inline-flex;white-space:nowrap;" 
+                     ref="nameDiv" :contenteditable="editing" 
+                     @keydown.enter.prevent="stopRename"
+                     @keydown.escape="cancelRename">
+                    {{ umlName }}
+                </div>
                     <!-- TODO we need some sort of handling for a click-outside of this div directive to cancel rename TODO -->
             </div>
         </div>
@@ -420,11 +428,17 @@ export default {
 </template>
 <style>
 .containmentTreeBlock {
-    display: block;
+    min-width: 300px;
+    display: inline-block;
+}
+.notFirstBlock {
+    width:100%;
 }
 .containmentTreePanel {
     vertical-align: middle;
-    display: flex;
+    min-width: 300px;
+    display: inline-flex;
+    width: 100%;
 }
 .notEditable {
     -webkit-user-select: none; /* Safari */        
