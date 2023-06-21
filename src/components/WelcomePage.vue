@@ -31,7 +31,7 @@
 <style>
 .scrollable {
     overflow-y: auto;
-    height: 80vh;
+    padding: 10px;
 }
 .welcomeText {
     font-size: 75px;

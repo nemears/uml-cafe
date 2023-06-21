@@ -191,8 +191,7 @@ export default {
 	order: 1;
 	overflow: auto;
 	flex-grow: 1;
-	/* display: flex; */
-	/* flex-direction: column; */
+	resize: horizontal; /* TODO make pretty horizontal resize */
 	width: 300px;
 }
 .leftBar {
