@@ -1,7 +1,7 @@
 <template>
     <div class="scrollable">
         <div class="welcomeText">
-            Welcome to Open-UML
+            Welcome to uml-cafe
         </div>
         <div class="information">
             <p>
@@ -11,7 +11,7 @@
                 Open-UML is built upon a pretty simple technical stack and is made up of 4 parts right now:
             </p>
             <p>
-                <a href="https://github.com/nemears/open-uml2">open-uml2</a> The vue based application built for the browser that allows interaction with a managed model in the backend. The diagramming ability is built upon bpmn.io's <a href="https://github.com/bpmn-io/diagram-js">diagram-js</a>.
+                <a href="https://github.com/nemears/uml-cafe">uml-cafe</a> The vue based application built for the browser that allows interaction with a managed model in the backend. The diagramming ability is built upon bpmn.io's <a href="https://github.com/bpmn-io/diagram-js">diagram-js</a>.
             </p>
             <p>
                 <a href="https://github.com/nemears/uml-cpp">uml-cpp</a> The core of the uml data operations in the backend. Keeps a persistent record of uml model elements and allows for aquiring and releasing those elements back to a serialized form in JSON, YAML, or soon XMI.

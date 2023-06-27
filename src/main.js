@@ -11,6 +11,10 @@ let sessionName = '/sessions/' + randomID();
 // this is some logic to determine wether we are accessing an already created project or if we are in a new state.
 if (location.pathname != "/") {
     sessionName = location.pathname;
+    
+    if (sessionName.charAt(sessionName.length - 1) === '/') {
+        sessionName = sessionName.slice(0, sessionName.length - 1);
+    }
 
     // check for stashed user and passwordHash
     const user = sessionStorage.getItem('user');

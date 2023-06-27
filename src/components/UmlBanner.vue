@@ -274,7 +274,7 @@ export default {
     <div class="umlBanner">
         <div class="titleContainer">
             <img v-bind:src="websiteImage"/>
-            open-uml v{{ version }}
+            uml-cafe v{{ version }}
             <div :style="gapStyle"></div>
             <div v-if="user !== undefined">
                 Logged in as {{ user }}
