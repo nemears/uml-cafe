@@ -1,6 +1,6 @@
 <script>
 import { Editor } from './diagram/editor';
-import { getLine } from './diagram/providers/UMLRenderer';
+// import { getLine } from './diagram/providers/relationships/Relationship';
 const EventEmitter = require('events');
 export default {
     data() {
@@ -123,19 +123,20 @@ export default {
                         represents = await this.$umlWebClient.get((await slot.values.front()).value);
                     }
                 }
-                const line = getLine(source, target);
-                var relationship = elementFactory.createConnection({
-                    waypoints: [
-                        line.source,
-                        line.target
-                    ],
-                    shapeID: packagedEl.id,
-                    elementID: represents.id,
-                    source: source,
-                    target: target,
-                    umlType: represents.elementType()
-                });
-                canvas.addConnection(relationship, root);
+                // TODO waypoints saved to model
+                // const line = getLine(source, target);
+                // var relationship = elementFactory.createConnection({
+                //     waypoints: [
+                //         line.source,
+                //         line.target
+                //     ],
+                //     shapeID: packagedEl.id,
+                //     elementID: represents.id,
+                //     source: source,
+                //     target: target,
+                //     umlType: represents.elementType()
+                // });
+                // canvas.addConnection(relationship, root);
             }
         }
         

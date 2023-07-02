@@ -1,6 +1,6 @@
 {
-  "name": "open-uml",
-  "version": "0.2.1",
+  "name": "uml-cafe",
+  "version": "0.2.2",
   "private": true,
   "license": "BSD-2.0",
   "scripts": {

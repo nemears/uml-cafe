@@ -1,5 +1,6 @@
 import Diagram from 'diagram-js';
 
+import BendpointsModule from 'diagram-js/lib/features/bendpoints';
 import ConnectModule from 'diagram-js/lib/features/connect';
 import ContextPadModule from 'diagram-js/lib/features/context-pad';
 import CreateModule from 'diagram-js/lib/features/create';
@@ -97,6 +98,7 @@ export function Editor(options) {
 
   // default modules provided by the toolbox
   const builtinModules = [
+    BendpointsModule,
     ConnectModule,
     ContextPadModule,
     CreateModule,

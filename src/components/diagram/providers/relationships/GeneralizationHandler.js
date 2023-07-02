@@ -35,7 +35,7 @@ export default class GeneralizationHandler extends Relationship {
 
     canConnect(context) {
         return context.hover.umlType && context.hover.umlType === 'class' && context.hover.elementID !== context.start.elementID;
-    };
+    }
 }
 
 GeneralizationHandler.$inject = ['eventBus', 'dragging', 'canvas', 'elementFactory', 'umlWebClient', 'diagramEmitter', 'diagramContext'];

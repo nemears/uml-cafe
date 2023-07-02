@@ -8,95 +8,19 @@ import { createLine } from 'diagram-js/lib/util/RenderUtil';
 import { assign } from 'min-dash';
 import TextUtil from 'diagram-js/lib/util/Text';
 
-export function getLine(source, target) {
-    const sourceMidX = source.x + (source.width / 2);
-    const sourceMidY = source.y + (source.height / 2);
-    const targetMidX = target.x + (target.width / 2);
-    const targetMidY = target.y + (target.height / 2);
-    const dx = targetMidX - sourceMidX;
-    const dy = targetMidY - sourceMidY;
-    const lineTanTheta = dy/dx;
-    const targetTanTheta = target.height / target.width;
-    const sourceTanTheta = source.height / source.width;
-    let ret = {
-        target: {},
-        source: {}
-    };
-
-    // target
-    const targetDetermineRightOrLeft = () => {
-        if (dx < 0) {
-            // right
-            ret.target.x = target.x + target.width;
-            ret.target.y = target.y + (target.height / 2) + ((target.width * dy) / (2 * dx));
-        } else {
-            // left
-            ret.target.x = target.x;
-            ret.target.y = target.y + (target.height / 2) - ((target.width * dy) / (2 * dx));
-        }
-    };
-    if (dy < 0) {
-        if (Math.abs(lineTanTheta) > Math.abs(targetTanTheta)) {
-            // below
-            ret.target.y = target.y + target.height;
-            ret.target.x = target.x + (target.width / 2) + ((target.height * dx) / (2 * dy));
-        } else {
-            targetDetermineRightOrLeft();
-        }
-    } else {
-        if (Math.abs(lineTanTheta) > Math.abs(targetTanTheta)) {
-            ret.target.y = target.y;
-            ret.target.x = target.x + (target.width / 2) - ((target.height * dx) / (2 * dy));
-        } else {
-            targetDetermineRightOrLeft();
-        }
-    }
-
-    // source
-    const sourceDetermineRightOrLeft = () => {
-        if (dx > 0) {
-            // right
-            ret.source.x = source.x + source.width;
-            ret.source.y = source.y + (source.height / 2) + ((source.width * dy) / (2 * dx));
-        } else {
-            // left
-            ret.source.x = source.x;
-            ret.source.y = source.y + (source.height / 2) - ((source.width * dy) / (2 * dx));
-        }
-    };
-    if (dy > 0) {
-        if (Math.abs(lineTanTheta) > Math.abs(sourceTanTheta)) {
-            // below
-            ret.source.y = source.y + source.height;
-            ret.source.x = source.x + (source.width / 2) + ((source.height * dx) / (2 * dy));
-        } else {
-            sourceDetermineRightOrLeft();
-        }
-    } else {
-        if (Math.abs(lineTanTheta) > Math.abs(sourceTanTheta)) {
-            ret.source.y = source.y;
-            ret.source.x = source.x + (source.width / 2) - ((source.height * dx) / (2 * dy));
-        } else {
-            sourceDetermineRightOrLeft();
-        }
-    }
-
-    return ret;
-}
-
 export function createArrow(line) {
     var xx, xx1, xx2 = undefined;
     var yx, yx1, yx2 = undefined;
 
-    xx = line.target.x;
-    yx = line.target.y;
+    xx = line[1].x;
+    yx = line[1].y;
 
-    const dx = line.source.x - line.target.x;
-    const dy = line.source.y - line.target.y;
+    const dx = line[0].x - line[1].x;
+    const dy = line[0].y - line[1].y;
     const tanThetaC = dy/dx;
 
     // tip of arrow
-    if (dx > 0) {
+    if (dx >= 0) {
         xx1 = xx + (20 * Math.cos(Math.atan(tanThetaC) + 0.5));
         xx2 = xx + (20 * Math.cos(Math.atan(tanThetaC) - 0.5));
         yx1 = yx + (20 * Math.sin(Math.atan(tanThetaC) + 0.5));
@@ -135,6 +59,7 @@ export default class UMLRenderer extends BaseRenderer {
                 fontWeight: 'normal'
             }
         });
+        this.connectionLayout = 'orthogonal';
     }
 
     canRender(element) {
@@ -143,18 +68,14 @@ export default class UMLRenderer extends BaseRenderer {
 
     drawConnection(gfx, element, attrs) {
         if (element.umlType === 'generalization') {
+            const arrow = createArrow(element.waypoints.slice(-2));
 
-            const lineBetweenShapes = getLine(element.source, element.target);
-
-            const arrow = createArrow(lineBetweenShapes);
-
-            var line = createLine([
-                lineBetweenShapes.source,
+            var line = createLine(element.waypoints.slice(0,-1).concat([   
                 {
                     x: (arrow[1].x + arrow[2].x) / 2,
                     y: (arrow[1].y + arrow[2].y) / 2
                 }
-            ], assign({}, this.CONNECTION_STYLE, attrs || {}));
+            ]), assign({}, this.CONNECTION_STYLE, attrs || {}));
             
             var tip = createLine([
                 {
@@ -181,15 +102,13 @@ export default class UMLRenderer extends BaseRenderer {
             return group;
         } else if (element.umlType === 'association') {
             // todo, segmented line
-            const lineBetweenShapes = getLine(element.source, element.target);
-            const arrow = createArrow(lineBetweenShapes);
-            var line = createLine([
-                lineBetweenShapes.source,
+            const arrow = createArrow(element.waypoints.slice(-2));
+            var line = createLine(element.waypoints.slice(0,-1).concat([
                 {
                     x: (arrow[1].x + arrow[2].x) / 2,
                     y: (arrow[1].y + arrow[2].y) / 2
                 }
-            ], assign({}, this.CONNECTION_STYLE, attrs || {}));
+            ]), assign({}, this.CONNECTION_STYLE, attrs || {}));
             var arrowTipPath = svgCreate('polyline');
             svgAttr(arrowTipPath, {
                 style: 'fill:var(--vt-c-black);stroke:var(--vt-c-black);',
@@ -197,8 +116,8 @@ export default class UMLRenderer extends BaseRenderer {
             });
 
             // create diamond at end
-            const dx = lineBetweenShapes.source.x - lineBetweenShapes.target.x;
-            const dy = lineBetweenShapes.source.y - lineBetweenShapes.target.y;
+            const dx = element.waypoints[1].x - element.waypoints[0].x;
+            const dy = element.waypoints[1].y - element.waypoints[0].y;
             const tan = dy/dx;
             const theta = Math.atan(tan);
 
@@ -207,20 +126,20 @@ export default class UMLRenderer extends BaseRenderer {
             const xMod = dx < 0 ? 0 : Math.PI;
             const points = [
                 {
-                    x: lineBetweenShapes.source.x,
-                    y: lineBetweenShapes.source.y
+                    x: element.waypoints[0].x,
+                    y: element.waypoints[0].y
                 },
                 {
-                    x: lineBetweenShapes.source.x + (diamondLen * Math.cos(xMod + theta + (Math.PI / 4))),
-                    y: lineBetweenShapes.source.y + (diamondLen * Math.sin(xMod + theta + (Math.PI / 4)))
+                    x: element.waypoints[0].x - (diamondLen * Math.cos(xMod + theta + (Math.PI / 4))),
+                    y: element.waypoints[0].y - (diamondLen * Math.sin(xMod + theta + (Math.PI / 4)))
                 },
                 {
-                    x: lineBetweenShapes.source.x + (Math.sqrt((diamondLen * diamondLen) + (diamondLen * diamondLen)) * Math.cos(xMod + theta)),
-                    y: lineBetweenShapes.source.y + (Math.sqrt((diamondLen * diamondLen) + (diamondLen * diamondLen)) * Math.sin(xMod + theta))
+                    x: element.waypoints[0].x - (Math.sqrt((diamondLen * diamondLen) + (diamondLen * diamondLen)) * Math.cos(xMod + theta)),
+                    y: element.waypoints[0].y - (Math.sqrt((diamondLen * diamondLen) + (diamondLen * diamondLen)) * Math.sin(xMod + theta))
                 },
                 {
-                    x: lineBetweenShapes.source.x + (diamondLen * Math.cos(xMod + theta - (Math.PI / 4))),
-                    y: lineBetweenShapes.source.y + (diamondLen * Math.sin(xMod + theta - (Math.PI / 4)))
+                    x: element.waypoints[0].x - (diamondLen * Math.cos(xMod + theta - (Math.PI / 4))),
+                    y: element.waypoints[0].y - (diamondLen * Math.sin(xMod + theta - (Math.PI / 4)))
                 }
             ];
             svgAttr(diamond, {
