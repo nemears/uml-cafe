@@ -114,6 +114,7 @@ export default {
                 let target = undefined;
                 let source = undefined;
                 let represents = undefined;
+                let waypointsSlot = undefined;
                 for await (let slot of packagedEl.slots) {
                     if (slot.definingFeature.id() === 'KrQkyKfJLEoLHucoJlsUn&06GdTi') {
                         target = shapes[(await slot.values.front()).instance.id()];
@@ -121,22 +122,34 @@ export default {
                         source = shapes[(await slot.values.front()).instance.id()];
                     } else if (slot.definingFeature.id() === '5aQ4hcDk32eSc3R&84uIyACddmu0') {
                         represents = await this.$umlWebClient.get((await slot.values.front()).value);
+                    } else if (slot.definingFeature.id() === 'JZd_DbxP5H2otheX0ucXKgeGxB3b') {
+                        waypointsSlot = slot;
                     }
                 }
-                // TODO waypoints saved to model
-                // const line = getLine(source, target);
-                // var relationship = elementFactory.createConnection({
-                //     waypoints: [
-                //         line.source,
-                //         line.target
-                //     ],
-                //     shapeID: packagedEl.id,
-                //     elementID: represents.id,
-                //     source: source,
-                //     target: target,
-                //     umlType: represents.elementType()
-                // });
-                // canvas.addConnection(relationship, root);
+                // waypoints saved to model
+                let waypoints = [];
+                for await (const pointVal of waypointsSlot.values) {
+                    const pointInstance = await pointVal.instance.get();
+                    let point = {};
+                    for await (const slot of pointInstance.slots) {
+                        if (slot.definingFeature.id() === 'TL9YRNP&uSq5O&ZX0BNUqSl3uHTO') {
+                            point.x = (await slot.values.front()).value;
+                        } else if (slot.definingFeature.id() === 'WQEwSh2OYmb1Yj2Hu5Fdk_S6qFP5') {
+                            point.y = (await slot.values.front()).value;
+                        }
+                    }
+                    waypoints.push(point);
+                }
+
+                var relationship = elementFactory.createConnection({
+                    waypoints: waypoints,
+                    shapeID: packagedEl.id,
+                    elementID: represents.id,
+                    source: source,
+                    target: target,
+                    umlType: represents.elementType()
+                });
+                canvas.addConnection(relationship, root);
             }
         }
         

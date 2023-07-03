@@ -122,6 +122,7 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         // get point instance
         const shapeInstance = await umlWebClient.get(event.shape.shapeID);
         adjustPoint(event, shapeInstance);
+        // TODO adjust incoming and outgoing relationships
     });
 
     eventBus.on('resize.end', async (event) => {
