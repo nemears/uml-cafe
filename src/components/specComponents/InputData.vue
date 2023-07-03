@@ -1,11 +1,10 @@
 <script>
 export default {
-    props: ['label', 'initialData', 'readOnly', 'type', 'umlid'],
-    inject: ['dataChange'],
+    props: ['label', 'inputType', 'initialData', 'readOnly', 'type', 'umlid'],
     data() {
         return {
-            data: ''
-        };
+            data: undefined
+        }
     },
     emits: ['dataChange'],
     mounted() {
@@ -25,7 +24,8 @@ export default {
     },
     methods: {
         async submitDataChange() {
-            this.data = this.$refs.stringInput.value;
+            console.log('TODO submit integer data change (maybe not needed)');
+            this.data = this.inputType === 'checkbox' ? this.$refs.numberInput.checked : this.$refs.numberInput.value;
             const el = await this.$umlWebClient.get(this.umlid);
             el[this.type] = this.data; // this may be dangerous in the future
             this.$umlWebClient.put(el);
@@ -43,28 +43,28 @@ export default {
 }
 </script>
 <template>
-    <div class="stringInputContainer">
-        <div class="stringInputLabel">
+    <div class="numberInputContainer">
+        <div class="numberInputLabel">
             <label for="dataField">
                 <b>{{ label }}</b>
             </label>
         </div>
-        <input name="dataField" type="text" :value="data" :readonly="readOnly" @keypress.enter="submitDataChange" ref="stringInput"/>
+        <input name="dataField" :type="inputType" :value="data" :readonly="readOnly" @change="submitDataChange" ref="numberInput"/>
     </div>
 </template>
 <style>
-.stringInputContainer {
+.numberInputContainer {
     display: flex;
     padding-bottom: 10px;
 }
-.stringInputContainer > input {
+.numberInputContainer > input {
     min-width: 700px;
     color: azure;
     background-color: #222427;
     border: none;
     font-size: 18px;
 }
-.stringInputLabel {
+.numberInputLabel {
     min-width: 200px;
 }
 </style>

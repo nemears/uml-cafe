@@ -1,10 +1,9 @@
 <script>
 import ElementType from './specComponents/ElementType.vue';
-import StringData from './specComponents/StringData.vue';
 import SetData from './specComponents/SetData.vue';
 import getImage from '../GetUmlImage.vue';
 import SingletonData from './specComponents/SingletonData.vue';
-import IntegerData from './specComponents/IntegerData.vue';
+import InputData from './specComponents/InputData.vue';
 export default {
     props: ['umlID'],
     emits: ['specification', 'dataChange'],
@@ -125,11 +124,32 @@ export default {
                 this.typedElementData = undefined;
             }
 
+            if (el.isSubClassOf('literalBool')) {
+                this.literalBoolData = {};
+                this.literalBoolData.value = el.value;
+            } else {
+                this.literalBoolData = undefined;
+            }
+
             if (el.isSubClassOf('literalInt')) {
                 this.literalIntData = {};
                 this.literalIntData.value = el.value;
             } else {
                 this.literalIntData = undefined;
+            }
+
+            if (el.isSubClassOf('literalReal')) {
+                this.literalRealData = {};
+                this.literalRealData.value = el.value;
+            } else {
+                this.literalRealData = undefined;
+            }
+
+            if (el.isSubClassOf('literalString')) {
+                this.literalStringData = {};
+                this.literalStringData.value = el.value;
+            } else {
+                this.literalStringData = undefined;
             }
 
             if (el.isSubClassOf('packageableElement')) {
@@ -243,7 +263,7 @@ export default {
             }
         },
     },
-    components: { ElementType, StringData, SetData, SingletonData, IntegerData }
+    components: { ElementType, SetData, SingletonData, InputData }
 }
 </script>
 <template>
@@ -256,15 +276,26 @@ export default {
         <img v-bind:src="elementImage" v-if="elementImage !== undefined" class="headerImage"/>
 	</div>
 	<ElementType :element-type="'Element'">
-        <StringData :label="'ID'" :initial-data="umlID" :read-only="true" :umlid="umlID" :type="'id'" @data-change="propogateDataChange"></StringData>
+        <InputData  :label="'ID'" 
+                    :input-type="'string'" 
+                    :initial-data="umlID" 
+                    :read-only="true" 
+                    :umlid="umlID" 
+                    :type="'id'" 
+                    @data-change="propogateDataChange"></InputData>
         <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements', 'generalizations']" 
                 @specification="propogateSpecification"></SetData>
         <SingletonData :label="'Owner'" :readonly="true" :inital-data="elementData.owner" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
         <SetData :label="'Applied Stereotypes'" :initial-data="elementData.appliedStereotypes" :umlid="umlID" @specification="propogateSpecification"></SetData>
 	</ElementType>
 	<ElementType :element-type="'Named Element'" v-if="namedElementData !== undefined">
-        <StringData :label="'Name'" :initial-data="namedElementData.name" :read-only="false" :umlid="umlID" :type="'name'" 
-        @data-change="propogateDataChange"></StringData>
+        <InputData  :label="'Name'" 
+                    :initial-data="namedElementData.name" 
+                    :input-type="'string'" 
+                    :read-only="false" 
+                    :umlid="umlID" 
+                    :type="'name'" 
+                    @data-change="propogateDataChange"></InputData>
         <SingletonData :label="'Namespace'" :readonly="true" :inital-data="namedElementData.namespace" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
 	</ElementType>
 	<ElementType :element-type="'Relationship'" v-if="relationshipData !== undefined">
@@ -286,9 +317,38 @@ export default {
 			:singleton-data="{setName:'type',validTypes:['classifier']}" 
 			@specification="propogateSpecification"></SingletonData>
 	</ElementType>
-	<ElementType :element-type="'Literal Int'" v-if="literalIntData !== undefined">
-        <IntegerData :label="'Value'" :initial-data="literalIntData.value" :umlid="umlID" :type="'value'"></IntegerData>
+    <ElementType :element-type="'Packageable Element'" v-if="packageableElementData !== undefined">
+        <SingletonData :label="'OwningPackage'" 
+			:inital-data="packageableElementData.owningPackage" 
+			:uml-i-d="umlID" 
+			@specification="propogateSpecification"></SingletonData>
 	</ElementType>
+ 
+    <ElementType :element-type="'Literal Bool'" v-if="literalBoolData !== undefined">
+        <InputData  :label="'Value'"
+                    :input-type="'checkbox'"
+                    :initial-data="literalBoolData.value"
+                    :umlid="umlID"
+                    :type="'value'">
+        </InputData>
+    </ElementType>
+	<ElementType :element-type="'Literal Int'" v-if="literalIntData !== undefined">
+        <InputData :label="'Value'" :input-type="'number'" :initial-data="literalIntData.value" :umlid="umlID" :type="'value'"></InputData>
+	</ElementType>
+    <ElementType :element-type="'Literal Real'" v-if="literalRealData">
+        <InputData  :label="'Value'"
+                    :input-type="'number'"
+                    :initial-data="literalRealData.value"
+                    :umlid="umlID"
+                    :type="'value'"></InputData>
+    </ElementType>
+    <ElementType :element-type="'Literal String'" v-if="literalStringData">
+        <InputData  :label="'Value'"
+                    :input-type="'string'"
+                    :initial-data="literalStringData.value"
+                    :umlid="umlID"
+                    :type="'value'"></InputData>
+    </ElementType>
 	<ElementType :element-type="'Multiplicity Element'" v-if="multiplicityElementData !== undefined">
         <SingletonData :label="'Lower Value'" :createable="{types:['literalInt'], set:'lowerValue'}" :inital-data="multiplicityElementData.lowerValue" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
         <SingletonData :label="'Upper Value'" :createable="{types:['literalInt', 'literalUnlimitedNatural'], set:'upperValue'}" :inital-data="multiplicityElementData.upperValue" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
@@ -322,13 +382,7 @@ export default {
         <SetData :label="'Owned Members'" :initial-data="namespaceData.ownedMembers" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']"
 			@specification="propogateSpecification"></SetData>
 	</ElementType>
-    <ElementType :element-type="'Packageable Element'" v-if="packageableElementData !== undefined">
-        <SingletonData :label="'OwningPackage'" 
-			:inital-data="packageableElementData.owningPackage" 
-			:uml-i-d="umlID" 
-			@specification="propogateSpecification"></SingletonData>
-	</ElementType>
-	<ElementType :element-type="'Package'" v-if="packageData !== undefined">
+    <ElementType :element-type="'Package'" v-if="packageData !== undefined">
         <SetData    :label="'Packaged Elements'" 
 			:initial-data="packageData.packagedElements" 
 			:umlid="umlID" 
