@@ -285,7 +285,13 @@ export default {
                     @data-change="propogateDataChange"></InputData>
         <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements', 'generalizations']" 
                 @specification="propogateSpecification"></SetData>
-        <SingletonData :label="'Owner'" :readonly="true" :inital-data="elementData.owner" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+        <SingletonData  :label="'Owner'" 
+                        :readonly="true" 
+                        :inital-data="elementData.owner" 
+                        :uml-i-d="umlID" 
+                        :singleton-data="{setName:'owner'}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
         <SetData :label="'Applied Stereotypes'" :initial-data="elementData.appliedStereotypes" :umlid="umlID" @specification="propogateSpecification"></SetData>
 	</ElementType>
 	<ElementType :element-type="'Named Element'" v-if="namedElementData !== undefined">
@@ -296,7 +302,13 @@ export default {
                     :umlid="umlID" 
                     :type="'name'" 
                     @data-change="propogateDataChange"></InputData>
-        <SingletonData :label="'Namespace'" :readonly="true" :inital-data="namedElementData.namespace" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+        <SingletonData  :label="'Namespace'" 
+                        :readonly="true" 
+                        :inital-data="namedElementData.namespace" 
+                        :uml-i-d="umlID"
+                        :singleton-data="{setName:'namespace'}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
 	</ElementType>
 	<ElementType :element-type="'Relationship'" v-if="relationshipData !== undefined">
         <SetData :label="'Related Elements'" :readonly="true" :initial-data="relationshipData.relatedElements" :umlid="umlID" @specification="propogateSpecification" :subsets="['general', 'specific']"></SetData>
@@ -306,24 +318,35 @@ export default {
         <SetData :label="'Sources'" :readonly="true" :initial-data="directedRelationshipData.sources" :umlid="umlID" @specification="propogateSpecification"></SetData>
 	</ElementType>
 	<ElementType :element-type="'Generalization'" v-if="generalizationData !== undefined">
-        <SingletonData :label="'Specific'" :inital-data="generalizationData.specific" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
-        <SingletonData :label="'General'" :inital-data="generalizationData.general" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
-	</ElementType>
-	<ElementType :element-type="'Typed Element'" v-if="typedElementData !== undefined">
-        <SingletonData 
-			:label="'Type'" 
-			:inital-data="typedElementData.type" 
-			:uml-i-d="umlID" 
-			:singleton-data="{setName:'type',validTypes:['classifier']}" 
-			@specification="propogateSpecification"></SingletonData>
-	</ElementType>
+        <SingletonData  :label="'Specific'" 
+                        :inital-data="generalizationData.specific" 
+                        :uml-i-d="umlID" 
+                        :singleton-data="{setName:'specific', validTypes:['classifier']}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
+        <SingletonData  :label="'General'" 
+                        :inital-data="generalizationData.general" 
+                        :uml-i-d="umlID" 
+                        :singleton-data="{setName:'general', valideTypes:['classifier']}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
+    </ElementType>
+    <ElementType :element-type="'Typed Element'" v-if="typedElementData !== undefined">
+        <SingletonData  :label="'Type'" 
+                        :inital-data="typedElementData.type" 
+                        :uml-i-d="umlID" 
+                        :singleton-data="{setName:'type',validTypes:['classifier']}" 
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
+    </ElementType>
     <ElementType :element-type="'Packageable Element'" v-if="packageableElementData !== undefined">
-        <SingletonData :label="'OwningPackage'" 
-			:inital-data="packageableElementData.owningPackage" 
-			:uml-i-d="umlID" 
-			@specification="propogateSpecification"></SingletonData>
+        <SingletonData  :label="'OwningPackage'" 
+                        :inital-data="packageableElementData.owningPackage" 
+                        :uml-i-d="umlID" 
+                        :singleton-data="{setName:'owningPackage', validTypes:['package']}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
 	</ElementType>
- 
     <ElementType :element-type="'Literal Bool'" v-if="literalBoolData !== undefined">
         <InputData  :label="'Value'"
                     :input-type="'checkbox'"
@@ -350,31 +373,64 @@ export default {
                     :type="'value'"></InputData>
     </ElementType>
 	<ElementType :element-type="'Multiplicity Element'" v-if="multiplicityElementData !== undefined">
-        <SingletonData :label="'Lower Value'" :createable="{types:['literalInt'], set:'lowerValue'}" :inital-data="multiplicityElementData.lowerValue" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
-        <SingletonData :label="'Upper Value'" :createable="{types:['literalInt', 'literalUnlimitedNatural'], set:'upperValue'}" :inital-data="multiplicityElementData.upperValue" :uml-i-d="umlID" @specification="propogateSpecification"></SingletonData>
+        <SingletonData  :label="'Lower Value'" 
+                        :createable="{types:['literalInt']}" 
+                        :inital-data="multiplicityElementData.lowerValue" 
+                        :uml-i-d="umlID" 
+                        :singleton-data="{setName:'lowerValue', validTypes:['valueSpecification']}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
+        <SingletonData  :label="'Upper Value'" 
+                        :createable="{types:['literalInt', 'literalUnlimitedNatural']}"
+                        :inital-data="multiplicityElementData.upperValue" 
+                        :uml-i-d="umlID" 
+                        :singleton-data="{setName:'upperValue', validTypes:['valueSpecification']}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
 	</ElementType>
 	<ElementType :element-type="'Property'" v-if="propertyData !== undefined">
         <SingletonData  :label="'Class'" 
                         :inital-data="propertyData.clazz" 
                         :uml-i-d="umlID" 
-                        @specification="propogateSpecification"></SingletonData>
+                        :singleton-data="{setName:'class', validTypes: ['class']}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
         <SingletonData  :label="'DataType'" 
                         :inital-data="propertyData.dataType" 
                         :uml-i-d="umlID" 
-                        @specification="propogateSpecification"></SingletonData>
+                        :singleton-data="{setName:'dataType', validTypes:['dataType']}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
         <SingletonData  :label="'Owning Association'" 
                         :inital-data="propertyData.owningAssociation" 
                         :uml-i-d="umlID" 
-                        @specification="propogateSpecification"></SingletonData>
+                        :singleton-data="{setName:'owningAssociation', validTypes:['assoiation']}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
         <SingletonData  :label="'Association'" 
                         :inital-data="propertyData.association" 
                         :uml-i-d="umlID" 
-                        @specification="propogateSpecification"></SingletonData>
+                        :singleton-data="{setName: 'association', validTypes:['association']}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
         <SingletonData  :label="'Default Value'"
-                        :createable="{types:['literalBool','literalInt','literalNull','literalReal','literalString','literalUnlimitedNatural'],set: 'defaultValue'}"
+                        :createable="
+                                    {
+                                        types: [
+                                            'instanceValue',
+                                            'literalBool',
+                                            'literalInt',
+                                            'literalNull',
+                                            'literalReal',
+                                            'literalString',
+                                            'literalUnlimitedNatural'
+                                        ],
+                                    }"
                         :inital-data="propertyData.defaultValue"
                         :uml-i-d="umlID"
-                        @specification="propogateSpecification"></SingletonData>
+                        :singleton-data="{setName:'defaultValue', validTypes:['valueSpecification']}"
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
 	</ElementType>
 	<ElementType :element-type="'Namespace'" v-if="namespaceData !== undefined">
         <SetData :label="'Members'" :initial-data="namespaceData.members" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']"
@@ -399,13 +455,13 @@ export default {
                     :set-data="{setName:'classifiers',validTypes:['classifier']}"
                     @specification="propogateSpecification"
                     @data-change="propogateDataChange"></SetData>
-    <SetData    :label="'Slots'"
-                :initial-data="instanceSpecificationData.slots"
-                :umlid="umlID"
-                :subsets="[]"
-                :creatable="{types:['slot'], set:'slots'}"
-                @specification="propogateSpecification"
-                @data-change="propogateDataChange"></SetData>
+        <SetData    :label="'Slots'"
+                    :initial-data="instanceSpecificationData.slots"
+                    :umlid="umlID"
+                    :subsets="[]"
+                    :creatable="{types:['slot'], set:'slots'}"
+                    @specification="propogateSpecification"
+                    @data-change="propogateDataChange"></SetData>
 
 	</ElementType>
 	<ElementType :element-type="'Slot'" v-if="slotData !== undefined">
@@ -413,6 +469,7 @@ export default {
             :label="'Owning Instance'"
             :inital-data="slotData.owningInstance"
             :uml-i-d="umlID" 
+            :singleton-data="{setName: 'owningInstance', validTypes:['instanceSpecification']}"
             @specification="propogateSpecification"
             @data-change="propogateDataChange"></SingletonData>
         <SetData    :label="'Values'"
@@ -421,13 +478,13 @@ export default {
                     :subsets="[]"
                     :creatable="{
                         types:[
+                            'instanceValue',
                             'literalInt', 
                             'literalNull', 
                             'literalReal', 
                             'literalString', 
                             'literalUnlimitedNatural'
                         ], 
-                        set:'values'
                     }"
                     @specification="propogateSpecification"
                     @data-change="propogateDataChange"></SetData>
@@ -482,12 +539,11 @@ export default {
 .mainDiv {
     padding: 10px;
     flex: 1 1 69vw;
-    overflow-y: auto;
-}
-.horizontalScroll{
     border: solid #525258;
     border-width: 2px;
-    overflow-x: auto;
+    overflow: auto;
+}
+.horizontalScroll{
     width: 1000px;
     margin: auto;
 }

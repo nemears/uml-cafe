@@ -12,6 +12,7 @@ import LiteralRealSVG from './components/icons/literal_real.svg';
 import LiteralStringSVG from './components/icons/literal_string.svg';
 import LiteralUnlimitedNaturalSVG from './components/icons/literal_unlimited_natural.svg';
 import InstanceSpecificationSVG from './components/icons/instance_specification.svg';
+import InstanceValueSVG from './components/icons/instance_value.svg';
 import SlotSVG from './components/icons/slot.svg';
 export default function getImage(el) {
     let elementType = typeof el === 'string' ? el : el.elementType();
@@ -33,6 +34,9 @@ export default function getImage(el) {
         }
         case 'instanceSpecification': {
             return InstanceSpecificationSVG;
+        }
+        case 'instanceValue': {
+            return InstanceValueSVG;
         }
         case 'literalBool': {
             return LiteralBoolSVG;

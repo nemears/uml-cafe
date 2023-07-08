@@ -41,7 +41,9 @@ export default {
         <div class="content">
             <div class="elementCreationOption" v-for="elementType in types" :key="elementType" @dblclick="createElement(elementType)">
                 <img v-bind:src="images[elementType]"/>
-                {{ elementType }}
+                <div style="padding-left:5px" class="notEditable">
+                    {{ elementType }}
+                </div>
             </div>
         </div>
     </div>

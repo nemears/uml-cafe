@@ -3,7 +3,7 @@ import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
 export default {
     props: ['label', 'umlID', 'initalData', 'readonly', 'createable', 'singletonData'],
-    emits: ['specification'],
+    emits: ['specification', 'dataChange'],
     inject: ['dataChange'],
     data() {
         return {
@@ -106,7 +106,65 @@ export default {
                 id: el.id,
                 label: el.name !== undefined ? el.name : '' 
             });
-        }
+        },
+        onContextMenu(evt) {
+            //prevent the browser's default menu
+            evt.preventDefault();
+
+            // determine items
+            let items = [];
+            if (!this.valID) {
+                if (this.createable) {
+                    items.push({
+                        label: 'Create Element',
+                        onClick: () => {
+                           this.createElement(); 
+                        }
+                    });
+                }
+            } else {
+                items.push({
+                    label: 'Specification',
+                    onClick: async () => {
+                        this.$emit('specification', await this.$umlWebClient.get(this.valID));
+                    }
+                });
+                items.push({
+                    label: 'Remove',
+                    onClick: async () => {
+                        const el = await this.$umlWebClient.get(this.umlid);
+                        el.sets[this.singletonData.setName].set(null);
+                    }
+                });
+                items.push({
+                    label: 'Delete',
+                    onClick: async () => {
+                        const el = await this.$umlWebClient.get(this.valID);
+                        const owner = await el.owner.get();
+                        this.$umlWebClient.deleteElement(el);
+                        this.$emit('dataChange', {
+                            data: [
+                                {
+                                    id: this.valID,
+                                    type: 'delete'
+                                }
+                            ]
+                        });
+                        this.$umlWebClient.put(owner);
+                        this.valID = undefined;
+                        this.img = undefined;
+                        this.valLabel = '';
+                    } 
+                });
+            }
+
+            //show our menu
+            this.$contextmenu({
+                x: evt.x,
+                y: evt.y,
+                items: items
+            });
+        }, 
     },
     components: { CreationPopUp }
 }
@@ -122,7 +180,8 @@ export default {
             @dragenter.prevent="dragenter($event)"
             @dragleave.prevent="dragleave($event)"
             @drop="drop($event)"
-            @dragover.prevent>
+            @dragover.prevent
+            @contextmenu="onContextMenu($event)">
             <img v-bind:src="img" v-if="img !== undefined" />
             <div>
                 {{ valLabel }}
@@ -130,7 +189,11 @@ export default {
             <div class="createButton" v-if="createable" @click="createElement">
                 +
             </div>
-            <CreationPopUp v-if="creationPopUp && !$umlWebClient.readonly" :types="createable.types" :set="createable.set" :umlid="umlID" @closePopUp="closePopUp"></CreationPopUp>
+            <CreationPopUp  v-if="creationPopUp && !$umlWebClient.readonly" 
+                            :types="createable.types" 
+                            :set="singletonData.setName" 
+                            :umlid="umlID" 
+                            @closePopUp="closePopUp"></CreationPopUp>
         </div>
     </div>
 </template>
