@@ -59,17 +59,29 @@ export default {
                             return;
                         }
                         if (data.id !== this.umlID) {
-                            // TODO may have to do something here
+                            if (this.children.includes(data.id)) {
+                                if (data.type === 'delete') {
+                                    this.children = this.children.filter(child => child !== data.id);
+                                } else if (data.type === 'remove') {
+                                    const element = await this.$umlWebClient.get(this.umlID);
+                                    if (!element.ownedElements.contains(data.id)) {
+                                        this.children = this.children.filter(child => child !== data.id);
+                                    }     
+                                }                   
+                            }
                             continue;
                         }
                         if (data.type === 'name') {
                             this.name = data.value;
                         } else if (data.type === 'add') {
-                            const me = await this.$umlWebClient.get(this.umlID);
                             if (this.children.includes(data.el)) {
                                 continue;
                             }
                             this.children.push(data.el);
+                        } else if (data.type === 'remove') {
+                            if (this.children.includes(data.val)) {
+                                this.children = this.children.filter(child => child !== data.val);
+                            }
                         }
                     }
                 };

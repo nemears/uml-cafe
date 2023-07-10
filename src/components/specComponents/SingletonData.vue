@@ -29,11 +29,7 @@ export default {
         dataChange(newDataChange, oldDataChange) {
             for (let data of newDataChange.data) {
                 if (data.id === this.valID && data.type === 'name') {
-                    if (data.value === '') {
-                        this.valLabel = this.valID;
-                    } else {
-                        this.valLabel = data.value;
-                    }
+                    this.valLabel = data.value;
                 }
             }
         }
@@ -85,7 +81,7 @@ export default {
                 this.$umlWebClient.put(me);
                 this.$umlWebClient.put(elementDragged);
                 this.img = getImage(elementDragged);
-                this.valLabel = elementDragged.name !== undefined && elementDragged.name !== '' ? elementDragged.name : elementDragged.id;
+                this.valLabel = elementDragged.name !== undefined ? elementDragged.name : '';
                 this.valID = elementDragged.id;
                 // TODO emit data change
  
@@ -132,8 +128,22 @@ export default {
                 items.push({
                     label: 'Remove',
                     onClick: async () => {
-                        const el = await this.$umlWebClient.get(this.umlid);
+                        const el = await this.$umlWebClient.get(this.umlID);
                         el.sets[this.singletonData.setName].set(null);
+                        this.$umlWebClient.put(el);
+                        this.$umlWebClient.put(await this.$umlWebClient.get(this.valID));
+                        this.$emit('dataChange', {
+                            data: [{
+                                id: this.umlID,
+                                type: 'remove',
+                                val: this.valID,
+                                set: this.singletonData.setName
+                            }]
+                        });
+                        this.valID = undefined;
+                        this.img = undefined;
+                        this.valLabel = '';
+ 
                     }
                 });
                 items.push({

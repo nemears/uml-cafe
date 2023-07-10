@@ -45,12 +45,7 @@ export default {
                         img: getImage(el)
                     });
                 } else if (data.type === 'delete') {
-                    const el = this.data.find((data) => {
-                        return data.id === data.id;
-                    });
-                    if (el !== undefined) {
-                        this.data.splice(this.data.indexOf(el), 1);
-                    }
+                    this.data = this.data.filter(val => val.id !== data.id);
                 }
             }
         }
@@ -120,6 +115,64 @@ export default {
             } else {
                 console.warn('TODO show client error');
             }
+        },
+        async elementContextMenu(evt, el) {
+            evt.preventDefault();
+            
+            let items = [];
+            let element = await this.$umlWebClient.get(el.id);
+            items.push({
+                label: 'Specification',
+                onClick: () => {
+                    this.$emit('specification', element);
+                }
+            });
+           
+            if (this.setData.readonly === undefined || !this.setData.readonly) {
+                items.push({
+                    label: 'Remove',
+                    onClick: async () => {
+                        const owner = await this.$umlWebClient.get(this.umlid);
+                        owner.sets[this.setData.setName].remove(element);
+                        this.$umlWebClient.put(owner);
+                        this.$umlWebClient.put(element);
+                        this.$emit('dataChange', {
+                            data: [{
+                                id: this.umlid,
+                                type: 'remove',
+                                val: el.id,
+                                set: this.setData.setName
+                            }]
+                        });
+                        this.data = this.data.filter(dataEl => dataEl.id !== el.id);
+                    }
+                });
+
+                items.push({
+                    label: 'Delete',
+                    onClick: async () => {
+                        const owner = await this. $umlWebClient.get(this.umlid);
+                        const elementID = element.id;
+                        await this.$umlWebClient.deleteElement(element);
+                        this.$emit('dataChange', {
+                            data: [
+                                {
+                                    id: elementID,
+                                    type: 'delete'
+                                }
+                            ]
+                        }); 
+                        this.$umlWebClient.put(owner);
+                    }
+                });
+            } 
+            
+            //show our menu
+            this.$contextmenu({
+                x: evt.x,
+                y: evt.y,
+                items: items
+            });
         }
     },
     components: { CreationPopUp }
@@ -135,25 +188,29 @@ export default {
              @dragleave.prevent="dragleave($event)"
              @drop="drop($event)"
              @dragover.prevent>
-            <div class="setElement" v-for="el in data" :key="el.id" @dblclick="specification(el.id)">
+            <div    class="setElement" 
+                    v-for="el in data" 
+                    :key="el.id" 
+                    @dblclick="specification(el.id)"
+                    @contextmenu="elementContextMenu($event, el)">
                 <img v-if="el.img !== undefined" :src="el.img"/>
                 <div>
                     {{ el.label }}
                 </div>
             </div>
-            <div class="setElement" 
-                 v-if="creatable || data.length === 0" 
-                  @dblclick="createElement">
-                <div class="createToolTip" 
-                     :class="{ readOnlyToolTip : $umlWebClient.readonly }" 
-                     v-if="creatable">
-                    double click to create an element
-                </div>
-                <div class="createButton" 
-                     :class="{ readOnlyButton : $umlWebClient.readonly}" 
-                     v-if="creatable" 
-                     @click="createElement">
-                    +
+            <div v-if="creatable || data.length === 0" >
+                <div class="setElement" @dblclick="createElement">
+                    <div class="createToolTip" 
+                         :class="{ readOnlyToolTip : $umlWebClient.readonly }" 
+                         v-if="creatable">
+                        double click to create an element
+                    </div>
+                    <div class="createButton" 
+                         :class="{ readOnlyButton : $umlWebClient.readonly}" 
+                         v-if="creatable" 
+                         @click="createElement">
+                        +
+                    </div>
                 </div>
                 <CreationPopUp v-if="createPopUp && !$umlWebClient.readonly" 
                                :types="creatable.types" 

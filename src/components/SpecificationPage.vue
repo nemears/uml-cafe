@@ -167,12 +167,19 @@ export default {
             }
 
             if (el.isSubClassOf('instanceSpecification')) {
-		this.instanceSpecificationData = {};
+                this.instanceSpecificationData = {};
                 await reloadSet(this.instanceSpecificationData, el.classifiers, 'classifiers');
-		await reloadSet(this.instanceSpecificationData, el.slots, 'slots');
+                await reloadSet(this.instanceSpecificationData, el.slots, 'slots');
                 // TODO specifications
             } else {
                 this.instanceSpecificationData = undefined;
+            }
+
+            if (el.isSubClassOf('instanceValue')) {
+                this.instanceValueData = {};
+                await reloadSingleton(this.instanceValueData, el.instance, 'instance');                
+            } else {
+                this.instanceValueData = undefined;
             }
 
             if (el.isSubClassOf('slot')) {
@@ -212,11 +219,11 @@ export default {
                 this.classifierData = undefined;
             }
 
-            if (el.isSubClassOf('primitiveType')) {
-                this.primitiveTypeData = {};
-                await reloadSet(this.primitiveTypeData, el.ownedAttributes, 'ownedAttributes');
+            if (el.isSubClassOf('dataType')) {
+                this.dataTypeData = {};
+                await reloadSet(this.dataTypeData, el.ownedAttributes, 'ownedAttributes');
             } else {
-                this.primitiveTypeData = undefined;
+                this.dataTypeData = undefined;
             }
 
             if (el.isSubClassOf('structuredClassifier')) {
@@ -283,8 +290,15 @@ export default {
                     :umlid="umlID" 
                     :type="'id'" 
                     @data-change="propogateDataChange"></InputData>
-        <SetData :label="'Owned Elements'" :initial-data="elementData.ownedElements" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements', 'generalizations']" 
-                @specification="propogateSpecification"></SetData>
+        <SetData    :label="'Owned Elements'" 
+                    :initial-data="elementData.ownedElements" 
+                    :umlid="umlID" 
+                    :subsets="['ownedAttributes', 'packagedElements', 'generalizations']" 
+                    :set-data="{
+                        readonly: true,
+                        setName: 'ownedElements'
+                    }"
+                    @specification="propogateSpecification"></SetData>
         <SingletonData  :label="'Owner'" 
                         :readonly="true" 
                         :inital-data="elementData.owner" 
@@ -311,11 +325,32 @@ export default {
                         @data-change="propogateDataChange"></SingletonData>
 	</ElementType>
 	<ElementType :element-type="'Relationship'" v-if="relationshipData !== undefined">
-        <SetData :label="'Related Elements'" :readonly="true" :initial-data="relationshipData.relatedElements" :umlid="umlID" @specification="propogateSpecification" :subsets="['general', 'specific']"></SetData>
+        <SetData    :label="'Related Elements'" 
+                    :initial-data="relationshipData.relatedElements" 
+                    :umlid="umlID" @specification="propogateSpecification" 
+                    :subsets="['general', 'specific']"
+                    :set-data="{
+                                    readonly: true,
+                                    setName: 'relatedElements'
+                                }"></SetData>
 	</ElementType>
 	<ElementType :element-type="'Directed Relationship'" v-if="directedRelationshipData !== undefined">
-        <SetData :label="'Targets'" :readonly="true" :initial-data="directedRelationshipData.targets" :umlid="umlID" @specification="propogateSpecification"></SetData>
-        <SetData :label="'Sources'" :readonly="true" :initial-data="directedRelationshipData.sources" :umlid="umlID" @specification="propogateSpecification"></SetData>
+        <SetData    :label="'Targets'" 
+                    :initial-data="directedRelationshipData.targets" 
+                    :umlid="umlID"
+                    :set-data="{
+                                    setName: 'targets',
+                                    readonly: true
+                                }"
+                    @specification="propogateSpecification"></SetData>
+        <SetData    :label="'Sources'" 
+                    :initial-data="directedRelationshipData.sources" 
+                    :umlid="umlID"
+                    :set-data="{
+                                    readonly: true,
+                                    setName: sources
+                                }"
+                    @specification="propogateSpecification"></SetData>
 	</ElementType>
 	<ElementType :element-type="'Generalization'" v-if="generalizationData !== undefined">
         <SingletonData  :label="'Specific'" 
@@ -347,6 +382,17 @@ export default {
                         @specification="propogateSpecification"
                         @data-change="propogateDataChange"></SingletonData>
 	</ElementType>
+    <ElementType :element-type="'Instance Value'" v-if="instanceValueData">
+        <SingletonData  :label="'Instance'"
+                        :initial-data="instanceValueData.instance"
+                        :uml-i-d="umlID"
+                        :singleton-data="{
+                                            setName: 'instance',
+                                            validTypes: ['instanceSpecification']    
+                                         }"  
+                        @specification="propogateSpecification"
+                        @data-change="propogateDataChange"></SingletonData>
+    </ElementType>
     <ElementType :element-type="'Literal Bool'" v-if="literalBoolData !== undefined">
         <InputData  :label="'Value'"
                     :input-type="'checkbox'"
@@ -433,26 +479,65 @@ export default {
                         @data-change="propogateDataChange"></SingletonData>
 	</ElementType>
 	<ElementType :element-type="'Namespace'" v-if="namespaceData !== undefined">
-        <SetData :label="'Members'" :initial-data="namespaceData.members" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']"
-            @specification="propogateSpecification"></SetData>
-        <SetData :label="'Owned Members'" :initial-data="namespaceData.ownedMembers" :umlid="umlID" :subsets="['ownedAttributes', 'packagedElements']"
-			@specification="propogateSpecification"></SetData>
+        <SetData    :label="'Members'" 
+                    :initial-data="namespaceData.members" 
+                    :umlid="umlID" 
+                    :subsets="['ownedAttributes', 'packagedElements']"
+                    :set-data="{
+                                    readonly: true,
+                                    setName: 'members'
+                                }"
+                    @specification="propogateSpecification"></SetData>
+        <SetData    :label="'Owned Members'" 
+                    :initial-data="namespaceData.ownedMembers" 
+                    :umlid="umlID" 
+                    :subsets="['ownedAttributes', 'packagedElements']"
+                    :set-data="{
+                                    setName: 'ownedMembers',
+                                    readonly: true
+                                }"
+                    @specification="propogateSpecification"></SetData>
 	</ElementType>
     <ElementType :element-type="'Package'" v-if="packageData !== undefined">
         <SetData    :label="'Packaged Elements'" 
-			:initial-data="packageData.packagedElements" 
-			:umlid="umlID" 
-			:subsets="['packagedElements']"
-			:creatable="{types:['class', 'package'], set:'packagedElements'}" 
-			@specification="propogateSpecification"
-			@data-change="propogateDataChange"></SetData>
+                    :initial-data="packageData.packagedElements" 
+                    :umlid="umlID" 
+                    :subsets="['packagedElements']"
+                    :creatable="{
+                                    types: [
+                                        'class', 
+                                        'dataType',
+                                        'instanceSpecification',
+                                        'instanceValue',
+                                        'literalBool',
+                                        'literalInt',
+                                        'literalNull',
+                                        'literalReal',
+                                        'literalString',
+                                        'literalUnlimitedNatural',
+                                        'package',
+                                        'primitiveType',
+                                    ], 
+                                    set: 'packagedElements'
+                                }"
+                    :set-data="{
+                                    setName: 'packagedElements',
+                                    readonly: false,
+                                    validTypes: ['packageableElement']
+                                }"
+                    @specification="propogateSpecification"
+                    @data-change="propogateDataChange"></SetData>
 	</ElementType>
 	<ElementType :element-type="'Instance Specification'" v-if="instanceSpecificationData !== undefined">
         <SetData    :label="'Classifiers'"
                     :initial-data="instanceSpecificationData.classifiers"
                     :umlid="umlID"
                     :subsets="[]"
-                    :set-data="{setName:'classifiers',validTypes:['classifier']}"
+                    :set-data="{
+                                    setName: 'classifiers',
+                                    validTypes:['classifier'],
+                                    readonly: false
+                                }"
                     @specification="propogateSpecification"
                     @data-change="propogateDataChange"></SetData>
         <SetData    :label="'Slots'"
@@ -460,6 +545,10 @@ export default {
                     :umlid="umlID"
                     :subsets="[]"
                     :creatable="{types:['slot'], set:'slots'}"
+                    :set-data="{
+                                    setName: 'slots',
+                                    readonly: false,
+                                }"
                     @specification="propogateSpecification"
                     @data-change="propogateDataChange"></SetData>
 
@@ -486,6 +575,10 @@ export default {
                             'literalUnlimitedNatural'
                         ], 
                     }"
+                    :set-data="{
+                                    setName: 'values',
+                                    readonly: false
+                                }"
                     @specification="propogateSpecification"
                     @data-change="propogateDataChange"></SetData>
         <SingletonData
@@ -502,35 +595,92 @@ export default {
                     :umlid="umlID" 
                     :subsets="['generalizations']" 
                     :creatable="{types:['generalization'], set: 'generalizations'}"
+                    :set-data="{
+                                    setName: 'generalizations',
+                                    readonly: false
+                                }"
                     @specification="propogateSpecification"
                     @data-change="propogateDataChange"></SetData>
-        <SetData :label="'Attributes'" :initial-data="classifierData.attributes" :umlid="umlID" :subsets="['ownedAttributes']"
-			@specification="propogateSpecification"></SetData>
+        <SetData    :label="'Attributes'" 
+                    :initial-data="classifierData.attributes" 
+                    :umlid="umlID" 
+                    :subsets="['ownedAttributes']"
+                    :set-data="{
+                                    setName: 'attributes',
+                                    readonly: true
+                                }"
+                    @specification="propogateSpecification"></SetData>
 	</ElementType>
-	<ElementType :elementType="'Primitive Type'" v-if="primitiveTypeData !== undefined">
-        <SetData :label="'Owned Attributes'" :initial-data="primitiveTypeData.ownedAttributes" :umlid="umlID" :subsets="['ownedAttributes']"
-			@specification="propogateSpecification"></SetData>
-	</ElementType>
+    <ElementType :elementType="'DataType'" v-if="dataTypeData">
+        <SetData    :label="'Owned Attributes'"
+                    :initial-data="dataTypeData.ownedAttributes"
+                    :umlid="umlID"
+                    :set-data="{
+                                    setName: 'ownedAttributes',
+                                    readonly: false
+                                }"
+                    :creatable="{
+                                    types: [
+                                                'property'
+                                            ],
+                                    set: 'ownedAttributes'
+                                }"
+                    @specification="propogateSpecification"
+                    @data-change="propogateDataChange"></SetData>
+    </ElementType>
 	<ElementType :elementType="'Structured Classifier'" v-if="structuredClassifierData !== undefined">
-        <SetData :label="'Owned Attributes'" :initial-data="structuredClassifierData.ownedAttributes" :umlid="umlID" :subsets="['ownedAttributes']"
-			@specification="propogateSpecification"></SetData>
+        <SetData    :label="'Owned Attributes'" 
+                    :initial-data="structuredClassifierData.ownedAttributes" 
+                    :umlid="umlID" 
+                    :subsets="['ownedAttributes']"
+                    :set-data="{
+                                    setName: 'ownedAttributes',
+                                    readonly: true
+                                }"
+                    @specification="propogateSpecification"></SetData>
 	</ElementType>
 	<ElementType :element-type="'Association'" v-if="associationData !== undefined">
-        <SetData :label="'Member Ends'" :initial-data="associationData.memberEnds" :umlid="umlID" :subsets="['ownedEnds', 'navigableOwnedEnds']"
-			@specification="propogateSpecification"></SetData>
-        <SetData :label="'Owned Ends'" :initial-data="associationData.ownedEnds" :umlid="umlID" :subsets="['navigableOwnedEnds']"
-			@specification="propogateSpecification"></SetData>
-        <SetData :label="'Navigable Owned Ends'" :initial-data="associationData.navigableOwnedEnds" :umlid="umlID"
+        <SetData    :label="'Member Ends'" 
+                    :initial-data="associationData.memberEnds" 
+                    :umlid="umlID" 
+                    :subsets="['ownedEnds', 'navigableOwnedEnds']"
+                    :set-data="{
+                                    setName: 'memberEnds',
+                                    readonly: false
+                                }"
+                    @specification="propogateSpecification"
+                    @data-change="propogateDataChange"></SetData>
+        <SetData    :label="'Owned Ends'" 
+                    :initial-data="associationData.ownedEnds" 
+                    :umlid="umlID" 
+                    :subsets="['navigableOwnedEnds']"
+                    :set-data="{
+                                    setName: 'ownedEnds',
+                                    readonly: false
+                                }"
+                    @specification="propogateSpecification"
+                    @data-change="propogateDataChange"></SetData>
+        <SetData    :label="'Navigable Owned Ends'" 
+                    :initial-data="associationData.navigableOwnedEnds" 
+                    :umlid="umlID"
+                    :set-data="{
+                                    setName: 'navigableOwnedEnds',
+                                    readonly: false
+                                }"
 			@specification="propogateSpecification"></SetData>
 	</ElementType>
 	<ElementType :elementType="'Class'" v-if="classData !== undefined">
         <SetData    :label="'Owned Attributes'" 
-			:initial-data="classData.ownedAttributes" 
-			:umlid="umlID" 
-			:subsets="['ownedAttributes']"
-			:creatable="{types:['property'], set: 'ownedAttributes'}"
-			@specification="propogateSpecification"
-			@data-change="propogateDataChange"></SetData>
+                    :initial-data="classData.ownedAttributes" 
+                    :umlid="umlID" 
+                    :subsets="['ownedAttributes']"
+                    :creatable="{types:['property'], set: 'ownedAttributes'}"
+                    :set-data="{
+                                    setName: 'ownedAttributes',
+                                    readonly: false
+                                }"
+                    @specification="propogateSpecification"
+                    @data-change="propogateDataChange"></SetData>
 	</ElementType>
     </div> 
 </div>
