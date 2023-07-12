@@ -53,36 +53,53 @@ export default {
                 if (!packagedEl.isSubClassOf('instanceSpecification')) {
                     continue;
                 }
-                if (!packagedEl.classifiers.contains('&7qxHqMCh5Cwd3&s053vQD&xPsAK')) {
+                if (!packagedEl.classifiers.contains('KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g')) {
                     continue;
                 }
                 // draw shape
-                let pointInstance = undefined;
                 let widthValue = undefined;
                 let heightValue = undefined;
                 let elementID = undefined;
-                for await (let slot of packagedEl.slots) {
-                    if (slot.definingFeature.id() === 'bHizRf2FLBphg0iYSQsXnbn_BJ2c') {
-                        pointInstance = await (await slot.values.front()).instance.get();
-                    } else if (slot.definingFeature.id() === 'MbxzX87yGS4s8kl&FehOVttIWs2q') {
-                        widthValue = (await slot.values.front()).value;
-                    } else if (slot.definingFeature.id() === 'pmvMVFeRTg6QF87n8ey97MIyopwb') {
-                        heightValue = (await slot.values.front()).value;
-                    } else if (slot.definingFeature.id() === '5aQ4hcDk32eSc3R&84uIyACddmu0') {
-                        elementID = (await slot.values.front()).value;
-                    }
-                }
-
                 let xValue = undefined;
                 let yValue = undefined;
-                for await (let slot of pointInstance.slots) {
-                    if (slot.definingFeature.id() === 'TL9YRNP&uSq5O&ZX0BNUqSl3uHTO') {
-                        xValue = (await slot.values.front()).value;
-                    } else if (slot.definingFeature.id() === 'WQEwSh2OYmb1Yj2Hu5Fdk_S6qFP5') {
-                        yValue = (await slot.values.front()).value;
+                for await (let slot of packagedEl.slots) {
+
+                    if (slot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
+                        // bounds
+                        const boundsInstance = await (await slot.values.front()).instance.get();
+                        for await (let boundsSlot of boundsInstance.slots) {
+                            if (boundsSlot.definingFeature.id() === 'OaYzOYryv5lrW2YYkujnjL02rSlo') {
+                                // x
+                                xValue = (await boundsSlot.values.front()).value;
+                            } else if (boundsSlot.definingFeature.id() === 'RhD_fTVUMc4ceJ4topOlpaFPpoiB') {
+                                yValue = (await boundsSlot.values.front()).value;
+                            }else if (boundsSlot.definingFeature.id() === '&TCEXx1uZQsa7g1KPT9ocVwNiwV7') {
+                                widthValue = (await boundsSlot.values.front()).value;
+                            } else if (boundsSlot.definingFeature.id() === 'ELF54xP3DUMrFbgteAQkIXONqnlg') {
+                                heightValue = (await boundsSlot.values.front()).value;
+                            } 
+                        }
+                    } else if (slot.definingFeature.id() === 'xnI9Aiz3GaF91K8H7KAPe95oDgyE') {
+                        // model element
+                        elementID = 
+                            (await 
+                                (await 
+                                    (await
+                                        (await slot.
+                                                values.
+                                                front()
+                                        ).
+                                        instance.
+                                        get()).
+                                    slots.
+                                    filter(modelElementSlot => modelElementSlot.definingFeature.id() === '3gx55nLEvmzDt2kKK7gYgxsTBD6M'))[0].
+                                values.
+                                front()).
+                            value;
                     }
                 }
 
+                
                 const elShapeIsRepresenting = await this.$umlWebClient.get(elementID);
                 const name = elShapeIsRepresenting.name ? elShapeIsRepresenting.name : '';
 
