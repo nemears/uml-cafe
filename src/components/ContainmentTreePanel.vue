@@ -156,6 +156,26 @@ export default {
 
             this.options[this.options.length - 1].divided = true;
 
+            const createAndAddToSet = async (type, set) => {
+                const createdEl= await this.$umlWebClient.post(type);
+                el.sets[set].add(createdEl);
+                this.$umlWebClient.put(createdEl);
+                this.$umlWebClient.put(el);
+                el = await this.$umlWebClient.get(el.id);
+                this.children.push(createdEl.id);
+                this.expanded = true;
+                this.$emit('dataChange', {
+                    data: [
+                        {
+                            id: el.id,
+                            type: 'add',
+                            set: set,
+                            el: createdEl.id
+                        }
+                    ]
+                });
+            }; 
+
             // create elements
             if (el.isSubClassOf('classifier')) {
                 for (let generalizationID of el.generalizations.ids()) {
@@ -169,24 +189,8 @@ export default {
                 this.options.push({
                     label: 'Create Property',
                     disabled: this.$umlWebClient.readonly,
-                    onClick: async () => {
-                        const newProperty = await this.$umlWebClient.post('property');
-                        el.ownedAttributes.add(newProperty);
-                        this.$umlWebClient.put(newProperty);
-                        this.$umlWebClient.put(el);
-                        el = await this.$umlWebClient.get(el.id);
-                        this.children.push(newProperty.id);
-                        this.expanded = true;
-                        this.$emit('dataChange', {
-                            data: [
-                                {
-                                    id: el.id,
-                                    type: 'add',
-                                    set: 'ownedAttributes',
-                                    el: newProperty.id
-                                }
-                            ]
-                        });
+                    onClick: () => {
+                        createAndAddToSet('property', 'ownedAttributes')
                     }
                 });
             }
@@ -195,33 +199,28 @@ export default {
                     this.children.push(propertyID);
                 }
             }
+            if (el.isSubClassOf('enumeration')) {
+                for (const literalID of el.ownedLiterals.ids()) {
+                    this.children.push(literalID);
+                }
+                this.options.push({
+                    label: 'Create Enumeration Literal',
+                    disabled: this.$umlWebClient.readonly,
+                    onClick: () => {
+                        createAndAddToSet('enumerationLiteral', 'ownedLiterals')
+                    }
+                });
+            }
             if (el.isSubClassOf('instanceSpecification')) {
                 for (let slotID of el.slots.ids()) {
                     this.children.push(slotID);
                 }
                 this.options.push({
-                   label: 'Create Slot',
-                   disabled: this.$umlWebClient.readonly,
-                    onClick: async () => {
-                        const newSlot= await this.$umlWebClient.post('slot');
-                        el.slots.add(newSlot);
-                        this.$umlWebClient.put(newSlot);
-                        this.$umlWebClient.put(el);
-                        el = await this.$umlWebClient.get(el.id);
-                        this.children.push(newSlot.id);
-                        this.expanded = true;
-                        this.$emit('dataChange', {
-                            data: [
-                                {
-                                    id: el.id,
-                                    type: 'add',
-                                    set: 'slots',
-                                    el: newSlot.id
-                                }
-                            ]
-                        });
+                    label: 'Create Slot',
+                    disabled: this.$umlWebClient.readonly,
+                    onClick: () => {
+                        createAndAddToSet('slot', 'slots')
                     }
- 
                 });
             }
             if (el.isSubClassOf('package')) {
@@ -231,116 +230,50 @@ export default {
                 this.options.push({
                     label: 'Create Package',
                     disabled: this.$umlWebClient.readonly,
-                    onClick: async () => {
-                        const newPackage = await this.$umlWebClient.post('package');
-                        el.packagedElements.add(newPackage);
-                        this.$umlWebClient.put(el);
-                        this.$umlWebClient.put(newPackage);
-                        el = await this.$umlWebClient.get(el.id);
-                        this.children.push(newPackage.id);
-                        this.expanded = true;
-                        this.$emit('dataChange', {
-                            data: [
-                                {
-                                    id: el.id,
-                                    type: 'add',
-                                    set: 'packagedElements',
-                                    el: newPackage.id
-                                }
-                            ]
-                        });
+                    onClick: () => {
+                        createAndAddToSet('package', 'packagedElements')
                     }
                 });
                 this.options.push({
                     label: 'Create Class',
                     disabled: this.$umlWebClient.readonly,
-                    onClick: async () => {
-                        const newClass = await this.$umlWebClient.post('class');
-                        el.packagedElements.add(newClass);
-                        this.$umlWebClient.put(el);
-                        this.$umlWebClient.put(newClass);
-                        el = await this.$umlWebClient.get(el.id);
-                        this.children.push(newClass.id);
-                        this.expanded = true;
-                        this.$emit('dataChange', {
-                            data: [
-                                {
-                                    id: el.id,
-                                    type: 'add',
-                                    set: 'packagedElements',
-                                    el: newClass.id
-                                }
-                            ]
-                        });
+                    onClick: () => {
+                        createAndAddToSet('class', 'packagedElements')
                     }
                 });
                 this.options.push({
                     label: 'Create Data Type',
                     disabled: this.$umlWebClient.readonly,
-                    onClick: async () => {
-                        const newDataType = await this.$umlWebClient.post('dataType');
-                        el.packagedElements.add(newDataType);
-                        this.$umlWebClient.put(el);
-                        this.$umlWebClient.put(newDataType);
-                        el = await this.$umlWebClient.get(el.id);
-                        this.children.push(newDataType.id);
-                        this.expanded = true;
-                        this.$emit('dataChange', {
-                            data: [
-                                {
-                                    id: el.id,
-                                    type: 'add',
-                                    set: 'packagedElements',
-                                    el: newDataType.id
-                                }
-                            ]
-                        });
-                    }
-                });  
-                this.options.push({
-                    label: 'Create Primitive Type',
-                    disabled: this.$umlWebClient.readonly,
-                    onClick: async () => {
-                        const newPrimitiveType = await this.$umlWebClient.post('primitiveType');
-                        el.packagedElements.add(newPrimitiveType);
-                        this.$umlWebClient.put(el);
-                        this.$umlWebClient.put(newPrimitiveType);
-                        el = await this.$umlWebClient.get(el.id);
-                        this.children.push(newPrimitiveType.id);
-                        this.expanded = true;
-                        this.$emit('dataChange', {
-                            data: [
-                                {
-                                    id: el.id,
-                                    type: 'add',
-                                    set: 'packagedElements',
-                                    el: newPrimitiveType.id
-                                }
-                            ]
-                        });
+                    onClick: () => {
+                        createAndAddToSet('dataType', 'packagedElements')
                     }
                 }); 
                 this.options.push({
+                    label: 'Create Enumeration',
+                    disabled: this.$umlWebClient.readonly,
+                    onClick: () => {
+                        createAndAddToSet('enumeration', 'packagedElements')
+                    }
+                }); 
+                this.options.push({
+                    label: 'Create Primitive Type',
+                    disabled: this.$umlWebClient.readonly,
+                    onClick: () => {
+                        createAndAddToSet('primitiveType', 'packagedElements')
+                    }
+                }); 
+                this.options.push({
+                    label: 'Create Association',
+                    disabled: this.$umlWebClient.readonly,
+                    onClick: () => {
+                        createAndAddToSet('association', 'packagedElements');
+                    }
+                });
+                this.options.push({
                     label: 'Create Instance Specification',
                     disabled: this.$umlWebClient.readonly,
-                    onClick: async () => {
-                        const newInstance = await this.$umlWebClient.post('instanceSpecification');
-                        el.packagedElements.add(newInstance);
-                        this.$umlWebClient.put(el);
-                        this.$umlWebClient.put(newInstance);
-                        el = await this.$umlWebClient.get(el.id);
-                        this.children.push(newInstance.id);
-                        this.expanded = true;
-                        this.$emit('dataChange', {
-                            data: [
-                                {
-                                    id: el.id,
-                                    type: 'add',
-                                    set: 'packagedElements',
-                                    el: newInstance.id
-                                }
-                            ]
-                        });
+                    onClick: () => {
+                        createAndAddToSet('instanceSpecification', 'packagedElements')
                     }
                 });
             }

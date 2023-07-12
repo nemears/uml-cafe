@@ -26,6 +26,12 @@ export default function getImage(el) {
         case 'dataType': {
             return ClassSVG;
         }
+        case 'enumeration': {
+            return ClassSVG;
+        }
+        case 'enumerationLiteral': {
+            return PropertySVG;
+        }
         case 'extension': {
             return AssociationSVG;
         }

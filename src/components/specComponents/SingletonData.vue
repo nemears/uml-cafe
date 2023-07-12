@@ -2,7 +2,7 @@
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
 export default {
-    props: ['label', 'umlID', 'initalData', 'readonly', 'createable', 'singletonData'],
+    props: ['label', 'umlID', 'initialData', 'readonly', 'createable', 'singletonData'],
     emits: ['specification', 'dataChange'],
     inject: ['dataChange'],
     data() {
@@ -16,8 +16,8 @@ export default {
         }
     },
     mounted() {
-        if (this.initalData !== undefined) {
-            this.setData(this.initalData);
+        if (this.initialData !== undefined) {
+            this.setData(this.initialData);
         }
     },
     watch: {
