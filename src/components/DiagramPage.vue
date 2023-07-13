@@ -113,7 +113,7 @@ export default {
                     shapeID: packagedEl.id,
                     name: name,
                     umlType: elShapeIsRepresenting.elementType(),
-                    newUMLElement: false
+                    newUMLElement: false,
                 });
                 canvas.addShape(shape);
                 shapes[packagedEl.id] = shape;
@@ -124,7 +124,7 @@ export default {
                 if (!packagedEl.isSubClassOf('instanceSpecification')) {
                     continue;
                 }
-                if (!packagedEl.classifiers.contains('NKE5JxXD2Cp82Gw0CzsnlgtanuSp')) {
+                if (!packagedEl.classifiers.contains('u2fIGW2nEDfMfVxqDvSmPd5e_wNR')) {
                     continue;
                 }
 
@@ -133,13 +133,14 @@ export default {
                 let represents = undefined;
                 let waypointsSlot = undefined;
                 for await (let slot of packagedEl.slots) {
-                    if (slot.definingFeature.id() === 'KrQkyKfJLEoLHucoJlsUn&06GdTi') {
+                    if (slot.definingFeature.id() === 'R2flL_8p_&Zc7HP07QfAyUI7EtCg') {
                         target = shapes[(await slot.values.front()).instance.id()];
-                    } else if (slot.definingFeature.id() === 'nW89s4ZaRhGlrwbri3wIQ6AG5PcY') {
+                    } else if (slot.definingFeature.id() === 'Xxh7mjF9IMK0rhyrbSXOGA1_7vVo') {
                         source = shapes[(await slot.values.front()).instance.id()];
-                    } else if (slot.definingFeature.id() === '5aQ4hcDk32eSc3R&84uIyACddmu0') {
-                        represents = await this.$umlWebClient.get((await slot.values.front()).value);
-                    } else if (slot.definingFeature.id() === 'JZd_DbxP5H2otheX0ucXKgeGxB3b') {
+                    } else if (slot.definingFeature.id() === 'xnI9Aiz3GaF91K8H7KAPe95oDgyE') {
+                        // model element
+                        represents = await this.$umlWebClient.get((await (await (await (await slot.values.front()).instance.get()).slots.filter(elInstSlot => elInstSlot.definingFeature.id() === '3gx55nLEvmzDt2kKK7gYgxsTBD6M'))[0].values.front()).value);
+                    } else if (slot.definingFeature.id() === 'Zf2K&k0k&jwaAz1GLsTSk7rN742p') {
                         waypointsSlot = slot;
                     }
                 }
@@ -149,9 +150,9 @@ export default {
                     const pointInstance = await pointVal.instance.get();
                     let point = {};
                     for await (const slot of pointInstance.slots) {
-                        if (slot.definingFeature.id() === 'TL9YRNP&uSq5O&ZX0BNUqSl3uHTO') {
+                        if (slot.definingFeature.id() === '0TTKoNWbe13DJ3ou_1KhyS9sE1iU') {
                             point.x = (await slot.values.front()).value;
-                        } else if (slot.definingFeature.id() === 'WQEwSh2OYmb1Yj2Hu5Fdk_S6qFP5') {
+                        } else if (slot.definingFeature.id() === 'wecoFZpGF2kLOJ0sBneePO3nB47z') {
                             point.y = (await slot.values.front()).value;
                         }
                     }
@@ -166,6 +167,8 @@ export default {
                     target: target,
                     umlType: represents.elementType()
                 });
+                target.incoming.push(relationship);
+                source.outgoing.push(relationship);
                 canvas.addConnection(relationship, root);
             }
         }

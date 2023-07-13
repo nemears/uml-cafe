@@ -29,7 +29,7 @@ export default class GeneralizationHandler extends Relationship {
             });
 
             // create shape
-            await this.createPath(event, umlWebClient, diagramContext);
+            await this.createEdge(event, umlWebClient, diagramContext);
         });
     }
 

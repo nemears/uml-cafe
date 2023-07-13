@@ -60,7 +60,7 @@ export default class DirectedComposition extends Relationship {
             });
 
             // create shapes
-            await this.createPath(event, umlWebClient, diagramContext);
+            await this.createEdge(event, umlWebClient, diagramContext);
         });
     }
 

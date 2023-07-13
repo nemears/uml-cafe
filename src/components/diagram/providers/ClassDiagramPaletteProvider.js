@@ -52,7 +52,7 @@ export default class ClassDiagramPaletteProvider {
               elementID: classID,
               shapeID: shapeID,
               newUMLElement: true,
-              umlType: 'class'
+              umlType: 'class',
             });
 
             // var classLabel = elementFactory.createLabel({
@@ -60,22 +60,6 @@ export default class ClassDiagramPaletteProvider {
             //   height: 10,
             //   labelTarget: shape
             // });
-
-            create.start(event, shape);
-          }
-        }
-      },
-      'create-frame': {
-        group: 'create',
-        className: 'palette-icon-create-frame',
-        title: 'Create Frame',
-        action: {
-          click: function() {
-            var shape = elementFactory.createShape({
-              width: 300,
-              height: 200,
-              isFrame: true
-            });
 
             create.start(event, shape);
           }

@@ -1,3 +1,5 @@
+import { makeUMLWaypoints } from './relationships/Relationship'
+
 export async function createClassShape(shape, umlWebClient, diagramContext) {
     // set up shape
     const shapeInstance = await umlWebClient.post('instanceSpecification', {id:shape.shapeID});
@@ -152,18 +154,55 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         }
     }
 
+    const adjustEdgeWaypoints = async (edge) => {
+        const edgeInstance = await umlWebClient.get(edge.shapeID);
+        for await (const edgeSlot of edgeInstance.slots) {
+            if (edgeSlot.definingFeature.id() === 'Zf2K&k0k&jwaAz1GLsTSk7rN742p') {
+                let waypointValues = [];
+                for await (const waypointValue of edgeSlot.values) {
+                    umlWebClient.deleteElement(await waypointValue.instance.get());
+                    waypointValues.push(waypointValue);
+                }
+                for (const waypointValue of waypointValues) {
+                    edgeSlot.values.remove(waypointValue);
+                    umlWebClient.deleteElement(waypointValue);
+                }
+                await makeUMLWaypoints(edge, umlWebClient, edgeSlot, await edgeInstance.owningPackage.get());
+            }
+        } 
+    };
+
+    const adjustListOfEdges = async (listOfEdges) => {
+        for (const edge of listOfEdges) {
+            await adjustEdgeWaypoints(edge); 
+        } 
+    }
+
+    const adjustAttachedEdges = async (shape) => {
+        await adjustListOfEdges(shape.incoming);
+        await adjustListOfEdges(shape.outgoing); 
+    }
+
     eventBus.on('shape.move.end', async (event) => {
         // get point instance
         const shapeInstance = await umlWebClient.get(event.shape.shapeID);
         adjustShape(event, shapeInstance);
-        // TODO adjust incoming and outgoing relationships
+        adjustAttachedEdges(event.shape);
     });
 
     eventBus.on('resize.end', async (event) => {
         const shapeInstance = await umlWebClient.get(event.shape.shapeID);
         adjustShape(event, shapeInstance);
-        
+        adjustAttachedEdges(event.shape);
     });
+
+    eventBus.on('connectionSegment.move.end', async (event) => {
+        await adjustEdgeWaypoints(event.connection);
+    });
+
+    eventBus.on('bendpoint.move.end', async (event) => {
+        await adjustEdgeWaypoints(event.connection);
+    }); 
 
     diagramEmitter.on('removeShape', (data) => {
         if (data.shapes) {
