@@ -24,7 +24,15 @@ export async function makeUMLWaypoints(relationship, umlWebClient, waypointsSlot
         pointValue.instance.set(pointInstance);
         waypointsSlot.values.add(pointValue);
         diagram.packagedElements.add(pointInstance);
+        await umlWebClient.put(pointInstance);
+        await umlWebClient.put(xSlot);
+        await umlWebClient.put(ySlot);
+        await umlWebClient.put(xValue);
+        await umlWebClient.put(yValue);
+        await umlWebClient.put(pointValue);
     }
+    await umlWebClient.put(waypointsSlot);
+    await umlWebClient.put(diagram);
 }
 
 export default class Relationship {
@@ -163,6 +171,7 @@ export default class Relationship {
         modelElementSlot.values.add(modelElementValue);
         modelElementSlot.definingFeature.set(await umlWebClient.get('xnI9Aiz3GaF91K8H7KAPe95oDgyE'));
         edgeInstance.slots.add(modelElementSlot);
+        diagramContext.diagram.packagedElements.add(modelElementInstance);
 
         // waypoints
         const waypointsSlot = await umlWebClient.post('slot');
@@ -172,27 +181,17 @@ export default class Relationship {
         diagramContext.diagram.packagedElements.add(edgeInstance);
         
 
-        umlWebClient.put(diagramContext.diagram);
-        umlWebClient.put(edgeInstance);
-        umlWebClient.put(sourceSlot);
-        umlWebClient.put(sourceValue);
-        umlWebClient.put(targetSlot);
-        umlWebClient.put(targetValue);
-        umlWebClient.put(modelElementInstance );
-        umlWebClient.put(modelElementSlot);
-        umlWebClient.put(modelElementValue);
-        umlWebClient.put(idSlot);
-        umlWebClient.put(idVal);
-        umlWebClient.put(waypointsSlot);
-        for await (const val of waypointsSlot.values) {
-            umlWebClient.put(val);
-            const pointInstance = await val.instance.get();
-            umlWebClient.put(pointInstance);
-            for await (const slot of pointInstance.slots) {
-                umlWebClient.put(slot);
-                umlWebClient.put(await slot.values.front());
-            }
-        }
+        await umlWebClient.put(diagramContext.diagram);
+        await umlWebClient.put(edgeInstance);
+        await umlWebClient.put(sourceSlot);
+        await umlWebClient.put(sourceValue);
+        await umlWebClient.put(targetSlot);
+        await umlWebClient.put(targetValue);
+        await umlWebClient.put(modelElementInstance );
+        await umlWebClient.put(modelElementSlot);
+        await umlWebClient.put(modelElementValue);
+        await umlWebClient.put(idSlot);
+        await umlWebClient.put(idVal);
 
         return edgeInstance;
     }

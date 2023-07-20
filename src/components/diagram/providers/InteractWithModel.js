@@ -65,6 +65,7 @@ export async function createClassShape(shape, umlWebClient, diagramContext) {
     modelElementSlot.values.add(modelElementValue);
     modelElementSlot.definingFeature.set(await umlWebClient.get('xnI9Aiz3GaF91K8H7KAPe95oDgyE'));
     shapeInstance.slots.add(modelElementSlot);
+    diagramContext.diagram.packagedElements.add(modelElementInstance);
 
     // put to server
     umlWebClient.put(diagramContext.diagram);
