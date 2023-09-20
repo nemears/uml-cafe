@@ -1,4 +1,4 @@
-import { randomID } from "uml-js/lib/element";
+import { randomID } from "uml-client/lib/element";
 
 /**
  * A example palette provider.

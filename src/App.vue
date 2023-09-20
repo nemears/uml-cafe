@@ -4,7 +4,7 @@ import ContainmentTreePanel from './components/ContainmentTreePanel.vue'
 import UmlEditor from './components/UmlEditor.vue'
 import getImage from './GetUmlImage.vue'
 import classDiagramImage from './components/icons/class_diagram.svg';
-import { nullID } from 'uml-js/lib/element.js'
+import { nullID } from 'uml-client/lib/element.js'
 import { computed } from 'vue'
 </script>
 <script>
