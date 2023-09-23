@@ -7,6 +7,7 @@ import ContextMenu from '@imengyu/vue3-context-menu'
 import { UmlWebClient } from 'uml-client';
 
 let sessionName = '/sessions/' + randomID();
+let serverAddress = 'wss://uml.cafe/api/';
 
 // this is some logic to determine wether we are accessing an already created project or if we are in a new state.
 if (location.pathname != "/") {
@@ -23,6 +24,7 @@ if (location.pathname != "/") {
     sessionStorage.removeItem('passwordHash');
 
     const umlWebClient = new UmlWebClient({
+        address: serverAddress,
         server: sessionName,
         user: user,
         passwordHash: passwordHash,
@@ -47,7 +49,10 @@ if (location.pathname != "/") {
     });
 } else {
     // todo create new session
-    const umlWebClient = new UmlWebClient({server: sessionName});
+    const umlWebClient = new UmlWebClient({
+        address: serverAddress,
+        server: sessionName
+    });
     const waitForServerAndForwardUrl = async () => {
         await umlWebClient.reserve();
         let beginningOfURL = document.URL;

@@ -166,8 +166,8 @@ export default {
                 this.createProjectWarningMessage = 'must be logged in to create a project!';
                 return
             }
-
             await this.$umlWebClient.login(undefined, undefined, {
+                address: this.$umlWebClient.options.address,
                 server: '/' + this.$umlWebClient.user + '/' + this.$refs.projectIdentifier.value,
                 create: true,
             });
