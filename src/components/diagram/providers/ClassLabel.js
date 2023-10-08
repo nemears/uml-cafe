@@ -27,7 +27,6 @@ export default class ClassLabel {
             if (!event.element.classLabel) {
                 return;
             }
-            // TODO
         });
         diagramEmitter.on('rename', (event) => {
             const label = labels[event.id];

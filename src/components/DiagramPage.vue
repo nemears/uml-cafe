@@ -10,7 +10,7 @@ export default {
         };
     },
     props: ['umlID'],
-    emits: ['dataChange'],
+    emits: ['dataChange', 'specification'],
     inject: ['dataChange', 'draginfo'],
     watch : {
         dataChange(newDataChange, oldDataChange) {
@@ -47,6 +47,9 @@ export default {
         onDrop(event, list) {
             console.log('dropped on diagram');
             
+        },
+        specification(event) {
+            this.$emit('specification', event);
         },
         async reloadDiagram() {
             if (this.diagram) {
@@ -223,6 +226,9 @@ export default {
             });
             scopedEmitter.on('directedComposition.end', (event) => {
                     diagramPage.$emit('dataChange', event);
+            });
+            scopedEmitter.on('specification', (event) => {
+                diagramPage.$emit('specification', event);
             });
             this.emitter = Object.freeze(scopedEmitter);
         }

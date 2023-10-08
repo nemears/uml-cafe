@@ -9,6 +9,7 @@ import ClassLabel from './ClassLabel';
 import GeneralizationHandler from './relationships/GeneralizationHandler';
 import DirectedComposition from './relationships/DirectedComposition';
 import UmlLayouter from './UmlLayouter';
+import DoubleClickSpecification from './DoubleClickSpecification';
 
 export default {
   __init__: [
@@ -23,6 +24,7 @@ export default {
     'classLabel',
     'layouter',
     'connectionDocking',
+    'doubleClickSpecification',
   ],
   generalizationHandler: ['type', GeneralizationHandler],
   directedComposition: ['type', DirectedComposition],
@@ -35,4 +37,5 @@ export default {
   classLabel: ['type', ClassLabel],
   layouter: ['type', UmlLayouter],
   connectionDocking: ['type', ConnectionDocking],
+  doubleClickSpecification: ['type', DoubleClickSpecification],
 };

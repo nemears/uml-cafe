@@ -132,7 +132,7 @@ export default {
         <div class="activeEditor">
             <WelcomePage v-if="welcome"></WelcomePage>
             <SpecificationPage v-if="specification" :uml-i-d="recentTab" @specification="propogateSpecification" @data-change="propogateDataChange"></SpecificationPage>
-            <DiagramPage v-if="diagram" :uml-i-d="recentTab" @data-change="propogateDataChange"></DiagramPage>
+            <DiagramPage v-if="diagram" :uml-i-d="recentTab" @data-change="propogateDataChange" @specification="propogateSpecification"></DiagramPage>
         </div>
     </div>
 </template>
