@@ -6,3 +6,5 @@ export default class DoubleClickSpecification {
         });
     }
 }
+
+DoubleClickSpecification.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient']

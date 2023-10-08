@@ -37,9 +37,9 @@ export default class ClassDiagramPaletteProvider {
         group: 'tools',
         separator: true
       },
-      'create-shape': {
+      'create-class': {
         group: 'create',
-        className: 'palette-icon-create-shape',
+        className: 'palette-icon-create-class',
         title: 'Create Class',
         action: {
           click: function(event) {
@@ -54,12 +54,6 @@ export default class ClassDiagramPaletteProvider {
               newUMLElement: true,
               umlType: 'class',
             });
-
-            // var classLabel = elementFactory.createLabel({
-            //   width: 25,
-            //   height: 10,
-            //   labelTarget: shape
-            // });
 
             create.start(event, shape);
           }
