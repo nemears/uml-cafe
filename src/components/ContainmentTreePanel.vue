@@ -154,8 +154,6 @@ export default {
                 })
             }
 
-            this.options[this.options.length - 1].divided = true;
-
             const createAndAddToSet = async (type, set) => {
                 const createdEl= await this.$umlWebClient.post(type);
                 el.sets[set].add(createdEl);
@@ -177,6 +175,10 @@ export default {
             }; 
 
             // create elements
+            const createOption = {
+                label: 'Create Element',
+                children: []
+            };
             if (el.isSubClassOf('classifier')) {
                 for (let generalizationID of el.generalizations.ids()) {
                     this.children.push(generalizationID);
@@ -186,7 +188,7 @@ export default {
                         this.children.push(attributeID);
                     }
                 }
-                this.options.push({
+                createOption.children.push({
                     label: 'Create Property',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
@@ -203,7 +205,7 @@ export default {
                 for (const literalID of el.ownedLiterals.ids()) {
                     this.children.push(literalID);
                 }
-                this.options.push({
+                createOption.children.push({
                     label: 'Create Enumeration Literal',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
@@ -215,7 +217,7 @@ export default {
                 for (let slotID of el.slots.ids()) {
                     this.children.push(slotID);
                 }
-                this.options.push({
+                createOption.children.push({
                     label: 'Create Slot',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
@@ -227,49 +229,49 @@ export default {
                 for (let packagedElID of el.packagedElements.ids()) {
                     this.children.push(packagedElID);
                 }
-                this.options.push({
+                createOption.children.push({
                     label: 'Create Package',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
                         createAndAddToSet('package', 'packagedElements')
                     }
                 });
-                this.options.push({
+                createOption.children.push({
                     label: 'Create Class',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
                         createAndAddToSet('class', 'packagedElements')
                     }
                 });
-                this.options.push({
+                createOption.children.push({
                     label: 'Create Data Type',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
                         createAndAddToSet('dataType', 'packagedElements')
                     }
                 }); 
-                this.options.push({
+                createOption.children.push({
                     label: 'Create Enumeration',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
                         createAndAddToSet('enumeration', 'packagedElements')
                     }
                 }); 
-                this.options.push({
+                createOption.children.push({
                     label: 'Create Primitive Type',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
                         createAndAddToSet('primitiveType', 'packagedElements')
                     }
                 }); 
-                this.options.push({
+                createOption.children.push({
                     label: 'Create Association',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
                         createAndAddToSet('association', 'packagedElements');
                     }
                 });
-                this.options.push({
+                createOption.children.push({
                     label: 'Create Instance Specification',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
@@ -278,7 +280,7 @@ export default {
                 });
             }
 
-            this.options[this.options.length - 1].divided = true;
+            this.options.push(createOption);
 
             this.options.push({
                 label: 'Delete',
