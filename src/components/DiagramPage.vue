@@ -24,182 +24,14 @@ export default {
         },
         draginfo(newDraginfo) {
             this.recentDraginfo = newDraginfo;
-        }
+        },
+        umlID() {
+            this.reloadDiagram();
+        },
+
     },
     async mounted() {
-        const scopedEmitter = new EventEmitter();
-        const diagramPackage = await this.$umlWebClient.get(this.umlID);
-        const diagram = new Editor({
-            container: this.$refs.diagram,
-            umlWebClient: this.$umlWebClient,
-            emitter: scopedEmitter,
-            context: await diagramPackage.owningPackage.get(),
-            diagramElement: diagramPackage
-        });
-        const canvas = diagram.get('canvas');
-        const elementFactory = diagram.get('elementFactory');
-
-        // add root
-        var root = elementFactory.createRoot();
-
-        canvas.setRootElement(root);
-
-        // set up diagram from model
-        {
-            const shapes = {};
-
-            // draw all shapes
-            for await (let packagedEl of diagramPackage.packagedElements) {
-                if (!packagedEl.isSubClassOf('instanceSpecification')) {
-                    continue;
-                }
-                if (!packagedEl.classifiers.contains('KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g')) {
-                    continue;
-                }
-                // draw shape
-                let widthValue = undefined;
-                let heightValue = undefined;
-                let elementID = undefined;
-                let xValue = undefined;
-                let yValue = undefined;
-                for await (let slot of packagedEl.slots) {
-
-                    if (slot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
-                        // bounds
-                        const boundsInstance = await (await slot.values.front()).instance.get();
-                        for await (let boundsSlot of boundsInstance.slots) {
-                            if (boundsSlot.definingFeature.id() === 'OaYzOYryv5lrW2YYkujnjL02rSlo') {
-                                // x
-                                xValue = (await boundsSlot.values.front()).value;
-                            } else if (boundsSlot.definingFeature.id() === 'RhD_fTVUMc4ceJ4topOlpaFPpoiB') {
-                                yValue = (await boundsSlot.values.front()).value;
-                            }else if (boundsSlot.definingFeature.id() === '&TCEXx1uZQsa7g1KPT9ocVwNiwV7') {
-                                widthValue = (await boundsSlot.values.front()).value;
-                            } else if (boundsSlot.definingFeature.id() === 'ELF54xP3DUMrFbgteAQkIXONqnlg') {
-                                heightValue = (await boundsSlot.values.front()).value;
-                            } 
-                        }
-                    } else if (slot.definingFeature.id() === 'xnI9Aiz3GaF91K8H7KAPe95oDgyE') {
-                        // model element
-                        elementID = 
-                            (await 
-                                (await 
-                                    (await
-                                        (await slot.
-                                                values.
-                                                front()
-                                        ).
-                                        instance.
-                                        get()).
-                                    slots.
-                                    filter(modelElementSlot => modelElementSlot.definingFeature.id() === '3gx55nLEvmzDt2kKK7gYgxsTBD6M'))[0].
-                                values.
-                                front()).
-                            value;
-                    }
-                }
-
-                
-                const elShapeIsRepresenting = await this.$umlWebClient.get(elementID);
-                const name = elShapeIsRepresenting.name ? elShapeIsRepresenting.name : '';
-
-                const shape = elementFactory.createShape({
-                    x: xValue,
-                    y: yValue,
-                    width: widthValue,
-                    height: heightValue,
-                    id: packagedEl.id,
-                    elementID: elementID,
-                    shapeID: packagedEl.id,
-                    name: name,
-                    umlType: elShapeIsRepresenting.elementType(),
-                    newUMLElement: false,
-                });
-                canvas.addShape(shape);
-                shapes[packagedEl.id] = shape;
-            }
-
-            // draw all connections between shapes
-            for await (let packagedEl of diagramPackage.packagedElements) {
-                if (!packagedEl.isSubClassOf('instanceSpecification')) {
-                    continue;
-                }
-                if (!packagedEl.classifiers.contains('u2fIGW2nEDfMfVxqDvSmPd5e_wNR')) {
-                    continue;
-                }
-
-                let target = undefined;
-                let source = undefined;
-                let represents = undefined;
-                let waypointsSlot = undefined;
-                for await (let slot of packagedEl.slots) {
-                    if (slot.definingFeature.id() === 'R2flL_8p_&Zc7HP07QfAyUI7EtCg') {
-                        target = shapes[(await slot.values.front()).instance.id()];
-                    } else if (slot.definingFeature.id() === 'Xxh7mjF9IMK0rhyrbSXOGA1_7vVo') {
-                        source = shapes[(await slot.values.front()).instance.id()];
-                    } else if (slot.definingFeature.id() === 'xnI9Aiz3GaF91K8H7KAPe95oDgyE') {
-                        // model element
-                        represents = await this.$umlWebClient.get((await (await (await (await slot.values.front()).instance.get()).slots.filter(elInstSlot => elInstSlot.definingFeature.id() === '3gx55nLEvmzDt2kKK7gYgxsTBD6M'))[0].values.front()).value);
-                    } else if (slot.definingFeature.id() === 'Zf2K&k0k&jwaAz1GLsTSk7rN742p') {
-                        waypointsSlot = slot;
-                    }
-                }
-                // waypoints saved to model
-                let waypoints = [];
-                for await (const pointVal of waypointsSlot.values) {
-                    const pointInstance = await pointVal.instance.get();
-                    let point = {};
-                    for await (const slot of pointInstance.slots) {
-                        if (slot.definingFeature.id() === '0TTKoNWbe13DJ3ou_1KhyS9sE1iU') {
-                            point.x = (await slot.values.front()).value;
-                        } else if (slot.definingFeature.id() === 'wecoFZpGF2kLOJ0sBneePO3nB47z') {
-                            point.y = (await slot.values.front()).value;
-                        }
-                    }
-                    waypoints.push(point);
-                }
-
-                var relationship = elementFactory.createConnection({
-                    waypoints: waypoints,
-                    shapeID: packagedEl.id,
-                    elementID: represents.id,
-                    source: source,
-                    target: target,
-                    umlType: represents.elementType()
-                });
-                target.incoming.push(relationship);
-                source.outgoing.push(relationship);
-                canvas.addConnection(relationship, root);
-            }
-        }
-        
-
-        const diagramPage = this;
-        // handle emits from diagram to update rest of app
-        scopedEmitter.on('shape.added', function(event) {
-            diagramPage.$emit('dataChange', {
-                data: [
-                    {
-                        id: diagramPackage.owningPackage.id(),
-                        type: 'add',
-                        set: 'packagedElements',
-                        el: event.element.elementID
-                    },
-                    {
-                        id: event.element.elementID,
-                        type: 'shape',
-                        shape: event.element.shapeID, 
-                    }
-                ]                
-            });
-        });
-        scopedEmitter.on('generalization.end', (event) => {
-            diagramPage.$emit('dataChange', event);
-        });
-        scopedEmitter.on('directedComposition.end', (event) => {
-                diagramPage.$emit('dataChange', event);
-        });
-        this.emitter = Object.freeze(scopedEmitter);
+        this.reloadDiagram();        
     },
     methods: {
         dragEnter(event, list) {
@@ -215,6 +47,184 @@ export default {
         onDrop(event, list) {
             console.log('dropped on diagram');
             
+        },
+        async reloadDiagram() {
+            if (this.diagram) {
+                this.diagram.destroy()
+            }
+            const scopedEmitter = new EventEmitter();
+            const diagramPackage = await this.$umlWebClient.get(this.umlID);
+            this.diagram = new Editor({
+                container: this.$refs.diagram,
+                umlWebClient: this.$umlWebClient,
+                emitter: scopedEmitter,
+                context: await diagramPackage.owningPackage.get(),
+                diagramElement: diagramPackage
+            });
+            const canvas = this.diagram.get('canvas');
+            const elementFactory = this.diagram.get('elementFactory');
+            
+            // add root
+            var root = elementFactory.createRoot();
+
+            canvas.setRootElement(root);
+
+            // set up diagram from model
+            {
+                const shapes = {};
+
+                // draw all shapes
+                for await (let packagedEl of diagramPackage.packagedElements) {
+                    if (!packagedEl.isSubClassOf('instanceSpecification')) {
+                        continue;
+                    }
+                    if (!packagedEl.classifiers.contains('KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g')) {
+                        continue;
+                    }
+                    // draw shape
+                    let widthValue = undefined;
+                    let heightValue = undefined;
+                    let elementID = undefined;
+                    let xValue = undefined;
+                    let yValue = undefined;
+                    for await (let slot of packagedEl.slots) {
+
+                        if (slot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
+                            // bounds
+                            const boundsInstance = await (await slot.values.front()).instance.get();
+                            for await (let boundsSlot of boundsInstance.slots) {
+                                if (boundsSlot.definingFeature.id() === 'OaYzOYryv5lrW2YYkujnjL02rSlo') {
+                                    // x
+                                    xValue = (await boundsSlot.values.front()).value;
+                                } else if (boundsSlot.definingFeature.id() === 'RhD_fTVUMc4ceJ4topOlpaFPpoiB') {
+                                    yValue = (await boundsSlot.values.front()).value;
+                                }else if (boundsSlot.definingFeature.id() === '&TCEXx1uZQsa7g1KPT9ocVwNiwV7') {
+                                    widthValue = (await boundsSlot.values.front()).value;
+                                } else if (boundsSlot.definingFeature.id() === 'ELF54xP3DUMrFbgteAQkIXONqnlg') {
+                                    heightValue = (await boundsSlot.values.front()).value;
+                                } 
+                            }
+                        } else if (slot.definingFeature.id() === 'xnI9Aiz3GaF91K8H7KAPe95oDgyE') {
+                            // model element
+                            elementID = 
+                                (await 
+                                    (await 
+                                        (await
+                                            (await slot.
+                                                    values.
+                                                    front()
+                                            ).
+                                            instance.
+                                            get()).
+                                        slots.
+                                        filter(modelElementSlot => modelElementSlot.definingFeature.id() === '3gx55nLEvmzDt2kKK7gYgxsTBD6M'))[0].
+                                    values.
+                                    front()).
+                                value;
+                        }
+                    }
+
+                    
+                    const elShapeIsRepresenting = await this.$umlWebClient.get(elementID);
+                    const name = elShapeIsRepresenting.name ? elShapeIsRepresenting.name : '';
+
+                    const shape = elementFactory.createShape({
+                        x: xValue,
+                        y: yValue,
+                        width: widthValue,
+                        height: heightValue,
+                        id: packagedEl.id,
+                        elementID: elementID,
+                        shapeID: packagedEl.id,
+                        name: name,
+                        umlType: elShapeIsRepresenting.elementType(),
+                        newUMLElement: false,
+                    });
+                    canvas.addShape(shape);
+                    shapes[packagedEl.id] = shape;
+                }
+
+                // draw all connections between shapes
+                for await (let packagedEl of diagramPackage.packagedElements) {
+                    if (!packagedEl.isSubClassOf('instanceSpecification')) {
+                        continue;
+                    }
+                    if (!packagedEl.classifiers.contains('u2fIGW2nEDfMfVxqDvSmPd5e_wNR')) {
+                        continue;
+                    }
+
+                    let target = undefined;
+                    let source = undefined;
+                    let represents = undefined;
+                    let waypointsSlot = undefined;
+                    for await (let slot of packagedEl.slots) {
+                        if (slot.definingFeature.id() === 'R2flL_8p_&Zc7HP07QfAyUI7EtCg') {
+                            target = shapes[(await slot.values.front()).instance.id()];
+                        } else if (slot.definingFeature.id() === 'Xxh7mjF9IMK0rhyrbSXOGA1_7vVo') {
+                            source = shapes[(await slot.values.front()).instance.id()];
+                        } else if (slot.definingFeature.id() === 'xnI9Aiz3GaF91K8H7KAPe95oDgyE') {
+                            // model element
+                            represents = await this.$umlWebClient.get((await (await (await (await slot.values.front()).instance.get()).slots.filter(elInstSlot => elInstSlot.definingFeature.id() === '3gx55nLEvmzDt2kKK7gYgxsTBD6M'))[0].values.front()).value);
+                        } else if (slot.definingFeature.id() === 'Zf2K&k0k&jwaAz1GLsTSk7rN742p') {
+                            waypointsSlot = slot;
+                        }
+                    }
+                    // waypoints saved to model
+                    let waypoints = [];
+                    for await (const pointVal of waypointsSlot.values) {
+                        const pointInstance = await pointVal.instance.get();
+                        let point = {};
+                        for await (const slot of pointInstance.slots) {
+                            if (slot.definingFeature.id() === '0TTKoNWbe13DJ3ou_1KhyS9sE1iU') {
+                                point.x = (await slot.values.front()).value;
+                            } else if (slot.definingFeature.id() === 'wecoFZpGF2kLOJ0sBneePO3nB47z') {
+                                point.y = (await slot.values.front()).value;
+                            }
+                        }
+                        waypoints.push(point);
+                    }
+
+                    var relationship = elementFactory.createConnection({
+                        waypoints: waypoints,
+                        shapeID: packagedEl.id,
+                        elementID: represents.id,
+                        source: source,
+                        target: target,
+                        umlType: represents.elementType()
+                    });
+                    target.incoming.push(relationship);
+                    source.outgoing.push(relationship);
+                    canvas.addConnection(relationship, root);
+                }
+            }
+            
+
+            const diagramPage = this;
+            // handle emits from diagram to update rest of app
+            scopedEmitter.on('shape.added', function(event) {
+                diagramPage.$emit('dataChange', {
+                    data: [
+                        {
+                            id: diagramPackage.owningPackage.id(),
+                            type: 'add',
+                            set: 'packagedElements',
+                            el: event.element.elementID
+                        },
+                        {
+                            id: event.element.elementID,
+                            type: 'shape',
+                            shape: event.element.shapeID, 
+                        }
+                    ]                
+                });
+            });
+            scopedEmitter.on('generalization.end', (event) => {
+                diagramPage.$emit('dataChange', event);
+            });
+            scopedEmitter.on('directedComposition.end', (event) => {
+                    diagramPage.$emit('dataChange', event);
+            });
+            this.emitter = Object.freeze(scopedEmitter);
         }
     }
 }

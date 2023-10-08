@@ -31,6 +31,9 @@ export default class ClassLabel {
         });
         diagramEmitter.on('rename', (event) => {
             const label = labels[event.id];
+            if (!label) {
+                return;
+            }
             label.labelTarget.name = event.value;
             graphicsFactory.update('shape', label, canvas.getGraphics(label));
         });
