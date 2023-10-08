@@ -52,18 +52,22 @@ export default class UMLRenderer extends BaseRenderer {
         super(eventBus);
         this.CONNECTION_STYLE = { fill: 'none', strokeWidth: 2, stroke: 'var(--vt-c-black)' };
         this.LABEL_STYLE = { fill: 'none', stroke: 'var(--vt-c-black)', strokeWidth: 0 };
+        this.CLASS_STYLE = { fill: '#ff9955ff', stroke: 'var(--vt-c-black-soft)', strokeWidth: 2 }; 
+        this.textStyle = {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: 12,
+            fontWeight: 'normal',
+        };
         this.textUtil = new TextUtil({
-            style: {
-                fontFamily: 'Arial, sans-serif',
-                fontSize: 12,
-                fontWeight: 'normal'
-            }
+            style: this.textStyle,
+            align: 'center'
         });
         this.connectionLayout = 'orthogonal';
     }
 
     canRender(element) {
-        return element.classLabel || element.umlType && (element.umlType === 'generalization' || element.umlType === 'association');
+        //return element.name || element.umlType && (element.umlType === 'generalization' || element.umlType === 'association');
+        return element.umlType;
     }
 
     drawConnection(gfx, element, attrs) {
@@ -157,27 +161,31 @@ export default class UMLRenderer extends BaseRenderer {
     }
 
     drawShape(gfx, element, attrs) {
-        if (element.classLabel) {
-            var rect = svgCreate('rect');
+        // create shape
+        const rect = svgCreate('rect');
+        svgAttr(rect, {
+            x: 0,
+            y: 0,
+            width: element.width || 0,
+            height: element.height || 0
+        });
+        svgAttr(rect, assign({}, this.CLASS_STYLE), attrs || {});
+        const group = svgCreate('g');
+        svgAppend(group, rect);
 
-            svgAttr(rect, {
-                x: 0,
-                y: 0,
-                width: element.width || 0,
-                height: element.height || 0
-            });
-            svgAttr(rect, assign({}, this.LABEL_STYLE, attrs || {}));
-
-            var text = this.textUtil.createText(element.labelTarget.name || '', {});
-
-            var group = svgCreate('g');
-            svgAppend(group, rect);
+        // add name to shape directly
+        if (element.name) {
+            const options = {
+                box: {
+                    width: element.width - 5,
+                }
+            };
+            var text = this.textUtil.createText(element.name || '', options);
             svgAppend(group, text);
-            svgAppend(gfx, group);
-            return group;
-        } else {
-            return super.drawShape(gfx, element, attrs);
         }
+
+        svgAppend(gfx, group);
+        return group;
     }
 }
 

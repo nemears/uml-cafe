@@ -138,7 +138,7 @@ export default {
                         height: heightValue,
                         id: packagedEl.id,
                         elementID: elementID,
-                        shapeID: packagedEl.id,
+                        shapeID: packagedEl.id, // remove duplicate
                         name: name,
                         umlType: elShapeIsRepresenting.elementType(),
                         newUMLElement: false,
