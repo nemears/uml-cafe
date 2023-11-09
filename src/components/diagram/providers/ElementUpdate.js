@@ -2,7 +2,7 @@ import { getUmlDiagramElement } from '../api/diagramInterchange';
 
 export default class ElementUpdate {
 
-    constructor(eventBus, diagramEmitter, umlWebClient, modeling, canvas, elementRegistry) {
+    constructor(diagramEmitter, umlWebClient, modeling, canvas, elementRegistry) {
         diagramEmitter.on('elementUpdate', async (event) => {
             // TODO check if element is a shape
             if (event.oldElement) {
@@ -32,12 +32,11 @@ export default class ElementUpdate {
                                 // TODO uml stuff
                                 update: true, // just saying it is from the backend
                                 id: event.newElement.id,
-                                shapeID: event.newElement.id,
                                 elementID: umlShape.modelElement.id,
                                 name: umlShape.modelElement.name,
                             }, {
-                                x: umlShape.bounds.x,
-                                y: umlShape.bounds.y,
+                                x: umlShape.bounds.x + umlShape.bounds.width / 2,
+                                y: umlShape.bounds.y + umlShape.bounds.height / 2,
                             }, canvas.getRootElement()); // TODO we want to do this with owningElement eventuall instead of assuming root
                         }
                     }
@@ -48,4 +47,4 @@ export default class ElementUpdate {
     }
 }
 
-ElementUpdate.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modeling', 'canvas', 'elementRegistry'];
+ElementUpdate.$inject = ['diagramEmitter', 'umlWebClient', 'modeling', 'canvas', 'elementRegistry'];

@@ -141,7 +141,6 @@ export default {
                         height: heightValue,
                         id: packagedEl.id,
                         elementID: elementID,
-                        shapeID: packagedEl.id, // remove duplicate
                         name: name,
                         umlType: elShapeIsRepresenting.elementType(),
                         newUMLElement: false,
@@ -192,7 +191,7 @@ export default {
 
                     var relationship = elementFactory.createConnection({
                         waypoints: waypoints,
-                        shapeID: packagedEl.id,
+                        id: packagedEl.id,
                         elementID: represents.id,
                         source: source,
                         target: target,
@@ -219,7 +218,7 @@ export default {
                         {
                             id: event.element.elementID,
                             type: 'shape',
-                            shape: event.element.shapeID, 
+                            shape: event.element.id, 
                         }
                     ]                
                 });

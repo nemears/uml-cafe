@@ -89,7 +89,7 @@ export default class Relationship {
             
             var relationship = elementFactory.createConnection({
                 waypoints: getWayPoints(event.context),
-                shapeID: randomID(),
+                id: randomID(),
                 elementID: randomID(),
                 source: event.context.source,
                 target: event.context.target,
@@ -136,14 +136,14 @@ export default class Relationship {
 
     async createEdge(event, umlWebClient, diagramContext) {
         // edge
-        const edgeInstance = await umlWebClient.post('instanceSpecification', {id: event.context.relationship.shapeID});
+        const edgeInstance = await umlWebClient.post('instanceSpecification', {id: event.context.relationship.id});
         edgeInstance.classifiers.add('u2fIGW2nEDfMfVxqDvSmPd5e_wNR');
 
         // source
         const sourceSlot = await umlWebClient.post('slot');
         sourceSlot.definingFeature.set('Xxh7mjF9IMK0rhyrbSXOGA1_7vVo');
         const sourceValue = await umlWebClient.post('instanceValue');
-        sourceValue.instance.set(await umlWebClient.get(event.context.relationship.source.shapeID));
+        sourceValue.instance.set(await umlWebClient.get(event.context.relationship.source.id));
         sourceSlot.values.add(sourceValue);
         edgeInstance.slots.add(sourceSlot);
 
@@ -151,7 +151,7 @@ export default class Relationship {
         const targetSlot = await umlWebClient.post('slot')
         targetSlot.definingFeature.set('R2flL_8p_&Zc7HP07QfAyUI7EtCg');
         const targetValue = await umlWebClient.post('instanceValue');
-        targetValue.instance.set(await umlWebClient.get(event.context.relationship.target.shapeID));
+        targetValue.instance.set(await umlWebClient.get(event.context.relationship.target.id));
         targetSlot.values.add(targetValue);
         edgeInstance.slots.add(targetSlot);
 

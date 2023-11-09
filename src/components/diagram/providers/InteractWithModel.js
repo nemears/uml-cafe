@@ -2,7 +2,7 @@ import { makeUMLWaypoints } from './relationships/Relationship'
 
 export async function createClassShape(shape, umlWebClient, diagramContext) {
     // set up shape
-    const shapeInstance = await umlWebClient.post('instanceSpecification', {id:shape.shapeID});
+    const shapeInstance = await umlWebClient.post('instanceSpecification', {id:shape.id});
     shapeInstance.classifiers.add(await umlWebClient.get('KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g'));
     diagramContext.diagram.packagedElements.add(shapeInstance);
     
@@ -164,7 +164,7 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
     }
 
     const adjustEdgeWaypoints = async (edge) => {
-        const edgeInstance = await umlWebClient.get(edge.shapeID);
+        const edgeInstance = await umlWebClient.get(edge.id);
         for await (const edgeSlot of edgeInstance.slots) {
             if (edgeSlot.definingFeature.id() === 'Zf2K&k0k&jwaAz1GLsTSk7rN742p') {
                 let waypointValues = [];
@@ -194,13 +194,13 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
 
     eventBus.on('shape.move.end', async (event) => {
         // get point instance
-        const shapeInstance = await umlWebClient.get(event.shape.shapeID);
+        const shapeInstance = await umlWebClient.get(event.shape.id);
         adjustShape(event, shapeInstance);
         adjustAttachedEdges(event.shape);
     });
 
     eventBus.on('resize.end', async (event) => {
-        const shapeInstance = await umlWebClient.get(event.shape.shapeID);
+        const shapeInstance = await umlWebClient.get(event.shape.id);
         adjustShape(event, shapeInstance);
         adjustAttachedEdges(event.shape);
     });

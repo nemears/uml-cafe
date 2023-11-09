@@ -50,7 +50,6 @@ export default class ClassDiagramPaletteProvider {
               height: 80,
               id: shapeID,
               elementID: classID,
-              shapeID: shapeID,
               newUMLElement: true,
               umlType: 'class',
             });

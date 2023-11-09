@@ -11,7 +11,6 @@ export default class DragFromTree {
                     height: 80,
                     id: shapeID,
                     elementID: event.draginfo.id,
-                    shapeID: shapeID,
                     newUMLElement: false,
                     newShapeElement: true,
                     umlType: 'class'
