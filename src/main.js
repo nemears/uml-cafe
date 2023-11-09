@@ -7,7 +7,7 @@ import ContextMenu from '@imengyu/vue3-context-menu'
 import { UmlWebClient } from 'uml-client';
 
 let sessionName = '/sessions/' + randomID();
-let serverAddress = 'wss://uml.cafe/api/';
+let serverAddress = 'ws://localhost:1672';
 
 // this is some logic to determine wether we are accessing an already created project or if we are in a new state.
 if (location.pathname != "/") {

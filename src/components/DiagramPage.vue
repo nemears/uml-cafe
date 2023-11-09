@@ -11,7 +11,7 @@ export default {
     },
     props: ['umlID'],
     emits: ['dataChange', 'specification'],
-    inject: ['dataChange', 'draginfo'],
+    inject: ['dataChange', 'draginfo', 'elementUpdate'],
     watch : {
         dataChange(newDataChange, oldDataChange) {
             for (let data of newDataChange.data) {
@@ -24,6 +24,9 @@ export default {
         },
         draginfo(newDraginfo) {
             this.recentDraginfo = newDraginfo;
+        },
+        elementUpdate(newElementUpdate) {
+            this.emitter.emit('elementUpdate', newElementUpdate);
         },
         umlID() {
             this.reloadDiagram();

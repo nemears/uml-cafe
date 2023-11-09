@@ -30,19 +30,31 @@ export default {
 				id: nullID(),
 				element: 'element',
 			},
-			diagramShapes : {}
+			diagramShapes : {},
+            elementUpdate: {
+                newElement: null,
+                oldElement: null,
+            }
 		}
 	},
 	provide() {
 		return {
 			dataChange: computed(() => this.recentDataChange),
 			draginfo: computed(() => this.recentDraginfo),
+            elementUpdate: computed(() => this.elementUpdate),
 		}
 	},
 	mounted() {
 		this.getHeadFromServer();
 
-		this.$umlWebClient.onUpdate = async (element) => {
+		this.$umlWebClient.onUpdate = async (element, oldElement) => {
+
+            // this is remaking dataChange (making it simpler)
+            this.elementUpdate = {
+                newElement: element,
+                oldElement: oldElement,
+            };
+
 			// TODO this will become more complicated
 			const owner = await element.owner.get();
 			if (owner !== undefined) {
@@ -54,10 +66,9 @@ export default {
 							set: 'packagedElements',
 							el: element.id
 						},
-					]                
+					]
 				};
 			}
-			
 		}
 	},
 	methods: {

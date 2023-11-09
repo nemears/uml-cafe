@@ -68,8 +68,6 @@ export async function createClassShape(shape, umlWebClient, diagramContext) {
     diagramContext.diagram.packagedElements.add(modelElementInstance);
 
     // put to server
-    umlWebClient.put(diagramContext.diagram);
-    umlWebClient.put(shapeInstance);
     umlWebClient.put(boundsSlot);
     umlWebClient.put(boundsInstance);
     umlWebClient.put(boundsValue);
@@ -86,11 +84,21 @@ export async function createClassShape(shape, umlWebClient, diagramContext) {
     umlWebClient.put(modelElementValue);
     umlWebClient.put(idSlot);
     umlWebClient.put(idVal);
+    umlWebClient.put(diagramContext.diagram);
+
+    // put shape last so that data is complete on updating diagram
+    umlWebClient.put(shapeInstance);
 }
 
 export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter, diagramContext, elementRegistry, modeling) {
 
     const asyncCreateShape = async (event) => {
+        if (event.element.update) {
+            // this means that the shape was created in response to an update from the backend
+            // we do not have to make any new class or shape because it was not created by a user
+            return;
+        }
+
         if (!event.element.newUMLElement) {
             if (event.element.newShapeElement) {
                 createClassShape(event.element, umlWebClient, diagramContext);
