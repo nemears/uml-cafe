@@ -56,6 +56,7 @@ export default {
             };
 
 			// TODO this will become more complicated
+            // TODO just take everything made with this and use elementUpdateInstead
 			const owner = await element.owner.get();
 			if (owner !== undefined) {
 				this.recentDataChange = {

@@ -26,6 +26,7 @@ export default {
             this.recentDraginfo = newDraginfo;
         },
         elementUpdate(newElementUpdate) {
+            // send update to diagram via emitter
             this.emitter.emit('elementUpdate', newElementUpdate);
         },
         umlID() {

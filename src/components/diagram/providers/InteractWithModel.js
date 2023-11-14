@@ -161,6 +161,8 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
                 umlWebClient.put(value);
             }
         }
+        umlWebClient.put(boundsInstance);
+        umlWebClient.put(shapeInstance);
     }
 
     const adjustEdgeWaypoints = async (edge) => {
