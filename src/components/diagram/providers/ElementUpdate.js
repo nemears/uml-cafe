@@ -44,10 +44,23 @@ export default class ElementUpdate {
                         } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
                             // it is a umlEdge
                             const umlEdge = await getUmlDiagramElement(event.newElement.id, umlWebClient);
-                            // TODO umlEdge source and target need to be set to create the diagram connection
+                            const source = elementRegistry.get(umlEdge.source); 
+                            const target = elementRegistry.get(umlEdge.target); 
+                            
+                            // create connection
                             modeling.createConnection(
-                                elementRegistry.get(umlEdge.source),
-                                elementRegistry.get(umlEdge.target),
+                                source,
+                                target,
+                                undefined, // parent index (valid?)
+                                {
+                                   source: source,
+                                    target: target,
+                                    waypoints: umlEdge.waypoints,
+                                    id: event.newElement.id,
+                                    elementID: umlEdge.modelElement.id,
+                                    umlType: umlEdge.modelElement.elementType(),
+                                },
+                                canvas.getRootElement()
                             );
                         }
                     }

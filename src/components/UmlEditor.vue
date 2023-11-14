@@ -8,8 +8,8 @@ export default {
         "tabs",
         "specificationTab"
     ],
-    inject: ['dataChange'],
-    emits: ['specification', 'dataChange', 'closeTab'],
+    inject: ['elementUpdate', 'dataChange'],
+    emits: ['specification', 'elementUpdate', 'dataChange', 'closeTab'],
     data() {
         return {
             closeSymbol: CloseSymbol,
@@ -63,6 +63,28 @@ export default {
                     }
                 }
             }
+        },
+        elementUpdate(newElementUpdate) {
+            const newElement = newElementUpdate.newElement;
+            const oldElement = newElementUpdate.oldElement;
+            if (!newElement) {
+                // TODO delete
+                const tab = this.tabs.find(tab => tab.id === oldElement.id);
+                if (tab) {
+                    this.remove(tab.id);
+                }
+            } else {
+                const tab = this.tabs.find(tab => tab.id === newElement.id);
+                if (tab) {
+                    if (newElement.isSubClassOf('namedElement')) {
+                        if ((!newElement.name || newElement.name === '') && tab.label !== '< >') {
+                            tab.label = '< >';
+                        } else if (newElement.name !== tab.label) {
+                            tab.label = newElement.name;
+                        }
+                    }
+                } 
+            }
         }
     },
     methods: {
@@ -115,6 +137,20 @@ export default {
                 });
             }
             this.$emit('dataChange', dataChange);
+        },
+        propogateElementUpdate(newElementUpdate) {
+            // TODO handle change from diagram and specification pages
+            const newElement = newElementUpdate.newElement;
+            if (newElement) {
+                const tabMatch = this.tabs.find((tab) => tab.id === newElement.id);
+                if (tabMatch) {
+                    if (newElement.isSubClassOf('namedElement')) {
+                        tabMatch.label = newElement.name;
+                    }
+                }
+            }
+
+            this.$emit('elementUpdate', newElementUpdate);
         }
     },
     components: { WelcomePage, SpecificationPage, DiagramPage }
@@ -131,8 +167,17 @@ export default {
         </div>
         <div class="activeEditor">
             <WelcomePage v-if="welcome"></WelcomePage>
-            <SpecificationPage v-if="specification" :uml-i-d="recentTab" @specification="propogateSpecification" @data-change="propogateDataChange"></SpecificationPage>
-            <DiagramPage v-if="diagram" :uml-i-d="recentTab" @data-change="propogateDataChange" @specification="propogateSpecification"></DiagramPage>
+            <SpecificationPage v-if="specification" 
+                    :uml-i-d="recentTab" 
+                    @specification="propogateSpecification" 
+                    @element-update="propogateElementUpdate"
+                    ></SpecificationPage>
+            <DiagramPage v-if="diagram" 
+                    :uml-i-d="recentTab" 
+                    @data-change="propogateDataChange" 
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate"
+                    ></DiagramPage>
         </div>
     </div>
 </template>

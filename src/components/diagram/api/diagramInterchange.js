@@ -50,15 +50,11 @@ export async function getUmlDiagramElement(id, umlClient) {
                             ret.bounds.height = (await boundsSlot.values.front()).value;
                         } 
                    }
-               } else if (shapeSlot.definingFeature.id() === 'xnI9Aiz3GaF91K8H7KAPe95oDgyE') {
-                    // modelElement get id and set value
-                    for await(let modelElementSlot of (await(await shapeSlot.values.front()).instance.get()).slots) {
-                        if (modelElementSlot.definingFeature.id() === '3gx55nLEvmzDt2kKK7gYgxsTBD6M') {
-                            // get value of id and set modelElement value
-                           ret.modelElement = await umlClient.get((await modelElementSlot.values.front()).value);
-                        }
-                    }
-               } 
+               } else {
+                   if (await getDiagramElementFeatures(shapeSlot, ret, umlClient)) {
+                        continue;
+                   }
+               }
             }
 
             // TODO fill out owned and owning elements
@@ -81,14 +77,6 @@ export async function getUmlDiagramElement(id, umlClient) {
                         }
                         ret.waypoints.push(point);
                     }
-                } else if (edgeSlot.definingFeature.id() === 'xnI9Aiz3GaF91K8H7KAPe95oDgyE') {
-                    // modelElement get id and set value
-                    for await(let modelElementSlot of (await(await edgeSlot.values.front()).instance.get()).slots) {
-                        if (modelElementSlot.definingFeature.id() === '3gx55nLEvmzDt2kKK7gYgxsTBD6M') {
-                            // get value of id and set modelElement value
-                           ret.modelElement = await umlClient.get((await modelElementSlot.values.front()).value);
-                        }
-                    }
                 } else if (edgeSlot.definingFeature.id() === 'Xxh7mjF9IMK0rhyrbSXOGA1_7vVo') {
                     // source
                     // just setting to id for now?
@@ -97,12 +85,27 @@ export async function getUmlDiagramElement(id, umlClient) {
                     // target
                     // just setting to id for now
                     ret.target = (await edgeSlot.values.front()).instance.id();
+                } else {
+                   if (await getDiagramElementFeatures(edgeSlot, ret, umlClient)) {
+                        continue;
+                   }
                 }
-                // TODO source and target
-
             }
-
             return ret;
         }
     }
+}
+
+async function getDiagramElementFeatures(slot, diagramElement, umlClient) {
+    if (slot.definingFeature.id() === 'xnI9Aiz3GaF91K8H7KAPe95oDgyE') {
+        // modelElement get id and set value
+        for await(let modelElementSlot of (await(await slot.values.front()).instance.get()).slots) {
+            if (modelElementSlot.definingFeature.id() === '3gx55nLEvmzDt2kKK7gYgxsTBD6M') {
+                // get value of id and set modelElement value
+                diagramElement.modelElement = await umlClient.get((await modelElementSlot.values.front()).value);
+                return true;
+            }
+        }
+    } // TODO owning and owned elements
+    return false;
 }

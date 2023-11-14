@@ -3,8 +3,8 @@ import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
 export default {
     props: ['label', 'initialData', 'umlid', 'subsets', 'creatable', "setData"],
-    inject: ['dataChange'],
-    emits: ['specification', 'dataChange'],
+    inject: ['elementUpdate'],
+    emits: ['specification', 'elementUpdate'],
     data() {
         return {
             data: [],
@@ -16,36 +16,53 @@ export default {
         this.data = this.initialData;
     },
     watch: {
-        initialData(newInitialData, oldInitialData) {
+        initialData(newInitialData) {
             this.data = newInitialData;
         },
-        async dataChange(newDataChange, oldDataChange) {
-            for (let data of newDataChange.data) {
-                if (data.type === 'name') {
-                    this.data.forEach(el => {
-                        if (el.id === data.id) {
-                            if (data.value === '') {
-                                el.label = el.id;
+        async elementUpdate(newElementUpdate) {
+            const newElement = newElementUpdate.newElement;
+            if (newElement) {
+                // check that the new element is us
+                if (newElement.id === this.umlid) {
+                    // keep track of original children
+                    const existingIDs = this.data.map((el) => el.id);
+
+                    // check if we need to add children
+                    for (const elementID of newElement.sets[this.setData.setName].ids()) {
+                        if (!this.data.find((el) => el.id === elementID)) {
+                            // add the data
+                            const element = await this.$umlWebClient.get(elementID);
+                            this.data.push({
+                                id: elementID,
+                                label: element.name !== undefined ? element.name : '',
+                                img: getImage(element),
+                            });
+                        }
+                    }
+
+                    // check if we need remove an element
+                    for (const existingID of existingIDs) {
+                        if (!newElement.sets[this.setData.setName].contains(existingID)) {
+                            // remove the element
+                            this.data = this.data.filter((el) => el.id !== existingID);
+                        }
+                    }
+                } else {
+                    const foundData = this.data.find((el) => el.id === newElement.id);
+                    if (foundData) {
+                        // check if the name was updated
+                        if (newElement.isSubClassOf('namedElement')) {
+                            if (foundData.label === '') {
+                                if (newElement.name && newElement.name !== '') {                                    
+                                    foundData.label = newElement.name;
+                                }
                             } else {
-                                el.label = data.value;
+                                if (foundData.label !== newElement.name) {
+                                    foundData.label = newElement.name;
+                                }
                             }
                         }
-                    });
-                } else if (
-                    data.type === 'add' && 
-                    data.id === this.umlid && 
-                    this.subsets &&
-                    this.subsets.includes(data.set) &&
-                    !this.data.find((el) => el.id === data.el)
-                ) {
-                    const el = await this.$umlWebClient.get(data.el);
-                    this.data.push({
-                        id: data.el,
-                        label: el.name !== undefined && el.name !== '' ? el.name : '',
-                        img: getImage(el)
-                    });
-                } else if (data.type === 'delete') {
-                    this.data = this.data.filter(val => val.id !== data.id);
+                    }
                 }
             }
         }
@@ -57,7 +74,7 @@ export default {
         createElement() {
             this.createPopUp = true;
         },
-        closePopUp(element) {
+        async closePopUp(element) {
             this.createPopUp = false;
             if (element === undefined) {
                 return;
@@ -67,15 +84,9 @@ export default {
                 id: element.id,
                 label: element.name !== undefined ? element.name : '' 
             });
-            this.$emit('dataChange', {
-                data: [
-                    {
-                        type: 'add',
-                        id: this.umlid,
-                        el: element.id,
-                        set: this.creatable.set
-                    }
-                ]
+            this.$emit('elementUpdate', {
+                newElement: await this.$umlWebClient.get(this.umlid),
+                oldElement: undefined, // idk
             });
         },
         dragenter(event) {
@@ -136,13 +147,9 @@ export default {
                         owner.sets[this.setData.setName].remove(element);
                         this.$umlWebClient.put(owner);
                         this.$umlWebClient.put(element);
-                        this.$emit('dataChange', {
-                            data: [{
-                                id: this.umlid,
-                                type: 'remove',
-                                val: el.id,
-                                set: this.setData.setName
-                            }]
+                        this.$emit('elementUpdate', {
+                            newElement: owner,
+                            oldElement: undefined, // idk
                         });
                         this.data = this.data.filter(dataEl => dataEl.id !== el.id);
                     }
@@ -153,16 +160,13 @@ export default {
                     onClick: async () => {
                         const owner = await this. $umlWebClient.get(this.umlid);
                         const elementID = element.id;
+                        // TODO elementUpdate delete??
                         await this.$umlWebClient.deleteElement(element);
-                        this.$emit('dataChange', {
-                            data: [
-                                {
-                                    id: elementID,
-                                    type: 'delete'
-                                }
-                            ]
-                        }); 
                         this.$umlWebClient.put(owner);
+                        this.$emit('elementUpdate', {
+                            newElement: owner,
+                            oldElement: undefined, // idk
+                        });
                     }
                 });
             } 

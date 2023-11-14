@@ -180,9 +180,6 @@ export default class Relationship {
         await makeUMLWaypoints(event.context.relationship, umlWebClient, waypointsSlot, diagramContext.diagram);
         diagramContext.diagram.packagedElements.add(edgeInstance);
         
-
-        await umlWebClient.put(diagramContext.diagram);
-        await umlWebClient.put(edgeInstance);
         await umlWebClient.put(sourceSlot);
         await umlWebClient.put(sourceValue);
         await umlWebClient.put(targetSlot);
@@ -192,6 +189,8 @@ export default class Relationship {
         await umlWebClient.put(modelElementValue);
         await umlWebClient.put(idSlot);
         await umlWebClient.put(idVal);
+        await umlWebClient.put(diagramContext.diagram);
+        await umlWebClient.put(edgeInstance);
 
         return edgeInstance;
     }

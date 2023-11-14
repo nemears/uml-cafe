@@ -8,11 +8,14 @@ export default {
     props: [
         "umlID",
         "depth",
-        'dataChange'
+        //'dataChange'
+    ],
+    inject: [
+        'elementUpdate',
     ],
     emits: [
         'specification',
-        'dataChange',
+        'elementUpdate',
         'diagram',
         'draginfo',
     ],
@@ -47,7 +50,7 @@ export default {
         }
     },
     watch: {
-        dataChange: {
+        /**dataChange: {
             handler(newDataChange) {
                 const handleNewData = async () => {
                     for (let data of newDataChange.data) {
@@ -85,8 +88,11 @@ export default {
                         }
                     }
                 };
-            handleNewData();
+                // handleNewData();
             }
+        },**/
+        elementUpdate(newElementUpdate) {
+          this.handleElementUpdate(newElementUpdate);  
         }
     },
     methods: {
@@ -162,7 +168,11 @@ export default {
                 el = await this.$umlWebClient.get(el.id);
                 this.children.push(createdEl.id);
                 this.expanded = true;
-                this.$emit('dataChange', {
+                this.$emit('elementUpdate', {
+                    newElement: el,
+                    oldElement: undefined, // not rlly sure what to do with this when using it internally
+                });
+                /**this.$emit('dataChange', {
                     data: [
                         {
                             id: el.id,
@@ -171,7 +181,7 @@ export default {
                             el: createdEl.id
                         }
                     ]
-                });
+                });**/
             }; 
 
             // create elements
@@ -288,17 +298,21 @@ export default {
                 onClick: async () => {
                     const owner = await el.owner.get();
                     this.$umlWebClient.deleteElement(el);
-                    this.$emit('dataChange', {
+                    /**this.$emit('dataChange', {
                         data: [
                             {
                                 id: this.umlID,
                                 type: 'delete'
                             }
                         ]
-                    });
+                    });**/
                     this.$umlWebClient.put(owner);
+                    this.$emit('elementUpdate', {
+                        newElement: owner,
+                        oldElement: undefined, // idk
+                    });
                 }
-            })
+            });
 
             this.name = el.name; // this will have to change eventually
             this.isFetching = false;
@@ -315,7 +329,11 @@ export default {
             const el = await this.$umlWebClient.get(this.umlID);
             el.name = this.name;
             this.$umlWebClient.put(el);
-            this.$emit('dataChange', {
+            this.$emit('elementUpdate', {
+                newElement: el,
+                oldElement: undefined, // idk
+            });
+            /** this.$emit('dataChange', {
                 data: [
                     {
                         id: this.umlID,
@@ -323,7 +341,7 @@ export default {
                         value: this.name
                     }
                 ]
-            });
+            });**/
         },
         cancelRename() {
             this.editing = false;
@@ -343,7 +361,7 @@ export default {
         propogateSpecification(spec) {
             this.$emit('specification', spec);
         },
-        propogateDataChange(dataChange) {
+        /**propogateDataChange(dataChange) {
             for (let data of dataChange.data) {
                 if (data.type === 'delete') {
                     let childToDeleteIndex = 0;
@@ -361,6 +379,43 @@ export default {
                 }
             }
             this.$emit('dataChange', dataChange);
+        },**/
+        handleElementUpdate(newElementUpdate) {
+            const newElement = newElementUpdate.newElement;
+            // const oldElement = newElementUpdate.oldElement;
+            if (!newElement) {
+                // TODO delete
+                // check if the deleted element is in our children
+                // might not be worth it
+                // pros: client will be able to update with out getting this element
+                // cons: will always run a loop through all of our children when an element is updated (laggy)
+            } else if (newElement.id === this.umlID) {
+                //name
+                if (newElement.isSubClassOf('namedElement')) {
+                    if (newElement.name !== this.name) {
+                        this.name = newElement.name; 
+                    } 
+                }
+                
+                // check children
+                // add
+                const childrenCopies = [...this.children];
+                for (const ownedElementID of newElement.ownedElements.ids()) {
+                    if (!this.children.includes(ownedElementID)) {
+                        this.children.push(ownedElementID);
+                    }
+                }
+                // remove
+                for (const childID of childrenCopies) {
+                    if (!newElement.ownedElements.contains(childID)) {
+                       this.children = this.children.filter(child => child !== childID); 
+                    }
+                }
+            } 
+        },
+        propogateElementUpdate(newElementUpdate) {
+            this.handleElementUpdate(newElementUpdate);
+            this.$emit('elementUpdate', newElementUpdate);
         },
         propogateDiagram(diagramClass) {
             this.$emit('diagram', diagramClass);
@@ -413,10 +468,9 @@ export default {
             <ContainmentTreePanel v-for="child in children" 
                     :umlID="child" 
                     :depth="depth + 1" 
-                    :data-change="dataChange" 
                     :key="child" 
                     @specification="propogateSpecification" 
-                    @data-change="propogateDataChange" 
+                    @element-update="propogateElementUpdate"
                     @diagram="propogateDiagram"
                     @draginfo="propogateDraginfo"></ContainmentTreePanel>
         </div>

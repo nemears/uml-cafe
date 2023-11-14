@@ -7,8 +7,11 @@ import InputData from './specComponents/InputData.vue';
 import EnumerationData from './specComponents/EnumerationData.vue';
 export default {
     props: ['umlID'],
-    emits: ['specification', 'dataChange'],
-    inject: ['dataChange'],
+    emits: [
+        'specification', 
+        'elementUpdate',
+    ],
+    inject: ['elementUpdate'],
     data() {
         return {
             elementType: '',
@@ -27,16 +30,29 @@ export default {
         this.reloadSpec();
     },
     watch: {
-        umlID(newID, oldID) {
+        umlID() {
             this.reloadSpec();
         },
-        dataChange(newDataChange, oldDataChange) {
-            for (let data of newDataChange.data) {
-                if (data.id === this.umlID && data.type === 'name') {
-                    this.namedElementData.name = data.value;
+        elementUpdate(newElementUpdate) {
+            const newElement = newElementUpdate.newElement;
+            // const oldElement = newElementUpdate.oldElement;
+            if (newElement) {
+                if (newElement.id === this.umlID) {
+                    if (newElement.isSubClassOf('namedElement')) {
+                        if (newElement.name !== this.namedElementData.name) {
+                            this.namedElementData.name = newElement.name;
+                        }
+                    }
                 }
             }
-        }
+        },
+        //dataChange(newDataChange, oldDataChange) {
+        //    for (let data of newDataChange.data) {
+        //        if (data.id === this.umlID && data.type === 'name') {
+        //            this.namedElementData.name = data.value;
+        //        }
+        //    }
+        //}
     },
     methods: {
         async reloadSpec() {
@@ -270,11 +286,25 @@ export default {
         propogateSpecification(spec) {
             this.$emit('specification', spec);
         },
-        propogateDataChange(dataChange) {
+        /**propogateDataChange(dataChange) {
             if (dataChange.type === 'name') {
                 this.namedElementData.name = dataChange.value;
             }
             this.$emit('dataChange', dataChange);
+        },**/
+        propogateElementUpdate(newElementUpdate) {
+            const newElement = newElementUpdate.newElement;
+            if (newElement) {
+                if (newElement.id === this.umlID) {
+                    if (newElement.isSubClassOf('namedElement')) {
+                        if (this.namedElementData.name !== newElement.name) {
+                            this.namedElementData.name = newElement.name;
+                        }
+                    } 
+                }
+                
+            }
+            this.$emit('elementUpdate', newElementUpdate);
         }
     },
     computed: {
@@ -305,7 +335,8 @@ export default {
                     :read-only="true" 
                     :umlid="umlID" 
                     :type="'id'" 
-                    @data-change="propogateDataChange"></InputData>
+                    @element-update="propogateElementUpdate"
+                    ></InputData>
         <SetData    :label="'Owned Elements'" 
                     :initial-data="elementData.ownedElements" 
                     :umlid="umlID" 
@@ -314,15 +345,27 @@ export default {
                         readonly: true,
                         setName: 'ownedElements'
                     }"
-                    @specification="propogateSpecification"></SetData>
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate" 
+                    ></SetData>
         <SingletonData  :label="'Owner'" 
                         :readonly="true" 
                         :initial-data="elementData.owner" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'owner'}"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
-        <SetData :label="'Applied Stereotypes'" :initial-data="elementData.appliedStereotypes" :umlid="umlID" @specification="propogateSpecification"></SetData>
+                        @element-update="propogateElementUpdate"
+                        ></SingletonData>
+        <SetData :label="'Applied Stereotypes'" 
+                 :initial-data="elementData.appliedStereotypes" 
+                 :umlid="umlID" 
+                 @specification="propogateSpecification"
+                 :set-data="{
+                    readonly: false,
+                    setName: 'appliedStereotypes',
+                 }"
+                 @element-update="propogateElementUpdate"
+                 ></SetData>
 	</ElementType>
 	<ElementType :element-type="'Named Element'" v-if="namedElementData !== undefined">
         <InputData  :label="'Name'" 
@@ -331,24 +374,29 @@ export default {
                     :read-only="false" 
                     :umlid="umlID" 
                     :type="'name'" 
-                    @data-change="propogateDataChange"></InputData>
+                    @element-update="propogateElementUpdate"
+                    ></InputData>
         <SingletonData  :label="'Namespace'" 
                         :readonly="true" 
                         :initial-data="namedElementData.namespace" 
                         :uml-i-d="umlID"
                         :singleton-data="{setName:'namespace'}"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"
+                        ></SingletonData>
 	</ElementType>
 	<ElementType :element-type="'Relationship'" v-if="relationshipData !== undefined">
         <SetData    :label="'Related Elements'" 
                     :initial-data="relationshipData.relatedElements" 
-                    :umlid="umlID" @specification="propogateSpecification" 
+                    :umlid="umlID" 
+                    @specification="propogateSpecification" 
                     :subsets="['general', 'specific']"
                     :set-data="{
                                     readonly: true,
                                     setName: 'relatedElements'
-                                }"></SetData>
+                                }"
+                    @element-update="propogateElementUpdate"  
+                    ></SetData>
 	</ElementType>
 	<ElementType :element-type="'Directed Relationship'" v-if="directedRelationshipData !== undefined">
         <SetData    :label="'Targets'" 
@@ -358,7 +406,9 @@ export default {
                                     setName: 'targets',
                                     readonly: true
                                 }"
-                    @specification="propogateSpecification"></SetData>
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate" 
+                    ></SetData>
         <SetData    :label="'Sources'" 
                     :initial-data="directedRelationshipData.sources" 
                     :umlid="umlID"
@@ -366,7 +416,9 @@ export default {
                                     readonly: true,
                                     setName: sources
                                 }"
-                    @specification="propogateSpecification"></SetData>
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate" 
+                    ></SetData>
 	</ElementType>
 	<ElementType :element-type="'Generalization'" v-if="generalizationData !== undefined">
         <SingletonData  :label="'Specific'" 
@@ -374,13 +426,15 @@ export default {
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'specific', validTypes:['classifier']}"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"
+                        ></SingletonData>
         <SingletonData  :label="'General'" 
                         :initial-data="generalizationData.general" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'general', validTypes:['classifier']}"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"
+                        ></SingletonData>
     </ElementType>
     <ElementType :element-type="'Typed Element'" v-if="typedElementData !== undefined">
         <SingletonData  :label="'Type'" 
@@ -388,7 +442,8 @@ export default {
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'type',validTypes:['classifier']}" 
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"
+                        ></SingletonData>
     </ElementType>
     <ElementType :element-type="'Packageable Element'" v-if="packageableElementData !== undefined">
         <SingletonData  :label="'OwningPackage'" 
@@ -396,7 +451,8 @@ export default {
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'owningPackage', validTypes:['package']}"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"
+                        ></SingletonData>
 	</ElementType>
     <ElementType :element-type="'Instance Value'" v-if="instanceValueData">
         <SingletonData  :label="'Instance'"
@@ -407,7 +463,8 @@ export default {
                                             validTypes: ['instanceSpecification']    
                                          }"  
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"
+                        ></SingletonData>
     </ElementType>
     <ElementType :element-type="'Literal Bool'" v-if="literalBoolData !== undefined">
         <InputData  :label="'Value'"
@@ -441,14 +498,16 @@ export default {
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'lowerValue', validTypes:['valueSpecification']}"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"
+                        ></SingletonData>
         <SingletonData  :label="'Upper Value'" 
                         :createable="{types:['literalInt', 'literalUnlimitedNatural']}"
                         :initial-data="multiplicityElementData.upperValue" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'upperValue', validTypes:['valueSpecification']}"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"
+                        ></SingletonData>
 	</ElementType>
 	<ElementType :element-type="'Property'" v-if="propertyData !== undefined">
         <EnumerationData    :label="'Aggregation'"
@@ -474,25 +533,29 @@ export default {
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'class', validTypes: ['class']}"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"
+                        ></SingletonData>
         <SingletonData  :label="'DataType'" 
                         :initial-data="propertyData.dataType" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'dataType', validTypes:['dataType']}"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"
+                        ></SingletonData>
         <SingletonData  :label="'Owning Association'" 
                         :initial-data="propertyData.owningAssociation" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'owningAssociation', validTypes:['assoiation']}"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"
+                        ></SingletonData>
         <SingletonData  :label="'Association'" 
                         :initial-data="propertyData.association" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName: 'association', validTypes:['association']}"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"     
+                        ></SingletonData>
         <SingletonData  :label="'Default Value'"
                         :createable="
                                     {
@@ -510,7 +573,8 @@ export default {
                         :uml-i-d="umlID"
                         :singleton-data="{setName:'defaultValue', validTypes:['valueSpecification']}"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate" 
+                        ></SingletonData>
 	</ElementType>
 	<ElementType :element-type="'Namespace'" v-if="namespaceData !== undefined">
         <SetData    :label="'Members'" 
@@ -521,7 +585,9 @@ export default {
                                     readonly: true,
                                     setName: 'members'
                                 }"
-                    @specification="propogateSpecification"></SetData>
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate"                     
+                    ></SetData>
         <SetData    :label="'Owned Members'" 
                     :initial-data="namespaceData.ownedMembers" 
                     :umlid="umlID" 
@@ -530,6 +596,7 @@ export default {
                                     setName: 'ownedMembers',
                                     readonly: true
                                 }"
+                    @element-update="propogateElementUpdate" 
                     @specification="propogateSpecification"></SetData>
 	</ElementType>
     <ElementType :element-type="'Package'" v-if="packageData !== undefined">
@@ -560,7 +627,8 @@ export default {
                                     validTypes: ['packageableElement']
                                 }"
                     @specification="propogateSpecification"
-                    @data-change="propogateDataChange"></SetData>
+                    @element-update="propogateElementUpdate" 
+                    ></SetData>
 	</ElementType>
 	<ElementType :element-type="'Instance Specification'" v-if="instanceSpecificationData !== undefined">
         <SetData    :label="'Classifiers'"
@@ -573,7 +641,8 @@ export default {
                                     readonly: false
                                 }"
                     @specification="propogateSpecification"
-                    @data-change="propogateDataChange"></SetData>
+                    @element-update="propogateElementUpdate" 
+                    ></SetData>
         <SetData    :label="'Slots'"
                     :initial-data="instanceSpecificationData.slots"
                     :umlid="umlID"
@@ -584,8 +653,8 @@ export default {
                                     readonly: false,
                                 }"
                     @specification="propogateSpecification"
-                    @data-change="propogateDataChange"></SetData>
-
+                    @element-update="propogateElementUpdate"  
+                    ></SetData>
 	</ElementType>
     <ElementType :element-type="'Enumeration Literal'" v-if="enumerationLiteralData">
         <SingletonData  :label="'Enumeration'"
@@ -596,7 +665,8 @@ export default {
                                                 validTypes: [ 'enumeration' ]
                                             }"
                         @specification="propogateSpecification"
-                        @data-change="propogateDataChange"></SingletonData>
+                        @element-update="propogateElementUpdate"  
+                        ></SingletonData>
     </ElementType>
 	<ElementType :element-type="'Slot'" v-if="slotData !== undefined">
         <SingletonData
@@ -605,7 +675,8 @@ export default {
             :uml-i-d="umlID" 
             :singleton-data="{setName: 'owningInstance', validTypes:['instanceSpecification']}"
             @specification="propogateSpecification"
-            @data-change="propogateDataChange"></SingletonData>
+            @element-update="propogateElementUpdate"
+            ></SingletonData>
         <SetData    :label="'Values'"
                     :initial-data="slotData.values"
                     :umlid="umlID"
@@ -625,14 +696,16 @@ export default {
                                     readonly: false
                                 }"
                     @specification="propogateSpecification"
-                    @data-change="propogateDataChange"></SetData>
+                    @element-update="propogateElementUpdate"
+                    ></SetData>
         <SingletonData
             :label="'Defining Feature'"
             :initial-data="slotData.definingFeature"
             :uml-i-d="umlID"
             :singleton-data="{ setName: 'definingFeature', validTypes: ['property'] }"
             @specification="propogateSpecification"
-            @data-change="propogateDataChange"></SingletonData>
+            @element-update="propogateElementUpdate" 
+            ></SingletonData>
 	</ElementType>
 	<ElementType :elementType="'Classifier'" v-if="classifierData !== undefined">
         <SetData    :label="'Generalizations'" 
@@ -645,7 +718,8 @@ export default {
                                     readonly: false
                                 }"
                     @specification="propogateSpecification"
-                    @data-change="propogateDataChange"></SetData>
+                    @element-update="propogateElementUpdate" 
+                    ></SetData>
         <SetData    :label="'Attributes'" 
                     :initial-data="classifierData.attributes" 
                     :umlid="umlID" 
@@ -654,7 +728,9 @@ export default {
                                     setName: 'attributes',
                                     readonly: true
                                 }"
-                    @specification="propogateSpecification"></SetData>
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate"  
+                    ></SetData>
 	</ElementType>
     <ElementType :elementType="'DataType'" v-if="dataTypeData">
         <SetData    :label="'Owned Attributes'"
@@ -672,7 +748,8 @@ export default {
                                     set: 'ownedAttributes'
                                 }"
                     @specification="propogateSpecification"
-                    @data-change="propogateDataChange"></SetData>
+                    @element-update="propogateElementUpdate"  
+                    ></SetData>
     </ElementType>
     <ElementType :elementType="'Enumeration'" v-if="enumerationData">
         <SetData    :label="'Owned Literals'"
@@ -688,7 +765,8 @@ export default {
                                     set: 'ownedLiterals'
                                 }"
                     @specification="propogateSpecification"
-                    @data-change="propogateDataChange"></SetData>
+                    @element-update="propogateElementUpdate"  
+                    ></SetData>
     </ElementType>
 	<ElementType :elementType="'Structured Classifier'" v-if="structuredClassifierData !== undefined">
         <SetData    :label="'Owned Attributes'" 
@@ -699,7 +777,9 @@ export default {
                                     setName: 'ownedAttributes',
                                     readonly: true
                                 }"
-                    @specification="propogateSpecification"></SetData>
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate"   
+                    ></SetData>
 	</ElementType>
 	<ElementType :element-type="'Association'" v-if="associationData !== undefined">
         <SetData    :label="'Member Ends'" 
@@ -712,7 +792,8 @@ export default {
                                     validTypes: ['property']
                                 }"
                     @specification="propogateSpecification"
-                    @data-change="propogateDataChange"></SetData>
+                    @element-update="propogateElementUpdate"   
+                    ></SetData>
         <SetData    :label="'Owned Ends'" 
                     :initial-data="associationData.ownedEnds" 
                     :umlid="umlID" 
@@ -729,7 +810,8 @@ export default {
                                     set: 'ownedEnds'
                                 }"
                     @specification="propogateSpecification"
-                    @data-change="propogateDataChange"></SetData>
+                    @element-update="propogateElementUpdate"  
+                    ></SetData>
         <SetData    :label="'Navigable Owned Ends'" 
                     :initial-data="associationData.navigableOwnedEnds" 
                     :umlid="umlID"
@@ -745,7 +827,8 @@ export default {
                                     set: 'navigableOwnedEnds'
                                 }"
                     @specification="propogateSpecification"
-                    @data-change="propogateDataChange" ></SetData>
+                    @element-update="propogateElementUpdate"  
+                    ></SetData>
 	</ElementType>
 	<ElementType :elementType="'Class'" v-if="classData !== undefined">
         <SetData    :label="'Owned Attributes'" 
@@ -758,7 +841,8 @@ export default {
                                     readonly: false
                                 }"
                     @specification="propogateSpecification"
-                    @data-change="propogateDataChange"></SetData>
+                    @element-update="propogateElementUpdate"
+                    ></SetData>
 	</ElementType>
     </div> 
 </div>

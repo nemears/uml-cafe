@@ -48,28 +48,10 @@ export default {
 		this.getHeadFromServer();
 
 		this.$umlWebClient.onUpdate = async (element, oldElement) => {
-
-            // this is remaking dataChange (making it simpler)
             this.elementUpdate = {
                 newElement: element,
                 oldElement: oldElement,
             };
-
-			// TODO this will become more complicated
-            // TODO just take everything made with this and use elementUpdateInstead
-			const owner = await element.owner.get();
-			if (owner !== undefined) {
-				this.recentDataChange = {
-					data: [
-						{
-							id: owner.id,
-							type: 'add',
-							set: 'packagedElements',
-							el: element.id
-						},
-					]
-				};
-			}
 		}
 	},
 	methods: {
@@ -134,6 +116,10 @@ export default {
 				}
 			}
 		},
+        elementUpdateHandler(newElementUpdate) {
+            this.elementUpdate = newElementUpdate;
+            // TODO shapes
+        },
 		diagram(diagramClass) {
 			if (this.tabs.find(tab => tab.id === diagramClass.id)) { // no duplicates
 				this.specificationTab = diagramClass.id;
@@ -179,7 +165,8 @@ export default {
 							:depth="0" 
 							:data-change="recentDataChange" 
 							@specification="specification" 
-							@data-change="dataChange" 
+							@data-change="dataChange"
+                            @element-update="elementUpdateHandler" 
 							@diagram="diagram"
 							@draginfo="dragInfo"></ContainmentTreePanel>
 				</div>
@@ -188,6 +175,7 @@ export default {
 						:specificationTab="specificationTab" 
 						@specification="specification" 
 						@data-change="dataChange"
+                        @elementUpdate="elementUpdateHandler"
 						@close-tab="closeTab"></UmlEditor>
 		</div>
 	</div>

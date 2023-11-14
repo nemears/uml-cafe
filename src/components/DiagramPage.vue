@@ -223,6 +223,7 @@ export default {
                         }
                     ]                
                 });
+                // TODO replace with elementUpdate or something else
             });
             scopedEmitter.on('generalization.end', (event) => {
                 diagramPage.$emit('dataChange', event);

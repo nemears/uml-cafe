@@ -3,8 +3,8 @@ import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
 export default {
     props: ['label', 'umlID', 'initialData', 'readonly', 'createable', 'singletonData'],
-    emits: ['specification', 'dataChange'],
-    inject: ['dataChange'],
+    emits: ['specification', 'elementUpdate'],
+    inject: ['elementUpdate'],
     data() {
         return {
             img: undefined,
@@ -21,18 +21,30 @@ export default {
         }
     },
     watch: {
-        initialData(newInitialData, oldInitialData) {
+        initialData(newInitialData) {
             if (newInitialData !== undefined) {
                 this.setData(newInitialData);
             }
         },
-        dataChange(newDataChange, oldDataChange) {
+        /**dataChange(newDataChange, oldDataChange) {
             for (let data of newDataChange.data) {
                 if (data.id === this.valID && data.type === 'name') {
                     this.valLabel = data.value;
                 }
             }
-        }
+        },**/
+        elementUpdate(newElementUpdate) {
+            const newElement = newElementUpdate.newElement;
+            if (newElement) {
+                if (newElement.id === this.valID) {
+                    if (newElement.isSubClassOf('namedElement')) {
+                        if (newElement.name !== this.valLabel) {
+                            this.valLabel = newElement.name;
+                        }
+                    }
+                }
+            }
+        },
     },
     methods: {
         setData(data) {
@@ -132,13 +144,17 @@ export default {
                         el.sets[this.singletonData.setName].set(null);
                         this.$umlWebClient.put(el);
                         this.$umlWebClient.put(await this.$umlWebClient.get(this.valID));
-                        this.$emit('dataChange', {
+                        /**this.$emit('dataChange', {
                             data: [{
                                 id: this.umlID,
                                 type: 'remove',
                                 val: this.valID,
                                 set: this.singletonData.setName
                             }]
+                        });**/
+                        this.$emit('elementUpdate', {
+                            newElement: el,
+                            oldElement: undefined, // idk
                         });
                         this.valID = undefined;
                         this.img = undefined;
@@ -152,14 +168,20 @@ export default {
                         const el = await this.$umlWebClient.get(this.valID);
                         const owner = await el.owner.get();
                         this.$umlWebClient.deleteElement(el);
-                        this.$emit('dataChange', {
+                        /**this.$emit('dataChange', {
                             data: [
                                 {
                                     id: this.valID,
                                     type: 'delete'
                                 }
                             ]
+                        });**/
+                        this.$emit('elementUpdate', {
+                            newElement: owner,
+                            oldElement: undefined, // idk
                         });
+                        // TODO umlid and valID
+
                         this.$umlWebClient.put(owner);
                         this.valID = undefined;
                         this.img = undefined;
