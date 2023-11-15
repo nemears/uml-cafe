@@ -26,23 +26,18 @@ export default {
                 this.setData(newInitialData);
             }
         },
-        /**dataChange(newDataChange, oldDataChange) {
-            for (let data of newDataChange.data) {
-                if (data.id === this.valID && data.type === 'name') {
-                    this.valLabel = data.value;
-                }
-            }
-        },**/
         elementUpdate(newElementUpdate) {
-            const newElement = newElementUpdate.newElement;
-            if (newElement) {
-                if (newElement.id === this.valID) {
-                    if (newElement.isSubClassOf('namedElement')) {
-                        if (newElement.name !== this.valLabel) {
-                            this.valLabel = newElement.name;
+            for (const update of newElementUpdate.updatedElements) {
+                const newElement = update.newElement;
+                if (newElement) {
+                    if (newElement.id === this.valID) {
+                        if (newElement.isSubClassOf('namedElement')) {
+                            if (newElement.name !== this.valLabel) {
+                                this.valLabel = newElement.name;
+                            }
                         }
                     }
-                }
+                } 
             }
         },
     },
@@ -144,17 +139,13 @@ export default {
                         el.sets[this.singletonData.setName].set(null);
                         this.$umlWebClient.put(el);
                         this.$umlWebClient.put(await this.$umlWebClient.get(this.valID));
-                        /**this.$emit('dataChange', {
-                            data: [{
-                                id: this.umlID,
-                                type: 'remove',
-                                val: this.valID,
-                                set: this.singletonData.setName
-                            }]
-                        });**/
                         this.$emit('elementUpdate', {
-                            newElement: el,
-                            oldElement: undefined, // idk
+                            elementsUpdated: [
+                                {
+                                    newElement: el,
+                                    oldElement: undefined, // idk 
+                                }
+                            ]
                         });
                         this.valID = undefined;
                         this.img = undefined;
@@ -177,8 +168,12 @@ export default {
                             ]
                         });**/
                         this.$emit('elementUpdate', {
-                            newElement: owner,
-                            oldElement: undefined, // idk
+                            elementsUpdated: [
+                                {
+                                    newElement: owner,
+                                    oldElement: undefined, // idk  
+                                }
+                            ]
                         });
                         // TODO umlid and valID
 

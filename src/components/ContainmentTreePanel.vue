@@ -8,7 +8,6 @@ export default {
     props: [
         "umlID",
         "depth",
-        //'dataChange'
     ],
     inject: [
         'elementUpdate',
@@ -169,19 +168,14 @@ export default {
                 this.children.push(createdEl.id);
                 this.expanded = true;
                 this.$emit('elementUpdate', {
-                    newElement: el,
-                    oldElement: undefined, // not rlly sure what to do with this when using it internally
-                });
-                /**this.$emit('dataChange', {
-                    data: [
+                    elementsUpdated:
+                    [
                         {
-                            id: el.id,
-                            type: 'add',
-                            set: set,
-                            el: createdEl.id
+                            newElement: el,
+                            oldElement: undefined, 
                         }
                     ]
-                });**/
+                });
             }; 
 
             // create elements
@@ -308,8 +302,12 @@ export default {
                     });**/
                     this.$umlWebClient.put(owner);
                     this.$emit('elementUpdate', {
-                        newElement: owner,
-                        oldElement: undefined, // idk
+                        elementsUpdated: [
+                            {
+                                newElement: owner,
+                                oldElement: undefined, // idk     
+                            }
+                        ]
                     });
                 }
             });
@@ -330,18 +328,14 @@ export default {
             el.name = this.name;
             this.$umlWebClient.put(el);
             this.$emit('elementUpdate', {
-                newElement: el,
-                oldElement: undefined, // idk
-            });
-            /** this.$emit('dataChange', {
-                data: [
+                elementsUpdated: [
                     {
-                        id: this.umlID,
-                        type: 'name',
-                        value: this.name
+                        newElement: el,
+                        oldElement: undefined, // idk     
                     }
                 ]
-            });**/
+                
+            });
         },
         cancelRename() {
             this.editing = false;
@@ -381,37 +375,40 @@ export default {
             this.$emit('dataChange', dataChange);
         },**/
         handleElementUpdate(newElementUpdate) {
-            const newElement = newElementUpdate.newElement;
-            // const oldElement = newElementUpdate.oldElement;
-            if (!newElement) {
-                // TODO delete
-                // check if the deleted element is in our children
-                // might not be worth it
-                // pros: client will be able to update with out getting this element
-                // cons: will always run a loop through all of our children when an element is updated (laggy)
-            } else if (newElement.id === this.umlID) {
-                //name
-                if (newElement.isSubClassOf('namedElement')) {
-                    if (newElement.name !== this.name) {
-                        this.name = newElement.name; 
-                    } 
-                }
-                
-                // check children
-                // add
-                const childrenCopies = [...this.children];
-                for (const ownedElementID of newElement.ownedElements.ids()) {
-                    if (!this.children.includes(ownedElementID)) {
-                        this.children.push(ownedElementID);
+            for (const update of newElementUpdate.updatedElements) {
+                const newElement = update.newElement;
+                // const oldElement = newElementUpdate.oldElement;
+                if (!newElement) {
+                    // TODO delete
+                    // check if the deleted element is in our children
+                    // might not be worth it
+                    // pros: client will be able to update with out getting this element
+                    // cons: will always run a loop through all of our children when an element is updated (laggy)
+                } else if (newElement.id === this.umlID) {
+                    //name
+                    if (newElement.isSubClassOf('namedElement')) {
+                        if (newElement.name !== this.name) {
+                            this.name = newElement.name; 
+                        } 
                     }
-                }
-                // remove
-                for (const childID of childrenCopies) {
-                    if (!newElement.ownedElements.contains(childID)) {
-                       this.children = this.children.filter(child => child !== childID); 
+                    
+                    // check children
+                    // add
+                    const childrenCopies = [...this.children];
+                    for (const ownedElementID of newElement.ownedElements.ids()) {
+                        if (!this.children.includes(ownedElementID)) {
+                            this.children.push(ownedElementID);
+                        }
                     }
-                }
-            } 
+                    // remove
+                    for (const childID of childrenCopies) {
+                        if (!newElement.ownedElements.contains(childID)) {
+                           this.children = this.children.filter(child => child !== childID); 
+                        }
+                    }
+                } 
+            }
+             
         },
         propogateElementUpdate(newElementUpdate) {
             this.handleElementUpdate(newElementUpdate);

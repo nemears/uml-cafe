@@ -20,50 +20,53 @@ export default {
             this.data = newInitialData;
         },
         async elementUpdate(newElementUpdate) {
-            const newElement = newElementUpdate.newElement;
-            if (newElement) {
-                // check that the new element is us
-                if (newElement.id === this.umlid) {
-                    // keep track of original children
-                    const existingIDs = this.data.map((el) => el.id);
+            for (const update of newElementUpdate.updatedElements) {
+                const newElement = update.newElement;
+                if (newElement) {
+                    // check that the new element is us
+                    if (newElement.id === this.umlid) {
+                        // keep track of original children
+                        const existingIDs = this.data.map((el) => el.id);
 
-                    // check if we need to add children
-                    for (const elementID of newElement.sets[this.setData.setName].ids()) {
-                        if (!this.data.find((el) => el.id === elementID)) {
-                            // add the data
-                            const element = await this.$umlWebClient.get(elementID);
-                            this.data.push({
-                                id: elementID,
-                                label: element.name !== undefined ? element.name : '',
-                                img: getImage(element),
-                            });
+                        // check if we need to add children
+                        for (const elementID of newElement.sets[this.setData.setName].ids()) {
+                            if (!this.data.find((el) => el.id === elementID)) {
+                                // add the data
+                                const element = await this.$umlWebClient.get(elementID);
+                                this.data.push({
+                                    id: elementID,
+                                    label: element.name !== undefined ? element.name : '',
+                                    img: getImage(element),
+                                });
+                            }
                         }
-                    }
 
-                    // check if we need remove an element
-                    for (const existingID of existingIDs) {
-                        if (!newElement.sets[this.setData.setName].contains(existingID)) {
-                            // remove the element
-                            this.data = this.data.filter((el) => el.id !== existingID);
+                        // check if we need remove an element
+                        for (const existingID of existingIDs) {
+                            if (!newElement.sets[this.setData.setName].contains(existingID)) {
+                                // remove the element
+                                this.data = this.data.filter((el) => el.id !== existingID);
+                            }
                         }
-                    }
-                } else {
-                    const foundData = this.data.find((el) => el.id === newElement.id);
-                    if (foundData) {
-                        // check if the name was updated
-                        if (newElement.isSubClassOf('namedElement')) {
-                            if (foundData.label === '') {
-                                if (newElement.name && newElement.name !== '') {                                    
-                                    foundData.label = newElement.name;
-                                }
-                            } else {
-                                if (foundData.label !== newElement.name) {
-                                    foundData.label = newElement.name;
+                    } else {
+                        const foundData = this.data.find((el) => el.id === newElement.id);
+                        if (foundData) {
+                            // check if the name was updated
+                            if (newElement.isSubClassOf('namedElement')) {
+                                if (foundData.label === '') {
+                                    if (newElement.name && newElement.name !== '') {                                    
+                                        foundData.label = newElement.name;
+                                    }
+                                } else {
+                                    if (foundData.label !== newElement.name) {
+                                        foundData.label = newElement.name;
+                                    }
                                 }
                             }
                         }
                     }
                 }
+ 
             }
         }
     },
@@ -85,8 +88,13 @@ export default {
                 label: element.name !== undefined ? element.name : '' 
             });
             this.$emit('elementUpdate', {
-                newElement: await this.$umlWebClient.get(this.umlid),
-                oldElement: undefined, // idk
+                elementsUpdated: [
+                    {
+                        newElement: await this.$umlWebClient.get(this.umlid),
+                        oldElement: undefined, // idk     
+                    }
+                ]
+                
             });
         },
         dragenter(event) {

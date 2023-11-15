@@ -8,8 +8,8 @@ export default {
         "tabs",
         "specificationTab"
     ],
-    inject: ['elementUpdate', 'dataChange'],
-    emits: ['specification', 'elementUpdate', 'dataChange', 'closeTab'],
+    inject: ['elementUpdate'],
+    emits: ['specification', 'elementUpdate', 'closeTab'],
     data() {
         return {
             closeSymbol: CloseSymbol,
@@ -44,47 +44,30 @@ export default {
         specificationTab(newRecentTab, oldRecentTab) {
             this.recentTab = newRecentTab;
         },
-        dataChange(newDataChange, oldDataChange) {
-            for (let data of newDataChange.data) {
-                if (data.type === 'name') {
-                    this.tabs.forEach(tab => {
-                        if (tab.id === data.id) {
-                            if (data.value === '') {
-                                tab.label = '< >';
-                            } else {
-                                tab.label = data.value;
-                            }
-                        }
-                    });
-                } else if (data.type === 'delete') {
-                    const tab = this.tabs.find(tab => tab.id === data.id);
-                    if (tab !== undefined) {
+        elementUpdate(newElementUpdate) {
+            for (const update of newElementUpdate.updatedElements) {
+                const newElement = update.newElement;
+                const oldElement = update.oldElement;
+                if (!newElement) {
+                    // TODO delete
+                    const tab = this.tabs.find(tab => tab.id === oldElement.id);
+                    if (tab) {
                         this.remove(tab.id);
                     }
-                }
-            }
-        },
-        elementUpdate(newElementUpdate) {
-            const newElement = newElementUpdate.newElement;
-            const oldElement = newElementUpdate.oldElement;
-            if (!newElement) {
-                // TODO delete
-                const tab = this.tabs.find(tab => tab.id === oldElement.id);
-                if (tab) {
-                    this.remove(tab.id);
-                }
-            } else {
-                const tab = this.tabs.find(tab => tab.id === newElement.id);
-                if (tab) {
-                    if (newElement.isSubClassOf('namedElement')) {
-                        if ((!newElement.name || newElement.name === '') && tab.label !== '< >') {
-                            tab.label = '< >';
-                        } else if (newElement.name !== tab.label) {
-                            tab.label = newElement.name;
+                } else {
+                    const tab = this.tabs.find(tab => tab.id === newElement.id);
+                    if (tab) {
+                        if (newElement.isSubClassOf('namedElement')) {
+                            if ((!newElement.name || newElement.name === '') && tab.label !== '< >') {
+                                tab.label = '< >';
+                            } else if (newElement.name !== tab.label) {
+                                tab.label = newElement.name;
+                            }
                         }
-                    }
+                    } 
                 } 
             }
+            
         }
     },
     methods: {
@@ -128,27 +111,19 @@ export default {
         propogateSpecification(spec) {
             this.$emit('specification', spec);
         },
-        propogateDataChange(dataChange) {
-            if (dataChange.type === 'name') {
-                this.tabs.forEach(tab => {
-                    if (tab.id === dataChange.id) {
-                        tab.label = dataChange.value;
-                    }
-                });
-            }
-            this.$emit('dataChange', dataChange);
-        },
         propogateElementUpdate(newElementUpdate) {
-            // TODO handle change from diagram and specification pages
-            const newElement = newElementUpdate.newElement;
-            if (newElement) {
-                const tabMatch = this.tabs.find((tab) => tab.id === newElement.id);
-                if (tabMatch) {
-                    if (newElement.isSubClassOf('namedElement')) {
-                        tabMatch.label = newElement.name;
+            for (const update of newElementUpdate.updatedElements) {
+                const newElement = update.newElement;
+                if (newElement) {
+                    const tabMatch = this.tabs.find((tab) => tab.id === newElement.id);
+                    if (tabMatch) {
+                        if (newElement.isSubClassOf('namedElement')) {
+                            tabMatch.label = newElement.name;
+                        }
                     }
-                }
+                } 
             }
+            
 
             this.$emit('elementUpdate', newElementUpdate);
         }
@@ -174,7 +149,6 @@ export default {
                     ></SpecificationPage>
             <DiagramPage v-if="diagram" 
                     :uml-i-d="recentTab" 
-                    @data-change="propogateDataChange" 
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
                     ></DiagramPage>

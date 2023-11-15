@@ -29,33 +29,20 @@ export default class DirectedComposition extends Relationship {
             umlWebClient.put(clazz);
             umlWebClient.put(diagramContext.context);
 
-            // update rest of app
-            diagramEmitter.fire('directedComposition.end', {
-                data: [
+            diagramEmitter.fire('elementUpdate', {
+                updatedElements: [
                     {
-                        type: 'add',
-                        id: diagramContext.context.id,
-                        set: 'packageableElements',
-                        el: association.id
-                    }, 
-                    {
-                        type: 'add',
-                        id: clazz.id,
-                        set: 'ownedAttributes',
-                        el: memberEnd.id
+                        newElement: diagramContext.context,
+                        oldElement: undefined,
                     },
                     {
-                        type: 'add',
-                        id: association.id,
-                        set: 'memberEnds',
-                        el: memberEnd.id
+                        newElement: clazz,
+                        oldElement: undefined,
                     },
                     {
-                        type: 'add',
-                        id: association.id,
-                        set: 'ownedEnds',
-                        el: ownedEnd.id
-                    }
+                        newElement: association,
+                        oldElement: undefined,
+                    },
                 ]
             });
 
@@ -66,7 +53,7 @@ export default class DirectedComposition extends Relationship {
 
     canConnect(context) {
         return context.hover.umlType && context.hover.umlType === 'class';
-    };
+    }
 }
 
 DirectedComposition.$inject = ['eventBus', 'dragging', 'canvas', 'elementFactory', 'umlWebClient', 'diagramEmitter', 'diagramContext'];

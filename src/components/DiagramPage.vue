@@ -1,6 +1,5 @@
 <script>
 import { Editor } from './diagram/editor';
-import ClassSVG from './icons/class.svg';
 const EventEmitter = require('events');
 export default {
     data() {
@@ -10,18 +9,9 @@ export default {
         };
     },
     props: ['umlID'],
-    emits: ['dataChange', 'specification'],
-    inject: ['dataChange', 'draginfo', 'elementUpdate'],
+    emits: ['specification', 'elementUpdate'],
+    inject: ['draginfo', 'elementUpdate'],
     watch : {
-        dataChange(newDataChange, oldDataChange) {
-            for (let data of newDataChange.data) {
-                if (data.type === 'name') {
-                    this.emitter.emit('rename', data);
-                } else if (data.type === 'delete') {
-                    this.emitter.emit('removeShape', data);
-                }
-            }
-        },
         draginfo(newDraginfo) {
             this.recentDraginfo = newDraginfo;
         },
@@ -207,29 +197,20 @@ export default {
 
             const diagramPage = this;
             // handle emits from diagram to update rest of app
-            scopedEmitter.on('shape.added', function(event) {
-                diagramPage.$emit('dataChange', {
-                    data: [
+            scopedEmitter.on('elementUpdate', (newElementUpdate) => {
+                diagramPage.$emit('elementUpdate', newElementUpdate);
+            });
+            // whenever a shape is added update diagram context
+            scopedEmitter.on('shape.added', async () => {
+                diagramPage.$emit('elementUpdate', {
+                    updatedElements: [
                         {
-                            id: diagramPackage.owningPackage.id(),
-                            type: 'add',
-                            set: 'packagedElements',
-                            el: event.element.elementID
-                        },
-                        {
-                            id: event.element.elementID,
-                            type: 'shape',
-                            shape: event.element.id, 
+                            newElement: await diagramPackage.owningPackage.get(),
+                            oldElement: undefined, 
                         }
-                    ]                
+                    ]
+                    
                 });
-                // TODO replace with elementUpdate or something else
-            });
-            scopedEmitter.on('generalization.end', (event) => {
-                diagramPage.$emit('dataChange', event);
-            });
-            scopedEmitter.on('directedComposition.end', (event) => {
-                    diagramPage.$emit('dataChange', event);
             });
             scopedEmitter.on('specification', (event) => {
                 diagramPage.$emit('specification', event);

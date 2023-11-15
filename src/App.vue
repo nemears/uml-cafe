@@ -23,23 +23,15 @@ export default {
 				}
 			],
 			specificationTab: '',
-			recentDataChange: {
-				data: []
-			},
 			recentDraginfo: {
 				id: nullID(),
 				element: 'element',
 			},
-			diagramShapes : {},
-            elementUpdate: {
-                newElement: null,
-                oldElement: null,
-            }
+            elementUpdate: [],
 		}
 	},
 	provide() {
 		return {
-			dataChange: computed(() => this.recentDataChange),
 			draginfo: computed(() => this.recentDraginfo),
             elementUpdate: computed(() => this.elementUpdate),
 		}
@@ -49,8 +41,12 @@ export default {
 
 		this.$umlWebClient.onUpdate = async (element, oldElement) => {
             this.elementUpdate = {
-                newElement: element,
-                oldElement: oldElement,
+                updatedElements: [
+                    {
+                        newElement: element,
+                        oldElement: oldElement,
+                    }
+                ]
             };
 		}
 	},
@@ -78,47 +74,8 @@ export default {
 			});
 			this.specificationTab = el.id;
 		},
-		dataChange(dataChange) {
-			this.recentDataChange = dataChange;
-			for (let data of dataChange.data) {
-				if (data.type === 'shape') {
-					if (this.diagramShapes[data.id] === undefined) {
-						this.diagramShapes[data.id] = [];
-					}
-					this.diagramShapes[data.id].push(data.shape);
-				} else if (data.type === 'delete') {
-					data.shapes = this.diagramShapes[data.id];
-
-					const deletShapesFromModel = async () => {
-						for (const shape of data.shapes) {
-							const shapeEl = await this.$umlWebClient.get(shape);
-							const diagramEl = await shapeEl.owningPackage.get();
-							this.$umlWebClient.deleteElement(shapeEl);
-							this.$umlWebClient.put(diagramEl);
-						}
-						
-						delete this.diagramShapes[data.id];
-					};
-					if (data.shapes) {
-						deletShapesFromModel();
-					} else {
-						for (const shapes in this.diagramShapes) {
-							for (const shape in this.diagramShapes[shapes]) {
-								if (shape === data.id) {
-									this.diagramShapes[shapes].splice(shapes.indexOf(shape), 1);
-								}
-								if (shapes.length === 0) {
-									delete this.diagramShapes[shapes];
-								}
-							}
-						}
-					}
-				}
-			}
-		},
         elementUpdateHandler(newElementUpdate) {
             this.elementUpdate = newElementUpdate;
-            // TODO shapes
         },
 		diagram(diagramClass) {
 			if (this.tabs.find(tab => tab.id === diagramClass.id)) { // no duplicates
@@ -163,9 +120,7 @@ export default {
 							v-if="!isFetching && headID !== undefined" 
 							:umlID="headID" 
 							:depth="0" 
-							:data-change="recentDataChange" 
 							@specification="specification" 
-							@data-change="dataChange"
                             @element-update="elementUpdateHandler" 
 							@diagram="diagram"
 							@draginfo="dragInfo"></ContainmentTreePanel>
@@ -174,7 +129,6 @@ export default {
 			<UmlEditor  :tabs="tabs" 
 						:specificationTab="specificationTab" 
 						@specification="specification" 
-						@data-change="dataChange"
                         @elementUpdate="elementUpdateHandler"
 						@close-tab="closeTab"></UmlEditor>
 		</div>

@@ -34,17 +34,20 @@ export default {
             this.reloadSpec();
         },
         elementUpdate(newElementUpdate) {
-            const newElement = newElementUpdate.newElement;
-            // const oldElement = newElementUpdate.oldElement;
-            if (newElement) {
-                if (newElement.id === this.umlID) {
-                    if (newElement.isSubClassOf('namedElement')) {
-                        if (newElement.name !== this.namedElementData.name) {
-                            this.namedElementData.name = newElement.name;
+            for (const update of newElementUpdate.updatedElements) {
+                const newElement = update.newElement;
+                // const oldElement = newElementUpdate.oldElement;
+                if (newElement) {
+                    if (newElement.id === this.umlID) {
+                        if (newElement.isSubClassOf('namedElement')) {
+                            if (newElement.name !== this.namedElementData.name) {
+                                this.namedElementData.name = newElement.name;
+                            }
                         }
                     }
-                }
+                } 
             }
+            
         },
         //dataChange(newDataChange, oldDataChange) {
         //    for (let data of newDataChange.data) {
@@ -293,17 +296,20 @@ export default {
             this.$emit('dataChange', dataChange);
         },**/
         propogateElementUpdate(newElementUpdate) {
-            const newElement = newElementUpdate.newElement;
-            if (newElement) {
-                if (newElement.id === this.umlID) {
-                    if (newElement.isSubClassOf('namedElement')) {
-                        if (this.namedElementData.name !== newElement.name) {
-                            this.namedElementData.name = newElement.name;
-                        }
-                    } 
-                }
-                
+            for (const update of newElementUpdate.updatedElements) {
+                const newElement = update.newElement;
+                if (newElement) {
+                    if (newElement.id === this.umlID) {
+                        if (newElement.isSubClassOf('namedElement')) {
+                            if (this.namedElementData.name !== newElement.name) {
+                                this.namedElementData.name = newElement.name;
+                            }
+                        } 
+                    }
+                    
+                } 
             }
+            
             this.$emit('elementUpdate', newElementUpdate);
         }
     },

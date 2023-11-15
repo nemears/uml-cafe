@@ -17,13 +17,12 @@ export default class GeneralizationHandler extends Relationship {
             generalization.general.set(event.context.relationship.target.elementID);
             umlWebClient.put(generalization);
             umlWebClient.put(specific);
-            diagramEmitter.fire('generalization.end', {
-                data: [
+
+            diagramEmitter.fire('elementUpdate', {
+                updatedElements: [
                     {
-                        type: 'add',
-                        id: specific.id,
-                        set: 'generalizations',
-                        el: generalization.id
+                        newElement: specific,
+                        oldElement: undefined,
                     }
                 ]
             });

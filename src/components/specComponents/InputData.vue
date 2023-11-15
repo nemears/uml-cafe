@@ -14,13 +14,6 @@ export default {
         initialData(newInitalData, oldInitialData) {
             this.data = newInitalData;
         },
-        /**dataChange(newDataChange, oldDataChange) {
-            for (let data of newDataChange.data) {
-                if (data.type === this.type && data.id === this.umlid) {
-                    this.data = data.value;
-                }
-            }
-        },**/
     },
     methods: {
         async submitDataChange() {
@@ -29,18 +22,13 @@ export default {
             const el = await this.$umlWebClient.get(this.umlid);
             el[this.type] = this.data; // this may be dangerous in the future
             this.$umlWebClient.put(el);
-            /**this.$emit('dataChange', {
-                data: [
+            this.$emit('elementUpdate', {
+                updatedElements: [
                     {
-                        id: this.umlid,
-                        type: this.type,
-                        value: this.data
+                        newElement: el,
+                        oldElement: undefined, // idk     
                     }
                 ]
-            });**/
-            this.$emit('elementUpdate', {
-                newElement: el,
-                oldElement: undefined, // idk
             });
         }
     }
