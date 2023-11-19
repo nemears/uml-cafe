@@ -39,32 +39,42 @@ export default class ElementUpdate {
 
                         let elementIsShapeType = false;
                         for (let classifierID of newElement.classifiers.ids()) {
-                            if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g' || classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
-                                elementIsShapeType = true;
+                            if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g') {
+                                // check if the element is in the diagram (on big diagrams with a lot of users this could get laggy)
+                                const diagramShape = elementRegistry.get(oldElement.id);
+                                if (diagramShape) {
+                                    // the element updated is a diagram shape
+                                    const umlShape = await getUmlDiagramElement(oldElement.id, umlWebClient);
+
+                                    // change bounds in diagram
+                                    modeling.resizeShape(diagramShape, umlShape.bounds);
+                                } else {
+                                    // not being tracked by diagram yet
+                                    let umlShape = await createNewShape(newElement.id, umlWebClient, modeling, canvas);
+                                    me.modelElements.set(umlShape.modelElement.id, newElement.id);
+                                }
+                                break;
+                            } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
+                                const diagramEdge = elementRegistry.get(oldElement.id);
+                                if (diagramEdge) {
+                                    const umlEdge = await getUmlDiagramElement(oldElement.id, umlWebClient);
+                                    if (diagramEdge.source.id === umlEdge.source && diagramEdge.target.id === umlEdge.target) {
+                                        // update waypoints
+                                        modeling.updateWaypoints(diagramEdge, umlEdge.waypoints);
+                                    } 
+                                } else {
+                                    // not being tracked by diagram yet maybe
+                                    console.warn('TODO ElementUpdate.js edge update "edge" case');
+                                }
                             }
                         }
 
                         if (!elementIsShapeType) {
                             return;
                         }
-                        
-                        // check if the element is in the diagram (on big diagrams with a lot of users this could get laggy)
-                        const diagramShape = elementRegistry.get(oldElement.id);
-                        if (diagramShape) {
-                            // the element updated is a diagram shape
-                            const umlShape = await getUmlDiagramElement(oldElement.id, umlWebClient);
-
-                            // change bounds in diagram
-                            modeling.resizeShape(diagramShape, umlShape.bounds);
-                        } else {
-                            // not being tracked by diagram yet
-                            let umlShape = await createNewShape(newElement.id, umlWebClient, modeling, canvas);
-                            me.modelElements.set(umlShape.modelElement.id, newElement.id);
-                        }
                     }
                 } else {
                     if (newElement.isSubClassOf('instanceSpecification')) {
-                        console.log("ElementUpdate.js got new instanceSpecification " + newElement.id);
                         for (let classifierID of newElement.classifiers.ids()) {
                             if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g') {
                                 const umlShape = await createNewShape(newElement.id, umlWebClient, modeling, canvas);

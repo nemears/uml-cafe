@@ -183,7 +183,8 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
                 }
                 await makeUMLWaypoints(edge, umlWebClient, edgeSlot, await edgeInstance.owningPackage.get());
             }
-        } 
+        }
+        umlWebClient.put(edgeInstance);
     };
 
     const adjustListOfEdges = async (listOfEdges) => {
@@ -202,20 +203,24 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         const shapeInstance = await umlWebClient.get(event.shape.id);
         adjustShape(event, shapeInstance);
         adjustAttachedEdges(event.shape);
+        umlWebClient.put(diagramContext.diagram);
     });
 
     eventBus.on('resize.end', async (event) => {
         const shapeInstance = await umlWebClient.get(event.shape.id);
         adjustShape(event, shapeInstance);
         adjustAttachedEdges(event.shape);
+        umlWebClient.put(diagramContext.diagram);
     });
 
     eventBus.on('connectionSegment.move.end', async (event) => {
         await adjustEdgeWaypoints(event.connection);
+        umlWebClient.put(diagramContext.diagram);
     });
 
     eventBus.on('bendpoint.move.end', async (event) => {
         await adjustEdgeWaypoints(event.connection);
+        umlWebClient.put(diagramContext.diagram);
     }); 
 
     diagramEmitter.on('removeShape', (data) => {
