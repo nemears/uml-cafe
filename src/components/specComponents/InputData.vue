@@ -1,4 +1,5 @@
 <script>
+import { createElementUpdate } from '../../createElementUpdate.js'
 export default {
     props: ['label', 'inputType', 'initialData', 'readOnly', 'type', 'umlid'],
     data() {
@@ -11,7 +12,7 @@ export default {
         this.data = this.initialData;
     },
     watch: {
-        initialData(newInitalData, oldInitialData) {
+        initialData(newInitalData) {
             this.data = newInitalData;
         },
     },
@@ -22,14 +23,7 @@ export default {
             const el = await this.$umlWebClient.get(this.umlid);
             el[this.type] = this.data; // this may be dangerous in the future
             this.$umlWebClient.put(el);
-            this.$emit('elementUpdate', {
-                updatedElements: [
-                    {
-                        newElement: el,
-                        oldElement: undefined, // idk     
-                    }
-                ]
-            });
+            this.$emit('elementUpdate', createElementUpdate(el));
         }
     }
 }

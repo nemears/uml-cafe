@@ -1,4 +1,5 @@
 import Relationship from "./Relationship";
+import { createElementUpdate } from '../../../../createElementUpdate';
 
 export default class DirectedComposition extends Relationship {
     constructor(eventBus, dragging, canvas, elementFactory, umlWebClient, diagramEmitter, diagramContext) {
@@ -29,23 +30,8 @@ export default class DirectedComposition extends Relationship {
             umlWebClient.put(clazz);
             umlWebClient.put(diagramContext.context);
 
-            diagramEmitter.fire('elementUpdate', {
-                updatedElements: [
-                    {
-                        newElement: diagramContext.context,
-                        oldElement: undefined,
-                    },
-                    {
-                        newElement: clazz,
-                        oldElement: undefined,
-                    },
-                    {
-                        newElement: association,
-                        oldElement: undefined,
-                    },
-                ]
-            });
-
+            diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, clazz, association));
+            
             // create shapes
             await this.createEdge(event, umlWebClient, diagramContext);
         });

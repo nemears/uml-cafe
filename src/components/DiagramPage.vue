@@ -1,6 +1,8 @@
 <script>
 import { Editor } from './diagram/editor';
 const EventEmitter = require('events');
+import { createElementUpdate } from '../createElementUpdate.js';
+import { getUmlDiagramElement, deleteUmlDiagramElement } from './diagram/api/diagramInterchange';
 export default {
     data() {
         return {
@@ -79,62 +81,23 @@ export default {
                         continue;
                     }
                     // draw shape
-                    let widthValue = undefined;
-                    let heightValue = undefined;
-                    let elementID = undefined;
-                    let xValue = undefined;
-                    let yValue = undefined;
-                    for await (let slot of packagedEl.slots) {
+                    const umlShape = await getUmlDiagramElement(packagedEl.id, this.$umlWebClient)
 
-                        if (slot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
-                            // bounds
-                            const boundsInstance = await (await slot.values.front()).instance.get();
-                            for await (let boundsSlot of boundsInstance.slots) {
-                                if (boundsSlot.definingFeature.id() === 'OaYzOYryv5lrW2YYkujnjL02rSlo') {
-                                    // x
-                                    xValue = (await boundsSlot.values.front()).value;
-                                } else if (boundsSlot.definingFeature.id() === 'RhD_fTVUMc4ceJ4topOlpaFPpoiB') {
-                                    yValue = (await boundsSlot.values.front()).value;
-                                }else if (boundsSlot.definingFeature.id() === '&TCEXx1uZQsa7g1KPT9ocVwNiwV7') {
-                                    widthValue = (await boundsSlot.values.front()).value;
-                                } else if (boundsSlot.definingFeature.id() === 'ELF54xP3DUMrFbgteAQkIXONqnlg') {
-                                    heightValue = (await boundsSlot.values.front()).value;
-                                } 
-                            }
-                        } else if (slot.definingFeature.id() === 'xnI9Aiz3GaF91K8H7KAPe95oDgyE') {
-                            // model element
-                            elementID = 
-                                (await 
-                                    (await 
-                                        (await
-                                            (await slot.
-                                                    values.
-                                                    front()
-                                            ).
-                                            instance.
-                                            get()).
-                                        slots.
-                                        filter(modelElementSlot => modelElementSlot.definingFeature.id() === '3gx55nLEvmzDt2kKK7gYgxsTBD6M'))[0].
-                                    values.
-                                    front()).
-                                value;
-                        }
+                    if (!umlShape.modelElement) {
+                        // modelElement for shape has been deleted
+                        await deleteUmlDiagramElement(umlShape.id, this.$umlWebClient);
+                        continue;
                     }
 
-                    
-                    const elShapeIsRepresenting = await this.$umlWebClient.get(elementID);
-                    const name = elShapeIsRepresenting.name ? elShapeIsRepresenting.name : '';
-
                     const shape = elementFactory.createShape({
-                        x: xValue,
-                        y: yValue,
-                        width: widthValue,
-                        height: heightValue,
+                        x: umlShape.bounds.x,
+                        y: umlShape.bounds.y,
+                        width: umlShape.bounds.width,
+                        height: umlShape.bounds.height,
                         id: packagedEl.id,
-                        elementID: elementID,
-                        name: name,
-                        umlType: elShapeIsRepresenting.elementType(),
-                        newUMLElement: false,
+                        elementID: umlShape.modelElement.id,
+                        name: umlShape.modelElement.name,
+                        umlType: umlShape.modelElement.elementType(),
                     });
                     canvas.addShape(shape);
                     shapes[packagedEl.id] = shape;
@@ -149,44 +112,24 @@ export default {
                         continue;
                     }
 
-                    let target = undefined;
-                    let source = undefined;
-                    let represents = undefined;
-                    let waypointsSlot = undefined;
-                    for await (let slot of packagedEl.slots) {
-                        if (slot.definingFeature.id() === 'R2flL_8p_&Zc7HP07QfAyUI7EtCg') {
-                            target = shapes[(await slot.values.front()).instance.id()];
-                        } else if (slot.definingFeature.id() === 'Xxh7mjF9IMK0rhyrbSXOGA1_7vVo') {
-                            source = shapes[(await slot.values.front()).instance.id()];
-                        } else if (slot.definingFeature.id() === 'xnI9Aiz3GaF91K8H7KAPe95oDgyE') {
-                            // model element
-                            represents = await this.$umlWebClient.get((await (await (await (await slot.values.front()).instance.get()).slots.filter(elInstSlot => elInstSlot.definingFeature.id() === '3gx55nLEvmzDt2kKK7gYgxsTBD6M'))[0].values.front()).value);
-                        } else if (slot.definingFeature.id() === 'Zf2K&k0k&jwaAz1GLsTSk7rN742p') {
-                            waypointsSlot = slot;
-                        }
-                    }
-                    // waypoints saved to model
-                    let waypoints = [];
-                    for await (const pointVal of waypointsSlot.values) {
-                        const pointInstance = await pointVal.instance.get();
-                        let point = {};
-                        for await (const slot of pointInstance.slots) {
-                            if (slot.definingFeature.id() === '0TTKoNWbe13DJ3ou_1KhyS9sE1iU') {
-                                point.x = (await slot.values.front()).value;
-                            } else if (slot.definingFeature.id() === 'wecoFZpGF2kLOJ0sBneePO3nB47z') {
-                                point.y = (await slot.values.front()).value;
-                            }
-                        }
-                        waypoints.push(point);
+                    const umlEdge = await getUmlDiagramElement(packagedEl.id, this.$umlWebClient);
+                    
+                    if (!umlEdge.modelElement) {
+                        // model element has been deleted
+                        await deleteUmlDiagramElement(umlEdge.id, this.$umlWebClient);
+                        continue;
                     }
 
+                    const source = shapes[umlEdge.source];
+                    const target = shapes[umlEdge.target];
+
                     var relationship = elementFactory.createConnection({
-                        waypoints: waypoints,
+                        waypoints: umlEdge.waypoints,
                         id: packagedEl.id,
-                        elementID: represents.id,
+                        elementID: umlEdge.modelElement.id,
                         source: source,
                         target: target,
-                        umlType: represents.elementType()
+                        umlType: umlEdge.modelElement.elementType()
                     });
                     target.incoming.push(relationship);
                     source.outgoing.push(relationship);
@@ -202,15 +145,7 @@ export default {
             });
             // whenever a shape is added update diagram context
             scopedEmitter.on('shape.added', async () => {
-                diagramPage.$emit('elementUpdate', {
-                    updatedElements: [
-                        {
-                            newElement: await diagramPackage.owningPackage.get(),
-                            oldElement: undefined, 
-                        }
-                    ]
-                    
-                });
+                diagramPage.$emit('elementUpdate', createElementUpdate(await diagramPackage.owningPackage.get()));
             });
             scopedEmitter.on('specification', (event) => {
                 diagramPage.$emit('specification', event);

@@ -1,6 +1,7 @@
 <script>
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
+import { createElementUpdate } from '../../createElementUpdate.js';
 export default {
     props: ['label', 'initialData', 'umlid', 'subsets', 'creatable', "setData"],
     inject: ['elementUpdate'],
@@ -87,15 +88,7 @@ export default {
                 id: element.id,
                 label: element.name !== undefined ? element.name : '' 
             });
-            this.$emit('elementUpdate', {
-                elementsUpdated: [
-                    {
-                        newElement: await this.$umlWebClient.get(this.umlid),
-                        oldElement: undefined, // idk     
-                    }
-                ]
-                
-            });
+            this.$emit('elementUpdate', createElementUpdate(await this.$umlWebClient.get(this.umlid)));
         },
         dragenter(event) {
             this.drag = true;
@@ -155,10 +148,7 @@ export default {
                         owner.sets[this.setData.setName].remove(element);
                         this.$umlWebClient.put(owner);
                         this.$umlWebClient.put(element);
-                        this.$emit('elementUpdate', {
-                            newElement: owner,
-                            oldElement: undefined, // idk
-                        });
+                        this.$emit('elementUpdate', createElementUpdate(owner));
                         this.data = this.data.filter(dataEl => dataEl.id !== el.id);
                     }
                 });
@@ -167,14 +157,9 @@ export default {
                     label: 'Delete',
                     onClick: async () => {
                         const owner = await this. $umlWebClient.get(this.umlid);
-                        const elementID = element.id;
-                        // TODO elementUpdate delete??
                         await this.$umlWebClient.deleteElement(element);
                         this.$umlWebClient.put(owner);
-                        this.$emit('elementUpdate', {
-                            newElement: owner,
-                            oldElement: undefined, // idk
-                        });
+                        this.$emit('elementUpdate', createElementUpdate(owner));
                     }
                 });
             } 

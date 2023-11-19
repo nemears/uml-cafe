@@ -124,14 +124,17 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         asyncCreateShape(event);
     });
 
-    eventBus.on('shape.remove', async (event) => {
-        if (!event.element.deletedFromModel && !event.element.classLabel) {
-            const shapeEl = await umlWebClient.get(event.element.id);
-            if (shapeEl) {
-                umlWebClient.deleteElement(shapeEl);
-                umlWebClient.put(diagramContext.diagram);
+    eventBus.on('shape.remove', (event) => {
+        const run = async () => {
+            if (!event.element.deletedFromModel && !event.element.classLabel) {
+                const shapeEl = await umlWebClient.get(event.element.id);
+                if (shapeEl) {
+                    umlWebClient.deleteElement(shapeEl);
+                    umlWebClient.put(diagramContext.diagram);
+                }
             }
-        }
+        };
+        run();
     });
 
     const adjustShape = async (event, shapeInstance) => {

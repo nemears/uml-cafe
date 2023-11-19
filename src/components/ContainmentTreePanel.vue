@@ -2,6 +2,7 @@
 import packageImage from './icons/package.svg';
 import getImage from '../GetUmlImage.vue';
 import classDiagramImage from './icons/class_diagram.svg';
+import { createElementUpdate, deleteElementElementUpdate } from '../createElementUpdate.js'
 
 export default {
     name: "ContainmentTreePanel",
@@ -49,47 +50,6 @@ export default {
         }
     },
     watch: {
-        /**dataChange: {
-            handler(newDataChange) {
-                const handleNewData = async () => {
-                    for (let data of newDataChange.data) {
-                        if (data === undefined) {
-                            return;
-                        }
-                        if (data.id === undefined) {
-                            console.warn('data change made without id');
-                            return;
-                        }
-                        if (data.id !== this.umlID) {
-                            if (this.children.includes(data.id)) {
-                                if (data.type === 'delete') {
-                                    this.children = this.children.filter(child => child !== data.id);
-                                } else if (data.type === 'remove') {
-                                    const element = await this.$umlWebClient.get(this.umlID);
-                                    if (!element.ownedElements.contains(data.id)) {
-                                        this.children = this.children.filter(child => child !== data.id);
-                                    }     
-                                }                   
-                            }
-                            continue;
-                        }
-                        if (data.type === 'name') {
-                            this.name = data.value;
-                        } else if (data.type === 'add') {
-                            if (this.children.includes(data.el)) {
-                                continue;
-                            }
-                            this.children.push(data.el);
-                        } else if (data.type === 'remove') {
-                            if (this.children.includes(data.val)) {
-                                this.children = this.children.filter(child => child !== data.val);
-                            }
-                        }
-                    }
-                };
-                // handleNewData();
-            }
-        },**/
         elementUpdate(newElementUpdate) {
           this.handleElementUpdate(newElementUpdate);  
         }
@@ -167,15 +127,7 @@ export default {
                 el = await this.$umlWebClient.get(el.id);
                 this.children.push(createdEl.id);
                 this.expanded = true;
-                this.$emit('elementUpdate', {
-                    elementsUpdated:
-                    [
-                        {
-                            newElement: el,
-                            oldElement: undefined, 
-                        }
-                    ]
-                });
+                this.$emit('elementUpdate', createElementUpdate(el));
             }; 
 
             // create elements
@@ -291,24 +243,10 @@ export default {
                 disabled: this.$umlWebClient.readonly,
                 onClick: async () => {
                     const owner = await el.owner.get();
-                    this.$umlWebClient.deleteElement(el);
-                    /**this.$emit('dataChange', {
-                        data: [
-                            {
-                                id: this.umlID,
-                                type: 'delete'
-                            }
-                        ]
-                    });**/
+                    this.$emit('elementUpdate', deleteElementElementUpdate(el));
+                    await this.$umlWebClient.deleteElement(el);
                     this.$umlWebClient.put(owner);
-                    this.$emit('elementUpdate', {
-                        elementsUpdated: [
-                            {
-                                newElement: owner,
-                                oldElement: undefined, // idk     
-                            }
-                        ]
-                    });
+                    this.$emit('elementUpdate', createElementUpdate(owner));
                 }
             });
 
@@ -327,15 +265,7 @@ export default {
             const el = await this.$umlWebClient.get(this.umlID);
             el.name = this.name;
             this.$umlWebClient.put(el);
-            this.$emit('elementUpdate', {
-                elementsUpdated: [
-                    {
-                        newElement: el,
-                        oldElement: undefined, // idk     
-                    }
-                ]
-                
-            });
+            this.$emit('elementUpdate', createElementUpdate(el));
         },
         cancelRename() {
             this.editing = false;
@@ -355,25 +285,6 @@ export default {
         propogateSpecification(spec) {
             this.$emit('specification', spec);
         },
-        /**propogateDataChange(dataChange) {
-            for (let data of dataChange.data) {
-                if (data.type === 'delete') {
-                    let childToDeleteIndex = 0;
-                    for (let child of this.children) {
-                        if (child === data.id) {
-                            break;
-                        }
-                        childToDeleteIndex++;
-                    }
-                    if (childToDeleteIndex < this.children.length) {
-                        this.children.splice(childToDeleteIndex, 1);
-                    }
-                } else if (data.type === 'add' && data.id === this.umlID) {
-                    this.children.push(data.element);
-                }
-            }
-            this.$emit('dataChange', dataChange);
-        },**/
         handleElementUpdate(newElementUpdate) {
             for (const update of newElementUpdate.updatedElements) {
                 const newElement = update.newElement;

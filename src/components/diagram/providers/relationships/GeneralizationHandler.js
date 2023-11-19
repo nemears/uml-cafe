@@ -1,4 +1,5 @@
 import Relationship from "./Relationship";
+import { createElementUpdate } from '../../../../createElementUpdate';
 
 export default class GeneralizationHandler extends Relationship {
     constructor(eventBus, dragging, canvas, elementFactory, umlWebClient, diagramEmitter, diagramContext) {
@@ -18,14 +19,7 @@ export default class GeneralizationHandler extends Relationship {
             umlWebClient.put(generalization);
             umlWebClient.put(specific);
 
-            diagramEmitter.fire('elementUpdate', {
-                updatedElements: [
-                    {
-                        newElement: specific,
-                        oldElement: undefined,
-                    }
-                ]
-            });
+            diagramEmitter.fire('elementUpdate', createElementUpdate(specific));
 
             // create shape
             await this.createEdge(event, umlWebClient, diagramContext);

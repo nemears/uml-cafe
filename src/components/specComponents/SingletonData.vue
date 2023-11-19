@@ -1,6 +1,7 @@
 <script>
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
+import { createElementUpdate } from '../../createElementUpdate.js';
 export default {
     props: ['label', 'umlID', 'initialData', 'readonly', 'createable', 'singletonData'],
     emits: ['specification', 'elementUpdate'],
@@ -139,14 +140,7 @@ export default {
                         el.sets[this.singletonData.setName].set(null);
                         this.$umlWebClient.put(el);
                         this.$umlWebClient.put(await this.$umlWebClient.get(this.valID));
-                        this.$emit('elementUpdate', {
-                            elementsUpdated: [
-                                {
-                                    newElement: el,
-                                    oldElement: undefined, // idk 
-                                }
-                            ]
-                        });
+                        this.$emit('elementUpdate', createElementUpdate(el));
                         this.valID = undefined;
                         this.img = undefined;
                         this.valLabel = '';
@@ -159,24 +153,7 @@ export default {
                         const el = await this.$umlWebClient.get(this.valID);
                         const owner = await el.owner.get();
                         this.$umlWebClient.deleteElement(el);
-                        /**this.$emit('dataChange', {
-                            data: [
-                                {
-                                    id: this.valID,
-                                    type: 'delete'
-                                }
-                            ]
-                        });**/
-                        this.$emit('elementUpdate', {
-                            elementsUpdated: [
-                                {
-                                    newElement: owner,
-                                    oldElement: undefined, // idk  
-                                }
-                            ]
-                        });
-                        // TODO umlid and valID
-
+                        this.$emit('elementUpdate', createElementUpdate(owner));
                         this.$umlWebClient.put(owner);
                         this.valID = undefined;
                         this.img = undefined;

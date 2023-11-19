@@ -2,6 +2,8 @@ import { Bounds, Point } from './diagramCommon';
 
 export class DiagramElement {
     
+    id = '';
+
     owningElement = null; // Type is DiagramElement
     ownedElement = []; // Type is [DiagramElement]
 
@@ -13,12 +15,18 @@ export class DiagramElement {
 
 export class Shape extends DiagramElement {
     bounds = new Bounds();
+    elementType() {
+        return 'shape';
+    }
 }
 
 export class Edge extends DiagramElement {
     source = '';
     target = '';
     waypoints = [];
+    elementType() {
+        return 'edge'
+    }
 }
 
 export async function getUmlDiagramElement(id, umlClient) {
@@ -30,6 +38,7 @@ export async function getUmlDiagramElement(id, umlClient) {
         if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g') {
             // it is a shape
             const ret = new Shape();
+            ret.id = id;
             // fill out bounds
             for await (let shapeSlot of umlDiagramElement.slots) {
                if (shapeSlot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
@@ -63,6 +72,7 @@ export async function getUmlDiagramElement(id, umlClient) {
         } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
             // edge
             const ret = new Edge();
+            ret.id = id;
             for await (const edgeSlot of umlDiagramElement.slots) {
                 if (edgeSlot.definingFeature.id() === 'Zf2K&k0k&jwaAz1GLsTSk7rN742p') {
                     // waypoints
@@ -108,4 +118,33 @@ async function getDiagramElementFeatures(slot, diagramElement, umlClient) {
         }
     } // TODO owning and owned elements
     return false;
+}
+
+export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
+    const diagramElementInstance = await umlWebClient.get(diagramElementID);
+    for (const classifierID of diagramElementInstance.classifiers.ids()) {
+        if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g') {
+            // shape
+            for await (const shapeSlot of diagramElementInstance.slots) {
+                if (shapeSlot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
+                    // bounds get and delete instance
+                    await umlWebClient.deleteElement(await (await shapeSlot.values.front()).instance.get());
+                }
+            }
+            await umlWebClient.deleteElement(diagramElementInstance);
+            break;
+        } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
+            // edge
+            for await (const edgeSlot of diagramElementInstance.slots) {
+                if (edgeSlot.definingFeature.id() === 'Zf2K&k0k&jwaAz1GLsTSk7rN742p') {
+                    // waypoints
+                    for await (const waypointValue of edgeSlot.values) {
+                        await umlWebClient.deleteElement(await waypointValue.instance.get());
+                    }
+                }
+            }
+            await umlWebClient.deleteElement(diagramElementInstance);
+            break;
+        }
+    }
 }
