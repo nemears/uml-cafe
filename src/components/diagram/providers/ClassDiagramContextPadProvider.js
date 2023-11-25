@@ -1,3 +1,5 @@
+import { removeShapeAndEdgeFromServer } from './ElementUpdate'; 
+
 /**
  * A example context pad provider.
  */
@@ -7,28 +9,27 @@ export default class ClassDiagramContextPadProvider {
     this._modeling = modeling;
     this._generalizationHandler = generalizationHandler;
     this._directedComposition = directedComposition;
-    this.umlWebClient = umlWebClient;
+    this._umlWebClient = umlWebClient;
   
     contextPad.registerProvider(this);
   }
 
   getContextPadEntries(element) {
-    if (this.umlWebClient.client.readonly) {
+    var modeling = this._modeling,
+    generalizationHandler = this._generalizationHandler,
+    directedComposition = this._directedComposition,
+    umlWebClient = this._umlWebClient; 
+    
+    if (umlWebClient.client.readonly) {
       return {};
     }
-    var connect = this._connect,
-    modeling = this._modeling,
-    generalizationHandler = this._generalizationHandler,
-    directedComposition = this._directedComposition;
-
-    function removeElement() {
-      modeling.removeElements([ element ].concat(element.incoming).concat(element.outgoing));
-    }
-
-    function startConnect(event, element, autoActivate) {
-      connect.start(event, element, autoActivate);
-    }
     
+
+    async function removeShape() {
+        await removeShapeAndEdgeFromServer(element, umlWebClient); 
+        modeling.removeShape(element);
+    }
+
     function startGeneralization(event, element, autoActivate) {
       generalizationHandler.start(event, element, autoActivate);
     }
@@ -44,8 +45,8 @@ export default class ClassDiagramContextPadProvider {
           className: 'context-pad-icon-remove',
           title: 'Remove',
           action: {
-            click: removeElement,
-            dragstart: removeElement
+            click: removeShape,
+            dragstart: removeShape
           }
         },
         'createGeneralization': {

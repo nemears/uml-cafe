@@ -131,8 +131,6 @@ export default {
                         target: target,
                         umlType: umlEdge.modelElement.elementType()
                     });
-                    target.incoming.push(relationship);
-                    source.outgoing.push(relationship);
                     canvas.addConnection(relationship, root);
                 }
             }

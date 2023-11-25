@@ -1,4 +1,5 @@
 import { makeUMLWaypoints } from './relationships/Relationship'
+import { removeShapeAndEdgeFromServer } from './ElementUpdate'; 
 
 export async function createClassShape(shape, umlWebClient, diagramContext) {
     // set up shape
@@ -124,18 +125,20 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         asyncCreateShape(event);
     });
 
-    eventBus.on('shape.remove', (event) => {
+    /*eventBus.on('shape.remove', (event) => {
         const run = async () => {
             if (!event.element.deletedFromModel && !event.element.classLabel) {
                 const shapeEl = await umlWebClient.get(event.element.id);
                 if (shapeEl) {
-                    umlWebClient.deleteElement(shapeEl);
-                    umlWebClient.put(diagramContext.diagram);
+                    //await deleteUmlDiagramElement(shapeEl.id, umlWebClient);
+                    await removeShapeAndEdgeFromServer(event.element, umlWebClient); 
+                    // await umlWebClient.deleteElement(shapeEl);
+                    // umlWebClient.put(diagramContext.diagram);
                 }
             }
         };
         run();
-    });
+    });*/
 
     const adjustShape = async (event, shapeInstance) => {
         let boundsInstance = undefined;
@@ -224,6 +227,7 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
     }); 
 
     diagramEmitter.on('removeShape', (data) => {
+        // TODO delete
         if (data.shapes) {
             for (const shape of data.shapes) {
                 const element = elementRegistry.get(shape);

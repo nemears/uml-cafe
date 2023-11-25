@@ -49,7 +49,7 @@ export default {
                 const newElement = update.newElement;
                 const oldElement = update.oldElement;
                 if (!newElement) {
-                    // TODO delete
+                    // element has been deleted, lets check if it is a tab
                     const tab = this.tabs.find(tab => tab.id === oldElement.id);
                     if (tab) {
                         this.remove(tab.id);

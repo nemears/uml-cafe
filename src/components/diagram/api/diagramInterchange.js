@@ -32,6 +32,11 @@ export class Edge extends DiagramElement {
 export async function getUmlDiagramElement(id, umlClient) {
     // get the element with the client
     const umlDiagramElement = await umlClient.get(id);
+
+    if (!umlDiagramElement) {
+        console.error('could not get diagram element ' + id + ' from server, it must have been deleted and kept track of!');
+        return undefined;
+    }
     
     // determine which type of diagramElement it is
     for (let classifierID of umlDiagramElement.classifiers.ids()) {
@@ -122,6 +127,10 @@ async function getDiagramElementFeatures(slot, diagramElement, umlClient) {
 
 export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
     const diagramElementInstance = await umlWebClient.get(diagramElementID);
+    if (!diagramElementInstance) {
+        console.warn('could not delete diagramElement ' + diagramElementID + ' from server, already removed!');
+        return;
+    }
     for (const classifierID of diagramElementInstance.classifiers.ids()) {
         if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g') {
             // shape
@@ -131,6 +140,9 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
                     await umlWebClient.deleteElement(await (await shapeSlot.values.front()).instance.get());
                 }
             }
+            
+            // TODO incoming outgoing, maybe not, maybe just on client side being tracked
+
             await umlWebClient.deleteElement(diagramElementInstance);
             break;
         } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
