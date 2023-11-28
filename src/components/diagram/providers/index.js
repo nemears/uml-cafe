@@ -9,7 +9,6 @@ import GeneralizationHandler from './relationships/GeneralizationHandler';
 import DirectedComposition from './relationships/DirectedComposition';
 import UmlLayouter from './UmlLayouter';
 import DoubleClickSpecification from './DoubleClickSpecification';
-import NameSupport from './NameSupport';
 import ElementUpdate from './ElementUpdate';
 
 export default {
@@ -25,7 +24,6 @@ export default {
     'layouter',
     'connectionDocking',
     'doubleClickSpecification',
-    'nameSupport',
     'elementUpdate',
   ],
   generalizationHandler: ['type', GeneralizationHandler],
@@ -39,6 +37,5 @@ export default {
   layouter: ['type', UmlLayouter],
   connectionDocking: ['type', ConnectionDocking],
   doubleClickSpecification: ['type', DoubleClickSpecification],
-  nameSupport: ['type', NameSupport],
   elementUpdate: ['type', ElementUpdate],
 };

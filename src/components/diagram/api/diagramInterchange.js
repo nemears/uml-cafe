@@ -160,3 +160,101 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
         }
     }
 }
+
+export async function createClassShape(shape, umlWebClient, diagramContext) {
+    // set up shape
+    const shapeInstance = await umlWebClient.post('instanceSpecification', {id:shape.id});
+    shapeInstance.classifiers.add(await umlWebClient.get('KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g'));
+    diagramContext.diagram.packagedElements.add(shapeInstance);
+    
+    // set up bounds
+    const boundsInstance = await umlWebClient.post('instanceSpecification');
+    diagramContext.diagram.packagedElements.add(boundsInstance);
+    boundsInstance.classifiers.add(await umlWebClient.get('GrSBY10MECO6g8EesG5ZdXVQ5m5B'));
+    const boundsSlot = await umlWebClient.post('slot');
+    boundsSlot.definingFeature.set(await umlWebClient.get('KbKmDNU19SWMJwggKTQ9FrzAzozO'));
+    const boundsValue = await umlWebClient.post('instanceValue');
+    boundsValue.instance.set(boundsInstance);
+    boundsSlot.values.add(boundsValue);
+    shapeInstance.slots.add(boundsSlot);
+    
+    // set up x
+    const xSlot = await umlWebClient.post('slot');
+    xSlot.definingFeature.set(await umlWebClient.get('OaYzOYryv5lrW2YYkujnjL02rSlo'));
+    boundsInstance.slots.add(xSlot);
+    const xValue = await umlWebClient.post('literalInt');
+    xValue.value = shape.x;
+    xSlot.values.add(xValue);
+
+    // set up y
+    const ySlot = await umlWebClient.post('slot');
+    ySlot.definingFeature.set(await umlWebClient.get('RhD_fTVUMc4ceJ4topOlpaFPpoiB'));
+    boundsInstance.slots.add(ySlot);
+    const yValue = await umlWebClient.post('literalInt');
+    yValue.value = shape.y;
+    ySlot.values.add(yValue);
+
+    // set up width
+    const widthValue = await umlWebClient.post('literalInt');
+    widthValue.value = shape.width;
+    const widthSlot = await umlWebClient.post('slot');
+    widthSlot.definingFeature.set(await umlWebClient.get('&TCEXx1uZQsa7g1KPT9ocVwNiwV7'));
+    widthSlot.values.add(widthValue);
+    boundsInstance.slots.add(widthSlot);
+
+    // set up height
+    const heightValue = await umlWebClient.post('literalInt');
+    heightValue.value = shape.height;
+    const heightSlot = await umlWebClient.post('slot');
+    heightSlot.definingFeature.set(await umlWebClient.get('ELF54xP3DUMrFbgteAQkIXONqnlg'));
+    heightSlot.values.add(heightValue);
+    boundsInstance.slots.add(heightSlot);
+    
+    // set up modelElement
+    // TODO do this with more detail, rn we are just making element and ID
+    const modelElementInstance = await umlWebClient.post('instanceSpecification');
+    const modelElementSlot = await umlWebClient.post('slot');
+    const modelElementValue = await umlWebClient.post('instanceValue');
+    const idSlot = await umlWebClient.post('slot');
+    const idVal = await umlWebClient.post('literalString');
+    modelElementInstance.classifiers.add(await umlWebClient.get('XI35viryLd5YduwnSbWpxSs3npcu'));
+    idVal.value = shape.elementID;
+    idSlot.definingFeature.set(await umlWebClient.get('3gx55nLEvmzDt2kKK7gYgxsTBD6M'));
+    idSlot.values.add(idVal);
+    modelElementInstance.slots.add(idSlot);
+    modelElementValue.instance.set(modelElementInstance);
+    modelElementSlot.values.add(modelElementValue);
+    modelElementSlot.definingFeature.set(await umlWebClient.get('xnI9Aiz3GaF91K8H7KAPe95oDgyE'));
+    shapeInstance.slots.add(modelElementSlot);
+    diagramContext.diagram.packagedElements.add(modelElementInstance);
+
+    // put to server
+    umlWebClient.put(boundsSlot);
+    umlWebClient.put(boundsInstance);
+    umlWebClient.put(boundsValue);
+    umlWebClient.put(xSlot);
+    umlWebClient.put(xValue);
+    umlWebClient.put(ySlot);
+    umlWebClient.put(yValue);
+    umlWebClient.put(heightSlot);
+    umlWebClient.put(heightValue);
+    umlWebClient.put(widthSlot);
+    umlWebClient.put(widthValue);
+    umlWebClient.put(modelElementInstance);
+    umlWebClient.put(modelElementSlot);
+    umlWebClient.put(modelElementValue);
+    umlWebClient.put(idSlot);
+    umlWebClient.put(idVal);
+    umlWebClient.put(diagramContext.diagram);
+
+    // put shape last so that data is complete on updating diagram
+    umlWebClient.put(shapeInstance);
+    const ret = new Shape();
+    ret.id = shape.id;
+    ret.bounds.x = shape.x;
+    ret.bounds.y = shape.y;
+    ret.bounds.width = shape.width;
+    ret.bounds.height = shape.height;
+    ret.modelElement = await umlWebClient.get(shape.elementID);
+    return ret;
+}

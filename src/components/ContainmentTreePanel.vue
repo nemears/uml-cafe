@@ -335,16 +335,6 @@ export default {
                 this.$emit('specification', await this.$umlWebClient.get(this.umlID));
             }
         },
-        startDrag(event, item) {
-            event.dataTransfer.setData('umlID', this.umlID);
-            event.dataTransfer.dropEffect = 'copy';
-            event.dataTransfer.effectAllowed = 'all';
-            console.log('dragging');
-            this.$emit('draginfo', {
-                id: this.umlID,
-                elementType: this.elementType,
-            });
-        },
         propogateDraginfo(draginfo) {
             this.$emit('draginfo', draginfo);
         }
@@ -361,7 +351,7 @@ export default {
             <div :style="indent"></div>
             <div style="display:inline-flex;" 
                  draggable="true" 
-                 @dragstart="startDrag($event, item)">
+                 >
                 <img v-bind:src="image" draggable="false"/>
                 <div style="display:inline-flex;white-space:nowrap;" 
                      ref="nameDiv" :contenteditable="editing" 

@@ -8,6 +8,7 @@ export default {
         return {
             emitter : undefined,
             recentDraginfo: undefined,
+            dragging: false,
         };
     },
     props: ['umlID'],
@@ -30,22 +31,10 @@ export default {
         this.reloadDiagram();        
     },
     methods: {
-        dragEnter(event, list) {
-            console.log('dragent');
-            this.emitter.emit('dragenter', {
-                draginfo: this.recentDraginfo,
-                event: event,
-            });
-        },
-        dragLeave(event, list) {
-
-        },
-        onDrop(event, list) {
-            console.log('dropped on diagram');
-            
-        },
         specification(event) {
-            this.$emit('specification', event);
+            if (event.currentTarget == this.$refs.diagram) {
+                this.$emit('specification', event);
+            }
         },
         async reloadDiagram() {
             if (this.diagram) {
@@ -154,11 +143,7 @@ export default {
 }
 </script>
 <template>
-    <div ref="diagram" class="diagramContainer" 
-        @drop="onDrop($event, 1)"
-        @dragover.prevent
-        @dragenter.prevent="dragEnter"
-        @dragleave.prevent="dragLeave"></div>
+    <div ref="diagram" class="diagramContainer"></div>
 </template>
 <style>
 .diagramContainer {
