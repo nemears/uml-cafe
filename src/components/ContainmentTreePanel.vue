@@ -335,6 +335,13 @@ export default {
                 this.$emit('specification', await this.$umlWebClient.get(this.umlID));
             }
         },
+        async startDrag() {
+            const me = this;
+            this.$emit('draginfo', {
+                element: await me.$umlWebClient.get(me.umlID),
+                event: me.pressed,
+            });
+        },
         propogateDraginfo(draginfo) {
             this.$emit('draginfo', draginfo);
         }
@@ -347,10 +354,11 @@ export default {
              :class="{notEditable: !editing}" 
              @click="childrenToggle" 
              @dblclick="specification"
-             @contextmenu="onContextMenu($event)" >
+             @contextmenu="onContextMenu($event)">
             <div :style="indent"></div>
             <div style="display:inline-flex;" 
-                 draggable="true" 
+                 draggable="true"
+                 @dragstart="startDrag"
                  >
                 <img v-bind:src="image" draggable="false"/>
                 <div style="display:inline-flex;white-space:nowrap;" 

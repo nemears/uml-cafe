@@ -5,25 +5,20 @@ export default class DragFromTree {
     constructor(create, elementFactory, diagramEmitter, umlWebClient, diagramContext) {
         diagramEmitter.on('dragenter', (event) => {
             console.log('drag entered diagram');
-            if (event.draginfo.elementType === 'class') {
+            if (event.element.elementType() === 'class') {
                 const shapeID = randomID();
-                // const name = (await umlWebClient.get(event.draginfo.id)).name;
                 const shape = elementFactory.createShape({
                     width: 100,
                     height: 80,
                     // TODO uml stuff
-                    update: true, // just saying it is from the backend
                     id: shapeID,
-                    elementID: event.draginfo.id,
-                    name: event.draginfo.name,
+                    elementID: event.element.id,
+                    name: event.element.name,
                     newUMLElement: false,
                     newShapeElement: true,
                     umlType: 'class'
                 });
-                event.draginfo.mouseEvent.pointers = [event.event];
-                event.draginfo.mouseEvent.originalEvent = event.event;
-                // await createClassShape(shape, umlWebClient, diagramContext);
-                create.start(event.draginfo.mouseEvent, shape);
+                create.start(event.event, shape);
             }
         });
     }

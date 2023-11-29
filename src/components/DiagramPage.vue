@@ -17,6 +17,7 @@ export default {
     watch : {
         draginfo(newDraginfo) {
             this.recentDraginfo = newDraginfo;
+            this.emitter.emit('dragenter', newDraginfo);
         },
         elementUpdate(newElementUpdate) {
             // send update to diagram via emitter
