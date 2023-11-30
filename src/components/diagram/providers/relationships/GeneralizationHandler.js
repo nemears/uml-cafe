@@ -21,6 +21,8 @@ export default class GeneralizationHandler extends Relationship {
 
             diagramEmitter.fire('elementUpdate', createElementUpdate(specific));
 
+            event.context.relationship.modelElement = generalization;
+
             // create shape
             await this.createEdge(event, umlWebClient, diagramContext);
         });

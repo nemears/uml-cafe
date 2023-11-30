@@ -11,6 +11,7 @@ import UmlLayouter from './UmlLayouter';
 import DoubleClickSpecification from './DoubleClickSpecification';
 import ElementUpdate from './ElementUpdate';
 import ModelElementMap from './ModelElementMap';
+import UmlContextMenu from './UmlContextMenu';
 
 export default {
   __init__: [
@@ -27,6 +28,7 @@ export default {
     'doubleClickSpecification',
     'elementUpdate',
     'modelElementMap',
+    'umlContextMenu',
   ],
   generalizationHandler: ['type', GeneralizationHandler],
   directedComposition: ['type', DirectedComposition],
@@ -41,4 +43,5 @@ export default {
   doubleClickSpecification: ['type', DoubleClickSpecification],
   elementUpdate: ['type', ElementUpdate],
   modelElementMap: ['type', ModelElementMap],
+  umlContextMenu: ['type', UmlContextMenu],
 };

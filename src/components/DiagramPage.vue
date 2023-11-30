@@ -85,6 +85,7 @@ export default {
                         width: umlShape.bounds.width,
                         height: umlShape.bounds.height,
                         id: packagedEl.id,
+                        modelElement: umlShape.modelElement,
                         elementID: umlShape.modelElement.id,
                         name: umlShape.modelElement.name,
                         umlType: umlShape.modelElement.elementType(),
@@ -116,10 +117,11 @@ export default {
                     var relationship = elementFactory.createConnection({
                         waypoints: umlEdge.waypoints,
                         id: packagedEl.id,
-                        elementID: umlEdge.modelElement.id,
+                        modelElement: umlEdge.modelElement,
+                        // elementID: umlEdge.modelElement.id,
                         source: source,
                         target: target,
-                        umlType: umlEdge.modelElement.elementType()
+                        // umlType: umlEdge.modelElement.elementType()
                     });
                     canvas.addConnection(relationship, root);
                 }
@@ -137,6 +139,9 @@ export default {
             });
             scopedEmitter.on('specification', (event) => {
                 diagramPage.$emit('specification', event);
+            });
+            scopedEmitter.on('contextmenu', (event) => {
+                diagramPage.$contextmenu(event);
             });
             this.emitter = Object.freeze(scopedEmitter);
         }
@@ -170,6 +175,9 @@ export default {
 
 .context-pad-icon-directed-composition {
     background: url('diagram/directedComposition.svg') !important;
+}
+.context-pad-icon-spec {
+    background: url('diagram/info.svg') !important;
 }
 @import "diagram-js/assets/diagram-js.css"
 </style>

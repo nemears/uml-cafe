@@ -12,11 +12,9 @@ export default class DragFromTree {
                     height: 80,
                     // TODO uml stuff
                     id: shapeID,
-                    elementID: event.element.id,
-                    name: event.element.name,
+                    modelElement: event.element,
                     newUMLElement: false,
                     newShapeElement: true,
-                    umlType: 'class'
                 });
                 create.start(event.event, shape);
             } /**else if (event.element.elementType() === 'generalization') {

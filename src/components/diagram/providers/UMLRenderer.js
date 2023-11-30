@@ -67,11 +67,11 @@ export default class UMLRenderer extends BaseRenderer {
 
     canRender(element) {
         //return element.name || element.umlType && (element.umlType === 'generalization' || element.umlType === 'association');
-        return element.umlType;
+        return element.umlType || element.modelElement;
     }
 
     drawConnection(gfx, element, attrs) {
-        if (element.umlType === 'generalization') {
+        if (element.modelElement.elementType() === 'generalization') {
             const arrow = createArrow(element.waypoints.slice(-2));
 
             var line = createLine(element.waypoints.slice(0,-1).concat([   
@@ -104,7 +104,7 @@ export default class UMLRenderer extends BaseRenderer {
             svgAppend(group, line);
             svgAppend(gfx, group);
             return group;
-        } else if (element.umlType === 'association') {
+        } else if (element.modelElement.elementType() === 'association') {
             // todo, segmented line
             const arrow = createArrow(element.waypoints.slice(-2));
             var line = createLine(element.waypoints.slice(0,-1).concat([
@@ -174,13 +174,13 @@ export default class UMLRenderer extends BaseRenderer {
         svgAppend(group, rect);
 
         // add name to shape directly
-        if (element.name) {
+        if (element.modelElement && element.modelElement.name) {
             const options = {
                 box: {
                     width: element.width - 5,
                 }
             };
-            var text = this.textUtil.createText(element.name || '', options);
+            var text = this.textUtil.createText(element.modelElement.name || '', options);
             svgAppend(group, text);
         }
 

@@ -5,12 +5,13 @@ import { removeShapeAndEdgeFromServer } from './ElementUpdate';
  * A example context pad provider.
  */
 export default class ClassDiagramContextPadProvider {
-  constructor(connect, contextPad, modeling, generalizationHandler, directedComposition, umlWebClient) {
+  constructor(connect, contextPad, modeling, generalizationHandler, directedComposition, umlWebClient, diagramEmitter) {
     this._connect = connect;
     this._modeling = modeling;
     this._generalizationHandler = generalizationHandler;
     this._directedComposition = directedComposition;
     this._umlWebClient = umlWebClient;
+    this._diagramEmitter = diagramEmitter;
   
     contextPad.registerProvider(this);
   }
@@ -19,7 +20,8 @@ export default class ClassDiagramContextPadProvider {
     var modeling = this._modeling,
     generalizationHandler = this._generalizationHandler,
     directedComposition = this._directedComposition,
-    umlWebClient = this._umlWebClient; 
+    umlWebClient = this._umlWebClient,
+    diagramEmitter = this._diagramEmitter; 
     
     if (umlWebClient.client.readonly) {
       return {};
@@ -44,21 +46,34 @@ export default class ClassDiagramContextPadProvider {
       directedComposition.start(event, element, autoActivate);
     }
 
-    if (element.umlType === 'class') {
+    function specification() {
+      diagramEmitter.fire('specification', element.modelElement);
+    }
+
+    if (element.modelElement.elementType() === 'class') {
       return {
         'delete': {
           group: 'edit',
           className: 'context-pad-icon-remove',
-          title: 'Remove',
+          title: 'Remove Shape',
           action: {
             click: removeShape,
             dragstart: removeShape
           }
         },
+        'specification': {
+          group: 'edit', // TODO change
+          className: 'context-pad-icon-spec',
+          title: 'Open Specification',
+          action: {
+            click: specification,
+            dragstart: specification,
+          }
+        },
         'createGeneralization': {
           group: 'edit',
           className: 'context-pad-icon-connect',
-          title: 'create generalization',
+          title: 'Create Generalization',
           action: {
             click: startGeneralization,
             dragstart: startGeneralization
@@ -67,34 +82,52 @@ export default class ClassDiagramContextPadProvider {
         'createDirectedComposition': {
           group: 'edit',
           className: 'context-pad-icon-directed-composition',
-          title: 'create directed composition',
+          title: 'Create Directed Composition',
           action: {
             click: startDirectedComposition,
             dragstart: startDirectedComposition
           }
         }
       };
-    } else if (element.umlType === 'generalization') {
+    } else if (element.modelElement.elementType() === 'generalization') {
       return {
         'delete': {
           group: 'edit',
           className: 'context-pad-icon-remove',
-          title: 'Remove',
+          title: 'Remove Edge',
           action: {
             click: removeEdge,
             dragstart: removeEdge
           }
         },
+        'specification': {
+          group: 'edit', // TODO change
+          className: 'context-pad-icon-spec',
+          title: 'Open Specification',
+          action: {
+            click: specification,
+            dragstart: specification,
+          }
+        },
       }
-    } else if (element.umlType === 'association') {
+    } else if (element.elementType() === 'association') {
       return {
         'delete': {
           group: 'edit',
           className: 'context-pad-icon-remove',
-          title: 'Remove',
+          title: 'Remove Edge',
           action: {
             click: removeEdge,
             dragstart: removeEdge
+          }
+        },
+        'specification': {
+          group: 'edit', // TODO change
+          className: 'context-pad-icon-spec',
+          title: 'Open Specification',
+          action: {
+            click: specification,
+            dragstart: specification,
           }
         },
       }
@@ -103,4 +136,4 @@ export default class ClassDiagramContextPadProvider {
   }
 }
 
-ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'modeling', 'generalizationHandler', 'directedComposition', 'umlWebClient'];
+ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'modeling', 'generalizationHandler', 'directedComposition', 'umlWebClient', 'diagramEmitter'];

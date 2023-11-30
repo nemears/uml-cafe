@@ -18,12 +18,13 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         }
 
         // create new uml class
-        const classID = event.element.elementID;
+        const classID = event.element.modelElement.id;
         let clazz = await umlWebClient.post('class', {id:classID});
         diagramContext.context.packagedElements.add(clazz);
         umlWebClient.put(clazz);
         umlWebClient.put(diagramContext.context);
         await umlWebClient.get(classID);
+        event.element.modelElement = clazz;
 
         diagramEmitter.fire('shape.added', event);
 

@@ -30,7 +30,7 @@ export default class ElementUpdate {
                                         modeling.removeShape(shape);
                                     } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
                                         // TODO remove just edge from server
-                                        console.warn("TODO delete shape from diagram");
+                                        console.warn("TODO delete edge from diagram");
                                     } 
                                 }
                             }
@@ -80,7 +80,7 @@ export default class ElementUpdate {
                                 // update name
                                 for (const shapeID of shapeIDs) {
                                     const shape = elementRegistry.get(shapeID);
-                                    shape.name = newElement.name;
+                                    shape.modelElement = newElement;
                                     graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
                                 }
                             }
@@ -108,8 +108,7 @@ export default class ElementUpdate {
                                         target: target,
                                         waypoints: umlEdge.waypoints,
                                         id: newElement.id,
-                                        elementID: umlEdge.modelElement.id,
-                                        umlType: umlEdge.modelElement.elementType(),
+                                        modelElement: umlEdge.modelElement,
                                     },
                                     canvas.getRootElement()
                                 );
@@ -122,11 +121,8 @@ export default class ElementUpdate {
                         // update name
                         for (const shapeID of shapeIDs) {
                             const shape = elementRegistry.get(shapeID);
-                            if (shape.name !== newElement.name) {
-                                // name doesn't match, update it
-                                shape.name = newElement.name;
-                                graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
-                            }
+                            shape.modelElement = newElement;
+                            graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
                         }
                     }
                 }

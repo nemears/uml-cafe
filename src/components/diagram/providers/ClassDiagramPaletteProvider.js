@@ -49,9 +49,13 @@ export default class ClassDiagramPaletteProvider {
               width: 100,
               height: 80,
               id: shapeID,
-              elementID: classID,
+              modelElement : {
+                id: classID,
+                elementType() {
+                  return 'class';
+                }
+              },
               newUMLElement: true,
-              umlType: 'class',
             });
 
             create.start(event, shape);

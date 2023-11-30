@@ -218,7 +218,7 @@ export async function createClassShape(shape, umlWebClient, diagramContext) {
     const idSlot = await umlWebClient.post('slot');
     const idVal = await umlWebClient.post('literalString');
     modelElementInstance.classifiers.add(await umlWebClient.get('XI35viryLd5YduwnSbWpxSs3npcu'));
-    idVal.value = shape.elementID;
+    idVal.value = shape.modelElement.id;
     idSlot.definingFeature.set(await umlWebClient.get('3gx55nLEvmzDt2kKK7gYgxsTBD6M'));
     idSlot.values.add(idVal);
     modelElementInstance.slots.add(idSlot);
@@ -255,6 +255,6 @@ export async function createClassShape(shape, umlWebClient, diagramContext) {
     ret.bounds.y = shape.y;
     ret.bounds.width = shape.width;
     ret.bounds.height = shape.height;
-    ret.modelElement = await umlWebClient.get(shape.elementID);
+    ret.modelElement = shape.modelElement;
     return ret;
 }

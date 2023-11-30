@@ -29,6 +29,7 @@ export default class DirectedComposition extends Relationship {
             umlWebClient.put(ownedEnd);
             umlWebClient.put(clazz);
             umlWebClient.put(diagramContext.context);
+            event.context.relationship.modelElement = association;
 
             diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, clazz, association));
             
