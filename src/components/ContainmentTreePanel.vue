@@ -274,6 +274,9 @@ export default {
         },
         onContextMenu(evt) {
             //prevent the browser's default menu
+            if (evt.ctrlKey) {
+                return;
+            }
             evt.preventDefault();
             //show our menu
             this.$contextmenu({
@@ -335,11 +338,11 @@ export default {
                 this.$emit('specification', await this.$umlWebClient.get(this.umlID));
             }
         },
-        async startDrag() {
+        async startDrag(event) {
             const me = this;
             this.$emit('draginfo', {
                 element: await me.$umlWebClient.get(me.umlID),
-                event: me.pressed,
+                event: event,
             });
         },
         propogateDraginfo(draginfo) {

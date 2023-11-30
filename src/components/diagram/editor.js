@@ -112,7 +112,7 @@ export function Editor(options) {
     ResizeModule,
     RulesModule,
     SelectionModule,
-    ZoomScrollModule
+    ZoomScrollModule,
   ];
 
   // our own modules, contributing controls, customizations, and more

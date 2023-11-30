@@ -2,36 +2,7 @@ import { getUmlDiagramElement, deleteUmlDiagramElement } from '../api/diagramInt
 
 export default class ElementUpdate {
 
-    modelElements = new Map();
-
-    constructor(diagramEmitter, umlWebClient, modeling, canvas, elementRegistry, eventBus, graphicsFactory) {
-        const me = this;
-        elementRegistry.forEach((element) => {
-            if (element.elementID) {
-                me.modelElements.set(element.elementID, element.id);
-            }
-        });
-
-        eventBus.on('shape.added', (event) => {
-            const modelElement = me.modelElements.get(event.element.elementID);
-            if (!modelElement) {
-                me.modelElements.set(event.element.elementID, [event.element.id]);
-            } else {
-                if (modelElement.find(shapeID => shapeID === event.element.id)) {
-                    modelElement.push(event.element.id);
-                }
-            }
-        });
-        eventBus.on('shape.remove', (event) => {
-            const modelElement = me.modelElements.get(event.element.elementID);
-            if (modelElement) {
-                modelElement.splice(modelElement.indexOf(event.element.id), 1);
-                if (modelElement.length === 0) {
-                    me.modelElements.delete(event.element.elementID);
-                }
-            }
-        });
-
+    constructor(diagramEmitter, umlWebClient, modeling, canvas, elementRegistry, modelElementMap, graphicsFactory) {
         diagramEmitter.on('elementUpdate', async (event) => {
             for (const update of event.updatedElements) {
                 const newElement = update.newElement;
@@ -39,7 +10,7 @@ export default class ElementUpdate {
                 if (oldElement) {
                     if (!newElement) {
                         // check if it is a modelElement being represented in the diagram
-                        let shapeIDs = me.modelElements.get(oldElement.id);
+                        let shapeIDs = modelElementMap.get(oldElement.id);
                         if (shapeIDs) {
                             for (const shapeID of shapeIDs) {
                                 const shape = elementRegistry.get(shapeID);
@@ -80,12 +51,7 @@ export default class ElementUpdate {
                                     } else {
                                         // not being tracked by diagram yet
                                         let umlShape = await createNewShape(newElement.id, umlWebClient, modeling, canvas);
-                                        const modelElement = me.modelElements.get(umlShape.modelElement.id);
-                                        if (!modelElement) {
-                                            me.modelElements.set(umlShape.modelElement.id, [newElement.id]);
-                                        } else {
-                                            modelElement.push(newElement.id);
-                                        }
+                                        modelElementMap.set(umlShape.modelElement.id, newElement.id);
                                     }
                                     break;
                                 } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
@@ -107,7 +73,7 @@ export default class ElementUpdate {
                                 return;
                             }
                         }
-                        const shapeIDs = me.modelElements.get(oldElement.id);
+                        const shapeIDs = modelElementMap.get(oldElement.id);
                         if (shapeIDs) {
                             // shape is represented in diagram
                             if (oldElement.name !== newElement.name) {
@@ -125,12 +91,7 @@ export default class ElementUpdate {
                         for (let classifierID of newElement.classifiers.ids()) {
                             if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g') {
                                 const umlShape = await createNewShape(newElement.id, umlWebClient, modeling, canvas);
-                                const modelElement = me.modelElements.get(umlShape.modelElement.id);
-                                if (!modelElement) {
-                                    me.modelElements.set(umlShape.modelElement.id, [newElement.id]);
-                                } else {
-                                    modelElement.push(newElement.id);
-                                }
+                                modelElementMap.set(umlShape.modelElement.id, newElement.id);
                             } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
                                 // it is a umlEdge
                                 const umlEdge = await getUmlDiagramElement(newElement.id, umlWebClient);
@@ -155,7 +116,7 @@ export default class ElementUpdate {
                             }
                         }
                     }
-                    const shapeIDs = me.modelElements.get(newElement.id);
+                    const shapeIDs = modelElementMap.get(newElement.id);
                     if (shapeIDs) {
                         // shape is represented in diagram
                         // update name
@@ -174,7 +135,7 @@ export default class ElementUpdate {
     }
 }
 
-ElementUpdate.$inject = ['diagramEmitter', 'umlWebClient', 'modeling', 'canvas', 'elementRegistry', 'eventBus', 'graphicsFactory'];
+ElementUpdate.$inject = ['diagramEmitter', 'umlWebClient', 'modeling', 'canvas', 'elementRegistry', 'modelElementMap', 'graphicsFactory'];
 
 async function createNewShape(newShapeID, umlWebClient, modeling, canvas) {
     // it is a umlShape, let's see if it is owned by this diagram

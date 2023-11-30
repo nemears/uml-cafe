@@ -1,3 +1,4 @@
+import { deleteUmlDiagramElement } from '../api/diagramInterchange';
 import { removeShapeAndEdgeFromServer } from './ElementUpdate'; 
 
 /**
@@ -28,6 +29,11 @@ export default class ClassDiagramContextPadProvider {
     async function removeShape() {
         await removeShapeAndEdgeFromServer(element, umlWebClient); 
         modeling.removeShape(element);
+    }
+
+    async function removeEdge() {
+      await deleteUmlDiagramElement(element.id, umlWebClient);
+      modeling.removeConnection(element, umlWebClient);
     }
 
     function startGeneralization(event, element, autoActivate) {
@@ -68,6 +74,30 @@ export default class ClassDiagramContextPadProvider {
           }
         }
       };
+    } else if (element.umlType === 'generalization') {
+      return {
+        'delete': {
+          group: 'edit',
+          className: 'context-pad-icon-remove',
+          title: 'Remove',
+          action: {
+            click: removeEdge,
+            dragstart: removeEdge
+          }
+        },
+      }
+    } else if (element.umlType === 'association') {
+      return {
+        'delete': {
+          group: 'edit',
+          className: 'context-pad-icon-remove',
+          title: 'Remove',
+          action: {
+            click: removeEdge,
+            dragstart: removeEdge
+          }
+        },
+      }
     }
     return {};
   }

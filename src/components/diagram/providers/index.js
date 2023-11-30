@@ -10,6 +10,7 @@ import DirectedComposition from './relationships/DirectedComposition';
 import UmlLayouter from './UmlLayouter';
 import DoubleClickSpecification from './DoubleClickSpecification';
 import ElementUpdate from './ElementUpdate';
+import ModelElementMap from './ModelElementMap';
 
 export default {
   __init__: [
@@ -25,6 +26,7 @@ export default {
     'connectionDocking',
     'doubleClickSpecification',
     'elementUpdate',
+    'modelElementMap',
   ],
   generalizationHandler: ['type', GeneralizationHandler],
   directedComposition: ['type', DirectedComposition],
@@ -38,4 +40,5 @@ export default {
   connectionDocking: ['type', ConnectionDocking],
   doubleClickSpecification: ['type', DoubleClickSpecification],
   elementUpdate: ['type', ElementUpdate],
+  modelElementMap: ['type', ModelElementMap],
 };
