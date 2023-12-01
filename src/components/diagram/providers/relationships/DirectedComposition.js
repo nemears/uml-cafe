@@ -1,4 +1,5 @@
-import Relationship from "./Relationship";
+import Relationship from './Relationship';
+import { createEdge } from "./Relationship";
 import { createElementUpdate } from '../../../../createElementUpdate';
 
 export default class DirectedComposition extends Relationship {
@@ -12,15 +13,15 @@ export default class DirectedComposition extends Relationship {
             }
             
             // create the association and properties
-            const association = await umlWebClient.post('association', {id: event.context.relationship.elementID});
+            const association = await umlWebClient.post('association', {id: event.context.relationship.modelElement.id});
             const memberEnd = await umlWebClient.post('property');
             const ownedEnd = await umlWebClient.post('property');
-            memberEnd.type.set(event.context.relationship.target.elementID);
+            memberEnd.type.set(event.context.relationship.target.modelElement.id);
             memberEnd.aggregation = 'composite';
-            ownedEnd.type.set(event.context.relationship.source.elementID);
+            ownedEnd.type.set(event.context.relationship.source.modelElement.id);
             association.memberEnds.add(memberEnd);
             association.ownedEnds.add(ownedEnd);
-            const clazz = await umlWebClient.get(event.context.relationship.source.elementID);
+            const clazz = await umlWebClient.get(event.context.relationship.source.modelElement.id);
             memberEnd.clazz.set(clazz);
             diagramContext.context.packagedElements.add(association);
 
@@ -34,12 +35,12 @@ export default class DirectedComposition extends Relationship {
             diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, clazz, association));
             
             // create shapes
-            await this.createEdge(event, umlWebClient, diagramContext);
+            await createEdge(event.context.relationship, umlWebClient, diagramContext);
         });
     }
 
     canConnect(context) {
-        return context.hover.umlType && context.hover.umlType === 'class';
+        return context.hover.modelElement && context.hover.modelElement.elementType() === 'class';
     }
 }
 

@@ -9,6 +9,7 @@ export default {
             emitter : undefined,
             recentDraginfo: undefined,
             dragging: false,
+            recentElementUpdate: undefined,
         };
     },
     props: ['umlID'],
@@ -20,8 +21,10 @@ export default {
             this.emitter.emit('dragenter', newDraginfo);
         },
         elementUpdate(newElementUpdate) {
-            // send update to diagram via emitter
-            this.emitter.emit('elementUpdate', newElementUpdate);
+            if (this.recentElementUpdate !== newElementUpdate) {
+                // send update to diagram via emitter
+                this.emitter.emit('elementUpdate', newElementUpdate);
+            }
         },
         umlID() {
             this.reloadDiagram();
@@ -86,9 +89,6 @@ export default {
                         height: umlShape.bounds.height,
                         id: packagedEl.id,
                         modelElement: umlShape.modelElement,
-                        elementID: umlShape.modelElement.id,
-                        name: umlShape.modelElement.name,
-                        umlType: umlShape.modelElement.elementType(),
                     });
                     canvas.addShape(shape);
                     shapes[packagedEl.id] = shape;
@@ -118,10 +118,8 @@ export default {
                         waypoints: umlEdge.waypoints,
                         id: packagedEl.id,
                         modelElement: umlEdge.modelElement,
-                        // elementID: umlEdge.modelElement.id,
                         source: source,
                         target: target,
-                        // umlType: umlEdge.modelElement.elementType()
                     });
                     canvas.addConnection(relationship, root);
                 }
@@ -132,6 +130,7 @@ export default {
             // handle emits from diagram to update rest of app
             scopedEmitter.on('elementUpdate', (newElementUpdate) => {
                 diagramPage.$emit('elementUpdate', newElementUpdate);
+                this.recentElementUpdate = newElementUpdate;
             });
             // whenever a shape is added update diagram context
             scopedEmitter.on('shape.added', async () => {
@@ -178,6 +177,12 @@ export default {
 }
 .context-pad-icon-spec {
     background: url('diagram/info.svg') !important;
+}
+.context-pad-icon-delete {
+    background: url('diagram/trash.svg') !important;
+}
+.context-pad-icon-options {
+    background: url('diagram/gear.svg') !important;
 }
 @import "diagram-js/assets/diagram-js.css"
 </style>

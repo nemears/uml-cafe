@@ -340,6 +340,9 @@ export default {
         },
         async startDrag(event) {
             const me = this;
+            event.dataTransfer.setData('umlID', this.umlID);
+            event.dataTransfer.dropEffect = 'copy';
+            event.dataTransfer.effectAllowed = 'all';
             this.$emit('draginfo', {
                 element: await me.$umlWebClient.get(me.umlID),
                 event: event,

@@ -10,23 +10,16 @@ export default class ModelElementMap {
             }
         });
         eventBus.on('shape.added', (event) => {
-            const modelElement = me.modelElements.get(event.element.elementID);
-            if (!modelElement) {
-                me.modelElements.set(event.element.elementID, [event.element.id]);
-            } else {
-                if (modelElement.find(shapeID => shapeID === event.element.id)) {
-                    modelElement.push(event.element.id);
-                }
-            }
+            me.set(event.element.modelElement.id, event.element.id);
         });
+        eventBus.on('connection.added', (event) => {
+            me.set(event.element.modelElement.id, event.element.id);
+        })
         eventBus.on('shape.remove', (event) => {
-            const modelElement = me.modelElements.get(event.element.elementID);
-            if (modelElement) {
-                modelElement.splice(modelElement.indexOf(event.element.id), 1);
-                if (modelElement.length === 0) {
-                    me.modelElements.delete(event.element.elementID);
-                }
-            }
+            me.remove(event.element.modelElement.id, event.element.id);
+        });
+        eventBus.on('connection.remove', (event) => {
+            me.remove(event.element.modelElement.id, event.element.id);
         });
     }
 
@@ -36,11 +29,21 @@ export default class ModelElementMap {
     }
 
     set(id, shapeID) {
-        const modelElement = me.modelElements.get(id);
+        const modelElement = this.modelElements.get(id);
         if (!modelElement) {
-            me.modelElements.set(id, [shapeID]);
+            this.modelElements.set(id, [shapeID]);
         } else {
             modelElement.push(shapeID);
+        }
+    }
+
+    remove(id, shapeID) {
+        const modelElement = this.modelElements.get(id);
+        if (modelElement) {
+            modelElement.splice(modelElement.indexOf(shapeID), 1);
+            if (modelElement.length === 0) {
+                this.modelElements.delete(id);
+            }
         }
     }
 };

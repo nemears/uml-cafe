@@ -29,8 +29,9 @@ export default class ElementUpdate {
                                         await removeShapeAndEdgeFromServer(shape, umlWebClient); // do we need this?
                                         modeling.removeShape(shape);
                                     } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
-                                        // TODO remove just edge from server
-                                        console.warn("TODO delete edge from diagram");
+                                        // edge
+                                        await deleteUmlDiagramElement(shape.id, umlWebClient);
+                                        modeling.removeConnection(shape);
                                     } 
                                 }
                             }
@@ -122,7 +123,11 @@ export default class ElementUpdate {
                         for (const shapeID of shapeIDs) {
                             const shape = elementRegistry.get(shapeID);
                             shape.modelElement = newElement;
-                            graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
+                            if (shape.waypoints) {
+                                // TODO
+                            } else {
+                                graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
+                            }
                         }
                     }
                 }
@@ -146,9 +151,7 @@ async function createNewShape(newShapeID, umlWebClient, modeling, canvas) {
         // TODO uml stuff
         update: true, // just saying it is from the backend
         id: newShapeID,
-        elementID: umlShape.modelElement.id,
-        name: umlShape.modelElement.name,
-        umlType: umlShape.modelElement.elementType(),
+        modelElement: umlShape.modelElement,
     }, {
         x: umlShape.bounds.x + umlShape.bounds.width / 2,
         y: umlShape.bounds.y + umlShape.bounds.height / 2,

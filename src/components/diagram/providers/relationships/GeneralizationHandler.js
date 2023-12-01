@@ -1,4 +1,5 @@
-import Relationship from "./Relationship";
+import Relationship from './Relationship';
+import { createEdge } from "./Relationship";
 import { createElementUpdate } from '../../../../createElementUpdate';
 
 export default class GeneralizationHandler extends Relationship {
@@ -12,10 +13,10 @@ export default class GeneralizationHandler extends Relationship {
             }
 
             // create generalization
-            const generalization = await umlWebClient.post('generalization', {id: event.context.relationship.elementID});
-            const specific = await umlWebClient.get(event.context.relationship.source.elementID);
+            const generalization = await umlWebClient.post('generalization', {id: event.context.relationship.modelElement.id});
+            const specific = await umlWebClient.get(event.context.relationship.source.modelElement.id);
             specific.generalizations.add(generalization);
-            generalization.general.set(event.context.relationship.target.elementID);
+            generalization.general.set(event.context.relationship.target.modelElement.id);
             umlWebClient.put(generalization);
             umlWebClient.put(specific);
 
@@ -24,12 +25,12 @@ export default class GeneralizationHandler extends Relationship {
             event.context.relationship.modelElement = generalization;
 
             // create shape
-            await this.createEdge(event, umlWebClient, diagramContext);
+            await createEdge(event.context.relationship, umlWebClient, diagramContext);
         });
     }
 
     canConnect(context) {
-        return context.hover.umlType && context.hover.umlType === 'class' && context.hover.elementID !== context.start.elementID;
+        return context.hover.modelElement && context.hover.modelElement.elementType() === 'class';
     }
 }
 
