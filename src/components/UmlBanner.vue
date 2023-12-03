@@ -5,6 +5,7 @@ import classSVG from './icons/class.svg'
 const packageJSON = require('../../package.json');
 import FreezeAndPopUp from './bannerComponents/FreezeAndPopUp.vue';
 import UserSelector from './bannerComponents/UserSelector.vue';
+import CreateDiagramButton from './bannerComponents/CreateDiagramButton.vue';
 export default {
     data() {
         return {
@@ -38,7 +39,7 @@ export default {
             this.toggleLogin();
         });
     },
-    emits: ["newModelLoaded"],
+    emits: ["newModelLoaded", 'elementUpdate', 'diagram'],
     methods: {
         optionToggle() {
             this.optionsEnabled = !this.optionsEnabled;
@@ -258,6 +259,12 @@ export default {
                 this.projectSettingsWarningMessage = err.message;
             });
             this.toggleProjectSettings();
+        },
+        propogateElementUpdate(elementUpdate) {
+            this.$emit('elementUpdate', elementUpdate);
+        },
+        propogateDiagram(diagram) {
+            this.$emit('diagram', diagram);
         }
     },
     computed: {
@@ -267,7 +274,7 @@ export default {
             }
         }
     },
-    components: { FreezeAndPopUp, UserSelector }
+    components: { FreezeAndPopUp, UserSelector, CreateDiagramButton }
 }
 </script>
 <template>
@@ -284,10 +291,13 @@ export default {
                 readonly
             </div>
         </div>
-        <div class="optionsContainer">
-            <div class="optionsButton" @click="optionToggle">
-                <img v-bind:src="hamburgerSVG" v-if="!hamburgerHover" @mouseenter="toggleHamburgerHover"/>
-                <img v-bind:src="hamburgerHoverSVG" v-if="hamburgerHover" @mouseleave="toggleHamburgerHover"/>
+        <div class="bannerItems">
+            <CreateDiagramButton @elementUpdate="propogateElementUpdate" @diagram="propogateDiagram"></CreateDiagramButton>
+            <div class="optionsContainer">
+                <div class="optionsButton" @click="optionToggle">
+                    <img v-bind:src="hamburgerSVG" v-if="!hamburgerHover" @mouseenter="toggleHamburgerHover"/>
+                    <img v-bind:src="hamburgerHoverSVG" v-if="hamburgerHover" @mouseleave="toggleHamburgerHover"/>
+                </div>
             </div>
         </div>
     </div>
@@ -453,6 +463,10 @@ export default {
     flex: 0 1 auto;
     background-color: var(--vt-c-black);
     max-height: 10vh;
+}
+.bannerItems {
+    display: flex;
+    justify-content: flex-end;
 }
 .titleContainer {
     vertical-align: middle;

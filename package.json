@@ -13,7 +13,7 @@
     "diagram-js": "^11.9.1",
     "events": "^3.3.0",
     "uml-client": "^0.2.4",
-    "vue": "^3.2.45"
+    "vue": "^3.2.26"
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",

@@ -111,7 +111,7 @@ export default {
 </script>
 <template>
 	<div style="display: flex;flex-direction: column;height:100vh;overflow: hidden;">
-		<UmlBanner @new-model-loaded="getHeadFromServer"></UmlBanner>
+		<UmlBanner @new-model-loaded="getHeadFromServer" @diagram="diagram" @element-update="elementUpdateHandler" ></UmlBanner>
 		<div class="parent">
 			<div class="leftBar">
 				<div style="flex:0 0 34px;background-color: var(--vt-c-black);order:0;"></div>
