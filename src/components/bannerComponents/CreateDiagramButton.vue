@@ -68,4 +68,7 @@ export default {
     background-color: var(--open-uml-selection-dark-1);
     color: var(--vt-c-text-light-1);
 }
+.createDiagramButton:hover {
+    background-color: var(--vt-c-dark-soft);
+}
 </style>
