@@ -72,7 +72,7 @@ export default {
             });
         },
         async saveToFile(event) {
-            let fileContent = await this.$umlWebClient.save();
+            let fileContent = await this.$umlWebClient.dump();
             let myFile = new Blob([fileContent], { type: "text/plain" });
             window.URL = window.URL || window.webkitURL;
             this.downloadRef = window.URL.createObjectURL(myFile);

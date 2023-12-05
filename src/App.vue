@@ -28,6 +28,7 @@ export default {
 				element: 'element',
 			},
             elementUpdate: [],
+            autosaving: false,
 		}
 	},
 	provide() {
@@ -49,6 +50,15 @@ export default {
                 ]
             };
 		}
+
+        setInterval(() => {
+            this.$umlWebClient.save();
+            this.autosaving = true;
+            setTimeout(() => {
+                this.autosaving = false;
+            }, 5000);
+            // TODO show message saying autosave
+        }, 180000);
 	},
 	methods: {
 		async getHeadFromServer() {
@@ -133,6 +143,9 @@ export default {
 						@close-tab="closeTab"></UmlEditor>
 		</div>
 	</div>
+    <div class="autosave" v-if="autosaving">
+        autosaving ...
+    </div>
 </template>
 <style>
 .parent {
@@ -152,5 +165,10 @@ export default {
 	display: flex;
 	flex-direction: column;
 	overflow: visible;
+}
+.autosave {
+    position: fixed;
+    bottom: 0;
+    right: 0;
 }
 </style>
