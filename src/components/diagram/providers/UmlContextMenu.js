@@ -8,7 +8,7 @@ import { createEdge } from "./relationships/Relationship";
 import { randomID } from "../umlUtil";
 
 export default class UmlContextMenu {
-    constructor(eventBus, diagramEmitter, umlWebClient, modeling, modelElementMap, elementRegistry, canvas, diagramContext) {
+    constructor(eventBus, diagramEmitter, umlWebClient, modeling, modelElementMap, elementRegistry, canvas, diagramContext, directEditing) {
         eventBus.on('element.contextmenu', (event) => {
             if (event.element.modelElement && !event.originalEvent.ctrlKey) {
                 showContextMenu(
@@ -21,7 +21,8 @@ export default class UmlContextMenu {
                     modelElementMap, 
                     elementRegistry, 
                     canvas, 
-                    diagramContext
+                    diagramContext,
+                    directEditing
                 );
                 event.originalEvent.preventDefault();
             }
@@ -29,7 +30,7 @@ export default class UmlContextMenu {
     }
 }
 
-UmlContextMenu.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modeling', 'modelElementMap', 'elementRegistry', 'canvas', 'diagramContext'];
+UmlContextMenu.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modeling', 'modelElementMap', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing'];
 
 export async function deleteModelElement(element, diagramEmitter, umlWebClient, modeling) {
     // TODO show popup menu
@@ -54,7 +55,7 @@ export async function deleteModelElement(element, diagramEmitter, umlWebClient, 
     // TODO fire element update
 }
 
-export async function showContextMenu(x, y, element, umlWebClient, diagramEmitter, modeling, modelElementMap, elementRegistry, canvas, diagramContext) {
+export async function showContextMenu(x, y, element, umlWebClient, diagramEmitter, modeling, modelElementMap, elementRegistry, canvas, diagramContext, directEditing) {
     const menu = {
         x: x,
         y: y,
@@ -66,6 +67,14 @@ export async function showContextMenu(x, y, element, umlWebClient, diagramEmitte
             diagramEmitter.fire('specification', element.modelElement);
         }
     });
+    if (element.modelElement.isSubClassOf('namedElement')) {
+        menu.items.push({
+            label: 'Rename',
+            onClick: () => {
+                directEditing.activate(element);
+            }
+        });
+    }
     if (element.waypoints) {
         menu.items.push({
             label: 'Remove Edge',

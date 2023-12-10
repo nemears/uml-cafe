@@ -6,7 +6,7 @@ import { deleteModelElement, showContextMenu } from './UmlContextMenu';
  * A example context pad provider.
  */
 export default class ClassDiagramContextPadProvider {
-  constructor(connect, contextPad, modeling, generalizationHandler, directedComposition, umlWebClient, diagramEmitter, modelElementMap, elementRegistry, canvas, diagramContext) {
+  constructor(connect, contextPad, modeling, generalizationHandler, directedComposition, umlWebClient, diagramEmitter, modelElementMap, elementRegistry, canvas, diagramContext, directEditing) {
     this._connect = connect;
     this._modeling = modeling;
     this._generalizationHandler = generalizationHandler;
@@ -17,6 +17,7 @@ export default class ClassDiagramContextPadProvider {
     this._elementRegistry = elementRegistry;
     this._canvas = canvas;
     this._diagramContext = diagramContext;
+    this._directEditing = directEditing;
   
     contextPad.registerProvider(this);
   }
@@ -30,7 +31,8 @@ export default class ClassDiagramContextPadProvider {
     modelElementMap = this._modelElementMap,
     elementRegistry = this._elementRegistry,
     canvas = this._canvas,
-    diagramContext = this._diagramContext;
+    diagramContext = this._diagramContext,
+    directEditing= this._directEditing;
     
     if (umlWebClient.client.readonly) {
       return {};
@@ -74,7 +76,8 @@ export default class ClassDiagramContextPadProvider {
         modelElementMap, 
         elementRegistry, 
         canvas, 
-        diagramContext);
+        diagramContext,
+        directEditing);
     }
 
     if (element.modelElement.elementType() === 'class') {
@@ -199,4 +202,4 @@ export default class ClassDiagramContextPadProvider {
   }
 }
 
-ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'modeling', 'generalizationHandler', 'directedComposition', 'umlWebClient', 'diagramEmitter', 'modelElementMap', 'elementRegistry', 'canvas', 'diagramContext'];
+ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'modeling', 'generalizationHandler', 'directedComposition', 'umlWebClient', 'diagramEmitter', 'modelElementMap', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing'];

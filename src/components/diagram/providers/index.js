@@ -12,6 +12,8 @@ import DoubleClickSpecification from './DoubleClickSpecification';
 import ElementUpdate from './ElementUpdate';
 import ModelElementMap from './ModelElementMap';
 import UmlContextMenu from './UmlContextMenu';
+import NameEditProvider from './NameEditProvider';
+import DirectEditing from 'diagram-js-direct-editing/lib/DirectEditing';
 
 export default {
   __init__: [
@@ -29,6 +31,8 @@ export default {
     'elementUpdate',
     'modelElementMap',
     'umlContextMenu',
+    'nameEditProvider',
+    'directEditing',
   ],
   generalizationHandler: ['type', GeneralizationHandler],
   directedComposition: ['type', DirectedComposition],
@@ -44,4 +48,6 @@ export default {
   elementUpdate: ['type', ElementUpdate],
   modelElementMap: ['type', ModelElementMap],
   umlContextMenu: ['type', UmlContextMenu],
+  nameEditProvider: ['type', NameEditProvider],
+  directEditing: ['type', DirectEditing],
 };

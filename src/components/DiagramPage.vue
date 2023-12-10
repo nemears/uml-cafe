@@ -163,6 +163,11 @@ export default {
     background-repeat: no-repeat;
     background-size: 100%;
 }
+.palette-icon-create-generalization {
+    background: url('icons/generalization.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
 
 .context-pad-icon-remove {
     background: url('diagram/deleteShapeDark.svg') !important;

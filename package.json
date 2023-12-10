@@ -11,6 +11,7 @@
   "dependencies": {
     "@imengyu/vue3-context-menu": "^1.2.3",
     "diagram-js": "^11.9.1",
+    "diagram-js-direct-editing": "^2.0.0",
     "events": "^3.3.0",
     "uml-client": "^0.2.5",
     "vue": "^3.2.26"
