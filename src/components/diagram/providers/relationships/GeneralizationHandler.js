@@ -1,11 +1,16 @@
-import { createEdge } from "./Relationship";
+import { createEdge } from "./relationshipUtil";
 import { createElementUpdate } from '../../../../createElementUpdate';
 import { randomID } from 'uml-client/lib/element';
+import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 
-export default class GeneralizationHandler {
+export default class GeneralizationHandler extends RuleProvider {
+    
     constructor(eventBus, umlWebClient, diagramEmitter, diagramContext, modeling) {
+        super(eventBus);
+        RuleProvider.call(this, eventBus);
+
         eventBus.on('connect.end', (event) => {
-            if (event.context.start.connectType === 'generalization') {
+            if (event.context.start.connectType === 'generalization' || event.connectType === 'generalization') {
                 // create generalization
                 const createGeneralization = async () => {
                     const generalization = await umlWebClient.post('generalization');
@@ -30,6 +35,17 @@ export default class GeneralizationHandler {
                 createGeneralization();
                 return false; // stop propogation
             }
+        });
+        eventBus.on('generalization.start', () => {
+            eventBus.once('connect.init', (event) => {
+                event.context.start.connectType = 'generalization';
+            });
+        });
+    }
+
+    init() {
+        this.addRule('connection.start', () => {
+            return true;
         });
     }
 }

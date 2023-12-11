@@ -4,7 +4,7 @@ import { removeShapeAndEdgeFromServer } from "./ElementUpdate";
 import { h } from 'vue'
 import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
 import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout'
-import { createEdge } from "./relationships/Relationship";
+import { createEdge } from "./relationships/relationshipUtil";
 import { randomID } from "../umlUtil";
 
 export default class UmlContextMenu {

@@ -1,4 +1,4 @@
-import { makeUMLWaypoints } from './relationships/Relationship'
+import { makeUMLWaypoints } from './relationships/relationshipUtil'
 import { createClassShape } from '../api/diagramInterchange';
 
 export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter, diagramContext, elementRegistry, modeling) {

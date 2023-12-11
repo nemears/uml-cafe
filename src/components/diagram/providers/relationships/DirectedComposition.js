@@ -1,5 +1,5 @@
 import { createElementUpdate } from '../../../../createElementUpdate';
-import { createEdge } from './Relationship';
+import { createEdge } from './relationshipUtil';
 import { randomID } from 'uml-client/lib/element';
 
 export default class DirectedComposition {

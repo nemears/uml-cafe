@@ -4,13 +4,14 @@ import { randomID } from "uml-client/lib/element";
  * A example palette provider.
  */
 export default class ClassDiagramPaletteProvider {
-  constructor(create, elementFactory, lassoTool, palette, umlWebClient, generalizationHandler) {
+  constructor(create, elementFactory, lassoTool, palette, umlWebClient, globalConnect, eventBus) {
     this._create = create;
     this._elementFactory = elementFactory;
     this._lassoTool = lassoTool;
     this._palette = palette;
     this.umlWebClient = umlWebClient;
-    this._generalizationHandler;
+    this._globalConnect = globalConnect;
+    this._eventBus = eventBus;
   
     palette.registerProvider(this);
   }
@@ -22,7 +23,8 @@ export default class ClassDiagramPaletteProvider {
     const create = this._create,
     elementFactory = this._elementFactory,
     lassoTool = this._lassoTool,
-    generalizationHandler = this._generalizationHandler;
+    globalConnect = this._globalConnect,
+    eventBus = this._eventBus;
 
     return {
       'lasso-tool': {
@@ -70,7 +72,8 @@ export default class ClassDiagramPaletteProvider {
           title: 'Create Generalization',
           action: {
             click: (event) => {
-                   
+              eventBus.fire('generalization.start');
+              globalConnect.start(event); 
             }
           }
       }
@@ -78,4 +81,4 @@ export default class ClassDiagramPaletteProvider {
   }
 }
 
-ClassDiagramPaletteProvider.$inject = ['create', 'elementFactory', 'lassoTool', 'palette', 'umlWebClient'];
+ClassDiagramPaletteProvider.$inject = ['create', 'elementFactory', 'lassoTool', 'palette', 'umlWebClient', 'globalConnect', 'eventBus'];
