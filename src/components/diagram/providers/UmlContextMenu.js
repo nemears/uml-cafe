@@ -77,6 +77,13 @@ export async function showContextMenu(x, y, element, umlWebClient, diagramEmitte
                 directEditing.activate(element);
             }
         });
+    } else if (element.modelElement.isSubClassOf('comment')) {
+        menu.items.push({
+            label: 'Edit Body',
+            onClick: () => {
+                directEditing.activate(element);
+            }
+        });
     }
     if (element.waypoints) {
         menu.items.push({

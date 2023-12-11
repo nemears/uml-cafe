@@ -26,13 +26,23 @@ export default class NameEditProvider {
             height: element.height,
         }
 
-        ret.style = {
-            backgroundColor: this._umlRenderer.CLASS_STYLE.fill,
-            border: this._umlRenderer.CLASS_STYLE.stroke,
-            fontSize: this._umlRenderer.textStyle.fontSize.toString(),
-            fontFamily: this._umlRenderer.textStyle.fontFamily,
-            fontWeight: this._umlRenderer.textStyle.fontWeight,
-        };
+        if (element.modelElement.elementType() === 'class') {
+            ret.style = {
+                backgroundColor: this._umlRenderer.CLASS_STYLE.fill,
+                border: this._umlRenderer.CLASS_STYLE.stroke,
+                fontSize: this._umlRenderer.textStyle.fontSize.toString(),
+                fontFamily: this._umlRenderer.textStyle.fontFamily,
+                fontWeight: this._umlRenderer.textStyle.fontWeight,
+            };
+        } else if (element.modelElement.elementType() === 'comment') {
+            ret.style = {
+                backgroundColor: this._umlRenderer.COMMENT_STYLE.fill,
+                border: this._umlRenderer.COMMENT_STYLE.stroke,
+                fontSize: this._umlRenderer.textStyle.fontSize.toString(),
+                fontFamily: this._umlRenderer.textStyle.fontFamily,
+                fontWeight: this._umlRenderer.textStyle.fontWeight,
+            };
+        }
 
         return ret;
     }
