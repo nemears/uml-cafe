@@ -2,7 +2,7 @@
 import packageImage from './icons/package.svg';
 import getImage from '../GetUmlImage.vue';
 import classDiagramImage from './icons/class_diagram.svg';
-import { createElementUpdate, deleteElementElementUpdate } from '../createElementUpdate.js'
+import { assignTabLabel, createElementUpdate, deleteElementElementUpdate } from '../umlUtil.js'
 
 export default {
     name: "ContainmentTreePanel",
@@ -50,8 +50,8 @@ export default {
         }
     },
     watch: {
-        elementUpdate(newElementUpdate) {
-          this.handleElementUpdate(newElementUpdate);  
+        async elementUpdate(newElementUpdate) {
+          await this.handleElementUpdate(newElementUpdate);  
         }
     },
     methods: {
@@ -135,6 +135,9 @@ export default {
                 label: 'Create Element',
                 children: []
             };
+            for (let commentID of el.ownedComments.ids()) {
+                this.children.push(commentID);
+            }
             if (el.isSubClassOf('classifier')) {
                 for (let generalizationID of el.generalizations.ids()) {
                     this.children.push(generalizationID);
@@ -250,7 +253,7 @@ export default {
                 }
             });
 
-            this.name = el.name; // this will have to change eventually
+            this.name = await assignTabLabel(el);
             this.isFetching = false;
         },
         childrenToggle() {
@@ -288,7 +291,7 @@ export default {
         propogateSpecification(spec) {
             this.$emit('specification', spec);
         },
-        handleElementUpdate(newElementUpdate) {
+        async handleElementUpdate(newElementUpdate) {
             for (const update of newElementUpdate.updatedElements) {
                 const newElement = update.newElement;
                 // const oldElement = newElementUpdate.oldElement;
@@ -298,7 +301,7 @@ export default {
                     // might not be worth it
                     // pros: client will be able to update with out getting this element
                     // cons: will always run a loop through all of our children when an element is updated (laggy)
-                } else if (newElement.id === this.umlID) {
+                } else if (newElement.id === this.umlID) { //umlID represents 
                     //name
                     if (newElement.isSubClassOf('namedElement')) {
                         if (newElement.name !== this.name) {
@@ -320,12 +323,20 @@ export default {
                            this.children = this.children.filter(child => child !== childID); 
                         }
                     }
-                } 
+                    const element = await this.$umlWebClient.get(this.umlID);
+                    if (element && element.isSubClassOf('comment')) {
+                        for (let elID of element.annotatedElements.ids()) {
+                            if (elID === newElement.id) {
+                                this.name = await assignTabLabel(element);
+                            }
+                        }
+                    }
+                }
             }
              
         },
-        propogateElementUpdate(newElementUpdate) {
-            this.handleElementUpdate(newElementUpdate);
+        async propogateElementUpdate(newElementUpdate) {
+            await this.handleElementUpdate(newElementUpdate);
             this.$emit('elementUpdate', newElementUpdate);
         },
         propogateDiagram(diagramClass) {

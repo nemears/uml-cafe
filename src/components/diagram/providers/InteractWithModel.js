@@ -1,7 +1,10 @@
-import { makeUMLWaypoints } from './relationships/relationshipUtil'
-import { createClassShape } from '../api/diagramInterchange';
+import { createEdge, makeUMLWaypoints } from './relationships/relationshipUtil';
+import { createDiagramShape } from '../api/diagramInterchange';
+import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
+import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout'
+import { randomID } from '../umlUtil';
 
-export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter, diagramContext, modeling) {
+export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter, diagramContext, modeling, modelElementMap, elementRegistry) {
 
     const asyncCreateShape = async (event) => {
         if (event.element.update) {
@@ -12,25 +15,60 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
 
         if (!event.element.newUMLElement) {
             if (event.element.newShapeElement) {
-                createClassShape(event.element, umlWebClient, diagramContext);
+                createDiagramShape(event.element, umlWebClient, diagramContext);
             }
             return;
         }
 
-        // create new uml class
-        const classID = event.element.modelElement.id;
-        let clazz = await umlWebClient.post('class', {id:classID});
-        diagramContext.context.packagedElements.add(clazz);
-        umlWebClient.put(clazz);
-        umlWebClient.put(diagramContext.context);
-        await umlWebClient.get(classID);
-        event.element.modelElement = clazz;
-
-        diagramEmitter.fire('shape.added', event);
-
-        // create shape
-        createClassShape(event.element, umlWebClient, diagramContext);
-        eventBus.fire('shape.created', event);
+        if (event.element.modelElement.elementType() === 'class') {
+    
+            // create new uml class
+            const classID = event.element.modelElement.id;
+            let clazz = await umlWebClient.post('class', {id:classID});
+            diagramContext.context.packagedElements.add(clazz);
+            umlWebClient.put(clazz);
+            umlWebClient.put(diagramContext.context);
+            await umlWebClient.get(classID);
+            event.element.modelElement = clazz;
+    
+            diagramEmitter.fire('shape.added', event);
+    
+            // create shape
+            createDiagramShape(event.element, umlWebClient, diagramContext);
+        } else if (event.element.modelElement.elementType() === 'comment') {
+            // TODO
+            const commentID = event.element.modelElement.id;
+            const annotatedElements = event.element.modelElement.annotatedElements;
+            let comment = await umlWebClient.post('comment', {id:commentID});
+            for (let el of annotatedElements) {
+                comment.annotatedElements.add(el);
+                const elMap = modelElementMap.get(el);
+                for (let elm of elMap) {
+                    const target = elementRegistry.get(elm);
+                    const anchor = modeling.connect(
+                        event.element,
+                        target,
+                        {
+                           source: event.element,
+                            target: target,
+                            waypoints: connectRectangles(event.element, target, getMid(event.element), getMid(target)),
+                            id: randomID(),
+                            modelElement: comment,
+                        }
+                    );
+                    createEdge(anchor, umlWebClient, diagramContext);
+                }
+            }
+            diagramContext.context.ownedComments.add(comment);
+            umlWebClient.put(comment);
+            umlWebClient.put(diagramContext.context);
+            await umlWebClient.get(commentID);
+            event.element.modelElement = comment;
+    
+            diagramEmitter.fire('shape.added', event);
+            // create shape
+            createDiagramShape(event.element, umlWebClient, diagramContext);
+        }
     };
 
     eventBus.on('shape.added',  function(event) {
@@ -136,4 +174,4 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
     });
 }
 
-InteractWithModel.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling'];
+InteractWithModel.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling', 'modelElementMap', 'elementRegistry'];

@@ -161,7 +161,7 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
     }
 }
 
-export async function createClassShape(shape, umlWebClient, diagramContext) {
+export async function createDiagramShape(shape, umlWebClient, diagramContext) {
     // set up shape
     const shapeInstance = await umlWebClient.post('instanceSpecification', {id:shape.id});
     shapeInstance.classifiers.add(await umlWebClient.get('KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g'));

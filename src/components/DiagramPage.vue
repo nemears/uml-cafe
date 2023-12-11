@@ -1,7 +1,7 @@
 <script>
 import { Editor } from './diagram/editor';
 const EventEmitter = require('events');
-import { createElementUpdate } from '../createElementUpdate.js';
+import { createElementUpdate } from '../umlUtil.js';
 import { getUmlDiagramElement, deleteUmlDiagramElement } from './diagram/api/diagramInterchange';
 export default {
     data() {
@@ -193,6 +193,9 @@ export default {
 }
 .context-pad-icon-options {
     background: url('diagram/gear.svg') !important;
+}
+.context-pad-icon-comment {
+    background: url('diagram/comment.svg') !important;
 }
 @import "diagram-js/assets/diagram-js.css"
 </style>

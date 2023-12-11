@@ -1,5 +1,5 @@
 import { createEdge } from "./relationshipUtil";
-import { createElementUpdate } from '../../../../createElementUpdate';
+import { createElementUpdate } from '../../../../umlUtil';
 import { randomID } from 'uml-client/lib/element';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 

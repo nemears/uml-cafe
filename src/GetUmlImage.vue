@@ -1,6 +1,7 @@
 <script>
 import PackageSVG from './components/icons/package.svg';
 import ClassSVG from './components/icons/class.svg';
+import CommentSVG from './components/icons/comment.svg';
 import PropertySVG from './components/icons/property.svg';
 import AssociationSVG from './components/icons/association.svg';
 import GeneralizationSVG from './components/icons/generalization.svg';
@@ -22,6 +23,9 @@ export default function getImage(el) {
         }
         case 'class': {
             return ClassSVG;
+        }
+        case 'comment': {
+            return CommentSVG;
         }
         case 'dataType': {
             return ClassSVG;

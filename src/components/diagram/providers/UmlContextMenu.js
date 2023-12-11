@@ -1,14 +1,15 @@
-import { createElementUpdate, deleteElementElementUpdate } from "../../../createElementUpdate";
+import { createElementUpdate, deleteElementElementUpdate } from "../../../umlUtil";
 import { deleteUmlDiagramElement } from "../api/diagramInterchange";
 import { removeShapeAndEdgeFromServer } from "./ElementUpdate";
-import { h } from 'vue'
-import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
-import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout'
+import { h } from "vue";
+import { getMid } from "diagram-js/lib/layout/LayoutUtil";
+import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { createEdge } from "./relationships/relationshipUtil";
 import { randomID } from "../umlUtil";
+import { createCommentClick } from "../../../umlUtil";
 
 export default class UmlContextMenu {
-    constructor(eventBus, diagramEmitter, umlWebClient, modeling, modelElementMap, elementRegistry, canvas, diagramContext, directEditing) {
+    constructor(eventBus, diagramEmitter, umlWebClient, modeling, modelElementMap, elementRegistry, canvas, diagramContext, directEditing, create, elementFactory) {    
         eventBus.on('element.contextmenu', (event) => {
             if (event.element.modelElement && !event.originalEvent.ctrlKey) {
                 showContextMenu(
@@ -22,7 +23,9 @@ export default class UmlContextMenu {
                     elementRegistry, 
                     canvas, 
                     diagramContext,
-                    directEditing
+                    directEditing,
+                    create,
+                    elementFactory
                 );
                 event.originalEvent.preventDefault();
             }
@@ -30,7 +33,7 @@ export default class UmlContextMenu {
     }
 }
 
-UmlContextMenu.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modeling', 'modelElementMap', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing'];
+UmlContextMenu.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modeling', 'modelElementMap', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing', 'create', 'elementFactory'];
 
 export async function deleteModelElement(element, diagramEmitter, umlWebClient, modeling) {
     // TODO show popup menu
@@ -55,7 +58,7 @@ export async function deleteModelElement(element, diagramEmitter, umlWebClient, 
     // TODO fire element update
 }
 
-export async function showContextMenu(x, y, element, umlWebClient, diagramEmitter, modeling, modelElementMap, elementRegistry, canvas, diagramContext, directEditing) {
+export async function showContextMenu(x, y, element, umlWebClient, diagramEmitter, modeling, modelElementMap, elementRegistry, canvas, diagramContext, directEditing, create, elementFactory) {
     const menu = {
         x: x,
         y: y,
@@ -100,6 +103,13 @@ export async function showContextMenu(x, y, element, umlWebClient, diagramEmitte
         disabled: umlWebClient.readonly,
         onClick: () => {
             deleteModelElement(element, diagramEmitter, umlWebClient, modeling);
+        }
+    });
+    menu.items.push({
+        label: 'Create Comment',
+        disabled: umlWebClient.readonly,
+        onClick: (event) => {
+            createCommentClick(event, element, create, elementFactory);
         }
     });
     if (element.modelElement.isSubClassOf('classifier')) {

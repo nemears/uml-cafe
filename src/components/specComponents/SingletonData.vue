@@ -1,7 +1,7 @@
 <script>
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
-import { createElementUpdate } from '../../createElementUpdate.js';
+import { createElementUpdate } from '../../umlUtil.js';
 export default {
     props: ['label', 'umlID', 'initialData', 'readonly', 'createable', 'singletonData'],
     emits: ['specification', 'elementUpdate'],

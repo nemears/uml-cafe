@@ -3,6 +3,8 @@ import CloseSymbol from './icons/close_symbol.svg';
 import SpecificationPage from './SpecificationPage.vue';
 import WelcomePage from './WelcomePage.vue';
 import DiagramPage from './DiagramPage.vue';
+import {assignTabLabel} from '../umlUtil.js';
+import { UmlWebClient } from 'uml-client';
 export default {
     props: [
         "tabs",
@@ -44,30 +46,8 @@ export default {
         specificationTab(newRecentTab, oldRecentTab) {
             this.recentTab = newRecentTab;
         },
-        elementUpdate(newElementUpdate) {
-            for (const update of newElementUpdate.updatedElements) {
-                const newElement = update.newElement;
-                const oldElement = update.oldElement;
-                if (!newElement) {
-                    // element has been deleted, lets check if it is a tab
-                    const tab = this.tabs.find(tab => tab.id === oldElement.id);
-                    if (tab) {
-                        this.remove(tab.id);
-                    }
-                } else {
-                    const tab = this.tabs.find(tab => tab.id === newElement.id);
-                    if (tab) {
-                        if (newElement.isSubClassOf('namedElement')) {
-                            if ((!newElement.name || newElement.name === '') && tab.label !== '< >') {
-                                tab.label = '< >';
-                            } else if (newElement.name !== tab.label) {
-                                tab.label = newElement.name;
-                            }
-                        }
-                    } 
-                } 
-            }
-            
+        async elementUpdate(newElementUpdate) {
+            this.handleElementUpdate(newElementUpdate);
         }
     },
     methods: {
@@ -111,20 +91,36 @@ export default {
         propogateSpecification(spec) {
             this.$emit('specification', spec);
         },
-        propogateElementUpdate(newElementUpdate) {
+        async handleElementUpdate(newElementUpdate) {
             for (const update of newElementUpdate.updatedElements) {
                 const newElement = update.newElement;
-                if (newElement) {
-                    const tabMatch = this.tabs.find((tab) => tab.id === newElement.id);
-                    if (tabMatch) {
-                        if (newElement.isSubClassOf('namedElement')) {
-                            tabMatch.label = newElement.name;
+                const oldElement = update.oldElement;
+                if (!newElement) {
+                    // element has been deleted, lets check if it is a tab
+                    const tab = this.tabs.find(tab => tab.id === oldElement.id);
+                    if (tab) {
+                        this.remove(tab.id);
+                    }
+                } else {
+                    const tab = this.tabs.find(tab => tab.id === newElement.id);
+                    if (tab) {
+                        tab.label = await assignTabLabel(newElement);
+                    }
+                    for (let tab of this.tabs) {
+                        const elTab = await this.$umlWebClient.get(tab.id);
+                        if (elTab && elTab.isSubClassOf('comment')) {
+                            for await (let el of elTab.annotatedElements) {
+                                if (el.id === newElement.id) {
+                                    tab.label = await assignTabLabel(elTab);
+                                }
+                            }
                         }
                     }
                 } 
             }
-            
-
+        },
+        propogateElementUpdate(newElementUpdate) {
+            this.handleElementUpdate(newElementUpdate);
             this.$emit('elementUpdate', newElementUpdate);
         }
     },

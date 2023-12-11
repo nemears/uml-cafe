@@ -51,8 +51,10 @@ export default class UMLRenderer extends BaseRenderer {
     constructor(eventBus) {
         super(eventBus);
         this.CONNECTION_STYLE = { fill: 'none', strokeWidth: 2, stroke: 'var(--vt-c-black)' };
+        this.ANCHOR_STYLE = { fill: 'none', strokeWidth: 2, stroke: 'var(--vt-c-black)', strokeDasharray: "7,7" };
         this.LABEL_STYLE = { fill: 'none', stroke: 'var(--vt-c-black)', strokeWidth: 0 };
-        this.CLASS_STYLE = { fill: '#ff9955ff', stroke: 'var(--vt-c-black-soft)', strokeWidth: 2 }; 
+        this.CLASS_STYLE = { fill: '#ff9955ff', stroke: 'var(--vt-c-black-soft)', strokeWidth: 2 };
+        this.COMMENT_STYLE = { fill: '#f0deb9', stroke: 'var(--vt-c-black-soft)', strokeWidth: 2 }; 
         this.textStyle = {
             fontFamily: 'Arial, sans-serif',
             fontSize: 12,
@@ -157,6 +159,12 @@ export default class UMLRenderer extends BaseRenderer {
             svgAppend(group, diamond);
             svgAppend(gfx, group);
             return group;
+        } else if (element.modelElement.elementType() === 'comment') {
+            const group = svgCreate('g');
+            var line = createLine(element.waypoints, assign({}, this.ANCHOR_STYLE, attrs || {}));            
+            svgAppend(group, line);
+            svgAppend(gfx, group);
+            return group;
         }
     }
 
@@ -169,21 +177,37 @@ export default class UMLRenderer extends BaseRenderer {
             width: element.width || 0,
             height: element.height || 0
         });
-        svgAttr(rect, assign({}, this.CLASS_STYLE), attrs || {});
         const group = svgCreate('g');
         svgAppend(group, rect);
+        if (element.modelElement.elementType() === 'class') {
+            svgAttr(rect, assign({}, this.CLASS_STYLE), attrs || {});
 
-        // add name to shape directly
-        if (element.modelElement && element.modelElement.name) {
-            const options = {
-                box: {
-                    width: element.width - 5,
-                }
-            };
-            var text = this.textUtil.createText(element.modelElement.name || '', options);
-            svgAppend(group, text);
+            // add name to shape directly
+            if (element.modelElement && element.modelElement.name) {
+                const options = {
+                    align: 'center-middle',
+                    box: {
+                        width: element.width - 5,
+                    }
+                };
+                var text = this.textUtil.createText(element.modelElement.name || '', options);
+                svgAppend(group, text);
+            }
+        } else if (element.modelElement.elementType() === 'comment') {
+            svgAttr(rect, assign({}, this.COMMENT_STYLE), attrs || {});
+            
+            // add body to comment shape directly
+            if (element.modelElement && element.modelElement.body) {
+                const options = {
+                    align: 'center-middle',
+                    box: {
+                        width: element.width - 5,
+                    }
+                };
+                var text = this.textUtil.createText(element.modelElement.body || '', options);
+                svgAppend(group, text);
+            }
         }
-
         svgAppend(gfx, group);
         return group;
     }

@@ -5,6 +5,7 @@ import getImage from '../GetUmlImage.vue';
 import SingletonData from './specComponents/SingletonData.vue';
 import InputData from './specComponents/InputData.vue';
 import EnumerationData from './specComponents/EnumerationData.vue';
+import { assignTabLabel } from '../umlUtil';
 export default {
     props: ['umlID'],
     emits: [
@@ -84,7 +85,7 @@ export default {
                 for await (let element of set) {
                     elementTypeData[setName].push({
                         img: getImage(element),
-                        label: element.name !== undefined ? element.name : '',
+                        label: await assignTabLabel(element),
                         id: element.id
                     });
                 }
@@ -94,6 +95,7 @@ export default {
             await reloadSet(this.elementData, el.ownedElements, 'ownedElements');
             reloadSingleton(this.elementData, el.owner, 'owner');
             reloadSet(this.elementData, el.appliedStereotypes, 'appliedStereotypes');
+            await reloadSet(this.elementData, el.ownedComments, 'ownedComments');
             // TODO rest of ELEMENT
 
 
@@ -284,6 +286,15 @@ export default {
                 this.associationData = undefined;
             }
 
+            if (el.isSubClassOf('comment')) {
+                this.commentData = {
+                    body: el.body
+                };
+                await reloadSet(this.commentData, el.annotatedElements, 'annotatedElements');
+            } else {
+                this.commentData = undefined;
+            }
+
             this.isFetching = false;
         },
         propogateSpecification(spec) {
@@ -370,6 +381,17 @@ export default {
                     readonly: false,
                     setName: 'appliedStereotypes',
                  }"
+                 @element-update="propogateElementUpdate"
+                 ></SetData>
+        <SetData :label="'Owned Comments'" 
+                 :initial-data="elementData.ownedComments" 
+                 :umlid="umlID" 
+                 @specification="propogateSpecification"
+                 :set-data="{
+                    readonly: false,
+                    setName: 'ownedComments',
+                 }"
+                :creatable="{types:['comment'], set:'ownedComments'}"
                  @element-update="propogateElementUpdate"
                  ></SetData>
 	</ElementType>
@@ -850,6 +872,27 @@ export default {
                     @element-update="propogateElementUpdate"
                     ></SetData>
 	</ElementType>
+    <ElementType :element-type="'Comment'" v-if="commentData !== undefined">
+        <InputData  :label="'Body'" 
+                    :initial-data="commentData.body" 
+                    :input-type="'string'" 
+                    :read-only="false" 
+                    :umlid="umlID" 
+                    :type="'body'" 
+                    @element-update="propogateElementUpdate"
+                    ></InputData>
+        <SetData    :label="'Annotated Elements'" 
+                    :initial-data="commentData.annotatedElements" 
+                    :umlid="umlID"
+                    :set-data="{
+                                    setName: 'annotatedElements',
+                                    readonly: false,
+                                    validTypes: ['element']
+                                }"
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate"
+                    ></SetData>
+    </ElementType>
     </div> 
 </div>
 </template>

@@ -1,7 +1,7 @@
 <script>
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
-import { createElementUpdate } from '../../createElementUpdate.js';
+import { createElementUpdate, assignTabLabel } from '../../umlUtil.js';
 export default {
     props: ['label', 'initialData', 'umlid', 'subsets', 'creatable', "setData"],
     inject: ['elementUpdate'],
@@ -52,18 +52,7 @@ export default {
                     } else {
                         const foundData = this.data.find((el) => el.id === newElement.id);
                         if (foundData) {
-                            // check if the name was updated
-                            if (newElement.isSubClassOf('namedElement')) {
-                                if (foundData.label === '') {
-                                    if (newElement.name && newElement.name !== '') {                                    
-                                        foundData.label = newElement.name;
-                                    }
-                                } else {
-                                    if (foundData.label !== newElement.name) {
-                                        foundData.label = newElement.name;
-                                    }
-                                }
-                            }
+                            foundData.label = await assignTabLabel(newElement);
                         }
                     }
                 }
@@ -86,7 +75,7 @@ export default {
             this.data.push({
                 img: getImage(element),
                 id: element.id,
-                label: element.name !== undefined ? element.name : '' 
+                label: await assignTabLabel(element)  
             });
             this.$emit('elementUpdate', createElementUpdate(await this.$umlWebClient.get(this.umlid)));
         },

@@ -1,5 +1,5 @@
 <script>
-import { createElementUpdate } from '../../createElementUpdate';
+import { createElementUpdate } from '../../umlUtil.js';
 export default {
     props: ['label', 'toggle'],
     emits: ['elementUpdate', 'diagram'],

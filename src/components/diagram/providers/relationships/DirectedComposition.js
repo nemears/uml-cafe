@@ -1,4 +1,4 @@
-import { createElementUpdate } from '../../../../createElementUpdate';
+import { createElementUpdate } from '../../../../umlUtil';
 import { createEdge } from './relationshipUtil';
 import { randomID } from 'uml-client/lib/element';
 

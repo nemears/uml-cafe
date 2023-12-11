@@ -1,17 +1,20 @@
 import { deleteUmlDiagramElement } from '../api/diagramInterchange';
 import { removeShapeAndEdgeFromServer } from './ElementUpdate';
 import { deleteModelElement, showContextMenu } from './UmlContextMenu';
+import { createCommentClick } from '../../../umlUtil';
 
 /**
  * A example context pad provider.
  */
 export default class ClassDiagramContextPadProvider {
-  constructor(connect, contextPad, modeling, umlWebClient, diagramEmitter, modelElementMap, elementRegistry, canvas, diagramContext, directEditing) {
+  constructor(connect, contextPad, create, modeling, generalizationHandler, directedComposition, umlWebClient, diagramEmitter, modelElementMap, elementFactory, elementRegistry, canvas, diagramContext, directEditing) {
     this._connect = connect;
+    this._create = create;
     this._modeling = modeling;
     this._umlWebClient = umlWebClient;
     this._diagramEmitter = diagramEmitter;
     this._modelElementMap = modelElementMap;
+    this._elementFactory = elementFactory;
     this._elementRegistry = elementRegistry;
     this._canvas = canvas;
     this._diagramContext = diagramContext;
@@ -26,6 +29,7 @@ export default class ClassDiagramContextPadProvider {
     umlWebClient = this._umlWebClient,
     diagramEmitter = this._diagramEmitter,
     modelElementMap = this._modelElementMap,
+    elementFactory = this._elementFactory,
     elementRegistry = this._elementRegistry,
     canvas = this._canvas,
     diagramContext = this._diagramContext,
@@ -72,11 +76,17 @@ export default class ClassDiagramContextPadProvider {
         umlWebClient, 
         diagramEmitter, 
         modeling, 
-        modelElementMap, 
+        modelElementMap,
+        elementFactory, 
         elementRegistry, 
         canvas, 
         diagramContext,
-        directEditing);
+        directEditing,
+        create);
+    }
+
+    function startCreateCommentClick (event) {
+      createCommentClick(event, element, create, elementFactory);
     }
 
     if (element.modelElement.elementType() === 'class') {
@@ -133,6 +143,15 @@ export default class ClassDiagramContextPadProvider {
           action: {
             click: startDirectedComposition,
             dragstart: startDirectedComposition
+          }
+        },
+        'createComment': {
+          group: 'edit',
+          className: 'context-pad-icon-comment',
+          title: 'Create Comment',
+          action: {
+            click: startCreateCommentClick,
+            dragstart: startCreateCommentClick
           }
         }
       };
@@ -201,4 +220,4 @@ export default class ClassDiagramContextPadProvider {
   }
 }
 
-ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'modeling', 'umlWebClient', 'diagramEmitter', 'modelElementMap', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing'];
+ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'create', 'modeling', 'generalizationHandler', 'directedComposition', 'umlWebClient', 'diagramEmitter', 'modelElementMap', 'elementFactory', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing'];

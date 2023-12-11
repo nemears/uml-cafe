@@ -1,4 +1,4 @@
-import { createElementUpdate } from '../../../createElementUpdate';
+import { createElementUpdate } from '../../../umlUtil';
 
 export default class NameEditProvider {
 

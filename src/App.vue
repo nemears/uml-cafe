@@ -1,11 +1,12 @@
 <script setup>
-import UmlBanner from './components/UmlBanner.vue'
-import ContainmentTreePanel from './components/ContainmentTreePanel.vue'
-import UmlEditor from './components/UmlEditor.vue'
-import getImage from './GetUmlImage.vue'
+import UmlBanner from './components/UmlBanner.vue';
+import ContainmentTreePanel from './components/ContainmentTreePanel.vue';
+import UmlEditor from './components/UmlEditor.vue';
+import getImage from './GetUmlImage.vue';
 import classDiagramImage from './components/icons/class_diagram.svg';
-import { nullID } from 'uml-client/lib/element.js'
-import { computed } from 'vue'
+import { nullID } from 'uml-client/lib/element.js';
+import { computed } from 'vue';
+import { assignTabLabel } from './umlUtil';
 </script>
 <script>
 // top level vue sets up client
@@ -67,7 +68,7 @@ export default {
 			this.headID = head.id;
 			this.isFetching = false;
 		},
-		specification(el) {
+		async specification(el) {
 			if (this.tabs.find(tab => tab.id === el.id)) { // no duplicates
 				this.specificationTab = el.id;
 				return;
@@ -76,7 +77,7 @@ export default {
 				tab.isActive = false;
 			}
 			this.tabs.push({
-				label: el.name !== undefined && el.name !== '' ? el.name : '< >',
+				label: await assignTabLabel(el),
 				id: el.id,
 				isActive: true,
 				type: 'Specification',
