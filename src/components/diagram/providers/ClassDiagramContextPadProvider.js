@@ -6,11 +6,9 @@ import { deleteModelElement, showContextMenu } from './UmlContextMenu';
  * A example context pad provider.
  */
 export default class ClassDiagramContextPadProvider {
-  constructor(connect, contextPad, modeling, generalizationHandler, directedComposition, umlWebClient, diagramEmitter, modelElementMap, elementRegistry, canvas, diagramContext, directEditing) {
+  constructor(connect, contextPad, modeling, umlWebClient, diagramEmitter, modelElementMap, elementRegistry, canvas, diagramContext, directEditing) {
     this._connect = connect;
     this._modeling = modeling;
-    this._generalizationHandler = generalizationHandler;
-    this._directedComposition = directedComposition;
     this._umlWebClient = umlWebClient;
     this._diagramEmitter = diagramEmitter;
     this._modelElementMap = modelElementMap;
@@ -23,16 +21,15 @@ export default class ClassDiagramContextPadProvider {
   }
 
   getContextPadEntries(element) {
-    const modeling = this._modeling,
-    generalizationHandler = this._generalizationHandler,
-    directedComposition = this._directedComposition,
+    const connect = this._connect,
+    modeling = this._modeling,
     umlWebClient = this._umlWebClient,
     diagramEmitter = this._diagramEmitter,
     modelElementMap = this._modelElementMap,
     elementRegistry = this._elementRegistry,
     canvas = this._canvas,
     diagramContext = this._diagramContext,
-    directEditing= this._directEditing;
+    directEditing = this._directEditing;
     
     if (umlWebClient.client.readonly) {
       return {};
@@ -50,11 +47,13 @@ export default class ClassDiagramContextPadProvider {
     }
 
     function startGeneralization(event, element, autoActivate) {
-      generalizationHandler.start(event, element, autoActivate);
+      element.connectType = 'generalization';
+      connect.start(event, element, autoActivate);
     }
 
     function startDirectedComposition(event, element, autoActivate) {
-      directedComposition.start(event, element, autoActivate);
+      element.connectType = 'directedComposition';
+      connect.start(event, element, autoActivate);
     }
 
     function specification() {
@@ -202,4 +201,4 @@ export default class ClassDiagramContextPadProvider {
   }
 }
 
-ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'modeling', 'generalizationHandler', 'directedComposition', 'umlWebClient', 'diagramEmitter', 'modelElementMap', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing'];
+ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'modeling', 'umlWebClient', 'diagramEmitter', 'modelElementMap', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing'];

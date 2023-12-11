@@ -14,7 +14,7 @@ export default class ModelElementMap {
         });
         eventBus.on('connection.added', (event) => {
             me.set(event.element.modelElement.id, event.element.id);
-        })
+        });
         eventBus.on('shape.remove', (event) => {
             me.remove(event.element.modelElement.id, event.element.id);
         });

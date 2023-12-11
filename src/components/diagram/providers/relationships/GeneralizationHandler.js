@@ -1,37 +1,37 @@
-import Relationship from './Relationship';
 import { createEdge } from "./Relationship";
 import { createElementUpdate } from '../../../../createElementUpdate';
+import { randomID } from 'uml-client/lib/element';
 
-export default class GeneralizationHandler extends Relationship {
-    constructor(eventBus, dragging, canvas, elementFactory, umlWebClient, diagramEmitter, diagramContext) {
-        super('generalization', 'generalization', eventBus, dragging, canvas, elementFactory);
+export default class GeneralizationHandler {
+    constructor(eventBus, umlWebClient, diagramEmitter, diagramContext, modeling) {
+        eventBus.on('connect.end', (event) => {
+            if (event.context.start.connectType === 'generalization') {
+                // create generalization
+                const createGeneralization = async () => {
+                    const generalization = await umlWebClient.post('generalization');
+                    const specific = await umlWebClient.get(event.context.start.modelElement.id);
+                    specific.generalizations.add(generalization);
+                    generalization.general.set(event.hover.modelElement.id);
+                    umlWebClient.put(generalization);
+                    umlWebClient.put(specific);
 
-        eventBus.on('generalization.end', async (event) => {
-            // check if it can connect
-            if (!this.canConnect(event.context)) {
-                return;
+                    diagramEmitter.fire('elementUpdate', createElementUpdate(specific));
+                    
+                    event.context.connection = modeling.connect(event.context.start, 
+                        event.hover, 
+                        {
+                            id: randomID(),
+                            modelElement: generalization 
+                        }, {});
+
+                    // create shape
+                    await createEdge(event.context.connection, umlWebClient, diagramContext);
+                }
+                createGeneralization();
+                return false; // stop propogation
             }
-
-            // create generalization
-            const generalization = await umlWebClient.post('generalization', {id: event.context.relationship.modelElement.id});
-            const specific = await umlWebClient.get(event.context.relationship.source.modelElement.id);
-            specific.generalizations.add(generalization);
-            generalization.general.set(event.context.relationship.target.modelElement.id);
-            umlWebClient.put(generalization);
-            umlWebClient.put(specific);
-
-            diagramEmitter.fire('elementUpdate', createElementUpdate(specific));
-
-            event.context.relationship.modelElement = generalization;
-
-            // create shape
-            await createEdge(event.context.relationship, umlWebClient, diagramContext);
         });
-    }
-
-    canConnect(context) {
-        return context.hover.modelElement && context.hover.modelElement.elementType() === 'class';
     }
 }
 
-GeneralizationHandler.$inject = ['eventBus', 'dragging', 'canvas', 'elementFactory', 'umlWebClient', 'diagramEmitter', 'diagramContext'];
+GeneralizationHandler.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling'];
