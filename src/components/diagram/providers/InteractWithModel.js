@@ -1,7 +1,7 @@
 import { makeUMLWaypoints } from './relationships/relationshipUtil'
 import { createClassShape } from '../api/diagramInterchange';
 
-export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter, diagramContext, elementRegistry, modeling) {
+export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter, diagramContext, modeling) {
 
     const asyncCreateShape = async (event) => {
         if (event.element.update) {
@@ -30,6 +30,7 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
 
         // create shape
         createClassShape(event.element, umlWebClient, diagramContext);
+        eventBus.fire('shape.created', event);
     };
 
     eventBus.on('shape.added',  function(event) {
@@ -135,4 +136,4 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
     });
 }
 
-InteractWithModel.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'elementRegistry', 'modeling'];
+InteractWithModel.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling'];

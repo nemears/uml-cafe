@@ -1,5 +1,4 @@
 import { createElementUpdate } from '../../../createElementUpdate';
-import { assign } from 'min-dash';
 
 export default class NameEditProvider {
 

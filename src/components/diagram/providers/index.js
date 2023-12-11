@@ -14,6 +14,7 @@ import ModelElementMap from './ModelElementMap';
 import UmlContextMenu from './UmlContextMenu';
 import NameEditProvider from './NameEditProvider';
 import DirectEditing from 'diagram-js-direct-editing/lib/DirectEditing';
+import EditOnCreate from './EditOnCreate';
 
 export default {
   __init__: [
@@ -33,6 +34,7 @@ export default {
     'umlContextMenu',
     'nameEditProvider',
     'directEditing',
+    'editOnCreate',
   ],
   generalizationHandler: ['type', GeneralizationHandler],
   directedComposition: ['type', DirectedComposition],
@@ -50,4 +52,5 @@ export default {
   umlContextMenu: ['type', UmlContextMenu],
   nameEditProvider: ['type', NameEditProvider],
   directEditing: ['type', DirectEditing],
+  editOnCreate: ['type', EditOnCreate],
 };
