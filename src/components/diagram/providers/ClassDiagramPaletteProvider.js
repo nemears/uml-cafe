@@ -76,8 +76,19 @@ export default class ClassDiagramPaletteProvider {
               globalConnect.start(event); 
             }
           }
+      },
+      'create-directed-composition': {
+        group: 'create',
+        className: 'palette-icon-create-directed-composition',
+        title: 'Create Directed Composition',
+        action: {
+            click: (event) => {
+                eventBus.fire('directedComposition.start');
+                globalConnect.start(event);
+            }
+        }
       }
-    };
+    }
   }
 }
 

@@ -47,6 +47,12 @@ export default class DirectedComposition {
                 return false; // stop propogation
             }
         });
+
+        eventBus.on('directedComposition.start', () => {
+            eventBus.once('connect.init', (event) => {
+                event.context.start.connectType = 'directedComposition';
+            });
+        });
     }
 }
 

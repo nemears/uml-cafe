@@ -168,6 +168,11 @@ export default {
     background-repeat: no-repeat;
     background-size: 100%;
 }
+.palette-icon-create-directed-composition {
+    background: url('icons/association.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
 
 .context-pad-icon-remove {
     background: url('diagram/deleteShapeDark.svg') !important;
