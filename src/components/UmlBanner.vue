@@ -293,12 +293,14 @@ export default {
         </div>
         <div class="bannerItems">
             <CreateDiagramButton @elementUpdate="propogateElementUpdate" @diagram="propogateDiagram"></CreateDiagramButton>
+            <div :style="gapStyle"></div>
+            <button type="button" class="logInButton" @click="toggleLogin">Log In</button>
             <div class="optionsContainer">
                 <div class="optionsButton" @click="optionToggle">
                     <img v-bind:src="hamburgerSVG" v-if="!hamburgerHover" @mouseenter="toggleHamburgerHover"/>
                     <img v-bind:src="hamburgerHoverSVG" v-if="hamburgerHover" @mouseleave="toggleHamburgerHover"/>
                 </div>
-            </div>
+            </div> 
         </div>
     </div>
     <div class="dropdown" v-if="optionsEnabled">
@@ -551,6 +553,17 @@ hr {
     border-radius: 10px;
 }
 .inputButton:hover {
+    background-color: var(--vt-c-dark-soft);
+}
+.logInButton {
+    padding: 10px;
+    overflow-y: auto;
+    flex: 0 1 auto;
+    border-color: var(--color-border);
+    background-color: var(--open-uml-selection-dark-1);
+    color: var(--vt-c-text-light-1);
+}
+.logInButton:hover {
     background-color: var(--vt-c-dark-soft);
 }
 </style>
