@@ -17,7 +17,7 @@ export default class DirectedComposition {
                     memberEnd.aggregation = 'composite';
                     ownedEnd.type.set(event.context.start.modelElement.id);
                     association.memberEnds.add(memberEnd);
-                    association.ownedEnds.add(ownedEnd);
+                    association.navigableOwnedEnds.add(ownedEnd); // this is directed , add to owned ends for an undirected composition
                     const clazz = await umlWebClient.get(event.context.start.modelElement.id);
                     memberEnd.clazz.set(clazz);
                     diagramContext.context.packagedElements.add(association);
