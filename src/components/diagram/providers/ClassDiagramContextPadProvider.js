@@ -33,7 +33,8 @@ export default class ClassDiagramContextPadProvider {
     elementRegistry = this._elementRegistry,
     canvas = this._canvas,
     diagramContext = this._diagramContext,
-    directEditing = this._directEditing;
+    directEditing = this._directEditing,
+    create = this._create;
     
     if (umlWebClient.client.readonly) {
       return {};
