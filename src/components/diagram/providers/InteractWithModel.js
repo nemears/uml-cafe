@@ -75,7 +75,7 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         asyncCreateShape(event);
     });
 
-    const adjustShape = async (event, shapeInstance) => {
+    const adjustShape = async (shape, shapeInstance) => {
         let boundsInstance = undefined;
         for await (let slot of shapeInstance.slots) {
             if (slot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
@@ -86,19 +86,19 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         for await (let slot of boundsInstance.slots) {
             if (slot.definingFeature.id() === 'OaYzOYryv5lrW2YYkujnjL02rSlo') {
                 const value = await slot.values.front();
-                value.value = event.shape.x;
+                value.value = shape.x;
                 umlWebClient.put(value);
             } else if (slot.definingFeature.id() === 'RhD_fTVUMc4ceJ4topOlpaFPpoiB') {
                 const value = await slot.values.front();
-                value.value = event.shape.y;
+                value.value = shape.y;
                 umlWebClient.put(value);
             } else if (slot.definingFeature.id() === '&TCEXx1uZQsa7g1KPT9ocVwNiwV7') {
                 const value = await slot.values.front();
-                value.value = event.shape.width;
+                value.value = shape.width;
                 umlWebClient.put(value);
             } else if (slot.definingFeature.id() === 'ELF54xP3DUMrFbgteAQkIXONqnlg') {
                 const value = await slot.values.front();
-                value.value = event.shape.height;
+                value.value = shape.height;
                 umlWebClient.put(value);
             }
         }
@@ -140,7 +140,11 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         // get point instance
         const shapeMoveEnd = async () => {
             const shapeInstance = await umlWebClient.get(event.shape.id);
-            await adjustShape(event, shapeInstance);
+            await adjustShape(event.shape, shapeInstance);
+            for (const child of event.shape.children) {
+                const childInstance = await umlWebClient.get(child.id);
+                await adjustShape(child, childInstance);
+            }
             await adjustAttachedEdges(event.shape);
             umlWebClient.put(diagramContext.diagram);
         }
@@ -150,7 +154,7 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
     eventBus.on('resize.end', (event) => {
         const resizeEnd = async () => {
             const shapeInstance = await umlWebClient.get(event.shape.id);
-            await adjustShape(event, shapeInstance);
+            await adjustShape(event.shape, shapeInstance);
             await adjustAttachedEdges(event.shape);
             umlWebClient.put(diagramContext.diagram);
         }

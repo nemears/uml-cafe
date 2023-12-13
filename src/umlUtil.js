@@ -1,5 +1,5 @@
 import { randomID } from "./components/diagram/umlUtil";
-
+import { createModelElementSlot } from "./components/diagram/api/diagramInterchange";
 export function createElementUpdate() {
     const ret = {
         updatedElements: []
@@ -72,3 +72,28 @@ export async function assignTabLabel(newElement) {
         } 
     }
 }
+
+export async function createClassDiagram(owner, umlWebClient) {
+    const diagramPackage = await umlWebClient.post('package');
+    owner.packagedElements.add(diagramPackage);
+    diagramPackage.name = owner.name;
+    const diagramStereotypeInstance = await umlWebClient.post('instanceSpecification');
+    diagramStereotypeInstance.classifiers.add(await umlWebClient.get('Diagram_nuc1IC2Cavgoa4zMBlVq'));
+    // TODO slots
+
+    // setup diagram instance
+    const diagramContext = {
+        diagram : diagramPackage
+    }
+    const diagramInstance = await umlWebClient.post('instanceSpecification');
+    await createModelElementSlot({ modelElement: { id: diagramInstance.id } }, umlWebClient, diagramInstance, diagramContext)
+    diagramInstance.classifiers.add(await umlWebClient.get('U3CQzJden20cL0mG0nQN_HuWfisB'));
+    diagramPackage.packagedElements.add(diagramInstance);
+
+    diagramPackage.appliedStereotypes.add(diagramStereotypeInstance);
+    umlWebClient.put(owner);
+    umlWebClient.put(diagramPackage);
+    umlWebClient.put(diagramStereotypeInstance);
+    await umlWebClient.get(diagramPackage.id);
+    return diagramPackage;
+} 

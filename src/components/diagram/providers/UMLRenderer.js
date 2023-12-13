@@ -55,6 +55,7 @@ export default class UMLRenderer extends BaseRenderer {
         this.LABEL_STYLE = { fill: 'none', stroke: 'var(--vt-c-black)', strokeWidth: 0 };
         this.CLASS_STYLE = { fill: '#ff9955ff', stroke: 'var(--vt-c-black-soft)', strokeWidth: 2 };
         this.COMMENT_STYLE = { fill: '#f0deb9', stroke: 'var(--vt-c-black-soft)', strokeWidth: 2 }; 
+        this.PROPERTY_STYLE = { fill: '#ff9955ff', stroke: '#8f552f', strokewidth: 2 };
         this.textStyle = {
             fontFamily: 'Arial, sans-serif',
             fontSize: 12,
@@ -205,6 +206,48 @@ export default class UMLRenderer extends BaseRenderer {
                     }
                 };
                 var text = this.textUtil.createText(element.modelElement.body || '', options);
+                svgAppend(group, text);
+            }
+        } else if (element.modelElement.elementType() === 'property') {
+            svgAttr(rect, assign({}, this.PROPERTY_STYLE), attrs || {});
+            
+            
+            // add property notation to shape
+            if (element.modelElement) {
+                const multiplicity = {};
+                if (element.modelElement.lowerValue.has()) {
+                    multiplicity.lower = element.modelElement.lowerValue.val.el.value;
+                }
+
+                if (element.modelElement.upperValue.has()) {
+                    multiplicity.upper = element.modelElement.upperValue.val.el.value;
+                }
+                // TODO visibility
+                // TODO derived
+                // TODO modifier
+                let textString = element.modelElement.name;
+                if (element.modelElement.type.has()) {
+                    textString += ' : ' + element.modelElement.type.val.el.name;
+                }
+                if (multiplicity.upper !== undefined) {
+                    if (multiplicity.lower !== undefined) {
+                        textString += ' ' + multiplicity.lower + '..' + multiplicity.upper;
+                    } else {
+                        textString += ' ' + multiplicity.upper;
+                    }
+                }
+                const text = this.textUtil.createText(
+                    textString,
+                    {
+                        align: 'left',
+                        padding: {
+                            left: 5
+                        },
+                        box: {
+                            width: element.width - 5,
+                        }
+                    }
+                );
                 svgAppend(group, text);
             }
         }

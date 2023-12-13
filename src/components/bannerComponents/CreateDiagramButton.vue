@@ -1,5 +1,5 @@
 <script>
-import { createElementUpdate } from '../../umlUtil.js';
+import { createElementUpdate, createClassDiagram } from '../../umlUtil.js';
 export default {
     props: ['label', 'toggle'],
     emits: ['elementUpdate', 'diagram'],
@@ -13,18 +13,8 @@ export default {
     },
     methods: {
         async createDiagram () {
-            const diagramPackage = await this.$umlWebClient.post('package');
             const head = await this.$umlWebClient.head();
-            head.packagedElements.add(diagramPackage);
-            diagramPackage.name = head.name;
-            const diagramStereotypeInstance = await this.$umlWebClient.post('instanceSpecification');
-            diagramStereotypeInstance.classifiers.add(await this.$umlWebClient.get('Diagram_nuc1IC2Cavgoa4zMBlVq'));
-            // TODO slots
-            diagramPackage.appliedStereotypes.add(diagramStereotypeInstance);
-            this.$umlWebClient.put(head);
-            this.$umlWebClient.put(diagramPackage);
-            this.$umlWebClient.put(diagramStereotypeInstance);
-            await this.$umlWebClient.get(diagramPackage.id);
+            const diagramPackage = await createClassDiagram(head, this.$umlWebClient);
             this.$emit('diagram', diagramPackage);
             this.$emit('elementUpdate', createElementUpdate(head));
         }

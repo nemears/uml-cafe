@@ -2,7 +2,7 @@
 import packageImage from './icons/package.svg';
 import getImage from '../GetUmlImage.vue';
 import classDiagramImage from './icons/class_diagram.svg';
-import { assignTabLabel, createElementUpdate, deleteElementElementUpdate } from '../umlUtil.js'
+import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createClassDiagram } from '../umlUtil.js'
 
 export default {
     name: "ElementExplorer",
@@ -101,16 +101,7 @@ export default {
                     label: 'Create Class Diagram',
                     disabled: this.$umlWebClient.readonly,
                     onClick: async () => {
-                        const diagramPackage = await this.$umlWebClient.post('package');
-                        el.packagedElements.add(diagramPackage);
-                        diagramPackage.name = el.name;
-                        const diagramStereotypeInstance = await this.$umlWebClient.post('instanceSpecification');
-                        diagramStereotypeInstance.classifiers.add(await this.$umlWebClient.get('Diagram_nuc1IC2Cavgoa4zMBlVq'));
-                        // TODO slots
-                        diagramPackage.appliedStereotypes.add(diagramStereotypeInstance);
-                        this.$umlWebClient.put(el);
-                        this.$umlWebClient.put(diagramPackage);
-                        this.$umlWebClient.put(diagramStereotypeInstance);
+                        const diagramPackage = await createClassDiagram(el, this.$umlWebClient);
                         await this.$umlWebClient.get(diagramPackage.id);
                         this.expanded = true;
                         this.children.push(diagramPackage.id);

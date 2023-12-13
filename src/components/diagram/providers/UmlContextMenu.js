@@ -7,6 +7,7 @@ import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { createEdge } from "./relationships/relationshipUtil";
 import { randomID } from "../umlUtil";
 import { createCommentClick } from "../../../umlUtil";
+import { createProperty } from "./Property";
 
 export default class UmlContextMenu {
     constructor(eventBus, diagramEmitter, umlWebClient, modeling, modelElementMap, elementRegistry, canvas, diagramContext, directEditing, create, elementFactory) {    
@@ -36,18 +37,6 @@ export default class UmlContextMenu {
 UmlContextMenu.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modeling', 'modelElementMap', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing', 'create', 'elementFactory'];
 
 export async function deleteModelElement(element, diagramEmitter, umlWebClient, modeling) {
-    // TODO show popup menu
-
-    // if (element.waypoints) {
-    //     // edge
-    //     await deleteUmlDiagramElement(element.id, umlWebClient);
-    //     modeling.removeConnection(element, umlWebClient);
-    // } else {
-    //     // shape
-    //     await removeShapeAndEdgeFromServer(element, umlWebClient);
-    //     modeling.removeShape(element);
-    // }
-
     const owner = await element.modelElement.owner.get();
     diagramEmitter.fire('elementUpdate', deleteElementElementUpdate(element.modelElement));
     await umlWebClient.deleteElement(element.modelElement);
@@ -55,7 +44,6 @@ export async function deleteModelElement(element, diagramEmitter, umlWebClient, 
         umlWebClient.put(owner);
         diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
     }
-    // TODO fire element update
 }
 
 export async function showContextMenu(x, y, element, umlWebClient, diagramEmitter, modeling, modelElementMap, elementRegistry, canvas, diagramContext, directEditing, create, elementFactory) {
@@ -125,13 +113,47 @@ export async function showContextMenu(x, y, element, umlWebClient, diagramEmitte
             label: 'Show Relationships',
             children: []
         };
+        const showPropertiesOption = {
+            label: 'Show Properties',
+            children: []
+        };
         const associations = [];
-        for await (const property of element.modelElement.attributes) {
-            if (property.association.has()) {
-                associations.push(await property.association.get());
+        if (element.modelElement.attributes.size() !== 0) {
+            showPropertiesOption.children.push({
+                label: 'Show All',
+                disabled: umlWebClient.readonly,
+                onClick: async () => {
+                    for await (const property of element.modelElement.attributes) {
+                        if (!modelElementMap.get(property.id)) {
+                            createProperty(property, element, modelElementMap, modeling, umlWebClient, diagramContext);
+                        }
+                    }
+                }
+            });
+            for await (const property of element.modelElement.attributes) {
+                if (property.association.has()) {
+                    associations.push(await property.association.get());
+                }
+                const propertyOption = {
+                    label: property.name,
+                    icon: h('img', {
+                        src: require('../../icons/property.svg')
+                    }),
+                    disabled: umlWebClient.readonly,
+                };
+                if (!modelElementMap.get(property.id)) {
+                    propertyOption.onClick = () => {
+                        createProperty(property, element, modelElementMap, modeling, umlWebClient, diagramContext);
+                    }
+                } else {
+                    propertyOption.disabled = true;
+                }
+                showPropertiesOption.children.push(propertyOption);
             }
+        } else {
+            showPropertiesOption.disabled = true;
         }
-        if (!(element.modelElement.generalizations.size() === 0 && associations.length === 0)) { // TODO other relationships besides generalizations
+        if (!(element.modelElement.generalizations.size() === 0 && associations.length === 0)) {
             showRelationshipsOption.children.push({
                 label: 'Show All',
                 disabled: umlWebClient.readonly,
@@ -176,6 +198,7 @@ export async function showContextMenu(x, y, element, umlWebClient, diagramEmitte
             showRelationshipsOption.disabled = true;
         }
         menu.items.push(showRelationshipsOption);
+        menu.items.push(showPropertiesOption);
     }
     diagramEmitter.fire('contextmenu', menu);
 }

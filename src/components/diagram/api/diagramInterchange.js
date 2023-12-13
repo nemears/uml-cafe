@@ -5,7 +5,7 @@ export class DiagramElement {
     id = '';
 
     owningElement = null; // Type is DiagramElement
-    ownedElement = []; // Type is [DiagramElement]
+    ownedElements = []; // Type is [DiagramElement]
 
     modelElement = null; // Type is uml-client/element
 
@@ -27,6 +27,10 @@ export class Edge extends DiagramElement {
     elementType() {
         return 'edge'
     }
+}
+
+export class Diagram extends Shape {
+    name =  '';
 }
 
 export async function getUmlDiagramElement(id, umlClient) {
@@ -70,9 +74,6 @@ export async function getUmlDiagramElement(id, umlClient) {
                    }
                }
             }
-
-            // TODO fill out owned and owning elements
-            
             return ret;
         } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
             // edge
@@ -121,7 +122,17 @@ async function getDiagramElementFeatures(slot, diagramElement, umlClient) {
                 return true;
             }
         }
-    } // TODO owning and owned elements
+    } else if (slot.definingFeature.id() === '3&io9rgm9t1Vu9l8EEwU3QBNblgX') {
+        // owningElement
+        diagramElement.owningElement = (await slot.values.front()).instance.id();
+        return true;
+    } else if (slot.definingFeature.id() === 'rnm_zSDRk_kdPiWTfx6QZRkgUvFe') {
+        // ownedElements
+        for await (const ownedElementValue of slot.values) {
+            diagramElement.ownedElements.push(ownedElementValue.instance.id());
+        }
+        return true;
+    }
     return false;
 }
 
@@ -138,11 +149,15 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
                 if (shapeSlot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
                     // bounds get and delete instance
                     await umlWebClient.deleteElement(await (await shapeSlot.values.front()).instance.get());
+                } else if (shapeSlot.definingFeature.id() === 'rnm_zSDRk_kdPiWTfx6QZRkgUvFe') {
+                    // delete owned elements
+                    for await (const ownedElementValue of shapeSlot.values) {
+                        await deleteUmlDiagramElement(ownedElementValue.instance.id(), umlWebClient);
+                    }
                 }
             }
             
             // TODO incoming outgoing, maybe not, maybe just on client side being tracked
-
             await umlWebClient.deleteElement(diagramElementInstance);
             break;
         } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
@@ -159,6 +174,30 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
             break;
         }
     }
+}
+
+export async function createModelElementSlot(shape, umlWebClient, shapeInstance, diagramContext) {
+    // TODO do this with more detail, rn we are just making element and ID
+    const modelElementInstance = await umlWebClient.post('instanceSpecification');
+    const modelElementSlot = await umlWebClient.post('slot');
+    const modelElementValue = await umlWebClient.post('instanceValue');
+    const idSlot = await umlWebClient.post('slot');
+    const idVal = await umlWebClient.post('literalString');
+    modelElementInstance.classifiers.add(await umlWebClient.get('XI35viryLd5YduwnSbWpxSs3npcu'));
+    idVal.value = shape.modelElement.id;
+    idSlot.definingFeature.set(await umlWebClient.get('3gx55nLEvmzDt2kKK7gYgxsTBD6M'));
+    idSlot.values.add(idVal);
+    modelElementInstance.slots.add(idSlot);
+    modelElementValue.instance.set(modelElementInstance);
+    modelElementSlot.values.add(modelElementValue);
+    modelElementSlot.definingFeature.set(await umlWebClient.get('xnI9Aiz3GaF91K8H7KAPe95oDgyE'));
+    shapeInstance.slots.add(modelElementSlot);
+    diagramContext.diagram.packagedElements.add(modelElementInstance);
+    umlWebClient.put(modelElementInstance);
+    umlWebClient.put(modelElementSlot);
+    umlWebClient.put(modelElementValue);
+    umlWebClient.put(idSlot);
+    umlWebClient.put(idVal); 
 }
 
 export async function createDiagramShape(shape, umlWebClient, diagramContext) {
@@ -211,22 +250,49 @@ export async function createDiagramShape(shape, umlWebClient, diagramContext) {
     boundsInstance.slots.add(heightSlot);
     
     // set up modelElement
-    // TODO do this with more detail, rn we are just making element and ID
-    const modelElementInstance = await umlWebClient.post('instanceSpecification');
-    const modelElementSlot = await umlWebClient.post('slot');
-    const modelElementValue = await umlWebClient.post('instanceValue');
-    const idSlot = await umlWebClient.post('slot');
-    const idVal = await umlWebClient.post('literalString');
-    modelElementInstance.classifiers.add(await umlWebClient.get('XI35viryLd5YduwnSbWpxSs3npcu'));
-    idVal.value = shape.modelElement.id;
-    idSlot.definingFeature.set(await umlWebClient.get('3gx55nLEvmzDt2kKK7gYgxsTBD6M'));
-    idSlot.values.add(idVal);
-    modelElementInstance.slots.add(idSlot);
-    modelElementValue.instance.set(modelElementInstance);
-    modelElementSlot.values.add(modelElementValue);
-    modelElementSlot.definingFeature.set(await umlWebClient.get('xnI9Aiz3GaF91K8H7KAPe95oDgyE'));
-    shapeInstance.slots.add(modelElementSlot);
-    diagramContext.diagram.packagedElements.add(modelElementInstance);
+    await createModelElementSlot(shape, umlWebClient, shapeInstance, diagramContext);
+
+    // set up owning and owned elements
+    let owningElementSlot = undefined;
+    let owningElementValue = undefined;
+    let owningElementInstance = undefined;
+    let owningElementOwnedElementsSlot = undefined;
+    let owningElementOwnedElementsValue = undefined;
+    let ownedElementsSlot = undefined;
+    let ownedElementValues = [];
+    if (shape.parent) {
+        owningElementInstance = await umlWebClient.get(shape.parent.id);
+        owningElementSlot = await umlWebClient.post('slot');
+        owningElementValue = await umlWebClient.post('instanceValue');
+        owningElementSlot.definingFeature.set(await umlWebClient.get('3&io9rgm9t1Vu9l8EEwU3QBNblgX'));
+        owningElementValue.instance.set(owningElementInstance);
+        owningElementSlot.values.add(owningElementValue);
+        shapeInstance.slots.add(owningElementSlot);
+        for await (const owningElementInstanceSlot of owningElementInstance.slots) {
+            if (owningElementInstanceSlot.definingFeature.id() === 'rnm_zSDRk_kdPiWTfx6QZRkgUvFe') {
+                owningElementOwnedElementsSlot = owningElementInstanceSlot;
+                break;
+            }
+        }
+        if (!owningElementOwnedElementsSlot) {
+            owningElementOwnedElementsSlot = await umlWebClient.post('slot');
+            owningElementOwnedElementsSlot.definingFeature.set(await umlWebClient.get('rnm_zSDRk_kdPiWTfx6QZRkgUvFe'));
+            owningElementInstance.slots.add(owningElementOwnedElementsSlot);
+        }
+        owningElementOwnedElementsValue = await umlWebClient.post('instanceValue');
+        owningElementOwnedElementsValue.instance.set(shapeInstance);
+        owningElementOwnedElementsSlot.values.add(owningElementOwnedElementsValue);
+    }
+    if (shape.children.length > 0) {
+        ownedElementsSlot = await umlWebClient.post('slot');
+        ownedElementsSlot.definingFeature.set(await umlWebClient.get('rnm_zSDRk_kdPiWTfx6QZRkgUvFe'));
+        for (const ownedElement of shape.children) {
+            const ownedElementValue = await umlWebClient.post('instanceValue');
+            ownedElementValue.instance.set(await umlWebClient.get(ownedElement.id));
+            ownedElementsSlot.values.add(ownedElementValue);
+        }
+        shapeInstance.slots.add(ownedElementsSlot);
+    }
 
     // put to server
     umlWebClient.put(boundsSlot);
@@ -240,11 +306,22 @@ export async function createDiagramShape(shape, umlWebClient, diagramContext) {
     umlWebClient.put(heightValue);
     umlWebClient.put(widthSlot);
     umlWebClient.put(widthValue);
-    umlWebClient.put(modelElementInstance);
-    umlWebClient.put(modelElementSlot);
-    umlWebClient.put(modelElementValue);
-    umlWebClient.put(idSlot);
-    umlWebClient.put(idVal);
+    
+    if (shape.parent) {
+        if (owningElementInstance.isSubClassOf('instanceSpecificatoin')) {
+            umlWebClient.put(owningElementSlot);
+            umlWebClient.put(owningElementValue);
+            umlWebClient.put(owningElementInstance);
+            umlWebClient.put(owningElementOwnedElementsSlot);
+            umlWebClient.put(owningElementOwnedElementsValue);
+        }
+    }
+    if (shape.children.length > 0) {
+        umlWebClient.put(ownedElementsSlot);
+        for (const ownedElementValue of ownedElementValues) {
+            umlWebClient.put(ownedElementValue);
+        } 
+    }
     umlWebClient.put(diagramContext.diagram);
 
     // put shape last so that data is complete on updating diagram
