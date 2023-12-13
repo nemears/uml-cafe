@@ -94,6 +94,7 @@ export async function createClassDiagram(owner, umlWebClient) {
     umlWebClient.put(owner);
     umlWebClient.put(diagramPackage);
     umlWebClient.put(diagramStereotypeInstance);
+    umlWebClient.put(diagramInstance);
     await umlWebClient.get(diagramPackage.id);
     return diagramPackage;
 } 
