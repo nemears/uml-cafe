@@ -5,7 +5,7 @@
         </div>
         <div class="information">
             <p>
-                This is an alpha stage open source uml based modeling client. Please be patient with development, or help us with it! There is so much to do! Be aware that the profile and code itself are subject to changes so any projects you create now may not be compatible easily with future versions. To start right click the Model in the containment tree to the left and start creating! 
+                This is an alpha stage open source uml based modeling client. Please be patient with development, or help us with it! There is so much to do! Be aware that the profile and code itself are subject to changes so any projects you create now may not be compatible easily with future versions. To start right click the Model in the element explorer to the left and start creating! 
             </p>
             <p>
                 uml-cafe is built upon a pretty simple technical stack and is made up of 4 parts right now:

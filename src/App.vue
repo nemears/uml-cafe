@@ -1,6 +1,6 @@
 <script setup>
 import UmlBanner from './components/UmlBanner.vue';
-import ContainmentTreePanel from './components/ContainmentTreePanel.vue';
+import ElementExplorer from './components/ElementExplorer.vue';
 import UmlEditor from './components/UmlEditor.vue';
 import getImage from './GetUmlImage.vue';
 import classDiagramImage from './components/icons/class_diagram.svg';
@@ -126,15 +126,15 @@ export default {
 		<div class="parent">
 			<div class="leftBar">
 				<div style="flex:0 0 34px;background-color: var(--vt-c-black);order:0;"></div>
-				<div class="containmentTree">
-					<ContainmentTreePanel 
+				<div class="elementExplorer">
+					<ElementExplorer 
 							v-if="!isFetching && headID !== undefined" 
 							:umlID="headID" 
 							:depth="0" 
 							@specification="specification" 
                             @element-update="elementUpdateHandler" 
 							@diagram="diagram"
-							@draginfo="dragInfo"></ContainmentTreePanel>
+							@draginfo="dragInfo"></ElementExplorer>
 				</div>
 			</div>
 			<UmlEditor  :tabs="tabs" 
@@ -155,7 +155,7 @@ export default {
 	display: flex;
 	overflow: hidden;
 }
-.containmentTree{
+.elementExplorer{
 	order: 1;
 	overflow: auto;
 	flex-grow: 1;

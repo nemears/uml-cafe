@@ -5,7 +5,7 @@ import classDiagramImage from './icons/class_diagram.svg';
 import { assignTabLabel, createElementUpdate, deleteElementElementUpdate } from '../umlUtil.js'
 
 export default {
-    name: "ContainmentTreePanel",
+    name: "ElementExplorer",
     props: [
         "umlID",
         "depth",
@@ -36,7 +36,7 @@ export default {
         };
     },
     components: [
-        "ContainmentTreePanel"
+        "ElementExplorer"
     ],
     computed: {
         indent() {
@@ -366,8 +366,8 @@ export default {
 }
 </script>
 <template>
-    <div class="containmentTreeBlock" v-if="!isFetching" :class="{notFirstBlock: depth !== 0}">
-        <div class="containmentTreePanel" 
+    <div class="elementExplorerBlock" v-if="!isFetching" :class="{notFirstBlock: depth !== 0}">
+        <div class="elementExplorerPanel" 
              :class="{notEditable: !editing}" 
              @click="childrenToggle" 
              @dblclick="specification"
@@ -388,32 +388,32 @@ export default {
             </div>
         </div>
         <div v-if="expanded && !isFetching">
-            <ContainmentTreePanel v-for="child in children" 
+            <ElementExplorer v-for="child in children" 
                     :umlID="child" 
                     :depth="depth + 1" 
                     :key="child" 
                     @specification="propogateSpecification" 
                     @element-update="propogateElementUpdate"
                     @diagram="propogateDiagram"
-                    @draginfo="propogateDraginfo"></ContainmentTreePanel>
+                    @draginfo="propogateDraginfo"></ElementExplorer>
         </div>
     </div>
 </template>
 <style>
-.containmentTreeBlock {
+.elementExplorerBlock {
     min-width: 300px;
     display: inline-block;
 }
 .notFirstBlock {
     width:100%;
 }
-.containmentTreePanel {
+.elementExplorerPanel {
     vertical-align: middle;
     min-width: 300px;
     display: inline-flex;
     width: 100%;
 }
-.containmentTreePanel:hover {
+.elementExplorerPanel:hover {
     background-color: var(--vt-c-dark-soft);
 }
 </style>
