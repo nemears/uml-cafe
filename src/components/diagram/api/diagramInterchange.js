@@ -308,13 +308,11 @@ export async function createDiagramShape(shape, umlWebClient, diagramContext) {
     umlWebClient.put(widthValue);
     
     if (shape.parent) {
-        if (owningElementInstance.isSubClassOf('instanceSpecificatoin')) {
-            umlWebClient.put(owningElementSlot);
-            umlWebClient.put(owningElementValue);
-            umlWebClient.put(owningElementInstance);
-            umlWebClient.put(owningElementOwnedElementsSlot);
-            umlWebClient.put(owningElementOwnedElementsValue);
-        }
+        umlWebClient.put(owningElementSlot);
+        umlWebClient.put(owningElementValue);
+        umlWebClient.put(owningElementInstance);
+        umlWebClient.put(owningElementOwnedElementsSlot);
+        umlWebClient.put(owningElementOwnedElementsValue);
     }
     if (shape.children.length > 0) {
         umlWebClient.put(ownedElementsSlot);

@@ -170,6 +170,16 @@ export default class UMLRenderer extends BaseRenderer {
     }
 
     drawShape(gfx, element, attrs) {
+
+        const cropText = (textString, bounds, options) => {
+            let text = undefined;
+            do {
+                text = this.textUtil.layoutText(textString, options);
+                textString = textString.slice(0, -4) + '...';
+            } while (text.dimensions.width > bounds.width || text.dimensions.height > bounds.height);
+            return text.element;
+        }
+
         // create shape
         const rect = svgCreate('rect');
         svgAttr(rect, {
@@ -191,7 +201,14 @@ export default class UMLRenderer extends BaseRenderer {
                         width: element.width - 5,
                     }
                 };
-                var text = this.textUtil.createText(element.modelElement.name || '', options);
+                var text = cropText(
+                    element.modelElement.name, 
+                    {
+                        height: 40,
+                        width: element.width
+                    }, 
+                    options
+                );
                 svgAppend(group, text);
             }
         } else if (element.modelElement.elementType() === 'comment') {
@@ -236,8 +253,9 @@ export default class UMLRenderer extends BaseRenderer {
                         textString += ' ' + multiplicity.upper;
                     }
                 }
-                const text = this.textUtil.createText(
-                    textString,
+                const text = cropText(
+                    textString, 
+                    element, 
                     {
                         align: 'left',
                         padding: {
@@ -248,6 +266,7 @@ export default class UMLRenderer extends BaseRenderer {
                         }
                     }
                 );
+
                 svgAppend(group, text);
             }
         }

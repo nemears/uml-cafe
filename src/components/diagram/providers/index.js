@@ -16,6 +16,7 @@ import NameEditProvider from './NameEditProvider';
 import DirectEditing from 'diagram-js-direct-editing/lib/DirectEditing';
 import EditOnCreate from './EditOnCreate';
 import Property from './Property';
+import ClassHandler from './ClassHandler';
 
 export default {
   __init__: [
@@ -37,6 +38,7 @@ export default {
     'directEditing',
     'editOnCreate',
     'property',
+    'classHandler',
   ],
   generalizationHandler: ['type', GeneralizationHandler],
   directedComposition: ['type', DirectedComposition],
@@ -56,4 +58,5 @@ export default {
   directEditing: ['type', DirectEditing],
   editOnCreate: ['type', EditOnCreate],
   property: ['type', Property],
+  classHandler: ['type', ClassHandler],
 };

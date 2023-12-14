@@ -19,8 +19,8 @@ export async function createProperty(property, clazzShape, modelElementMap, mode
         // just draw it as a property shape within the owned class
         const lastShape = clazzShape.children.slice(-1)[0];
         const propertyShapePosition = {
-            x: clazzShape.x + 5,
-            width: clazzShape.width - 10,
+            x: clazzShape.x + 8,
+            width: clazzShape.width - 16,
             height: 20
         };
         if (lastShape) {
@@ -67,6 +67,12 @@ export default class Property extends RuleProvider {
                 if (shape.modelElement.elementType() === 'property') {
                    return false;
                 }
+            }
+            return true;
+        });
+        this.addRule('shape.resize', (context) => {
+            if (context.shape.modelElement && context.shape.modelElement.elementType() === 'property') {
+                return false;
             }
             return true;
         });

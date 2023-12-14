@@ -25,17 +25,4 @@ ClassDiagramRuleProvider.prototype.init = function() {
 
     return source.parent === target.parent;
   });
-
-  this.addRule("elements.move", (event) => {
-    for (let shape of event.shapes) {
-      if (shape.classLabel) {
-        return false;
-      }
-    }
-    return true;
-  });
-
-  this.addRule("shape.resize", (event) => {
-    return !event.shape.classLabel;
-  });
 };

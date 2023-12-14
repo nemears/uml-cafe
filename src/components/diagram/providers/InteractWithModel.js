@@ -155,6 +155,10 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         const resizeEnd = async () => {
             const shapeInstance = await umlWebClient.get(event.shape.id);
             await adjustShape(event.shape, shapeInstance);
+            for (const child of event.shape.children) {
+                const childInstance = await umlWebClient.get(child.id);
+                await adjustShape(child, childInstance);
+            }
             await adjustAttachedEdges(event.shape);
             umlWebClient.put(diagramContext.diagram);
         }

@@ -87,6 +87,10 @@ export default {
                     // draw shape
                     const umlShape = await getUmlDiagramElement(packagedEl.id, this.$umlWebClient)
                     const drawShape = async (umlShape) => {
+                        const shapeAlreadyDrawn = elementRegistry.get(umlShape.id); 
+                        if (shapeAlreadyDrawn) {
+                            return shapeAlreadyDrawn;
+                        }
                         if (umlShape.modelElement.isSubClassOf('property')) {
                             if (umlShape.modelElement.type.has()) {
                                 await umlShape.modelElement.type.get();
@@ -110,7 +114,7 @@ export default {
                             y: umlShape.bounds.y,
                             width: umlShape.bounds.width,
                             height: umlShape.bounds.height,
-                            id: packagedEl.id,
+                            id: umlShape.id,
                             modelElement: umlShape.modelElement,
                         });
                         let parent = elementRegistry.get(umlShape.owningElement);

@@ -25,6 +25,8 @@ export default class NameEditProvider {
             width: element.width,
             height: element.height,
         }
+            
+        // TODO make font black atleast
 
         if (element.modelElement.elementType() === 'class') {
             ret.style = {
@@ -42,6 +44,14 @@ export default class NameEditProvider {
                 fontFamily: this._umlRenderer.textStyle.fontFamily,
                 fontWeight: this._umlRenderer.textStyle.fontWeight,
             };
+        } else if (element.modelElement.elementType() === 'property') {
+            ret.style = {
+                backgroundColor: this._umlRenderer.PROPERTY_STYLE.fill,
+                border: this._umlRenderer.PROPERTY_STYLE.stroke,
+                fontSize: this._umlRenderer.textStyle.fontSize.toString(),
+                fontFamily: this._umlRenderer.textStyle.fontFamily,
+                fontWeight: this._umlRenderer.textStyle.fontWeight,
+            }
         }
 
         return ret;
