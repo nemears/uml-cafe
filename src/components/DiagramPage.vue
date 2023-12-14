@@ -76,21 +76,14 @@ export default {
 
             // set up diagram from model
             {
-                // draw all shapes
-                for await (let packagedEl of diagramPackage.packagedElements) {
-                    if (!packagedEl.isSubClassOf('instanceSpecification')) {
-                        continue;
+                
+                const drawDiagramElement = async (umlDiagramElement) => {
+                    const shapeAlreadyDrawn = elementRegistry.get(umlDiagramElement.id); 
+                    if (shapeAlreadyDrawn) {
+                        return shapeAlreadyDrawn;
                     }
-                    if (!packagedEl.classifiers.contains('KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g')) {
-                        continue;
-                    }
-                    // draw shape
-                    const umlShape = await getUmlDiagramElement(packagedEl.id, this.$umlWebClient)
-                    const drawShape = async (umlShape) => {
-                        const shapeAlreadyDrawn = elementRegistry.get(umlShape.id); 
-                        if (shapeAlreadyDrawn) {
-                            return shapeAlreadyDrawn;
-                        }
+                    if (umlDiagramElement.elementType() === 'shape') {
+                        const umlShape = umlDiagramElement;
                         if (umlShape.modelElement.isSubClassOf('property')) {
                             if (umlShape.modelElement.type.has()) {
                                 await umlShape.modelElement.type.get();
@@ -119,12 +112,48 @@ export default {
                         });
                         let parent = elementRegistry.get(umlShape.owningElement);
                         if (!parent) {
-                            parent = await drawShape(await getUmlDiagramElement(umlShape.owningElement, this.$umlWebClient));
+                            parent = await drawDiagramElement(await getUmlDiagramElement(umlShape.owningElement, this.$umlWebClient));
                         }
                         canvas.addShape(shape, parent);
                         return shape;
+                    } else if (umlDiagramElement.elementType() === 'edge') {
+                        const umlEdge = umlDiagramElement;
+                        if (!umlEdge.modelElement) {
+                            // model element has been deleted
+                            await deleteUmlDiagramElement(umlEdge.id, this.$umlWebClient);
+                            return undefined;
+                        }
+
+                        let source = elementRegistry.get(umlEdge.source);
+                        let target = elementRegistry.get(umlEdge.target);
+                        if (!source) {
+                            source = drawDiagramElement(await getUmlDiagramElement(umlEdge.source, this.$umlWebClient));
+                        }
+                        if (!target) {
+                            target = drawDiagramElement(await getUmlDiagramElement(umlEdge.target, this.$umlWebClient));
+                        }
+                        var relationship = elementFactory.createConnection({
+                            waypoints: umlEdge.waypoints,
+                            id: umlEdge.id,
+                            modelElement: umlEdge.modelElement,
+                            source: source,
+                            target: target,
+                        });
+                        canvas.addConnection(relationship, root); 
                     }
-                    await drawShape(umlShape);
+                } 
+
+                // draw all shapes
+                for await (let packagedEl of diagramPackage.packagedElements) {
+                    if (!packagedEl.isSubClassOf('instanceSpecification')) {
+                        continue;
+                    }
+                    if (!packagedEl.classifiers.contains('KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g')) {
+                        continue;
+                    }
+                    // draw shape
+                    const umlShape = await getUmlDiagramElement(packagedEl.id, this.$umlWebClient)
+                    await drawDiagramElement(umlShape);
                 }
 
                 // draw all connections between shapes
@@ -137,24 +166,7 @@ export default {
                     }
 
                     const umlEdge = await getUmlDiagramElement(packagedEl.id, this.$umlWebClient);
-                    
-                    if (!umlEdge.modelElement) {
-                        // model element has been deleted
-                        await deleteUmlDiagramElement(umlEdge.id, this.$umlWebClient);
-                        continue;
-                    }
-
-                    const source = elementRegistry.get(umlEdge.source);
-                    const target = elementRegistry.get(umlEdge.target);
-
-                    var relationship = elementFactory.createConnection({
-                        waypoints: umlEdge.waypoints,
-                        id: packagedEl.id,
-                        modelElement: umlEdge.modelElement,
-                        source: source,
-                        target: target,
-                    });
-                    canvas.addConnection(relationship, root);
+                    await drawDiagramElement(umlEdge);
                 }
             }
             

@@ -1,3 +1,7 @@
+import { PROPERTY_COMPARTMENT_HEIGHT } from './Property';
+
+export const CLASS_SHAPE_HEADER_HEIGHT = 40;
+
 export default class ClassHandler {
     constructor(eventBus, modeling) {
         eventBus.on('resize.start', (event) => {
@@ -6,14 +10,14 @@ export default class ClassHandler {
                 delete event.context.resizeConstraints;
                 event.context.minBounds = {
                     width: 0,
-                    height: 40 + event.shape.children.length * 25
+                    height: CLASS_SHAPE_HEADER_HEIGHT + event.shape.children.length * PROPERTY_COMPARTMENT_HEIGHT
                 }
             }
         });
         eventBus.on('resize.end', (event) => {
             const shape = event.shape;
             if (shape.modelElement.isSubClassOf('classifier')) {
-                let totalHeight = 40;
+                let totalHeight = CLASS_SHAPE_HEADER_HEIGHT;
                 for (const child of shape.children) {
                     modeling.resizeShape(
                         child, 
@@ -39,7 +43,7 @@ export default class ClassHandler {
                 }
             } 
         });
-    }
+   }
 }
 
 ClassHandler.$inject = ['eventBus', 'modeling'];

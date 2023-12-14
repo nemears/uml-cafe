@@ -107,6 +107,9 @@ export default {
                         tab.label = await assignTabLabel(newElement);
                     }
                     for (let tab of this.tabs) {
+                        if (tab.type === 'Welcome') {
+                            continue;
+                        }
                         const elTab = await this.$umlWebClient.get(tab.id);
                         if (elTab && elTab.isSubClassOf('comment')) {
                             for await (let el of elTab.annotatedElements) {

@@ -7,6 +7,7 @@ import {
 import { createLine } from 'diagram-js/lib/util/RenderUtil';
 import { assign } from 'min-dash';
 import TextUtil from 'diagram-js/lib/util/Text';
+import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 
 export function createArrow(line) {
     var xx, xx1, xx2 = undefined;
@@ -56,6 +57,7 @@ export default class UMLRenderer extends BaseRenderer {
         this.CLASS_STYLE = { fill: '#ff9955ff', stroke: 'var(--vt-c-black-soft)', strokeWidth: 2 };
         this.COMMENT_STYLE = { fill: '#f0deb9', stroke: 'var(--vt-c-black-soft)', strokeWidth: 2 }; 
         this.PROPERTY_STYLE = { fill: '#ff9955ff', stroke: '#8f552f', strokewidth: 2 };
+        this.OWNED_ATTRIBUTE_STYLE = { fill: 'var(--vt-c-black)' };
         this.textStyle = {
             fontFamily: 'Arial, sans-serif',
             fontSize: 12,
@@ -108,14 +110,37 @@ export default class UMLRenderer extends BaseRenderer {
             svgAppend(gfx, group);
             return group;
         } else if (element.modelElement.elementType() === 'association') {
-            // todo, segmented line
-            const arrow = createArrow(element.waypoints.slice(-2));
+            if (element.modelElement.memberEnds.size() > 2) {
+                throw new Error("not rendering association relating more than two elements currently, contact dev if you need this!");
+            }
             var line = createLine(element.waypoints.slice(0,-1).concat([
                 {
                     x: (arrow[1].x + arrow[2].x) / 2,
                     y: (arrow[1].y + arrow[2].y) / 2
                 }
-            ]), assign({}, this.CONNECTION_STYLE, attrs || {}));
+            ]), assign({}, this.CONNECTION_STYLE, attrs || {})); 
+            for (const navigableOwnedEnd of element.modelElement.navigableOwnedEnds) {
+                // put arrow on other side because the association is navigable
+                if (navigableOwnedEnd.type.id() === element.source.modelElement.id) {
+                    // arrow to target
+                    for (const memberEnd of element.modelElement.memberEnds) {
+                        if (memberEnd.id !== navigableOwnedEnd.id) {
+                            if (element.modelElement.ownedEnds.contains(memberEnd)) {
+                                // no dot TODO
+                            } else {
+                                // leave space for dot and aggregation signifier
+                                // TODO
+                                if (memberEnd.aggregation === 'composite') {
+                                    // draw diamond
+                                }
+                            }
+                        }
+                    }
+                } else if (navigableOwnedEnd.type.id() === element.target.modelElement.id) {
+                    // arrow to source TODO
+                }
+            }
+            const arrow = createArrow(element.waypoints.slice(-2));
             var arrowTipPath = svgCreate('polyline');
             svgAttr(arrowTipPath, {
                 style: 'fill:var(--vt-c-black);stroke:var(--vt-c-black);',
@@ -181,16 +206,20 @@ export default class UMLRenderer extends BaseRenderer {
         }
 
         // create shape
-        const rect = svgCreate('rect');
-        svgAttr(rect, {
-            x: 0,
-            y: 0,
-            width: element.width || 0,
-            height: element.height || 0
-        });
         const group = svgCreate('g');
-        svgAppend(group, rect);
+        const createRectangle = () => {
+            const rect = svgCreate('rect');
+            svgAttr(rect, {
+                x: 0,
+                y: 0,
+                width: element.width || 0,
+                height: element.height || 0
+            }); 
+            svgAppend(group, rect);
+            return rect
+        };
         if (element.modelElement.elementType() === 'class') {
+            const rect = createRectangle();
             svgAttr(rect, assign({}, this.CLASS_STYLE), attrs || {});
 
             // add name to shape directly
@@ -204,7 +233,7 @@ export default class UMLRenderer extends BaseRenderer {
                 var text = cropText(
                     element.modelElement.name, 
                     {
-                        height: 40,
+                        height: CLASS_SHAPE_HEADER_HEIGHT,
                         width: element.width
                     }, 
                     options
@@ -212,6 +241,7 @@ export default class UMLRenderer extends BaseRenderer {
                 svgAppend(group, text);
             }
         } else if (element.modelElement.elementType() === 'comment') {
+            const rect = createRectangle();
             svgAttr(rect, assign({}, this.COMMENT_STYLE), attrs || {});
             
             // add body to comment shape directly
@@ -226,48 +256,61 @@ export default class UMLRenderer extends BaseRenderer {
                 svgAppend(group, text);
             }
         } else if (element.modelElement.elementType() === 'property') {
-            svgAttr(rect, assign({}, this.PROPERTY_STYLE), attrs || {});
-            
-            
-            // add property notation to shape
-            if (element.modelElement) {
-                const multiplicity = {};
-                if (element.modelElement.lowerValue.has()) {
-                    multiplicity.lower = element.modelElement.lowerValue.val.el.value;
-                }
-
-                if (element.modelElement.upperValue.has()) {
-                    multiplicity.upper = element.modelElement.upperValue.val.el.value;
-                }
-                // TODO visibility
-                // TODO derived
-                // TODO modifier
-                let textString = element.modelElement.name;
-                if (element.modelElement.type.has()) {
-                    textString += ' : ' + element.modelElement.type.val.el.name;
-                }
-                if (multiplicity.upper !== undefined) {
-                    if (multiplicity.lower !== undefined) {
-                        textString += ' ' + multiplicity.lower + '..' + multiplicity.upper;
-                    } else {
-                        textString += ' ' + multiplicity.upper;
+            if (element.parent && element.parent.modelElement && element.parent.modelElement.elementType() === 'association') {
+                const circle = svgCreate('circle');
+                svgAttr(circle, {
+                    cx: 5,
+                    cy: 5,
+                    r: 5
+                }); 
+                svgAppend(group, circle);
+                svgAttr(circle, assign({}, this.OWNED_ATTRIBUTE_STYLE), attrs || {}); 
+                // TODO LABEL
+            } else {
+                const rect = createRectangle();
+                svgAttr(rect, assign({}, this.PROPERTY_STYLE), attrs || {});
+                
+                
+                // add property notation to shape
+                if (element.modelElement) {
+                    const multiplicity = {};
+                    if (element.modelElement.lowerValue.has()) {
+                        multiplicity.lower = element.modelElement.lowerValue.val.el.value;
                     }
-                }
-                const text = cropText(
-                    textString, 
-                    element, 
-                    {
-                        align: 'left',
-                        padding: {
-                            left: 5
-                        },
-                        box: {
-                            width: element.width - 5,
+
+                    if (element.modelElement.upperValue.has()) {
+                        multiplicity.upper = element.modelElement.upperValue.val.el.value;
+                    }
+                    // TODO visibility
+                    // TODO derived
+                    // TODO modifier
+                    let textString = element.modelElement.name;
+                    if (element.modelElement.type.has()) {
+                        textString += ' : ' + element.modelElement.type.val.el.name;
+                    }
+                    if (multiplicity.upper !== undefined) {
+                        if (multiplicity.lower !== undefined) {
+                            textString += ' ' + multiplicity.lower + '..' + multiplicity.upper;
+                        } else {
+                            textString += ' ' + multiplicity.upper;
                         }
                     }
-                );
+                    const text = cropText(
+                        textString, 
+                        element, 
+                        {
+                            align: 'left',
+                            padding: {
+                                left: 5
+                            },
+                            box: {
+                                width: element.width - 5,
+                            }
+                        }
+                    );
 
-                svgAppend(group, text);
+                    svgAppend(group, text);
+                }
             }
         }
         svgAppend(gfx, group);

@@ -1,6 +1,9 @@
 import { nullID, randomID } from "uml-client/lib/element";
 import { createDiagramShape } from "../api/diagramInterchange";
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
+import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
+
+export const PROPERTY_COMPARTMENT_HEIGHT = 15;
 
 export async function createProperty(property, clazzShape, modelElementMap, modeling, umlWebClient, diagramContext) {
     if (property.association.id() !== nullID()) {
@@ -21,12 +24,12 @@ export async function createProperty(property, clazzShape, modelElementMap, mode
         const propertyShapePosition = {
             x: clazzShape.x + 8,
             width: clazzShape.width - 16,
-            height: 20
+            height: PROPERTY_COMPARTMENT_HEIGHT
         };
         if (lastShape) {
             propertyShapePosition.y = lastShape.y + lastShape.height + 5;
         } else {
-            propertyShapePosition.y = clazzShape.y + 40;
+            propertyShapePosition.y = clazzShape.y + CLASS_SHAPE_HEADER_HEIGHT;
         }
 
         // load type and multiplicty before so it can be loaded instantly for renderer
@@ -40,6 +43,23 @@ export async function createProperty(property, clazzShape, modelElementMap, mode
 
         if (property.upperValue.has()) {
             await property.upperValue.get();
+        }
+
+        // adjust parent class shape to fit it
+        let totalHeight = CLASS_SHAPE_HEADER_HEIGHT + PROPERTY_COMPARTMENT_HEIGHT;
+        for (const child of clazzShape.children) {
+            totalHeight += 5 + child.height;
+        }
+        if (totalHeight > clazzShape.height) {
+            modeling.resizeShape(
+                clazzShape,
+                {
+                    x: clazzShape.x,
+                    y: clazzShape.y,
+                    width: clazzShape.width,
+                    height: totalHeight,
+                }
+            );
         }
 
         const propertyShape = modeling.createShape(

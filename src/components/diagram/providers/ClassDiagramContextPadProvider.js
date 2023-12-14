@@ -2,6 +2,7 @@ import { deleteUmlDiagramElement } from '../api/diagramInterchange';
 import { removeShapeAndEdgeFromServer } from './ElementUpdate';
 import { deleteModelElement, showContextMenu } from './UmlContextMenu';
 import { createCommentClick } from '../../../umlUtil';
+import { PROPERTY_COMPARTMENT_HEIGHT } from './Property';
 
 /**
  * A example context pad provider.
@@ -47,6 +48,28 @@ export default class ClassDiagramContextPadProvider {
                 modeling.removeConnection(element);
             } else {
                 await removeShapeAndEdgeFromServer(element, umlWebClient); 
+                if (element.modelElement.elementType() === 'property' && element.parent.modelElement.isSubClassOf('classifier')){
+                    const clazzShape = element.parent;
+                    if (!clazzShape.waypoints) {
+                        let shiftUp = false;
+                        for (const child of clazzShape.children) {
+                            if (shiftUp) {
+                                modeling.resizeShape(
+                                    child,
+                                    {
+                                        x: child.x,
+                                        y: child.y - PROPERTY_COMPARTMENT_HEIGHT - 5,
+                                        width: child.width,
+                                        height: child.height,
+                                    }
+                                );
+                            }
+                            if (child.id === element.id) {
+                                shiftUp = true;
+                            }
+                        }
+                    }
+                }
                 modeling.removeShape(element);
             }
         }
