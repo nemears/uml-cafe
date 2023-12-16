@@ -101,7 +101,10 @@ export default {
                             await deleteUmlDiagramElement(umlShape.id, this.$umlWebClient);
                             return undefined;
                         }
-
+                        let parent = elementRegistry.get(umlShape.owningElement);
+                        if (!parent) {
+                            parent = await drawDiagramElement(await getUmlDiagramElement(umlShape.owningElement, this.$umlWebClient));
+                        }
                         const shape = elementFactory.createShape({
                             x: umlShape.bounds.x,
                             y: umlShape.bounds.y,
@@ -110,10 +113,6 @@ export default {
                             id: umlShape.id,
                             modelElement: umlShape.modelElement,
                         });
-                        let parent = elementRegistry.get(umlShape.owningElement);
-                        if (!parent) {
-                            parent = await drawDiagramElement(await getUmlDiagramElement(umlShape.owningElement, this.$umlWebClient));
-                        }
                         canvas.addShape(shape, parent);
                         return shape;
                     } else if (umlDiagramElement.elementType() === 'edge') {
@@ -127,10 +126,15 @@ export default {
                         let source = elementRegistry.get(umlEdge.source);
                         let target = elementRegistry.get(umlEdge.target);
                         if (!source) {
-                            source = drawDiagramElement(await getUmlDiagramElement(umlEdge.source, this.$umlWebClient));
+                            source = await drawDiagramElement(await getUmlDiagramElement(umlEdge.source, this.$umlWebClient));
                         }
                         if (!target) {
-                            target = drawDiagramElement(await getUmlDiagramElement(umlEdge.target, this.$umlWebClient));
+                            target = await drawDiagramElement(await getUmlDiagramElement(umlEdge.target, this.$umlWebClient));
+                        }
+                        if (umlEdge.modelElement.isSubClassOf('association')) {
+                            for await (const memberEnd of umlEdge.modelElement.memberEnds) {
+                                await memberEnd.type.get()
+                            }
                         }
                         var relationship = elementFactory.createConnection({
                             waypoints: umlEdge.waypoints,
@@ -139,7 +143,8 @@ export default {
                             source: source,
                             target: target,
                         });
-                        canvas.addConnection(relationship, root); 
+                        canvas.addConnection(relationship, root);
+                        return relationship;
                     }
                 } 
 

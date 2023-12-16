@@ -8,6 +8,7 @@ import { createLine } from 'diagram-js/lib/util/RenderUtil';
 import { assign } from 'min-dash';
 import TextUtil from 'diagram-js/lib/util/Text';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
+import { OWNED_END_RADIUS } from './relationships/DirectedComposition';
 
 export function createArrow(line) {
     var xx, xx1, xx2 = undefined;
@@ -71,7 +72,6 @@ export default class UMLRenderer extends BaseRenderer {
     }
 
     canRender(element) {
-        //return element.name || element.umlType && (element.umlType === 'generalization' || element.umlType === 'association');
         return element.umlType || element.modelElement;
     }
 
@@ -113,81 +113,91 @@ export default class UMLRenderer extends BaseRenderer {
             if (element.modelElement.memberEnds.size() > 2) {
                 throw new Error("not rendering association relating more than two elements currently, contact dev if you need this!");
             }
-            var line = createLine(element.waypoints.slice(0,-1).concat([
-                {
-                    x: (arrow[1].x + arrow[2].x) / 2,
-                    y: (arrow[1].y + arrow[2].y) / 2
-                }
-            ]), assign({}, this.CONNECTION_STYLE, attrs || {})); 
-            for (const navigableOwnedEnd of element.modelElement.navigableOwnedEnds) {
-                // put arrow on other side because the association is navigable
-                if (navigableOwnedEnd.type.id() === element.source.modelElement.id) {
-                    // arrow to target
-                    for (const memberEnd of element.modelElement.memberEnds) {
-                        if (memberEnd.id !== navigableOwnedEnd.id) {
-                            if (element.modelElement.ownedEnds.contains(memberEnd)) {
-                                // no dot TODO
-                            } else {
-                                // leave space for dot and aggregation signifier
-                                // TODO
-                                if (memberEnd.aggregation === 'composite') {
-                                    // draw diamond
-                                }
+            const group = svgCreate('g');
+            const line = createLine(element.waypoints, assign({}, this.CONNECTION_STYLE, attrs || {}));
+            svgAppend(group, line);
+            for (const memberEnd of element.modelElement.memberEnds.unsafe()) {
+                if ((memberEnd.featuringClassifier.has() && memberEnd.owner.id() === memberEnd.featuringClassifier.id()) || element.modelElement.navigableOwnedEnds.contains(memberEnd)) {
+                    // this is either a navigable owned end, or it is owned by a classifier
+                    if (memberEnd.type.id() === element.source.modelElement.id) {
+                        // arrow to source
+                    } else if (memberEnd.type.id() === element.target.modelElement.id) {
+                        // arrow to target
+                        const leadingLine = element.waypoints.slice(-2);
+                        const arrowPoints = createArrow(leadingLine);
+                        if (leadingLine[0].x < leadingLine[1].x) {
+                            // to left
+                            for (const point of arrowPoints) {
+                                point.x = point.x - (2 * OWNED_END_RADIUS);
                             }
-                        }
+                        } else if (leadingLine[0].x > leadingLine[1].x) {
+                            // to right
+                            for (const point of arrowPoints) {
+                                point.x = point.x + (2 * OWNED_END_RADIUS);
+                            }
+                        } else if (leadingLine[0].y < leadingLine[1].y) {
+                            // to the top
+                            for (const point of arrowPoints) {
+                                point.y = point.y - (2 * OWNED_END_RADIUS);
+                            }
+                        } else if (leadingLine[0].y > leadingLine[1].y) {
+                            // to the bottom
+                            for (const point of arrowPoints) {
+                                point.y = point.y + (2 * OWNED_END_RADIUS);
+                            }
+                        } 
+                        
+                        var arrowTipPath = svgCreate('polyline');
+                        svgAttr(arrowTipPath, {
+                            style: 'fill:var(--vt-c-black);stroke:var(--vt-c-black);',
+                            points: `${arrowPoints[0].x},${arrowPoints[0].y} ${arrowPoints[1].x},${arrowPoints[1].y} ${arrowPoints[2].x},${arrowPoints[2].y}`
+                        });
+                        svgAppend(group, arrowTipPath);
                     }
-                } else if (navigableOwnedEnd.type.id() === element.target.modelElement.id) {
-                    // arrow to source TODO
+
+                }
+                if (memberEnd.featuringClassifier.has() && memberEnd.owner.id() === memberEnd.featuringClassifier.id() && memberEnd.aggregation === 'composite') {
+                    // create diamond at end
+                    const dx = element.waypoints[1].x - element.waypoints[0].x;
+                    const dy = element.waypoints[1].y - element.waypoints[0].y;
+                    const tan = dy/dx;
+                    const theta = Math.atan(tan);
+
+                    var diamond = svgCreate('polyline');
+                    const diamondLen = 15;
+                    const xMod = dx < 0 ? 0 : Math.PI;
+                    const points = [
+                        {
+                            x: element.waypoints[0].x,
+                            y: element.waypoints[0].y
+                        },
+                        {
+                            x: element.waypoints[0].x - (diamondLen * Math.cos(xMod + theta + (Math.PI / 4))),
+                            y: element.waypoints[0].y - (diamondLen * Math.sin(xMod + theta + (Math.PI / 4)))
+                        },
+                        {
+                            x: element.waypoints[0].x - (Math.sqrt((diamondLen * diamondLen) + (diamondLen * diamondLen)) * Math.cos(xMod + theta)),
+                            y: element.waypoints[0].y - (Math.sqrt((diamondLen * diamondLen) + (diamondLen * diamondLen)) * Math.sin(xMod + theta))
+                        },
+                        {
+                            x: element.waypoints[0].x - (diamondLen * Math.cos(xMod + theta - (Math.PI / 4))),
+                            y: element.waypoints[0].y - (diamondLen * Math.sin(xMod + theta - (Math.PI / 4)))
+                        }
+                    ];
+                    svgAttr(diamond, {
+                        style: 'fill:var(--vt-c-black);stroke:var(--vt-c-black);',
+                        points: `${points[0].x},${points[0].y} ${points[1].x},${points[1].y} ${points[2].x},${points[2].y} ${points[3].x},${points[3].y}`
+                    });
+
+                    
+                    svgAppend(group, diamond);  
                 }
             }
-            const arrow = createArrow(element.waypoints.slice(-2));
-            var arrowTipPath = svgCreate('polyline');
-            svgAttr(arrowTipPath, {
-                style: 'fill:var(--vt-c-black);stroke:var(--vt-c-black);',
-                points: `${arrow[0].x},${arrow[0].y} ${arrow[1].x},${arrow[1].y} ${arrow[2].x},${arrow[2].y}`
-            });
-
-            // create diamond at end
-            const dx = element.waypoints[1].x - element.waypoints[0].x;
-            const dy = element.waypoints[1].y - element.waypoints[0].y;
-            const tan = dy/dx;
-            const theta = Math.atan(tan);
-
-            var diamond = svgCreate('polyline');
-            const diamondLen = 15;
-            const xMod = dx < 0 ? 0 : Math.PI;
-            const points = [
-                {
-                    x: element.waypoints[0].x,
-                    y: element.waypoints[0].y
-                },
-                {
-                    x: element.waypoints[0].x - (diamondLen * Math.cos(xMod + theta + (Math.PI / 4))),
-                    y: element.waypoints[0].y - (diamondLen * Math.sin(xMod + theta + (Math.PI / 4)))
-                },
-                {
-                    x: element.waypoints[0].x - (Math.sqrt((diamondLen * diamondLen) + (diamondLen * diamondLen)) * Math.cos(xMod + theta)),
-                    y: element.waypoints[0].y - (Math.sqrt((diamondLen * diamondLen) + (diamondLen * diamondLen)) * Math.sin(xMod + theta))
-                },
-                {
-                    x: element.waypoints[0].x - (diamondLen * Math.cos(xMod + theta - (Math.PI / 4))),
-                    y: element.waypoints[0].y - (diamondLen * Math.sin(xMod + theta - (Math.PI / 4)))
-                }
-            ];
-            svgAttr(diamond, {
-                style: 'fill:var(--vt-c-black);stroke:var(--vt-c-black);',
-                points: `${points[0].x},${points[0].y} ${points[1].x},${points[1].y} ${points[2].x},${points[2].y} ${points[3].x},${points[3].y}`
-            });
-
-            var group = svgCreate('g');
-            svgAppend(group, arrowTipPath);
-            svgAppend(group, line);
-            svgAppend(group, diamond);
             svgAppend(gfx, group);
             return group;
         } else if (element.modelElement.elementType() === 'comment') {
             const group = svgCreate('g');
-            var line = createLine(element.waypoints, assign({}, this.ANCHOR_STYLE, attrs || {}));            
+            const line = createLine(element.waypoints, assign({}, this.ANCHOR_STYLE, attrs || {}));            
             svgAppend(group, line);
             svgAppend(gfx, group);
             return group;
@@ -258,11 +268,31 @@ export default class UMLRenderer extends BaseRenderer {
         } else if (element.modelElement.elementType() === 'property') {
             if (element.parent && element.parent.modelElement && element.parent.modelElement.elementType() === 'association') {
                 const circle = svgCreate('circle');
-                svgAttr(circle, {
+                const options = {
                     cx: 5,
                     cy: 5,
                     r: 5
-                }); 
+                };
+                if (element.parent.waypoints[0].x === element.x && element.parent.waypoints[0].y === element.y) {
+                    const leadingline = element.parent.waypoints.slice(0,2);
+                    // TODO
+                } else {
+                    const leadingLine = element.parent.waypoints.slice(-2);
+                    if (leadingLine[0].x < leadingLine[1].x) {
+                        // to left
+                        options.cx -= 5;
+                    } else if (leadingLine[0].x > leadingLine[1].x) {
+                        // to right
+                        options.cx += 5;
+                    } else if (leadingLine[0].y < leadingLine[1].y) {
+                        // to the top
+                        options.cy -= 5;
+                    } else if (leadingLine[0].y > leadingLine[1].y) {
+                        // to the bottom
+                        options.cy += 5;
+                    }
+                }
+                svgAttr(circle, options); 
                 svgAppend(group, circle);
                 svgAttr(circle, assign({}, this.OWNED_ATTRIBUTE_STYLE), attrs || {}); 
                 // TODO LABEL
