@@ -4,12 +4,13 @@ import { randomID } from 'uml-client/lib/element';
 import { createDiagramLabel, createDiagramShape } from '../../api/diagramInterchange';
 import { adjustShape } from '../InteractWithModel';
 import { getMultiplicityText } from '../UMLRenderer';
+import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 
 export const OWNED_END_RADIUS = 5;
 
-export default class DirectedComposition {
+export default class DirectedComposition extends RuleProvider {
     constructor(eventBus, umlWebClient, diagramEmitter, diagramContext, modeling, umlRenderer, elementFactory, canvas) {
-
+        super(eventBus);
         eventBus.on('connect.end', (event) => {
             // check if it can connect
             if (event.context.start.connectType === 'directedComposition') {
@@ -112,6 +113,34 @@ export default class DirectedComposition {
             checkConnectionEnds(connection, umlWebClient, modeling);
         });
     }
+
+    init() {
+        this.addRule('connection.start', (context) => {
+           return canConnect(context);
+        });
+
+        this.addRule('connection.create', (context) => {
+            return canConnect(context);
+        });
+        this.addRule('connection.reconnect', (context) => {
+            return canConnect(context);
+        });
+    }
+}
+
+function canConnect(context) {
+    if (!context.source || !context.source.connectType) {
+        return true;
+    }
+    if (context.source.connectType === 'directeComposition') {
+        if (!context.source.modelElement) {
+            return false;
+        }
+        if (!context.source.modelElement.isSubClassOf('classifier')) {
+            return false;
+        }
+    }
+    return true;
 }
 
 DirectedComposition.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling', 'umlRenderer', 'elementFactory', 'canvas'];
@@ -180,6 +209,5 @@ export function createAssociationEndLabel(propertyShape, umlRenderer, elementFac
         height: Math.ceil(labelBounds.height),
     });
     canvas.addShape(propertyLabel, canvas.findRoot(propertyShape));
-
     createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
 }

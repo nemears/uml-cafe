@@ -69,6 +69,9 @@ function canConnect(context) {
 }
 
 function canConnectHelper(context) {
+    if (context.source && !context.source.connectType) {
+        return true;
+    }
     if (context.source && context.source.connectType === 'generalization') {
         if (!context.source.modelElement) {
             return false;

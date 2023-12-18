@@ -38,12 +38,14 @@ UmlContextMenu.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modelin
 
 export async function deleteModelElement(element, diagramEmitter, umlWebClient, modeling) {
     const elementsToRemove = [element];
-    for (const end of element.children) {
-        elementsToRemove.push(end);
-        await umlWebClient.deleteElement(await umlWebClient.get(end.id));
-        for (const endLabel of end.labels) {
-            elementsToRemove.push(endLabel);
-            await umlWebClient.deleteElement(await umlWebClient.get(endLabel.id), umlWebClient);
+    if (element.children) {
+        for (const end of element.children) {
+            elementsToRemove.push(end);
+            await umlWebClient.deleteElement(await umlWebClient.get(end.id));
+            for (const endLabel of end.labels) {
+                elementsToRemove.push(endLabel);
+                await umlWebClient.deleteElement(await umlWebClient.get(endLabel.id), umlWebClient);
+            }
         }
     }
     modeling.removeElements(elementsToRemove);
