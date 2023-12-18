@@ -30,6 +30,8 @@ export default {
 			},
             elementUpdate: [],
             autosaving: false,
+			elementExplorerHide: false,
+			elementExplorerButtonTitle: 'Collapse'
 		}
 	},
 	provide() {
@@ -116,6 +118,15 @@ export default {
 			if (this.specificationTab === id) {
 				this.specificationTab = this.tabs[this.tabs.length - 1].id;
 			}
+		},
+		ElementExplorerCollapse() {
+			this.elementExplorerHide = !this.elementExplorerHide;
+			if (this.elementExplorerHide) {
+				this.elementExplorerButtonTitle = 'Expand'
+			} else if (!this.elementExplorerHide) {
+				this.elementExplorerButtonTitle = 'Collapse'
+			}
+			document.getElementById('elementExplorerButtonID').title = this.elementExplorerButtonTitle;
 		}
 	}
 }
@@ -125,10 +136,12 @@ export default {
 		<UmlBanner @new-model-loaded="getHeadFromServer" @diagram="diagram" @element-update="elementUpdateHandler" ></UmlBanner>
 		<div class="parent">
 			<div class="leftBar">
-				<div style="flex:0 0 34px;background-color: var(--vt-c-black);order:0;"></div>
+				<div style="flex:0 0 34px;background-color: var(--vt-c-black);order:0;">
+					<button type="button" id="elementExplorerButtonID" class="elementExplorerButton" @click="ElementExplorerCollapse"></button>
+				</div>
 				<div class="elementExplorer">
 					<ElementExplorer 
-							v-if="!isFetching && headID !== undefined" 
+							v-if="!isFetching && headID !== undefined && !elementExplorerHide"
 							:umlID="headID" 
 							:depth="0" 
 							@specification="specification" 
