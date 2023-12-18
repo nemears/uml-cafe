@@ -45,6 +45,7 @@ export class Label extends Shape {
 
 const BOUNDS_ID = 'KbKmDNU19SWMJwggKTQ9FrzAzozO';
 const TEXT_ID = 'GJKibcaKH82QYL&Sm3&rX5Mlc8ps';
+const LABEL_ID = 'urWpoxZVhva76RnwyRAhLgduprmm';
 
 export async function getUmlDiagramElement(id, umlClient) {
     // get the element with the client
@@ -177,7 +178,7 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
         return;
     }
     for (const classifierID of diagramElementInstance.classifiers.ids()) {
-        if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g') {
+        if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g' || classifierID === LABEL_ID) {
             // shape
             for await (const shapeSlot of diagramElementInstance.slots) {
                 if (shapeSlot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
@@ -381,7 +382,7 @@ export async function createDiagramShape(shape, umlWebClient, diagramContext) {
 export async function createDiagramLabel(label, umlWebClient, diagramContext) {
    // set up shape
     const labelInstance = await umlWebClient.post('instanceSpecification', { id : label.id });
-    labelInstance.classifiers.add(await umlWebClient.get('urWpoxZVhva76RnwyRAhLgduprmm'));
+    labelInstance.classifiers.add(await umlWebClient.get(LABEL_ID));
     diagramContext.diagram.packagedElements.add(labelInstance); 
 
     await createDiagramShapeFeatures(label, labelInstance, umlWebClient, diagramContext);
