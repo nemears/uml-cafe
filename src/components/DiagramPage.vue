@@ -66,6 +66,7 @@ export default {
             const canvas = this.diagram.get('canvas');
             const elementFactory = this.diagram.get('elementFactory');
             const elementRegistry = this.diagram.get('elementRegistry');
+            const modelElementMap = this.diagram.get('modelElementMap');
             
             // add root
             var root = elementFactory.createRoot({
@@ -145,6 +146,32 @@ export default {
                         });
                         canvas.addConnection(relationship, root);
                         return relationship;
+                    } else if (umlDiagramElement.elementType() === 'label') {
+                        const umlLabel = umlDiagramElement;
+                        if (!umlLabel.modelElement) {
+                            // TODO
+                            console.error('TODO diagramInterchange');
+
+                        }
+                        // TODO create label pointing to shape
+                        let labelTargets = modelElementMap.get(umlLabel.modelElement.id);
+                        for (const targetID of labelTargets) {
+                            const labelTarget = elementRegistry.get(targetID);
+                            if (labelTarget.parent && labelTarget.parent.modelElement && labelTarget.parent.modelElement.isSubClassOf('association')) {
+                                const label = elementFactory.createLabel({
+                                    id: umlLabel.id,
+                                    text: umlLabel.text,
+                                    modelElement: umlLabel.modelElement,
+                                    x: umlLabel.bounds.x,
+                                    y: umlLabel.bounds.y,
+                                    width: umlLabel.bounds.width,
+                                    height: umlLabel.bounds.height,
+                                    labelTarget: labelTarget
+                                });
+                                canvas.addShape(label, canvas.findRoot(labelTarget));
+                                return label;
+                            }
+                        }
                     }
                 } 
 
@@ -172,6 +199,19 @@ export default {
 
                     const umlEdge = await getUmlDiagramElement(packagedEl.id, this.$umlWebClient);
                     await drawDiagramElement(umlEdge);
+                }
+
+                // draw all labels
+                for await (let packagedEl of diagramPackage.packagedElements) {
+                    if (!packagedEl.isSubClassOf('instanceSpecification')) {
+                        continue;
+                    }
+                    if (!packagedEl.classifiers.contains('urWpoxZVhva76RnwyRAhLgduprmm')) {
+                        continue;
+                    }
+
+                    const umlLabel = await getUmlDiagramElement(packagedEl.id, this.$umlWebClient);
+                    await drawDiagramElement(umlLabel);
                 }
             }
             

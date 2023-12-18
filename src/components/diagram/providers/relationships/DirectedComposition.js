@@ -1,13 +1,14 @@
 import { createElementUpdate } from '../../../../umlUtil';
 import { createEdge } from './relationshipUtil';
 import { randomID } from 'uml-client/lib/element';
-import { createDiagramShape } from '../../api/diagramInterchange';
+import { createDiagramLabel, createDiagramShape } from '../../api/diagramInterchange';
 import { adjustShape } from '../InteractWithModel';
+import { getMultiplicityText } from '../UMLRenderer';
 
 export const OWNED_END_RADIUS = 5;
 
 export default class DirectedComposition {
-    constructor(eventBus, umlWebClient, diagramEmitter, diagramContext, modeling) {
+    constructor(eventBus, umlWebClient, diagramEmitter, diagramContext, modeling, umlRenderer, elementFactory, canvas) {
 
         eventBus.on('connect.end', (event) => {
             // check if it can connect
@@ -19,6 +20,10 @@ export default class DirectedComposition {
                     const ownedEnd = await umlWebClient.post('property');
                     memberEnd.type.set(event.hover.modelElement);
                     memberEnd.aggregation = 'composite';
+
+                    // custom to call ends the lower case of their type
+                    memberEnd.name = event.hover.modelElement.name.toLowerCase();
+
                     ownedEnd.type.set(event.context.start.modelElement);
                     association.memberEnds.add(memberEnd);
                     association.ownedEnds.add(ownedEnd); 
@@ -41,9 +46,8 @@ export default class DirectedComposition {
                         }, 
                         {}
                     );
-                    await createEdge(event.context.connection, umlWebClient, diagramContext);
 
-                    // create property shaper at end of association
+                    // create property shape at end of association
                     const lastWaypoint = event.context.connection.waypoints.slice(-1)[0];
                     const propertyShape = modeling.createShape(
                         {
@@ -58,6 +62,12 @@ export default class DirectedComposition {
                         },
                         event.context.connection
                     );
+
+                    // create Label
+                    createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
+
+                    // send to server and rest of client
+                    await createEdge(event.context.connection, umlWebClient, diagramContext);
                     await createDiagramShape(propertyShape, umlWebClient, diagramContext);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, clazz, association));
                 }
@@ -104,38 +114,72 @@ export default class DirectedComposition {
     }
 }
 
-DirectedComposition.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling'];
+DirectedComposition.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling', 'umlRenderer', 'elementFactory', 'canvas'];
 
 function checkConnectionEnds(connection, umlWebClient, modeling) {
     for (const end of connection.children) {
         if (end.modelElement.elementType() === 'property') {
+            let newEndBounds = {
+                width: 2 * OWNED_END_RADIUS,
+                height: 2 * OWNED_END_RADIUS,
+            };
             if (end.modelElement.type.id() === connection.source.modelElement.id) {
                 const firstWaypoint = connection.waypoints[0];
-                modeling.resizeShape(
-                    end,
-                    {
-                        x: firstWaypoint.x - OWNED_END_RADIUS,
-                        y: firstWaypoint.y - OWNED_END_RADIUS,
-                        width: 2 * OWNED_END_RADIUS,
-                        height: 2 * OWNED_END_RADIUS,
-                    }
-                );
+                newEndBounds.x = firstWaypoint.x - OWNED_END_RADIUS;
+                newEndBounds.y = firstWaypoint.y - OWNED_END_RADIUS;
             } else if (end.modelElement.type.id() === connection.target.modelElement.id) {
                 const lastWaypoint = connection.waypoints.slice(-1)[0];
-                modeling.resizeShape(
-                    end,
-                    {
-                        x: lastWaypoint.x - OWNED_END_RADIUS,
-                        y: lastWaypoint.y - OWNED_END_RADIUS,
-                        width: 2 * OWNED_END_RADIUS,
-                        height: 2 * OWNED_END_RADIUS
-                    }
-                );
+                newEndBounds.x = lastWaypoint.x - OWNED_END_RADIUS;
+                newEndBounds.y = lastWaypoint.y - OWNED_END_RADIUS;
             }
+            modeling.resizeShape(end, newEndBounds);
             const adjustEdgeShape = async () => {
                 await adjustShape(end, await umlWebClient.get(end.id), umlWebClient);
             }
             adjustEdgeShape(); 
+
+            // move label
+            for (const label of end.labels) {
+                modeling.resizeShape(
+                    label,
+                    {
+                        x: newEndBounds.x + 20,
+                        y: newEndBounds.y - 10,
+                        width: label.width,
+                        height: label.height,
+                    }
+                );
+                // update it to server
+                const adjustLabel = async () => {
+                    await adjustShape(label, await umlWebClient.get(label.id), umlWebClient);
+                };
+                adjustLabel();
+            }
         }
     }
+}
+
+export function createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext) {
+    let labelName = propertyShape.modelElement.name;
+    labelName += " " + getMultiplicityText(propertyShape);
+    const options = {
+        align: 'center-middle',
+        box: {
+            width: 200,
+        }
+    };
+    const labelBounds = umlRenderer.textUtil.getDimensions(labelName, options);
+    const propertyLabel = elementFactory.createLabel({
+        id: randomID(),
+        labelTarget: propertyShape,
+        modelElement: propertyShape.modelElement,
+        text: labelName,
+        x: propertyShape.x + 20,
+        y: propertyShape.y - 10,
+        width: Math.ceil(labelBounds.width) + 10,
+        height: Math.ceil(labelBounds.height),
+    });
+    canvas.addShape(propertyLabel, canvas.findRoot(propertyShape));
+
+    createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
 }

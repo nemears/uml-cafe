@@ -10,13 +10,17 @@ export default class ModelElementMap {
             }
         });
         eventBus.on('shape.added', (event) => {
-            me.set(event.element.modelElement.id, event.element.id);
+            if (event.element.modelElement) {
+                me.set(event.element.modelElement.id, event.element.id);
+            }
         });
         eventBus.on('connection.added', (event) => {
             me.set(event.element.modelElement.id, event.element.id);
         });
         eventBus.on('shape.remove', (event) => {
-            me.remove(event.element.modelElement.id, event.element.id);
+            if (event.element.modelElement) {
+                me.remove(event.element.modelElement.id, event.element.id);
+            }
         });
         eventBus.on('connection.remove', (event) => {
             me.remove(event.element.modelElement.id, event.element.id);
