@@ -43,6 +43,7 @@ export default class NameEditProvider {
                 fontSize: this._umlRenderer.textStyle.fontSize.toString(),
                 fontFamily: this._umlRenderer.textStyle.fontFamily,
                 fontWeight: this._umlRenderer.textStyle.fontWeight,
+                fontFill: 'var(--vt-c-text-light-1)'
             };
         } else if (element.modelElement.elementType() === 'property') {
             ret.style = {

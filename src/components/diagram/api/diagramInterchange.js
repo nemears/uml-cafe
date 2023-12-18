@@ -31,7 +31,20 @@ export class Edge extends DiagramElement {
 
 export class Diagram extends Shape {
     name =  '';
+    elementType() {
+        return 'diagram';
+    }
 }
+
+export class Label extends Shape {
+    text = '';
+    elementType() {
+        return 'label';
+    }
+}
+
+const BOUNDS_ID = 'KbKmDNU19SWMJwggKTQ9FrzAzozO';
+const TEXT_ID = 'GJKibcaKH82QYL&Sm3&rX5Mlc8ps';
 
 export async function getUmlDiagramElement(id, umlClient) {
     // get the element with the client
@@ -50,24 +63,9 @@ export async function getUmlDiagramElement(id, umlClient) {
             ret.id = id;
             // fill out bounds
             for await (let shapeSlot of umlDiagramElement.slots) {
-               if (shapeSlot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
+               if (shapeSlot.definingFeature.id() === BOUNDS_ID) {
                    // this is the bounds
-                   const boundsInstance = await (await shapeSlot.values.front()).instance.get();
-                   for await (let boundsSlot of boundsInstance.slots) {
-                        if (boundsSlot.definingFeature.id() === 'OaYzOYryv5lrW2YYkujnjL02rSlo') {
-                            // x value
-                            ret.bounds.x = (await boundsSlot.values.front()).value;
-                        } else if (boundsSlot.definingFeature.id() === 'RhD_fTVUMc4ceJ4topOlpaFPpoiB') {
-                            // y value
-                            ret.bounds.y = (await boundsSlot.values.front()).value;
-                        } else if (boundsSlot.definingFeature.id() === '&TCEXx1uZQsa7g1KPT9ocVwNiwV7') {
-                            // width value
-                            ret.bounds.width = (await boundsSlot.values.front()).value;
-                        } else if (boundsSlot.definingFeature.id() === 'ELF54xP3DUMrFbgteAQkIXONqnlg') {
-                            // height value
-                            ret.bounds.height = (await boundsSlot.values.front()).value;
-                        } 
-                   }
+                   await filloutBounds(shapeSlot, ret);
                } else {
                    if (await getDiagramElementFeatures(shapeSlot, ret, umlClient)) {
                         continue;
@@ -108,7 +106,43 @@ export async function getUmlDiagramElement(id, umlClient) {
                 }
             }
             return ret;
+        } else if (classifierID === 'urWpoxZVhva76RnwyRAhLgduprmm') {
+            // UmlLabel
+            const ret = new Label();
+            ret.id = id;
+            for await (const labelSlot of umlDiagramElement.slots) {
+                if (labelSlot.definingFeature.id() === BOUNDS_ID) {
+                    await filloutBounds(labelSlot, ret);
+                } else if (labelSlot.definingFeature.id() === TEXT_ID) {
+                    ret.text = (await labelSlot.values.front()).value;
+                } else {
+                   if (await getDiagramElementFeatures(labelSlot, ret, umlClient)) {
+                        continue;
+                   }
+               } 
+            }
+
+            return ret;
         }
+    }
+}
+
+async function filloutBounds(shapeSlot, ret) {
+    const boundsInstance = await (await shapeSlot.values.front()).instance.get();
+    for await (let boundsSlot of boundsInstance.slots) {
+        if (boundsSlot.definingFeature.id() === 'OaYzOYryv5lrW2YYkujnjL02rSlo') {
+            // x value
+            ret.bounds.x = (await boundsSlot.values.front()).value;
+        } else if (boundsSlot.definingFeature.id() === 'RhD_fTVUMc4ceJ4topOlpaFPpoiB') {
+            // y value
+            ret.bounds.y = (await boundsSlot.values.front()).value;
+        } else if (boundsSlot.definingFeature.id() === '&TCEXx1uZQsa7g1KPT9ocVwNiwV7') {
+            // width value
+            ret.bounds.width = (await boundsSlot.values.front()).value;
+        } else if (boundsSlot.definingFeature.id() === 'ELF54xP3DUMrFbgteAQkIXONqnlg') {
+            // height value
+            ret.bounds.height = (await boundsSlot.values.front()).value;
+        } 
     }
 }
 
@@ -176,7 +210,12 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
     }
 }
 
+
+
 export async function createModelElementSlot(shape, umlWebClient, shapeInstance, diagramContext) {
+    if (!shape.modelElement) {
+        return;
+    }
     // TODO do this with more detail, rn we are just making element and ID
     const modelElementInstance = await umlWebClient.post('instanceSpecification');
     const modelElementSlot = await umlWebClient.post('slot');
@@ -200,12 +239,7 @@ export async function createModelElementSlot(shape, umlWebClient, shapeInstance,
     umlWebClient.put(idVal); 
 }
 
-export async function createDiagramShape(shape, umlWebClient, diagramContext) {
-    // set up shape
-    const shapeInstance = await umlWebClient.post('instanceSpecification', {id:shape.id});
-    shapeInstance.classifiers.add(await umlWebClient.get('KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g'));
-    diagramContext.diagram.packagedElements.add(shapeInstance);
-    
+async function createDiagramShapeFeatures(shape, shapeInstance, umlWebClient, diagramContext) {
     // set up bounds
     const boundsInstance = await umlWebClient.post('instanceSpecification');
     diagramContext.diagram.packagedElements.add(boundsInstance);
@@ -322,6 +356,16 @@ export async function createDiagramShape(shape, umlWebClient, diagramContext) {
     }
     umlWebClient.put(diagramContext.diagram);
 
+}
+
+export async function createDiagramShape(shape, umlWebClient, diagramContext) {
+    // set up shape
+    const shapeInstance = await umlWebClient.post('instanceSpecification', {id:shape.id});
+    shapeInstance.classifiers.add(await umlWebClient.get('KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g'));
+    diagramContext.diagram.packagedElements.add(shapeInstance);
+    
+    await createDiagramShapeFeatures(shape, shapeInstance, umlWebClient, diagramContext);
+    
     // put shape last so that data is complete on updating diagram
     umlWebClient.put(shapeInstance);
     const ret = new Shape();
@@ -331,5 +375,37 @@ export async function createDiagramShape(shape, umlWebClient, diagramContext) {
     ret.bounds.width = shape.width;
     ret.bounds.height = shape.height;
     ret.modelElement = shape.modelElement;
+    return ret;
+}
+
+export async function createDiagramLabel(label, umlWebClient, diagramContext) {
+   // set up shape
+    const labelInstance = await umlWebClient.post('instanceSpecification', { id : label.id });
+    labelInstance.classifiers.add(await umlWebClient.get('urWpoxZVhva76RnwyRAhLgduprmm'));
+    diagramContext.diagram.packagedElements.add(labelInstance); 
+
+    await createDiagramShapeFeatures(label, labelInstance, umlWebClient, diagramContext);
+
+    // text
+    const textSlot = await umlWebClient.post('slot');
+    const textVal = await umlWebClient.post('literalString');
+    textSlot.definingFeature.set(await umlWebClient.get('GJKibcaKH82QYL&Sm3&rX5Mlc8ps'));
+    textSlot.values.add(textVal);
+    textVal.value = label.text;
+    labelInstance.slots.add(textSlot);
+
+    umlWebClient.put(textSlot);
+    umlWebClient.put(textVal);
+    
+    umlWebClient.put(labelInstance);
+    umlWebClient.put(diagramContext.diagram);
+
+    const ret = new Label();
+    ret.bounds.x = label.x;
+    ret.bounds.y = label.y;
+    ret.bounds.width = label.width;
+    ret.bounds.height = label.height;
+    ret.id = label.id;
+    ret.text = label.text;
     return ret;
 }

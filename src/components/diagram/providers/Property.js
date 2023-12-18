@@ -84,8 +84,11 @@ export default class Property extends RuleProvider {
             // TODO alter this when drag property to show association
             const shapes = context.shapes;
             for (const shape of shapes) {
-                if (shape.modelElement.elementType() === 'property') {
-                   return false;
+                if (shape.modelElement && shape.modelElement.elementType() === 'property') {
+                    if (shape.parent && !shape.parent.parent) {
+                        return true;
+                    }
+                    return false;
                 }
             }
             return true;

@@ -54,7 +54,7 @@ export default class UMLRenderer extends BaseRenderer {
         super(eventBus);
         this.CONNECTION_STYLE = { fill: 'none', strokeWidth: 2, stroke: 'var(--vt-c-black)' };
         this.ANCHOR_STYLE = { fill: 'none', strokeWidth: 2, stroke: 'var(--vt-c-black)', strokeDasharray: "7,7" };
-        this.LABEL_STYLE = { fill: 'none', stroke: 'var(--vt-c-black)', strokeWidth: 0 };
+        this.LABEL_STYLE = { fill: 'none' };
         this.CLASS_STYLE = { fill: '#ff9955ff', stroke: 'var(--vt-c-black-soft)', strokeWidth: 2 };
         this.COMMENT_STYLE = { fill: '#f0deb9', stroke: 'var(--vt-c-black-soft)', strokeWidth: 2 }; 
         this.PROPERTY_STYLE = { fill: '#ff9955ff', stroke: '#8f552f', strokewidth: 2 };
@@ -205,15 +205,42 @@ export default class UMLRenderer extends BaseRenderer {
     }
 
     drawShape(gfx, element, attrs) {
-
         const cropText = (textString, bounds, options) => {
             let text = undefined;
             do {
                 text = this.textUtil.layoutText(textString, options);
                 textString = textString.slice(0, -4) + '...';
-            } while (text.dimensions.width > bounds.width || text.dimensions.height > bounds.height);
+            } while (textString.length > 4 && (text.dimensions.width > bounds.width || text.dimensions.height > bounds.height));
             return text.element;
+        } 
+        if (!element.modelElement) {
+            if (element.parent && element.parent.modelElement && element.parent.modelElement.isSubClassOf('property')) {
+                // we are a label
+                const group = svgCreate('g');
+                const createRectangle = () => {
+                    const rect = svgCreate('rect');
+                    svgAttr(rect, {
+                        x: 0,
+                        y: 0,
+                        width: element.width || 0,
+                        height: element.height || 0
+                    }); 
+                    svgAppend(group, rect);
+                    return rect
+                }
+                createRectangle();
+                const text = cropText(element.text, element, {
+                    align: 'center-middle',
+                    box: {
+                        width: element.width - 5,
+                    }
+                });
+                svgAppend(group, text);
+                console.warn('TODO remove me, no modelElement calling super.drawShape()');
+                return super.drawShape(gfx, element, attrs);
+            }
         }
+        
 
         // create shape
         const group = svgCreate('g');
@@ -296,51 +323,49 @@ export default class UMLRenderer extends BaseRenderer {
                 svgAppend(group, circle);
                 svgAttr(circle, assign({}, this.OWNED_ATTRIBUTE_STYLE), attrs || {}); 
                 // TODO LABEL
-            } else {
+            } else if (element.parent && element.parent.modelElement && element.parent.modelElement.isSubClassOf('classifier')) {
                 const rect = createRectangle();
                 svgAttr(rect, assign({}, this.PROPERTY_STYLE), attrs || {});
                 
-                
                 // add property notation to shape
-                if (element.modelElement) {
-                    const multiplicity = {};
-                    if (element.modelElement.lowerValue.has()) {
-                        multiplicity.lower = element.modelElement.lowerValue.val.el.value;
-                    }
-
-                    if (element.modelElement.upperValue.has()) {
-                        multiplicity.upper = element.modelElement.upperValue.val.el.value;
-                    }
-                    // TODO visibility
-                    // TODO derived
-                    // TODO modifier
-                    let textString = element.modelElement.name;
-                    if (element.modelElement.type.has()) {
-                        textString += ' : ' + element.modelElement.type.val.el.name;
-                    }
-                    if (multiplicity.upper !== undefined) {
-                        if (multiplicity.lower !== undefined) {
-                            textString += ' ' + multiplicity.lower + '..' + multiplicity.upper;
-                        } else {
-                            textString += ' ' + multiplicity.upper;
+                const textString = createPropertyLabel(element);
+                const text = cropText(
+                    textString, 
+                    element, 
+                    {
+                        align: 'left',
+                        padding: {
+                            left: 5
+                        },
+                        box: {
+                            width: element.width - 5,
                         }
                     }
-                    const text = cropText(
-                        textString, 
-                        element, 
-                        {
-                            align: 'left',
-                            padding: {
-                                left: 5
-                            },
-                            box: {
-                                width: element.width - 5,
-                            }
-                        }
-                    );
+                );
 
-                    svgAppend(group, text);
-                }
+                svgAppend(group, text);
+            } else if (element.parent && !element.parent.parent) {
+                // TODO label
+                const rect = createRectangle();
+                svgAttr(rect, assign({}, this.LABEL_STYLE), attrs || {});
+                const textString = element.text;
+                const text = cropText(
+                    textString,
+                    element,
+                    {
+                        align: 'left',
+                        box : {
+                            width: element.width
+                        },
+                        padding: {
+                            left: 5
+                        },
+                        style: {
+                            fill: 'var(--vt-c-text-light-1)'
+                        }
+                    }
+                );
+                svgAppend(group, text);
             }
         }
         svgAppend(gfx, group);
@@ -349,3 +374,36 @@ export default class UMLRenderer extends BaseRenderer {
 }
 
 UMLRenderer.$inject = ['eventBus'];
+
+export function getMultiplicityText(element) {
+    let textString = '';
+    const multiplicity = {};
+    if (element.modelElement.lowerValue.has()) {
+        multiplicity.lower = element.modelElement.lowerValue.val.el.value;
+    }
+    if (multiplicity.upper !== undefined) {
+        if (multiplicity.lower !== undefined) {
+            textString += ' ' + multiplicity.lower + '..' + multiplicity.upper;
+        } else {
+            textString += ' ' + multiplicity.upper;
+        }
+    }
+    if (element.modelElement.upperValue.has()) {
+        multiplicity.upper = element.modelElement.upperValue.val.el.value;
+    }
+    return textString; 
+}
+
+export function createPropertyLabel(element) {
+    
+    // TODO visibility
+    // TODO derived
+    // TODO modifier
+    let textString = element.modelElement.name;
+    if (element.modelElement.type.has()) {
+        textString += ' : ' + element.modelElement.type.val.el.name;
+    }
+    textString += getMultiplicityText(element);
+    
+    return textString;
+}
