@@ -1,5 +1,5 @@
 import { createEdge, makeUMLWaypoints } from './relationships/relationshipUtil';
-import { createDiagramShape } from '../api/diagramInterchange';
+import { createDiagramShape, LABEL_ID } from '../api/diagramInterchange';
 import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
 import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout'
 import { randomID } from '../umlUtil';
@@ -78,18 +78,26 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
     
 
     eventBus.on('shape.move.end',  (event) => {
-        // get point instance
-        const shapeMoveEnd = async () => {
-            const shapeInstance = await umlWebClient.get(event.shape.id);
-            await adjustShape(event.shape, shapeInstance, umlWebClient);
-            for (const child of event.shape.children) {
-                const childInstance = await umlWebClient.get(child.id);
-                await adjustShape(child, childInstance, umlWebClient);
+        for (const shape of event.context.shapes) {
+            // get point instance
+            const shapeMoveEnd = async () => {
+                const shapeInstance = await umlWebClient.get(shape.id);
+                for (const classifierID of shapeInstance.classifiers.ids()) {
+                    if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g' || classifierID === LABEL_ID) {
+                        await adjustShape(shape, shapeInstance, umlWebClient);
+                        for (const child of shape.children) {
+                            const childInstance = await umlWebClient.get(child.id);
+                            await adjustShape(child, childInstance, umlWebClient);
+                        }
+                        await adjustAttachedEdges(shape, umlWebClient);         
+                    } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
+                        adjustEdgeWaypoints(shape, umlWebClient);
+                    }
+                }
+                umlWebClient.put(diagramContext.diagram);
             }
-            await adjustAttachedEdges(event.shape, umlWebClient);
-            umlWebClient.put(diagramContext.diagram);
+            shapeMoveEnd();
         }
-        shapeMoveEnd();
     });
 
     eventBus.on('resize.end', (event) => {
