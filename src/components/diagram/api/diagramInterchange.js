@@ -1,4 +1,5 @@
 import { Bounds, Point } from './diagramCommon';
+import { adjustShape } from '../providers/InteractWithModel';
 
 export class DiagramElement {
     
@@ -409,4 +410,18 @@ export async function createDiagramLabel(label, umlWebClient, diagramContext) {
     ret.id = label.id;
     ret.text = label.text;
     return ret;
+}
+
+export async function updateLabel(label, umlWebClient) {
+    const labelInstance = await umlWebClient.get(label.id);
+    adjustShape(label, labelInstance, umlWebClient);
+
+    // push new text
+    for await (const labelSlot of labelInstance.slots) {
+        if (labelSlot.definingFeature.id() ===  TEXT_ID) {
+            const labelValue = await labelSlot.values.front();
+            labelValue.value = label.text;
+            umlWebClient.put(labelValue);
+        }
+    }
 }

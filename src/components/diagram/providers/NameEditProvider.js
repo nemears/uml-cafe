@@ -1,12 +1,15 @@
 import { createElementUpdate } from '../../../umlUtil';
+import { updateLabel } from '../api/diagramInterchange';
+import { getLabelBounds } from './relationships/DirectedComposition';
 
 export default class NameEditProvider {
 
-    constructor(directEditing, umlWebClient, diagramEmitter, umlRenderer) {
+    constructor(directEditing, umlWebClient, diagramEmitter, umlRenderer, modeling) {
         directEditing.registerProvider(this);
         this._umlWebClient = umlWebClient;
         this._diagramEmitter = diagramEmitter;
         this._umlRenderer = umlRenderer;
+        this._modeling = modeling;
     }
 
     activate(element) {
@@ -60,7 +63,9 @@ export default class NameEditProvider {
 
     update(element, newLabel, activeContextText, bounds) {
         const umlWebClient = this._umlWebClient,
-        diagramEmitter = this._diagramEmitter;
+        diagramEmitter = this._diagramEmitter,
+        umlRenderer = this._umlRenderer,
+        modeling = this._modeling;
         if (element.modelElement) {
             if (element.modelElement.isSubClassOf('namedElement')) {
                 element.modelElement.name = newLabel;
@@ -70,12 +75,24 @@ export default class NameEditProvider {
                 umlWebClient.put(element.modelElement);
             }
         }
-        element.x = bounds.x;
-        element.y = bounds.y;
-        element.width = bounds.width;
-        element.height = bounds.height;
+        if (element.labelTarget) {
+            element.text = newLabel;
+            const labelBounds = getLabelBounds(element.labelTarget, umlRenderer);
+            labelBounds.x = element.x;
+            labelBounds.y = element.y;
+            modeling.resizeShape(
+                element,
+                labelBounds,
+            );
+            updateLabel(element, umlWebClient);
+        } else {
+            element.x = bounds.x;
+            element.y = bounds.y;
+            element.width = bounds.width;
+            element.height = bounds.height;
+        }
         diagramEmitter.fire('elementUpdate', createElementUpdate(element.modelElement));
     }
 }
 
-NameEditProvider.$inject = ['directEditing', 'umlWebClient', 'diagramEmitter', 'umlRenderer'];
+NameEditProvider.$inject = ['directEditing', 'umlWebClient', 'diagramEmitter', 'umlRenderer', 'modeling'];
