@@ -86,31 +86,31 @@ export default class DirectedComposition extends RuleProvider {
         eventBus.on('shape.move.end', (event) => {
             const shape = event.shape;
             for (const connection of shape.incoming) {
-                checkConnectionEnds(connection, umlWebClient, modeling);
+                checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer);
             }
             for (const connection of shape.outgoing) {
-                checkConnectionEnds(connection, umlWebClient, modeling);
+                checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer);
             }
         });
         eventBus.on('connection.move.end', (event) => {
-            checkConnectionEnds(event.connection, umlWebClient, modeling);
+            checkConnectionEnds(event.connection, umlWebClient, modeling, umlRenderer);
         });
         eventBus.on('resize.end', (event) => {
             const shape = event.shape;
             for (const connection of shape.incoming) {
-                checkConnectionEnds(connection, umlWebClient, modeling);
+                checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer);
             }
             for (const connection of shape.outgoing) {
-                checkConnectionEnds(connection, umlWebClient, modeling);
+                checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer);
             }
         });
         eventBus.on('bendpoint.move.end', (event) => {
             const connection = event.connection;
-            checkConnectionEnds(connection, umlWebClient, modeling);
+            checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer);
         });
         eventBus.on('connectionSegment.move.move', (event) => {
             const connection = event.connection;
-            checkConnectionEnds(connection, umlWebClient, modeling);
+            checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer);
         });
     }
 
@@ -145,7 +145,7 @@ function canConnect(context) {
 
 DirectedComposition.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling', 'umlRenderer', 'elementFactory', 'canvas'];
 
-function checkConnectionEnds(connection, umlWebClient, modeling) {
+function checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer) {
     for (const end of connection.children) {
         if (end.modelElement.elementType() === 'property') {
             let newEndBounds = {
@@ -171,12 +171,7 @@ function checkConnectionEnds(connection, umlWebClient, modeling) {
             for (const label of end.labels) {
                 modeling.resizeShape(
                     label,
-                    {
-                        x: newEndBounds.x + 20,
-                        y: newEndBounds.y - 10,
-                        width: label.width,
-                        height: label.height,
-                    }
+                    getLabelBounds(end, umlRenderer)
                 );
                 // update it to server
                 const adjustLabel = async () => {
@@ -190,6 +185,23 @@ function checkConnectionEnds(connection, umlWebClient, modeling) {
 
 export function createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext) {
     let labelName = propertyShape.modelElement.name;
+    let labelBounds = getLabelBounds(propertyShape, umlRenderer);
+    const propertyLabel = elementFactory.createLabel({
+        id: randomID(),
+        labelTarget: propertyShape,
+        modelElement: propertyShape.modelElement,
+        text: labelName,
+        x: labelBounds.x,
+        y: labelBounds.y,
+        width: labelBounds.width,
+        height: labelBounds.height,
+    });
+    canvas.addShape(propertyLabel, canvas.findRoot(propertyShape));
+    createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
+}
+
+export function getLabelBounds(propertyShape, umlRenderer) {
+    let labelName = propertyShape.modelElement.name;
     labelName += " " + getMultiplicityText(propertyShape);
     const options = {
         align: 'center-middle',
@@ -198,16 +210,39 @@ export function createAssociationEndLabel(propertyShape, umlRenderer, elementFac
         }
     };
     const labelBounds = umlRenderer.textUtil.getDimensions(labelName, options);
-    const propertyLabel = elementFactory.createLabel({
-        id: randomID(),
-        labelTarget: propertyShape,
-        modelElement: propertyShape.modelElement,
-        text: labelName,
-        x: propertyShape.x + 20,
-        y: propertyShape.y - 10,
-        width: Math.ceil(labelBounds.width) + 10,
-        height: Math.ceil(labelBounds.height),
-    });
-    canvas.addShape(propertyLabel, canvas.findRoot(propertyShape));
-    createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
+    labelBounds.width = Math.ceil(labelBounds.width) + 10;
+    labelBounds.height = Math.ceil(labelBounds.height);
+    let typeShape;
+    if (propertyShape.parent.source.modelElement.id === propertyShape.modelElement.type.id()) {
+        typeShape = propertyShape.parent.source;
+    } else if (propertyShape.parent.target.modelElement.id === propertyShape.modelElement.type.id()) {
+        typeShape = propertyShape.parent.target;
+    } else {
+        throw new Error('bad state!');
+    }
+    if (propertyShape.y < typeShape.y) {
+        // it is above the shape
+        // put it above and to the right
+        labelBounds.x = propertyShape.x + 20;
+        labelBounds.y = propertyShape.y - 10;
+    } else {
+        // it is either below or to either side
+        if (propertyShape.x < typeShape.x) {
+            // it is to left
+            // place it above and to the left making sure it doesn't overflow above
+            labelBounds.x = propertyShape.x - labelBounds.width;
+            labelBounds.y = propertyShape.y - 20;
+        } else if (propertyShape.x + (2 * OWNED_END_RADIUS) > (typeShape.x + typeShape.width)) {
+            // it is to the right
+            // place it above and to the right
+            labelBounds.x = propertyShape.x + 20;
+            labelBounds.y = propertyShape.y - 10;
+        } else {
+            // it is below
+            // place it below and to the right
+            labelBounds.x = propertyShape.x + 20;
+            labelBounds.y = propertyShape.y + labelBounds.height;
+        }
+    }
+    return labelBounds;
 }

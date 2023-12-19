@@ -90,7 +90,6 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
             umlWebClient.put(diagramContext.diagram);
         }
         shapeMoveEnd();
-        console.log(event.shape.modelElement);
     });
 
     eventBus.on('resize.end', (event) => {
