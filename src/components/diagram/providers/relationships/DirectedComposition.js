@@ -146,6 +146,9 @@ function canConnect(context) {
 DirectedComposition.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling', 'umlRenderer', 'elementFactory', 'canvas'];
 
 function checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer) {
+    if (!connection.children) {
+        return;
+    }
     for (const end of connection.children) {
         if (end.modelElement.elementType() === 'property') {
             let newEndBounds = {

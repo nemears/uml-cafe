@@ -46,7 +46,7 @@ export class Label extends Shape {
 
 const BOUNDS_ID = 'KbKmDNU19SWMJwggKTQ9FrzAzozO';
 const TEXT_ID = 'GJKibcaKH82QYL&Sm3&rX5Mlc8ps';
-const LABEL_ID = 'urWpoxZVhva76RnwyRAhLgduprmm';
+export const LABEL_ID = 'urWpoxZVhva76RnwyRAhLgduprmm';
 
 export async function getUmlDiagramElement(id, umlClient) {
     // get the element with the client
