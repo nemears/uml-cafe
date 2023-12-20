@@ -8,7 +8,7 @@ import { PROPERTY_COMPARTMENT_HEIGHT } from './Property';
  * A example context pad provider.
  */
 export default class ClassDiagramContextPadProvider {
-  constructor(connect, contextPad, create, modeling, generalizationHandler, directedComposition, umlWebClient, diagramEmitter, modelElementMap, elementFactory, elementRegistry, canvas, diagramContext, directEditing) {
+  constructor(connect, contextPad, create, modeling, umlWebClient, diagramEmitter, modelElementMap, elementFactory, elementRegistry, canvas, diagramContext, directEditing) {
     this._connect = connect;
     this._create = create;
     this._modeling = modeling;
@@ -154,6 +154,15 @@ export default class ClassDiagramContextPadProvider {
                     click: contextMenu,
                     dragstart: contextMenu,
                 }
+            },
+            'createComment' : {
+                group: 'edit',
+                className: 'context-pad-icon-comment',
+                title: 'Create Comment',
+                action: {
+                    click: startCreateCommentClick,
+                    dragstart: startCreateCommentClick
+                }
             }
         };
 
@@ -176,20 +185,55 @@ export default class ClassDiagramContextPadProvider {
                     dragstart: startDirectedComposition
                 }
             }; 
-            
+            ret.createComposition = {
+                group: 'edit',
+                className: 'context-pad-icon-composition',
+                title: 'Create Composition',
+                action: {
+                    click: () => {
+                        element.connectType = 'composition';
+                        connect.start(event, element); 
+                    }
+                }
+            };
+            ret.createDirectedAssociation = {
+                group: 'edit',
+                className: 'context-pad-icon-directed-association',
+                title: 'Create Directed Association',
+                action: {
+                    click: () => {
+                        element.connectType = 'directedAssociation';
+                        connect.start(event, element);
+                    }
+                }
+            };
+            ret.createAssociation = {
+                group: 'edit',
+                className: 'context-pad-icon-association',
+                title: 'Create Association',
+                action: {
+                    click: () => {
+                        element.connectType = 'association';
+                        connect.start(event, element);
+                    }
+                }
+            };
+            ret.createBiDirectionalAssociation = {
+                group: 'edit',
+                className: 'context-pad-icon-bi-directional-association',
+                title: 'Create Bi-Directional Association',
+                action: {
+                    click: () => {
+                        element.connectType = 'biDirectionalAssociation';
+                        connect.start(event, element);
+                    }
+                }
+            };
         }
-        ret.createComment = {
-            group: 'edit',
-            className: 'context-pad-icon-comment',
-            title: 'Create Comment',
-            action: {
-                click: startCreateCommentClick,
-                dragstart: startCreateCommentClick
-            }
-        };
+        
 
         return ret;
     }
 }
 
-ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'create', 'modeling', 'generalizationHandler', 'directedComposition', 'umlWebClient', 'diagramEmitter', 'modelElementMap', 'elementFactory', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing'];
+ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'create', 'modeling', 'umlWebClient', 'diagramEmitter', 'modelElementMap', 'elementFactory', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing'];

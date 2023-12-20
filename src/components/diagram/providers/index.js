@@ -6,7 +6,7 @@ import DragFromTree from './DragFromTree';
 import InteractWithModel from './InteractWithModel';
 import UMLRenderer from './UMLRenderer';
 import GeneralizationHandler from './relationships/GeneralizationHandler';
-import DirectedComposition from './relationships/DirectedComposition';
+import Association from './relationships/Association';
 import UmlLayouter from './UmlLayouter';
 import DoubleClickSpecification from './DoubleClickSpecification';
 import ElementUpdate from './ElementUpdate';
@@ -21,7 +21,7 @@ import ClassHandler from './ClassHandler';
 export default {
   __init__: [
     'generalizationHandler',
-    'directedComposition',
+    'association',
     'classDiagramContextPadProvider',
     'classDiagramPaletteProvider',
     'dragFromTree',
@@ -41,7 +41,7 @@ export default {
     'classHandler',
   ],
   generalizationHandler: ['type', GeneralizationHandler],
-  directedComposition: ['type', DirectedComposition],
+  association: ['type', Association],
   classDiagramContextPadProvider: [ 'type', ClassDiagramContextPadProvider ],
   classDiagramPaletteProvider: [ 'type', ClassDiagramPaletteProvider ],
   classDiagramRuleProvider: [ 'type', ClassDiagramRuleProvider ],
