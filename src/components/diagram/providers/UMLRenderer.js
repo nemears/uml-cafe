@@ -276,23 +276,47 @@ export default class UMLRenderer extends BaseRenderer {
             }
         } else if (element.modelElement.elementType() === 'property') {
             if (element.parent && element.parent.modelElement && element.parent.modelElement.elementType() === 'association') {
-                const circle = svgCreate('circle');
-                const options = {
-                    cx: 5,
-                    cy: 5,
-                    r: 5
-                };
-                if (element.parent.source.modelElement.id === element.modelElement.type.id()) {
-                    const leadingline = element.parent.waypoints.slice(0,2).reverse();
-                    moveEnd(leadingline, options);
+                if (element.labelTarget) {
+                    // label
+                    const rect = createRectangle();
+                    svgAttr(rect, assign({}, this.LABEL_STYLE), attrs || {});
+                    const textString = element.text;
+                    const text = cropText(
+                        textString,
+                        element,
+                        {
+                            align: 'left',
+                            box : {
+                                width: element.width
+                            },
+                            padding: {
+                                left: 5
+                            },
+                            style: {
+                                fill: 'var(--vt-c-text-light-1)'
+                            }
+                        }
+                    );
+                    svgAppend(group, text);
                 } else {
-                    const leadingLine = element.parent.waypoints.slice(-2);
-                    moveEnd(leadingLine, options);
+                    // end shape
+                    const circle = svgCreate('circle');
+                    const options = {
+                        cx: 5,
+                        cy: 5,
+                        r: 5
+                    };
+                    if (element.parent.source.modelElement.id === element.modelElement.type.id()) {
+                        const leadingline = element.parent.waypoints.slice(0,2).reverse();
+                        moveEnd(leadingline, options);
+                    } else {
+                        const leadingLine = element.parent.waypoints.slice(-2);
+                        moveEnd(leadingLine, options);
+                    }
+                    svgAttr(circle, options); 
+                    svgAppend(group, circle);
+                    svgAttr(circle, assign({}, this.OWNED_ATTRIBUTE_STYLE), attrs || {});
                 }
-                svgAttr(circle, options); 
-                svgAppend(group, circle);
-                svgAttr(circle, assign({}, this.OWNED_ATTRIBUTE_STYLE), attrs || {}); 
-                // TODO LABEL
             } else if (element.parent && element.parent.modelElement && element.parent.modelElement.isSubClassOf('classifier')) {
                 const rect = createRectangle();
                 svgAttr(rect, assign({}, this.PROPERTY_STYLE), attrs || {});
@@ -313,28 +337,6 @@ export default class UMLRenderer extends BaseRenderer {
                     }
                 );
 
-                svgAppend(group, text);
-            } else if (element.parent && !element.parent.parent) {
-                // TODO label
-                const rect = createRectangle();
-                svgAttr(rect, assign({}, this.LABEL_STYLE), attrs || {});
-                const textString = element.text;
-                const text = cropText(
-                    textString,
-                    element,
-                    {
-                        align: 'left',
-                        box : {
-                            width: element.width
-                        },
-                        padding: {
-                            left: 5
-                        },
-                        style: {
-                            fill: 'var(--vt-c-text-light-1)'
-                        }
-                    }
-                );
                 svgAppend(group, text);
             }
         }

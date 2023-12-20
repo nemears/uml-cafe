@@ -260,7 +260,7 @@ function checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer) {
         return;
     }
     for (const end of connection.children) {
-        if (end.modelElement.elementType() === 'property') {
+        if (end.modelElement.elementType() === 'property' && !end.labelTarget) {
             let newEndBounds = {
                 width: 2 * OWNED_END_RADIUS,
                 height: 2 * OWNED_END_RADIUS,
@@ -309,7 +309,7 @@ export function createAssociationEndLabel(propertyShape, umlRenderer, elementFac
         width: labelBounds.width,
         height: labelBounds.height,
     });
-    canvas.addShape(propertyLabel, canvas.findRoot(propertyShape));
+    canvas.addShape(propertyLabel, propertyShape.parent);
     createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
 }
 
