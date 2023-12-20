@@ -8,7 +8,7 @@ import { createLine } from 'diagram-js/lib/util/RenderUtil';
 import { assign } from 'min-dash';
 import TextUtil from 'diagram-js/lib/util/Text';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
-import { OWNED_END_RADIUS } from './relationships/DirectedComposition';
+import { OWNED_END_RADIUS } from './relationships/Association';
 
 export function createArrow(line) {
     var xx, xx1, xx2 = undefined;
@@ -117,42 +117,24 @@ export default class UMLRenderer extends BaseRenderer {
             const line = createLine(element.waypoints, assign({}, this.CONNECTION_STYLE, attrs || {}));
             svgAppend(group, line);
             for (const memberEnd of element.modelElement.memberEnds.unsafe()) {
-                if ((memberEnd.featuringClassifier.has() && memberEnd.owner.id() === memberEnd.featuringClassifier.id()) || element.modelElement.navigableOwnedEnds.contains(memberEnd)) {
+                if (memberEnd.owner.id() !== element.modelElement.id || element.modelElement.navigableOwnedEnds.contains(memberEnd)) {
                     // this is either a navigable owned end, or it is owned by a classifier
                     if (memberEnd.type.id() === element.source.modelElement.id) {
                         // arrow to source
+                        const leadingLine = element.waypoints.slice(0,2).reverse();
+                        const arrowPoints = createArrow(leadingLine);
+                        if (memberEnd.owner.id() !== element.modelElement.id) { // TODO do this by looking for shape instead
+                            moveArrow(leadingLine, arrowPoints);
+                        }
+                        createAssociationArrow(group, arrowPoints);
                     } else if (memberEnd.type.id() === element.target.modelElement.id) {
                         // arrow to target
                         const leadingLine = element.waypoints.slice(-2);
                         const arrowPoints = createArrow(leadingLine);
-                        if (leadingLine[0].x < leadingLine[1].x) {
-                            // to left
-                            for (const point of arrowPoints) {
-                                point.x = point.x - (2 * OWNED_END_RADIUS);
-                            }
-                        } else if (leadingLine[0].x > leadingLine[1].x) {
-                            // to right
-                            for (const point of arrowPoints) {
-                                point.x = point.x + (2 * OWNED_END_RADIUS);
-                            }
-                        } else if (leadingLine[0].y < leadingLine[1].y) {
-                            // to the top
-                            for (const point of arrowPoints) {
-                                point.y = point.y - (2 * OWNED_END_RADIUS);
-                            }
-                        } else if (leadingLine[0].y > leadingLine[1].y) {
-                            // to the bottom
-                            for (const point of arrowPoints) {
-                                point.y = point.y + (2 * OWNED_END_RADIUS);
-                            }
-                        } 
-                        
-                        var arrowTipPath = svgCreate('polyline');
-                        svgAttr(arrowTipPath, {
-                            style: 'fill:var(--vt-c-black);stroke:var(--vt-c-black);',
-                            points: `${arrowPoints[0].x},${arrowPoints[0].y} ${arrowPoints[1].x},${arrowPoints[1].y} ${arrowPoints[2].x},${arrowPoints[2].y}`
-                        });
-                        svgAppend(group, arrowTipPath);
+                        if (memberEnd.owner.id() !== element.modelElement.id) {
+                            moveArrow(leadingLine, arrowPoints); 
+                        }
+                        createAssociationArrow(group, arrowPoints);
                     }
 
                 }
@@ -289,7 +271,7 @@ export default class UMLRenderer extends BaseRenderer {
                         width: element.width - 5,
                     }
                 };
-                var text = this.textUtil.createText(element.modelElement.body || '', options);
+                const text = this.textUtil.createText(element.modelElement.body || '', options);
                 svgAppend(group, text);
             }
         } else if (element.modelElement.elementType() === 'property') {
@@ -300,24 +282,12 @@ export default class UMLRenderer extends BaseRenderer {
                     cy: 5,
                     r: 5
                 };
-                if (element.parent.waypoints[0].x === element.x && element.parent.waypoints[0].y === element.y) {
-                    const leadingline = element.parent.waypoints.slice(0,2);
-                    // TODO
+                if (element.parent.source.modelElement.id === element.modelElement.type.id()) {
+                    const leadingline = element.parent.waypoints.slice(0,2).reverse();
+                    moveEnd(leadingline, options);
                 } else {
                     const leadingLine = element.parent.waypoints.slice(-2);
-                    if (leadingLine[0].x < leadingLine[1].x) {
-                        // to left
-                        options.cx -= 5;
-                    } else if (leadingLine[0].x > leadingLine[1].x) {
-                        // to right
-                        options.cx += 5;
-                    } else if (leadingLine[0].y < leadingLine[1].y) {
-                        // to the top
-                        options.cy -= 5;
-                    } else if (leadingLine[0].y > leadingLine[1].y) {
-                        // to the bottom
-                        options.cy += 5;
-                    }
+                    moveEnd(leadingLine, options);
                 }
                 svgAttr(circle, options); 
                 svgAppend(group, circle);
@@ -406,4 +376,53 @@ export function createPropertyLabel(element) {
     textString += getMultiplicityText(element);
     
     return textString;
+}
+
+function moveArrow(leadingLine, arrowPoints) {
+    if (leadingLine[0].x < leadingLine[1].x) {
+        // to left
+        for (const point of arrowPoints) {
+            point.x = point.x - (2 * OWNED_END_RADIUS);
+        }
+    } else if (leadingLine[0].x > leadingLine[1].x) {
+        // to right
+        for (const point of arrowPoints) {
+            point.x = point.x + (2 * OWNED_END_RADIUS);
+        }
+    } else if (leadingLine[0].y < leadingLine[1].y) {
+        // to the top
+        for (const point of arrowPoints) {
+            point.y = point.y - (2 * OWNED_END_RADIUS);
+        }
+    } else if (leadingLine[0].y > leadingLine[1].y) {
+        // to the bottom
+        for (const point of arrowPoints) {
+            point.y = point.y + (2 * OWNED_END_RADIUS);
+        }
+    }
+}
+
+function createAssociationArrow(group, arrowPoints) {
+    const arrowTipPath = svgCreate('polyline');
+    svgAttr(arrowTipPath, {
+        style: 'fill:var(--vt-c-black);stroke:var(--vt-c-black);',
+        points: `${arrowPoints[0].x},${arrowPoints[0].y} ${arrowPoints[1].x},${arrowPoints[1].y} ${arrowPoints[2].x},${arrowPoints[2].y}`
+    });
+    svgAppend(group, arrowTipPath);
+}
+
+function moveEnd(leadingLine, options) {
+    if (leadingLine[0].x < leadingLine[1].x) {
+        // to left
+        options.cx -= 5;
+    } else if (leadingLine[0].x > leadingLine[1].x) {
+        // to right
+        options.cx += 5;
+    } else if (leadingLine[0].y < leadingLine[1].y) {
+        // to the top
+        options.cy -= 5;
+    } else if (leadingLine[0].y > leadingLine[1].y) {
+        // to the bottom
+        options.cy += 5;
+    }
 }

@@ -1,6 +1,6 @@
 import { createElementUpdate } from '../../../umlUtil';
 import { updateLabel } from '../api/diagramInterchange';
-import { getLabelBounds } from './relationships/DirectedComposition';
+import { getLabelBounds } from './relationships/Association';
 
 export default class NameEditProvider {
 

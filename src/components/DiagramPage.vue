@@ -263,29 +263,61 @@ export default {
     background-repeat: no-repeat;
     background-size: 100%;
 }
+.palette-icon-create-composition {
+    background: url('diagram/icons/palette/composition.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+.palette-icon-create-association {
+    background: url('diagram/icons/palette/association.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+.palette-icon-create-directed-association {
+    background: url('diagram/icons/palette/directedAssociation.svg');
+    background-repeat: no-repeat;
+    background-size: 100%; 
+}
+.palette-icon-create-bi-directional-association {
+    background: url('diagram/icons/palette/biDirectionalAssociation.svg');
+    background-repeat: no-repeat;
+    background-size: 100%; 
+}
 
 .context-pad-icon-remove {
-    background: url('diagram/deleteShapeDark.svg') !important;
+    background: url('diagram/icons/context/deleteShapeDark.svg') !important;
 }
 
 .context-pad-icon-connect {
-    background: url('diagram/createGeneralizationDark.svg') !important;
+    background: url('diagram/icons/context/createGeneralizationDark.svg') !important;
 }
 
 .context-pad-icon-directed-composition {
-    background: url('diagram/directedComposition.svg') !important;
+    background: url('diagram/icons/context/directedComposition.svg') !important;
 }
 .context-pad-icon-spec {
-    background: url('diagram/info.svg') !important;
+    background: url('diagram/icons/context/info.svg') !important;
 }
 .context-pad-icon-delete {
-    background: url('diagram/trash.svg') !important;
+    background: url('diagram/icons/context/trash.svg') !important;
 }
 .context-pad-icon-options {
-    background: url('diagram/gear.svg') !important;
+    background: url('diagram/icons/context/gear.svg') !important;
 }
 .context-pad-icon-comment {
-    background: url('diagram/comment.svg') !important;
+    background: url('diagram/icons/context/comment.svg') !important;
+}
+.context-pad-icon-composition {
+    background: url('diagram/icons/context/composition.svg') !important;
+}
+.context-pad-icon-directed-association {
+    background: url('diagram/icons/context/directedAssociation.svg') !important;
+}
+.context-pad-icon-association {
+    background: url('diagram/icons/context/association.svg') !important;
+}
+.context-pad-icon-bi-directional-association {
+    background: url('diagram/icons/context/biDirectedAssociation.svg') !important;
 }
 @import "diagram-js/assets/diagram-js.css"
 </style>
