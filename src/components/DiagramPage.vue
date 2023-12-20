@@ -168,7 +168,7 @@ export default {
                                     height: umlLabel.bounds.height,
                                     labelTarget: labelTarget
                                 });
-                                canvas.addShape(label, canvas.findRoot(labelTarget));
+                                canvas.addShape(label, labelTarget.parent);
                                 return label;
                             }
                         }
