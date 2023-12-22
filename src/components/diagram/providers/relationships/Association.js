@@ -5,11 +5,12 @@ import { createDiagramLabel, createDiagramShape } from '../../api/diagramInterch
 import { adjustShape } from '../InteractWithModel';
 import { getMultiplicityText } from '../UMLRenderer';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
+import { assign } from 'min-dash';
 
 export const OWNED_END_RADIUS = 5;
 
 export default class Association extends RuleProvider {
-    constructor(eventBus, umlWebClient, diagramEmitter, diagramContext, modeling, umlRenderer, elementFactory, canvas) {
+    constructor(eventBus, umlWebClient, diagramEmitter, diagramContext, modeling, umlRenderer, elementFactory, canvas, graphicsFactory) {
         super(eventBus);
         eventBus.on('connect.end', (event) => {
             // check if it can connect
@@ -195,11 +196,22 @@ export default class Association extends RuleProvider {
 
         eventBus.on('shape.move.end', (event) => {
             const shape = event.shape;
+            
             for (const connection of shape.incoming) {
                 checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer);
             }
             for (const connection of shape.outgoing) {
                 checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer);
+            }
+        });
+        eventBus.on('shape.move.end', 900, (event) => {
+            const shape = event.shape;
+            if (shape.labelTarget && shape.labelTarget.modelElement && shape.labelTarget.modelElement.isSubClassOf('property')) {
+                assign(shape,
+                    {
+                        parent : shape.labelTarget.parent
+                    });
+                graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
             }
         });
         eventBus.on('connection.move.end', (event) => {
@@ -253,7 +265,7 @@ function canConnect(context) {
     return true;
 }
 
-Association.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling', 'umlRenderer', 'elementFactory', 'canvas'];
+Association.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling', 'umlRenderer', 'elementFactory', 'canvas', 'graphicsFactory'];
 
 function checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer) {
     if (!connection.children) {

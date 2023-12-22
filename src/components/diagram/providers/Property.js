@@ -85,7 +85,7 @@ export default class Property extends RuleProvider {
             const shapes = context.shapes;
             for (const shape of shapes) {
                 if (shape.modelElement && shape.modelElement.elementType() === 'property') {
-                    if (shape.parent && !shape.parent.parent) {
+                    if (shape.labelTarget) {
                         return true;
                     }
                     return false;
