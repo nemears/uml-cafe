@@ -357,7 +357,7 @@ async function createDiagramShapeFeatures(shape, shapeInstance, umlWebClient, di
         } 
     }
     umlWebClient.put(diagramContext.diagram);
-
+    await umlWebClient.head();
 }
 
 export async function createDiagramShape(shape, umlWebClient, diagramContext) {
