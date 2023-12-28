@@ -1,5 +1,5 @@
-import { createEdge, makeUMLWaypoints } from './relationships/relationshipUtil';
-import { createDiagramShape, LABEL_ID } from '../api/diagramInterchange';
+import { makeUMLWaypoints } from './relationships/relationshipUtil';
+import { createDiagramShape, BOUNDS_ID, LABEL_ID, createDiagramEdge } from '../api/diagramInterchange';
 import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
 import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout'
 import { randomID } from '../umlUtil';
@@ -56,7 +56,7 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
                             modelElement: comment,
                         }
                     );
-                    createEdge(anchor, umlWebClient, diagramContext);
+                    createDiagramEdge(anchor, umlWebClient, diagramContext);
                 }
             }
             diagramContext.context.ownedComments.add(comment);
@@ -122,6 +122,14 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
         connectionSegmentMoveEnd();
     });
 
+    eventBus.on('connectionSegment.move.move', (event) => {
+        const connectionSegmentMove = async () => {
+            await adjustEdgeWaypoints(event.connection, umlWebClient);
+            umlWebClient.put(diagramContext.diagram);
+        };
+        connectionSegmentMove();
+    });
+
     eventBus.on('bendpoint.move.end', (event) => {
         const bendpointMoveEnd = async () => {
             await adjustEdgeWaypoints(event.connection, umlWebClient);
@@ -136,7 +144,7 @@ InteractWithModel.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diag
 export async function adjustShape(shape, shapeInstance, umlWebClient) {
     let boundsInstance = undefined;
     for await (let slot of shapeInstance.slots) {
-        if (slot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
+        if (slot.definingFeature.id() === BOUNDS_ID) {
             boundsInstance = await (await slot.values.front()).instance.get();
             break;
         }
@@ -177,7 +185,7 @@ async function adjustEdgeWaypoints(edge, umlWebClient) {
                 edgeSlot.values.remove(waypointValue);
                 umlWebClient.deleteElement(waypointValue);
             }
-            await makeUMLWaypoints(edge, umlWebClient, edgeSlot, await edgeInstance.owningPackage.get());
+            await makeUMLWaypoints(edge, umlWebClient, edgeSlot, {diagram: await edgeInstance.owningPackage.get()});
         }
     }
     umlWebClient.put(edgeInstance);

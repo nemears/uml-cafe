@@ -1,4 +1,4 @@
-import { getUmlDiagramElement, deleteUmlDiagramElement } from '../api/diagramInterchange';
+import { getUmlDiagramElement, deleteUmlDiagramElement, SHAPE_ID, LABEL_ID } from '../api/diagramInterchange';
 
 export default class ElementUpdate {
 
@@ -24,7 +24,7 @@ export default class ElementUpdate {
                             
                             if (shape) {
                                 for (const classifierID of oldElement.classifiers.ids()) {
-                                    if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g') {
+                                    if (classifierID === SHAPE_ID) {
                                         // shape
                                         await removeShapeAndEdgeFromServer(shape, umlWebClient); // do we need this?
                                         modeling.removeShape(shape);
@@ -40,7 +40,7 @@ export default class ElementUpdate {
                         if (newElement.isSubClassOf('instanceSpecification')) {
                             let elementIsShapeType = false;
                             for (let classifierID of newElement.classifiers.ids()) {
-                                if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g') {
+                                if (classifierID === SHAPE_ID) {
                                     // check if the element is in the diagram (on big diagrams with a lot of users this could get laggy)
                                     const diagramShape = elementRegistry.get(oldElement.id);
                                     if (diagramShape) {
@@ -51,10 +51,23 @@ export default class ElementUpdate {
                                         modeling.resizeShape(diagramShape, umlShape.bounds);
                                     } else {
                                         // not being tracked by diagram yet
-                                        let umlShape = await createNewShape(newElement.id, umlWebClient, modeling, canvas);
+                                        let umlShape = await createNewShape(newElement.id, umlWebClient, modeling, elementRegistry);
                                         modelElementMap.set(umlShape.modelElement.id, newElement.id);
                                     }
                                     break;
+                                } else if (classifierID === LABEL_ID) {
+                                    const diagramShape = elementRegistry.get(oldElement.id);
+                                    if (diagramShape) {
+                                        // already tracked, update the label 
+                                        const umlLabel = await await getUmlDiagramElement(oldElement.id, umlWebClient);
+
+                                        // change bounds in diagram
+                                        modeling.resizeShape(diagramShape, umlLabel.bounds);
+                                    } else {
+                                        // not being tracked by diagram yet
+                                        let umlLabel = await createNewLabel(newElement.id, umlWebClient, modeling, elementRegistry);
+                                        modelElementMap.set(umlLabel.modelElement.id, newElement.id);
+                                    }
                                 } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
                                     const diagramEdge = elementRegistry.get(oldElement.id);
                                     if (diagramEdge) {
@@ -90,14 +103,17 @@ export default class ElementUpdate {
                 } else {
                     if (newElement.isSubClassOf('instanceSpecification')) {
                         for (let classifierID of newElement.classifiers.ids()) {
-                            if (classifierID === 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g') {
-                                const umlShape = await createNewShape(newElement.id, umlWebClient, modeling, canvas);
+                            if (classifierID === SHAPE_ID) {
+                                const umlShape = await createNewShape(newElement.id, umlWebClient, modeling, elementRegistry);
                                 modelElementMap.set(umlShape.modelElement.id, newElement.id);
                             } else if (classifierID === 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR') {
                                 // it is a umlEdge
                                 const umlEdge = await getUmlDiagramElement(newElement.id, umlWebClient);
                                 const source = elementRegistry.get(umlEdge.source); 
                                 const target = elementRegistry.get(umlEdge.target); 
+                                if (umlEdge.modelElement.isSubClassOf('association')) {
+                                    for await (const memberEnd of umlEdge.modelElement.memberEnds) {}
+                                }
                                 
                                 // create connection
                                 modeling.createConnection(
@@ -138,7 +154,7 @@ export default class ElementUpdate {
 
 ElementUpdate.$inject = ['diagramEmitter', 'umlWebClient', 'modeling', 'canvas', 'elementRegistry', 'modelElementMap', 'graphicsFactory'];
 
-async function createNewShape(newShapeID, umlWebClient, modeling, canvas) {
+async function createNewShape(newShapeID, umlWebClient, modeling, elementRegistry) {
     // it is a umlShape, let's see if it is owned by this diagram
     // TODO check if it is owned by this diagram
     // just assuming it is now
@@ -155,9 +171,26 @@ async function createNewShape(newShapeID, umlWebClient, modeling, canvas) {
     }, {
         x: umlShape.bounds.x + umlShape.bounds.width / 2,
         y: umlShape.bounds.y + umlShape.bounds.height / 2,
-    }, canvas.getRootElement()); // TODO we want to do this with owningElement eventuall instead of assuming root
+    }, elementRegistry.get(umlShape.owningElement)); // TODO we want to do this with owningElement eventuall instead of assuming root
 
     return umlShape;
+}
+
+async function createNewLabel(newLabelID, umlWebClient, modeling, elementRegistry) {
+    const umlLabel = await getUmlDiagramElement(newLabelID, umlWebClient);
+    modeling.createLabel({
+            width: umlLabel.width,
+            height: umlLabel.height,
+            update: true,
+            id: newLabelID,
+            modelElement: umlLabel.modelElement
+        },
+        {
+            x: umlLabel.bounds.x + umlLabel.bounds.width / 2,
+            y: umlLabel.bounds.y + umlLabel.bounds.height / 2
+        },
+        elementRegistry.get(umlLabel.owningElement)
+    );
 }
 
 export async function removeShapeAndEdgeFromServer(shape, umlWebClient) {
