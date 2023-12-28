@@ -1,5 +1,5 @@
 import { randomID } from "./components/diagram/umlUtil";
-import { createModelElementSlot } from "./components/diagram/api/diagramInterchange";
+import { createDiagramElementFeatures } from "./components/diagram/api/diagramInterchange";
 export function createElementUpdate() {
     const ret = {
         updatedElements: []
@@ -86,7 +86,18 @@ export async function createClassDiagram(owner, umlWebClient) {
         diagram : diagramPackage
     }
     const diagramInstance = await umlWebClient.post('instanceSpecification');
-    await createModelElementSlot({ modelElement: { id: diagramInstance.id } }, umlWebClient, diagramInstance, diagramContext)
+    await createDiagramElementFeatures(
+        {
+            id: diagramInstance.id,
+            modelElement: {
+                id: owner.id
+            },
+            children: []
+        },
+        umlWebClient,
+        diagramInstance,
+        diagramContext
+    );
     diagramInstance.classifiers.add(await umlWebClient.get('U3CQzJden20cL0mG0nQN_HuWfisB'));
     diagramPackage.packagedElements.add(diagramInstance);
 

@@ -1,10 +1,9 @@
 import { createElementUpdate, deleteElementElementUpdate } from "../../../umlUtil";
-import { deleteUmlDiagramElement } from "../api/diagramInterchange";
+import { deleteUmlDiagramElement, createDiagramEdge } from "../api/diagramInterchange";
 import { removeShapeAndEdgeFromServer } from "./ElementUpdate";
 import { h } from "vue";
 import { getMid } from "diagram-js/lib/layout/LayoutUtil";
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
-import { createEdge } from "./relationships/relationshipUtil";
 import { randomID } from "../umlUtil";
 import { createCommentClick } from "../../../umlUtil";
 import { createProperty } from "./Property";
@@ -232,7 +231,7 @@ async function drawGeneralization(element, generalization, umlWebClient, modelEl
             },
             canvas.getRootElement()
         );
-        await createEdge(relationship, umlWebClient, diagramContext);
+        await createDiagramEdge(relationship, umlWebClient, diagramContext);
     }
 }
 
@@ -258,6 +257,6 @@ async function drawAssociation(element, association, umlWebClient, modelElementM
             },
             canvas.getRootElement()
         );
-        await createEdge(relationship, umlWebClient, diagramContext);
+        await createDiagramEdge(relationship, umlWebClient, diagramContext);
     }
 }

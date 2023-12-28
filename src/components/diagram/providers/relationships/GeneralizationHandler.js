@@ -1,4 +1,4 @@
-import { createEdge } from "./relationshipUtil";
+import { createDiagramEdge } from "../../api/diagramInterchange";
 import { createElementUpdate } from '../../../../umlUtil';
 import { randomID } from 'uml-client/lib/element';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
@@ -30,7 +30,7 @@ export default class GeneralizationHandler extends RuleProvider {
                             }, {});
 
                         // create shape
-                        await createEdge(event.context.connection, umlWebClient, diagramContext);
+                        await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
                     }
                     createGeneralization();
                     return false; // stop propogation

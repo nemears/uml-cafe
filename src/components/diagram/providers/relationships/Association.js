@@ -1,5 +1,5 @@
 import { createElementUpdate } from '../../../../umlUtil';
-import { createEdge } from './relationshipUtil';
+import { createDiagramEdge } from '../../api/diagramInterchange';
 import { randomID } from 'uml-client/lib/element';
 import { createDiagramLabel, createDiagramShape } from '../../api/diagramInterchange';
 import { adjustShape } from '../InteractWithModel';
@@ -45,7 +45,7 @@ export default class Association extends RuleProvider {
                     createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
 
                     // send to server and rest of client
-                    await createEdge(event.context.connection, umlWebClient, diagramContext);
+                    await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
                     await createDiagramShape(propertyShape, umlWebClient, diagramContext);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, clazz, association));
                 }
@@ -70,7 +70,7 @@ export default class Association extends RuleProvider {
                     umlWebClient.put(diagramContext.context);
 
                     createAssociationConnection(event, association, modeling);
-                    await createEdge(event.context.connection, umlWebClient, diagramContext);
+                    await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, association));
                 };
                 createAssociation();
@@ -98,7 +98,7 @@ export default class Association extends RuleProvider {
                     const lastWaypoint = event.context.connection.waypoints.slice(-1)[0];
                     const propertyShape = createAssociationEndShape(event, memberEnd, lastWaypoint, modeling);
                     createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
-                    await createEdge(event.context.connection, umlWebClient, diagramContext);
+                    await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
                     await createDiagramShape(propertyShape , umlWebClient, diagramContext);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, association));
                 };
@@ -121,7 +121,7 @@ export default class Association extends RuleProvider {
                     umlWebClient.put(diagramContext.context);
 
                     createAssociationConnection(event, association, modeling);
-                    await createEdge(event.context.connection, umlWebClient, diagramContext);
+                    await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, association));
                 };
                 createAssociation();
@@ -153,7 +153,7 @@ export default class Association extends RuleProvider {
                     createAssociationEndLabel(sourceShape, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
                     const targetShape = createAssociationEndShape(event, targetEnd, event.context.connection.waypoints.slice(-1)[0], modeling);
                     createAssociationEndLabel(targetShape,umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
-                    await createEdge(event.context.connection, umlWebClient, diagramContext);
+                    await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
                     await createDiagramShape(sourceShape, umlWebClient, diagramContext);
                     await createDiagramShape(targetShape, umlWebClient, diagramContext);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, association));
