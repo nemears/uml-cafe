@@ -16,6 +16,7 @@ import ResizeModule from 'diagram-js/lib/features/resize';
 import RulesModule from 'diagram-js/lib/features/rules';
 import SelectionModule from 'diagram-js/lib/features/selection';
 import SnappingModule from 'diagram-js/lib/features/snapping';
+import TouchModule from 'diagram-js/lib/features/touch';
 import ZoomScrollModule from 'diagram-js/lib/navigation/zoomscroll';
 import ProvidersModule from './providers';
 
@@ -116,6 +117,7 @@ export function Editor(options) {
     RulesModule,
     SelectionModule,
     SnappingModule,
+    TouchModule,
     ZoomScrollModule,
   ];
 

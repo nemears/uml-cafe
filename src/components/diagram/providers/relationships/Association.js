@@ -42,11 +42,12 @@ export default class Association extends RuleProvider {
                     createAssociationConnection(event, association, modeling);
                     const lastWaypoint = event.context.connection.waypoints.slice(-1)[0];
                     const propertyShape = createAssociationEndShape(event, memberEnd, lastWaypoint, modeling);
-                    createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
+                    const propertyLabel = createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
 
                     // send to server and rest of client
                     await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
                     await createDiagramShape(propertyShape, umlWebClient, diagramContext);
+                    await createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, clazz, association));
                 }
                 createAssociation();
@@ -97,9 +98,10 @@ export default class Association extends RuleProvider {
                     createAssociationConnection(event, association, modeling);
                     const lastWaypoint = event.context.connection.waypoints.slice(-1)[0];
                     const propertyShape = createAssociationEndShape(event, memberEnd, lastWaypoint, modeling);
-                    createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
+                    const propertyLabel = createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas);
                     await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
                     await createDiagramShape(propertyShape , umlWebClient, diagramContext);
+                    await createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, association));
                 };
                 createAssociation();
@@ -150,12 +152,14 @@ export default class Association extends RuleProvider {
 
                     createAssociationConnection(event, association, modeling);
                     const sourceShape = createAssociationEndShape(event, sourceEnd, event.context.connection.waypoints[0], modeling);
-                    createAssociationEndLabel(sourceShape, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
+                    const sourceLabel = createAssociationEndLabel(sourceShape, umlRenderer, elementFactory, canvas);
                     const targetShape = createAssociationEndShape(event, targetEnd, event.context.connection.waypoints.slice(-1)[0], modeling);
-                    createAssociationEndLabel(targetShape,umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
+                    const targetLabel = createAssociationEndLabel(targetShape,umlRenderer, elementFactory, canvas);
                     await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
                     await createDiagramShape(sourceShape, umlWebClient, diagramContext);
                     await createDiagramShape(targetShape, umlWebClient, diagramContext);
+                    await createDiagramLabel(sourceLabel, umlWebClient, diagramContext);
+                    await createDiagramLabel(targetLabel, umlWebClient, diagramContext);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, association));
                 };
                 createAssociation();
@@ -347,7 +351,7 @@ function checkConnectionEndsLocal(connection, modeling, umlRenderer) {
     }
 }
 
-export function createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext) {
+export function createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas) {
     let labelName = propertyShape.modelElement.name;
     let labelBounds = getLabelBounds(propertyShape, umlRenderer);
     const propertyLabel = elementFactory.createLabel({
@@ -361,7 +365,7 @@ export function createAssociationEndLabel(propertyShape, umlRenderer, elementFac
         height: labelBounds.height,
     });
     canvas.addShape(propertyLabel, propertyShape.parent);
-    createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
+    return propertyLabel;
 }
 
 export function getLabelBounds(propertyShape, umlRenderer) {
