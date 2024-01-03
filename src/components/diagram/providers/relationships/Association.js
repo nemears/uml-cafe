@@ -232,7 +232,13 @@ export default class Association extends RuleProvider {
         });
         eventBus.on('connectionSegment.move.move', (event) => {
             const connection = event.connection;
-            checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer);
+
+            // this can be a lot of work for backend, only do it if there is someone to watch >:)
+            if (umlWebClient.client.otherClients.size > 0) {
+                checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer);
+            } else {
+                checkConnectionEndsLocal(connection, modeling, umlRenderer);
+            }
         });
     }
 
@@ -303,6 +309,39 @@ function checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer) {
                     await adjustShape(label, await umlWebClient.get(label.id), umlWebClient);
                 };
                 adjustLabel();
+            }
+        }
+    }
+}
+
+function checkConnectionEndsLocal(connection, modeling, umlRenderer) {
+    if (!connection.children) {
+        return;
+    }
+    for (const end of connection.children) {
+        if (end.modelElement.elementType() === 'property' && !end.labelTarget) {
+            let newEndBounds = {
+                width: 2 * OWNED_END_RADIUS,
+                height: 2 * OWNED_END_RADIUS,
+            };
+            if (end.modelElement.type.id() === connection.source.modelElement.id) {
+                const firstWaypoint = connection.waypoints[0];
+                newEndBounds.x = firstWaypoint.x - OWNED_END_RADIUS;
+                newEndBounds.y = firstWaypoint.y - OWNED_END_RADIUS;
+            } else if (end.modelElement.type.id() === connection.target.modelElement.id) {
+                const lastWaypoint = connection.waypoints.slice(-1)[0];
+                newEndBounds.x = lastWaypoint.x - OWNED_END_RADIUS;
+                newEndBounds.y = lastWaypoint.y - OWNED_END_RADIUS;
+            }
+            end.ignore = true;
+            modeling.resizeShape(end, newEndBounds);
+
+            // move label
+            for (const label of end.labels) {
+                modeling.resizeShape(
+                    label,
+                    getLabelBounds(end, umlRenderer)
+                );
             }
         }
     }
