@@ -113,6 +113,9 @@ export default class UMLRenderer extends BaseRenderer {
             if (element.modelElement.memberEnds.size() > 2) {
                 throw new Error("not rendering association relating more than two elements currently, contact dev if you need this!");
             }
+            if (element.waypoints.size < 2) {
+                throw new Error("not enough waypoints to create edge!")
+            }
             const group = svgCreate('g');
             const line = createLine(element.waypoints, assign({}, this.CONNECTION_STYLE, attrs || {}));
             svgAppend(group, line);
@@ -414,6 +417,9 @@ function createAssociationArrow(group, arrowPoints) {
 }
 
 function moveEnd(leadingLine, options) {
+    if (leadingLine.size < 2) {
+        throw new Error("not enough waypoints to determine direction of edge!");
+    }
     if (leadingLine[0].x < leadingLine[1].x) {
         // to left
         options.cx -= 5;

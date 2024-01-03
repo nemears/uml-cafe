@@ -90,14 +90,7 @@ export default class ElementUpdate {
                         const shapeIDs = modelElementMap.get(oldElement.id);
                         if (shapeIDs) {
                             // shape is represented in diagram
-                            if (oldElement.name !== newElement.name) {
-                                // update name
-                                for (const shapeID of shapeIDs) {
-                                    const shape = elementRegistry.get(shapeID);
-                                    shape.modelElement = newElement;
-                                    graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
-                                }
-                            }
+                            updateName(newElement, shapeIDs, elementRegistry, graphicsFactory, canvas);
                         }
                     }
                 } else {
@@ -135,16 +128,7 @@ export default class ElementUpdate {
                     const shapeIDs = modelElementMap.get(newElement.id);
                     if (shapeIDs) {
                         // shape is represented in diagram
-                        // update name
-                        for (const shapeID of shapeIDs) {
-                            const shape = elementRegistry.get(shapeID);
-                            shape.modelElement = newElement;
-                            if (shape.waypoints) {
-                                // TODO
-                            } else {
-                                graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
-                            }
-                        }
+                        updateName(newElement, shapeIDs, elementRegistry, graphicsFactory, canvas);
                     }
                 }
             }
@@ -153,6 +137,19 @@ export default class ElementUpdate {
 }
 
 ElementUpdate.$inject = ['diagramEmitter', 'umlWebClient', 'modeling', 'canvas', 'elementRegistry', 'modelElementMap', 'graphicsFactory'];
+
+function updateName(newElement, shapeIDs, elementRegistry, graphicsFactory, canvas) {
+    for (const shapeID of shapeIDs) {
+        const shape = elementRegistry.get(shapeID);
+        shape.modelElement = newElement;
+        if (shape.labelTarget) {
+            // TODO maybe different depending on type?
+            shape.text = newElement.name;
+            // TODO maybe update shape size based on text
+        }
+        graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
+    }
+}
 
 async function createNewShape(newShapeID, umlWebClient, modeling, elementRegistry) {
     // it is a umlShape, let's see if it is owned by this diagram

@@ -96,7 +96,11 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
                 }
                 umlWebClient.put(diagramContext.diagram);
             }
-            shapeMoveEnd();
+            if (shape.ignore) {
+                delete shape.ignore
+            } else {
+                shapeMoveEnd();
+            }
         }
     });
 
@@ -127,7 +131,9 @@ export default function InteractWithModel(eventBus, umlWebClient, diagramEmitter
             await adjustEdgeWaypoints(event.connection, umlWebClient);
             umlWebClient.put(diagramContext.diagram);
         };
-        connectionSegmentMove();
+        if (umlWebClient.client.otherClients.size > 0) {
+            connectionSegmentMove();
+        }
     });
 
     eventBus.on('bendpoint.move.end', (event) => {
@@ -178,12 +184,12 @@ async function adjustEdgeWaypoints(edge, umlWebClient) {
         if (edgeSlot.definingFeature.id() === 'Zf2K&k0k&jwaAz1GLsTSk7rN742p') {
             let waypointValues = [];
             for await (const waypointValue of edgeSlot.values) {
-                umlWebClient.deleteElement(await waypointValue.instance.get());
+                await umlWebClient.deleteElement(await waypointValue.instance.get());
                 waypointValues.push(waypointValue);
             }
             for (const waypointValue of waypointValues) {
                 edgeSlot.values.remove(waypointValue);
-                umlWebClient.deleteElement(waypointValue);
+                await umlWebClient.deleteElement(waypointValue);
             }
             await makeUMLWaypoints(edge, umlWebClient, edgeSlot, {diagram: await edgeInstance.owningPackage.get()});
         }
