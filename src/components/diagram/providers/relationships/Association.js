@@ -2,7 +2,7 @@ import { createElementUpdate } from '../../../../umlUtil';
 import { createDiagramEdge } from '../../api/diagramInterchange';
 import { randomID } from 'uml-client/lib/element';
 import { createDiagramLabel, createDiagramShape } from '../../api/diagramInterchange';
-import { adjustShape } from '../InteractWithModel';
+import { adjustShape } from '../UmlShapeProvider';
 import { getMultiplicityText } from '../UMLRenderer';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { assign } from 'min-dash';

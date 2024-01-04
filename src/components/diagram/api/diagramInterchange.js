@@ -1,5 +1,5 @@
 import { Bounds, Point } from './diagramCommon';
-import { adjustShape } from '../providers/InteractWithModel';
+import { adjustShape } from '../providers/UmlShapeProvider';
 import { makeUMLWaypoints } from '../providers/relationships/relationshipUtil';
 
 export class DiagramElement {
