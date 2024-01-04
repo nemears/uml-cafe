@@ -3,7 +3,6 @@ import ClassDiagramPaletteProvider from './ClassDiagramPaletteProvider';
 import ClassDiagramRuleProvider from './ClassDiagramRuleProvider';
 import ConnectionDocking from 'diagram-js/lib/layout/CroppingConnectionDocking.js'
 import DragFromTree from './DragFromTree';
-import InteractWithModel from './InteractWithModel';
 import UMLRenderer from './UMLRenderer';
 import GeneralizationHandler from './relationships/GeneralizationHandler';
 import Association from './relationships/Association';
@@ -17,6 +16,9 @@ import DirectEditing from 'diagram-js-direct-editing/lib/DirectEditing';
 import EditOnCreate from './EditOnCreate';
 import Property from './Property';
 import ClassHandler from './ClassHandler';
+import CommentHandler from './CommentHandler';
+import UmlShapeProvider from './UmlShapeProvider';
+import UmlEdgeProvider from './UmlEdgeProvider';
 
 export default {
   __init__: [
@@ -26,7 +28,6 @@ export default {
     'classDiagramPaletteProvider',
     'dragFromTree',
     'classDiagramRuleProvider',
-    'interactWithModel',
     'umlRenderer',
     'layouter',
     'connectionDocking',
@@ -39,6 +40,9 @@ export default {
     'editOnCreate',
     'property',
     'classHandler',
+    'commentHandler',
+    'umlShapeProvider',
+    'umlEdgeProvider',
   ],
   generalizationHandler: ['type', GeneralizationHandler],
   association: ['type', Association],
@@ -46,7 +50,6 @@ export default {
   classDiagramPaletteProvider: [ 'type', ClassDiagramPaletteProvider ],
   classDiagramRuleProvider: [ 'type', ClassDiagramRuleProvider ],
   dragFromTree: ['type', DragFromTree],
-  interactWithModel: ['type', InteractWithModel],
   umlRenderer: ['type', UMLRenderer],
   layouter: ['type', UmlLayouter],
   connectionDocking: ['type', ConnectionDocking],
@@ -59,4 +62,7 @@ export default {
   editOnCreate: ['type', EditOnCreate],
   property: ['type', Property],
   classHandler: ['type', ClassHandler],
+  commentHandler: ['type', CommentHandler],
+  umlShapeProvider: ['type', UmlShapeProvider],
+  umlEdgeProvider: ['type', UmlEdgeProvider],
 };

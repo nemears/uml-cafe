@@ -3,7 +3,21 @@ import { PROPERTY_COMPARTMENT_HEIGHT } from './Property';
 export const CLASS_SHAPE_HEADER_HEIGHT = 40;
 
 export default class ClassHandler {
-    constructor(eventBus, modeling) {
+    constructor(eventBus, modeling, umlWebClient, diagramContext) {
+        eventBus.on('shape.added', (event) => {
+            if (event.element.newUMLElement && event.element.modelElement.elementType() === 'class') {
+                const createClass = async () => {
+                    const classID = event.element.modelElement.id;
+                    let clazz = await umlWebClient.post('class', {id:classID});
+                    diagramContext.context.packagedElements.add(clazz);
+                    umlWebClient.put(clazz);
+                    umlWebClient.put(diagramContext.context);
+                    await umlWebClient.get(classID);
+                    event.element.modelElement = clazz;
+                }
+                createClass();
+            }
+        });
         eventBus.on('resize.start', (event) => {
             if (event.shape.modelElement && event.shape.modelElement.isSubClassOf('classifier')) {
                 // overiding resize.start so that minSize is different
@@ -46,4 +60,4 @@ export default class ClassHandler {
    }
 }
 
-ClassHandler.$inject = ['eventBus', 'modeling'];
+ClassHandler.$inject = ['eventBus', 'modeling', 'umlWebClient', 'diagramContext'];
