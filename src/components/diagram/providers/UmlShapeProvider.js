@@ -3,15 +3,16 @@ import { adjustEdgeWaypoints } from './UmlEdgeProvider';
 
 export default class UmlShapeProvider {
 
-    constructor(eventBus, umlWebClient, diagramContext) {
+    constructor(eventBus, umlWebClient, diagramContext, elementRegistry, elementFactory, canvas, graphicsFactory) {
         eventBus.on('shape.added', (event) => {
-            if (event.element.newShapeElement) {
+            if (event.element.newUMLElement || event.element.newShapeElement) {
                 createDiagramShape(event.element, umlWebClient, diagramContext);
             }
         });
         eventBus.on('shape.move.end', (event) => {
             for (const shape of event.context.shapes) {
                 const shapeMoveEnd = async () => {
+                    console.log('moving shape ' + shape.id + ' to (' + shape.x + ',' + shape.y +')');
                     const shapeInstance = await umlWebClient.get(shape.id);
                     for (const classifierID of shapeInstance.classifiers.ids()) {
                         if (classifierID === SHAPE_ID || classifierID === LABEL_ID) {
@@ -34,7 +35,6 @@ export default class UmlShapeProvider {
                 }
             }
         });
-
         eventBus.on('resize.end', (event) => {
             const resizeEnd = async () => {
                 const shapeInstance = await umlWebClient.get(event.shape.id);
@@ -48,10 +48,47 @@ export default class UmlShapeProvider {
             }
             resizeEnd();
         });
+        eventBus.on('server.create', (event) => {
+            if (event.serverElement.elementType() === 'shape') {
+                const umlShape = event.serverElement;
+                console.log('creating shape');
+                console.log(umlShape);
+                const owner = elementRegistry.get(umlShape.owningElement);
+                const shape = elementFactory.createShape({
+                    x: umlShape.bounds.x,
+                    y: umlShape.bounds.y,
+                    width: umlShape.bounds.width,
+                    height: umlShape.bounds.height,
+                    update: true,
+                    id: umlShape.id,
+                    modelElement: umlShape.modelElement,
+                });
+                canvas.addShape(shape, owner);
+            }
+        });
+        eventBus.on('server.update', (event) => {
+            if (event.serverElement.elementType() === 'shape') {
+                const umlShape = event.serverElement;
+                const localShape = event.localElement;
+                localShape.x = umlShape.bounds.x;
+                localShape.y = umlShape.bounds.y;
+                localShape.width = umlShape.bounds.width;
+                localShape.height = umlShape.bounds.height;
+                localShape.modelElement = umlShape.modelElement;
+
+                // TODO check children and parent
+
+                // update
+                graphicsFactory.update('shape', localShape, canvas.getGraphics(localShape));
+
+                console.log('updated shape');
+                console.log(umlShape);
+            }
+        });
     }
 }
 
-UmlShapeProvider.$inject = ['eventBus', 'umlWebClient', 'diagramContext'];
+UmlShapeProvider.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory'];
 
 export async function adjustShape(shape, shapeInstance, umlWebClient) {
     let boundsInstance = undefined;
