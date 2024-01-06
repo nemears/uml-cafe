@@ -19,6 +19,7 @@ import ClassHandler from './ClassHandler';
 import CommentHandler from './CommentHandler';
 import UmlShapeProvider from './UmlShapeProvider';
 import UmlEdgeProvider from './UmlEdgeProvider';
+import UmlLabelProvider from './UmlLabelProvider';
 
 export default {
   __init__: [
@@ -43,6 +44,7 @@ export default {
     'commentHandler',
     'umlShapeProvider',
     'umlEdgeProvider',
+    'umlLabelProvider',
   ],
   generalizationHandler: ['type', GeneralizationHandler],
   association: ['type', Association],
@@ -65,4 +67,5 @@ export default {
   commentHandler: ['type', CommentHandler],
   umlShapeProvider: ['type', UmlShapeProvider],
   umlEdgeProvider: ['type', UmlEdgeProvider],
+  umlLabelProvider: ['type', UmlLabelProvider],
 };

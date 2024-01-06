@@ -1,9 +1,10 @@
+import { createElementUpdate } from '../../../umlUtil';
 import { PROPERTY_COMPARTMENT_HEIGHT } from './Property';
 
 export const CLASS_SHAPE_HEADER_HEIGHT = 40;
 
 export default class ClassHandler {
-    constructor(eventBus, modeling, umlWebClient, diagramContext) {
+    constructor(eventBus, modeling, umlWebClient, diagramContext, diagramEmitter) {
         eventBus.on('shape.added', (event) => {
             if (event.element.newUMLElement && event.element.modelElement.elementType() === 'class') {
                 const createClass = async () => {
@@ -14,6 +15,7 @@ export default class ClassHandler {
                     umlWebClient.put(diagramContext.context);
                     await umlWebClient.get(classID);
                     event.element.modelElement = clazz;
+                    diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context))
                 }
                 createClass();
             }
@@ -60,4 +62,4 @@ export default class ClassHandler {
    }
 }
 
-ClassHandler.$inject = ['eventBus', 'modeling', 'umlWebClient', 'diagramContext'];
+ClassHandler.$inject = ['eventBus', 'modeling', 'umlWebClient', 'diagramContext', 'diagramEmitter'];

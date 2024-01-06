@@ -234,7 +234,7 @@ export default class Association extends RuleProvider {
             const connection = event.connection;
             checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer);
         });
-        eventBus.on('connectionSegment.move.move', (event) => {
+        eventBus.on('connectionSegment.move.move', 1100, (event) => {
             const connection = event.connection;
 
             // this can be a lot of work for backend, only do it if there is someone to watch >:)
@@ -277,7 +277,7 @@ function canConnect(context) {
 
 Association.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling', 'umlRenderer', 'elementFactory', 'canvas', 'graphicsFactory'];
 
-function checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer) {
+async function checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer) {
     if (!connection.children) {
         return;
     }
@@ -297,10 +297,7 @@ function checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer) {
                 newEndBounds.y = lastWaypoint.y - OWNED_END_RADIUS;
             }
             modeling.resizeShape(end, newEndBounds);
-            const adjustEdgeShape = async () => {
-                await adjustShape(end, await umlWebClient.get(end.id), umlWebClient);
-            }
-            adjustEdgeShape(); 
+            await adjustShape(end, await umlWebClient.get(end.id), umlWebClient);
 
             // move label
             for (const label of end.labels) {
@@ -309,10 +306,7 @@ function checkConnectionEnds(connection, umlWebClient, modeling, umlRenderer) {
                     getLabelBounds(end, umlRenderer)
                 );
                 // update it to server
-                const adjustLabel = async () => {
-                    await adjustShape(label, await umlWebClient.get(label.id), umlWebClient);
-                };
-                adjustLabel();
+                await adjustShape(label, await umlWebClient.get(label.id), umlWebClient);
             }
         }
     }

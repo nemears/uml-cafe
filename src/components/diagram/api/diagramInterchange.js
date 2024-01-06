@@ -124,6 +124,7 @@ export async function getUmlDiagramElement(id, umlClient) {
             return ret;
         }
     }
+    return undefined;
 }
 
 async function filloutBounds(shapeSlot, ret) {
