@@ -35,7 +35,7 @@ export default {
     },
     mounted() {
         // TODO check if we need to enable login on startup
-        this.$umlWebClient.initializationPromise.catch((err) => {
+        this.$umlWebClient.initialization.catch((err) => {
             this.toggleLogin();
         });
     },
@@ -98,8 +98,18 @@ export default {
                 return;
             }
             let successfulLogin = true;
-            this.$umlWebClient.login(user, password).catch((err) => {
-                this.$umlWebClient.login("0", undefined);
+            this.$umlWebClient.login({
+                user: user, 
+                password: password,
+                address: this.$umlWebClient.address,
+                project: this.$umlWebClient.project,
+                group: this.$umlWebClient.group,
+            }).catch((err) => {
+                this.$umlWebClient.login({
+                    address: this.$umlWebClient.address,
+                    project: this.$umlWebClient.project,
+                    group: this.$umlWebClient.group,
+                });
                 this.loginErrorMessage = JSON.parse(err).error.message;
                 successfulLogin = false;
             }).then(() => {
@@ -167,9 +177,12 @@ export default {
                 this.createProjectWarningMessage = 'must be logged in to create a project!';
                 return
             }
-            await this.$umlWebClient.login(undefined, undefined, {
-                address: this.$umlWebClient.options.address,
-                server: '/' + this.$umlWebClient.user + '/' + this.$refs.projectIdentifier.value,
+            await this.$umlWebClient.close();
+            await this.$umlWebClient.login({
+                user: this.$umlWebClient.user,
+                address: this.$umlWebClient.address,
+                group: this.$umlWebClient.user,
+                project: this.$refs.projectIdentifier.value,
                 create: true,
             });
 
@@ -189,7 +202,7 @@ export default {
             });
 
             sessionStorage.setItem('user', this.$umlWebClient.user);
-            sessionStorage.setItem('passwordHash', this.$umlWebClient.options.passwordHash);
+            sessionStorage.setItem('passwordHash', this.$umlWebClient.passwordHash);
             window.location.replace('/' + this.$umlWebClient.user + '/' + this.$refs.projectIdentifier.value);
         },
         closeLoginAndGoToSignUp() {

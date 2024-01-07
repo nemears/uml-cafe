@@ -1,4 +1,3 @@
-import { UmlWebClient } from 'uml-client';
 import { makeUMLWaypoints } from './relationships/relationshipUtil';
 
 export default class UmlEdgeProvider {
@@ -93,7 +92,7 @@ export async function adjustEdgeWaypoints(edge, umlWebClient) {
                 edgeSlot.values.remove(waypointValue);
                 await umlWebClient.deleteElement(waypointValue);
             }
-            await makeUMLWaypoints(edge, umlWebClient, edgeSlot, {diagram: await edgeInstance.owningPackage.get()});
+            makeUMLWaypoints(edge, umlWebClient, edgeSlot, {diagram: await edgeInstance.owningPackage.get()});
             umlWebClient.put(edgeSlot);
         }
     }
