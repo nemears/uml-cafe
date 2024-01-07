@@ -6,16 +6,23 @@ import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { UmlWebClient } from 'uml-client';
 
-let sessionName = '/sessions/' + randomID();
+let projectName = randomID();
+let groupName = 'sessions';
 let serverAddress = 'wss://uml.cafe/api/';
 
 // this is some logic to determine wether we are accessing an already created project or if we are in a new state.
 if (location.pathname != "/") {
-    sessionName = location.pathname;
-    
-    if (sessionName.charAt(sessionName.length - 1) === '/') {
-        sessionName = sessionName.slice(0, sessionName.length - 1);
+    let projectUrl = location.pathname;
+    if (projectUrl.charAt(projectUrl.length - 1) === '/') {
+        projectUrl = projectUrl.slice(0, projectUrl.length - 1);
     }
+    const projectUrlSplit = projectUrl.split('/');
+    if (projectUrlSplit.length != 3) {
+        // TODO expand to help user with more info
+        throw new Error("bad url!");
+    }
+    groupName = projectUrlSplit[1];
+    projectName = projectUrlSplit[2];
 
     // check for stashed user and passwordHash
     const user = sessionStorage.getItem('user');
@@ -25,11 +32,12 @@ if (location.pathname != "/") {
 
     const umlWebClient = new UmlWebClient({
         address: serverAddress,
-        server: sessionName,
+        group: groupName,
+        project: projectName,
         user: user,
         passwordHash: passwordHash,
-    })
-    umlWebClient.initializationPromise.catch((err) => {
+    });
+    umlWebClient.initialization.catch((err) => {
         try {
             const errObj = JSON.parse(err);
             if (errObj.error.code && errObj.error.code == 1) {
@@ -41,7 +49,6 @@ if (location.pathname != "/") {
         }
     }).then(() => {
         const app = createApp(App);
-        app.config.globalProperties.$sessionName = sessionName;
         app.config.globalProperties.$umlWebClient = umlWebClient;
         app.config.unwrapInjectedRef = true;
         app.mount('#app');
@@ -51,15 +58,17 @@ if (location.pathname != "/") {
     // todo create new session
     const umlWebClient = new UmlWebClient({
         address: serverAddress,
-        server: sessionName
+        group: groupName,
+        project: projectName
     });
     const waitForServerAndForwardUrl = async () => {
-        await umlWebClient.reserve();
+        await umlWebClient.initialization;
+        await umlWebClient.head();
         let beginningOfURL = document.URL;
         if (beginningOfURL.slice(-1) === '/') {
-            beginningOfURL = beginningOfURL.slice(0, beginningOfURL.length -1);
+            beginningOfURL = beginningOfURL.slice(0, beginningOfURL.length - 1);
         }
-        window.location.replace(beginningOfURL + sessionName);
+        window.location.replace(beginningOfURL + '/' + groupName + '/' + projectName);
     }
     waitForServerAndForwardUrl();
 }

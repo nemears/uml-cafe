@@ -64,9 +64,11 @@ export default {
 	methods: {
 		async getHeadFromServer() {
 			this.isFetching = true;
-			const head = await this.$umlWebClient.head();
-			this.headID = head.id;
-			this.isFetching = false;
+			if (this.$umlWebClient.initialized) {
+				const head = await this.$umlWebClient.head();
+				this.headID = head.id;
+				this.isFetching = false;
+			}
 		},
 		async specification(el) {
 			if (this.tabs.find(tab => tab.id === el.id)) { // no duplicates

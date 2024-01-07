@@ -3,6 +3,8 @@ export default class UmlLabelProvider {
         eventBus.on('server.create', (event) => {
             if (event.serverElement.elementType() === 'label') {
                 const umlLabel = event.serverElement;
+                console.log('creating label');
+                console.log(umlLabel);
                 const owner = elementRegistry.get(umlLabel.owningElement);
                 let labelTarget;
 
@@ -36,6 +38,8 @@ export default class UmlLabelProvider {
             if (event.serverElement.elementType() === 'label') {
                 const serverLabel = event.serverElement;
                 const localLabel = event.localElement;
+                console.log('updating label');
+                console.log(serverLabel);
                 localLabel.x = serverLabel.bounds.x;
                 localLabel.y = serverLabel.bounds.y;
                 localLabel.width = serverLabel.bounds.width;

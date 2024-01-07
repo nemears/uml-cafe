@@ -56,14 +56,14 @@ export function Editor(options) {
   class DiagramUmlClient  {
     client = umlWebClient;
     readonly = umlWebClient.readonly;
-    async post(type, options) {
-      return await this.client.post(type, options);
+    post(type, options) {
+      return this.client.post(type, options);
     }
     async get(id) {
       return await this.client.get(id);
     }
-    async put(el) {
-      return await this.client.put(el);
+    put(el) {
+      return this.client.put(el);
     }
     async head() {
       return await this.client.head();

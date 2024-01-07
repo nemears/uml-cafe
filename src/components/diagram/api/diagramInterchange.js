@@ -236,19 +236,19 @@ export async function createDiagramElementFeatures(shape, umlWebClient, shapeIns
     if (!shape.modelElement) {
         console.warn('no model element for ' + shape.ElementType() + ' ' + shape.id);
     } else {
-        const modelElementInstance = await umlWebClient.post('instanceSpecification');
-        const modelElementSlot = await umlWebClient.post('slot');
-        const modelElementValue = await umlWebClient.post('instanceValue');
-        const idSlot = await umlWebClient.post('slot');
-        const idVal = await umlWebClient.post('literalString');
-        modelElementInstance.classifiers.add(await umlWebClient.get('XI35viryLd5YduwnSbWpxSs3npcu'));
+        const modelElementInstance = umlWebClient.post('instanceSpecification');
+        const modelElementSlot = umlWebClient.post('slot');
+        const modelElementValue = umlWebClient.post('instanceValue');
+        const idSlot = umlWebClient.post('slot');
+        const idVal = umlWebClient.post('literalString');
+        modelElementInstance.classifiers.add('XI35viryLd5YduwnSbWpxSs3npcu');
         idVal.value = shape.modelElement.id;
-        idSlot.definingFeature.set(await umlWebClient.get('3gx55nLEvmzDt2kKK7gYgxsTBD6M'));
+        idSlot.definingFeature.set('3gx55nLEvmzDt2kKK7gYgxsTBD6M');
         idSlot.values.add(idVal);
         modelElementInstance.slots.add(idSlot);
         modelElementValue.instance.set(modelElementInstance);
         modelElementSlot.values.add(modelElementValue);
-        modelElementSlot.definingFeature.set(await umlWebClient.get('xnI9Aiz3GaF91K8H7KAPe95oDgyE'));
+        modelElementSlot.definingFeature.set('xnI9Aiz3GaF91K8H7KAPe95oDgyE');
         shapeInstance.slots.add(modelElementSlot);
         diagramContext.diagram.packagedElements.add(modelElementInstance);
         umlWebClient.put(modelElementInstance);
@@ -268,9 +268,9 @@ export async function createDiagramElementFeatures(shape, umlWebClient, shapeIns
     let ownedElementValues = [];
     if (shape.parent) {
         owningElementInstance = await umlWebClient.get(shape.parent.id);
-        owningElementSlot = await umlWebClient.post('slot');
-        owningElementValue = await umlWebClient.post('instanceValue');
-        owningElementSlot.definingFeature.set(await umlWebClient.get('3&io9rgm9t1Vu9l8EEwU3QBNblgX'));
+        owningElementSlot = umlWebClient.post('slot');
+        owningElementValue = umlWebClient.post('instanceValue');
+        owningElementSlot.definingFeature.set('3&io9rgm9t1Vu9l8EEwU3QBNblgX');
         owningElementValue.instance.set(owningElementInstance);
         owningElementSlot.values.add(owningElementValue);
         shapeInstance.slots.add(owningElementSlot);
@@ -281,20 +281,20 @@ export async function createDiagramElementFeatures(shape, umlWebClient, shapeIns
             }
         }
         if (!owningElementOwnedElementsSlot) {
-            owningElementOwnedElementsSlot = await umlWebClient.post('slot');
-            owningElementOwnedElementsSlot.definingFeature.set(await umlWebClient.get('rnm_zSDRk_kdPiWTfx6QZRkgUvFe'));
+            owningElementOwnedElementsSlot = umlWebClient.post('slot');
+            owningElementOwnedElementsSlot.definingFeature.set('rnm_zSDRk_kdPiWTfx6QZRkgUvFe');
             owningElementInstance.slots.add(owningElementOwnedElementsSlot);
         }
-        owningElementOwnedElementsValue = await umlWebClient.post('instanceValue');
+        owningElementOwnedElementsValue = umlWebClient.post('instanceValue');
         owningElementOwnedElementsValue.instance.set(shapeInstance);
         owningElementOwnedElementsSlot.values.add(owningElementOwnedElementsValue);
     }
     if (shape.children.length > 0) {
-        ownedElementsSlot = await umlWebClient.post('slot');
-        ownedElementsSlot.definingFeature.set(await umlWebClient.get('rnm_zSDRk_kdPiWTfx6QZRkgUvFe'));
+        ownedElementsSlot = umlWebClient.post('slot');
+        ownedElementsSlot.definingFeature.set('rnm_zSDRk_kdPiWTfx6QZRkgUvFe');
         for (const ownedElement of shape.children) {
-            const ownedElementValue = await umlWebClient.post('instanceValue');
-            ownedElementValue.instance.set(await umlWebClient.get(ownedElement.id));
+            const ownedElementValue = umlWebClient.post('instanceValue');
+            ownedElementValue.instance.set(ownedElement.id);
             ownedElementsSlot.values.add(ownedElementValue);
         }
         shapeInstance.slots.add(ownedElementsSlot);
@@ -314,50 +314,49 @@ export async function createDiagramElementFeatures(shape, umlWebClient, shapeIns
         } 
     }
     umlWebClient.put(diagramContext.diagram);
-    await umlWebClient.head();
 }
 
 async function createDiagramShapeFeatures(shape, shapeInstance, umlWebClient, diagramContext) {
     // set up bounds
-    const boundsInstance = await umlWebClient.post('instanceSpecification');
+    const boundsInstance = umlWebClient.post('instanceSpecification');
     diagramContext.diagram.packagedElements.add(boundsInstance);
-    boundsInstance.classifiers.add(await umlWebClient.get('GrSBY10MECO6g8EesG5ZdXVQ5m5B'));
-    const boundsSlot = await umlWebClient.post('slot');
-    boundsSlot.definingFeature.set(await umlWebClient.get('KbKmDNU19SWMJwggKTQ9FrzAzozO'));
-    const boundsValue = await umlWebClient.post('instanceValue');
+    boundsInstance.classifiers.add('GrSBY10MECO6g8EesG5ZdXVQ5m5B');
+    const boundsSlot = umlWebClient.post('slot');
+    boundsSlot.definingFeature.set('KbKmDNU19SWMJwggKTQ9FrzAzozO');
+    const boundsValue = umlWebClient.post('instanceValue');
     boundsValue.instance.set(boundsInstance);
     boundsSlot.values.add(boundsValue);
     shapeInstance.slots.add(boundsSlot);
     
     // set up x
-    const xSlot = await umlWebClient.post('slot');
-    xSlot.definingFeature.set(await umlWebClient.get('OaYzOYryv5lrW2YYkujnjL02rSlo'));
+    const xSlot = umlWebClient.post('slot');
+    xSlot.definingFeature.set('OaYzOYryv5lrW2YYkujnjL02rSlo');
     boundsInstance.slots.add(xSlot);
-    const xValue = await umlWebClient.post('literalInt');
+    const xValue = umlWebClient.post('literalInt');
     xValue.value = shape.x;
     xSlot.values.add(xValue);
 
     // set up y
-    const ySlot = await umlWebClient.post('slot');
-    ySlot.definingFeature.set(await umlWebClient.get('RhD_fTVUMc4ceJ4topOlpaFPpoiB'));
+    const ySlot = umlWebClient.post('slot');
+    ySlot.definingFeature.set('RhD_fTVUMc4ceJ4topOlpaFPpoiB');
     boundsInstance.slots.add(ySlot);
-    const yValue = await umlWebClient.post('literalInt');
+    const yValue = umlWebClient.post('literalInt');
     yValue.value = shape.y;
     ySlot.values.add(yValue);
 
     // set up width
-    const widthValue = await umlWebClient.post('literalInt');
+    const widthValue = umlWebClient.post('literalInt');
     widthValue.value = shape.width;
-    const widthSlot = await umlWebClient.post('slot');
-    widthSlot.definingFeature.set(await umlWebClient.get('&TCEXx1uZQsa7g1KPT9ocVwNiwV7'));
+    const widthSlot = umlWebClient.post('slot');
+    widthSlot.definingFeature.set('&TCEXx1uZQsa7g1KPT9ocVwNiwV7');
     widthSlot.values.add(widthValue);
     boundsInstance.slots.add(widthSlot);
 
     // set up height
-    const heightValue = await umlWebClient.post('literalInt');
+    const heightValue = umlWebClient.post('literalInt');
     heightValue.value = shape.height;
-    const heightSlot = await umlWebClient.post('slot');
-    heightSlot.definingFeature.set(await umlWebClient.get('ELF54xP3DUMrFbgteAQkIXONqnlg'));
+    const heightSlot = umlWebClient.post('slot');
+    heightSlot.definingFeature.set('ELF54xP3DUMrFbgteAQkIXONqnlg');
     heightSlot.values.add(heightValue);
     boundsInstance.slots.add(heightSlot);
     
@@ -376,19 +375,16 @@ async function createDiagramShapeFeatures(shape, shapeInstance, umlWebClient, di
     umlWebClient.put(heightValue);
     umlWebClient.put(widthSlot);
     umlWebClient.put(widthValue);
-
-    await umlWebClient.head();
 }
 
 export async function createDiagramShape(shape, umlWebClient, diagramContext) {
     // set up shape
-    const shapeInstance = await umlWebClient.post('instanceSpecification', {id:shape.id});
-    shapeInstance.classifiers.add(await umlWebClient.get(SHAPE_ID));
+    const shapeInstance = umlWebClient.post('instanceSpecification', {id:shape.id});
+    shapeInstance.classifiers.add(SHAPE_ID);
     diagramContext.diagram.packagedElements.add(shapeInstance);
     
     await createDiagramShapeFeatures(shape, shapeInstance, umlWebClient, diagramContext);
     
-    await umlWebClient.head(); // get a response from the server (head always waits)
     // put shape last so that data is complete on updating diagram
     umlWebClient.put(shapeInstance);
     const ret = new Shape();
@@ -403,14 +399,14 @@ export async function createDiagramShape(shape, umlWebClient, diagramContext) {
 
 export async function createDiagramLabel(label, umlWebClient, diagramContext) {
    // set up shape
-    const labelInstance = await umlWebClient.post('instanceSpecification', { id : label.id });
-    labelInstance.classifiers.add(await umlWebClient.get(LABEL_ID));
+    const labelInstance = umlWebClient.post('instanceSpecification', { id : label.id });
+    labelInstance.classifiers.add(LABEL_ID);
     diagramContext.diagram.packagedElements.add(labelInstance); 
 
     // text
-    const textSlot = await umlWebClient.post('slot');
-    const textVal = await umlWebClient.post('literalString');
-    textSlot.definingFeature.set(await umlWebClient.get('GJKibcaKH82QYL&Sm3&rX5Mlc8ps'));
+    const textSlot = umlWebClient.post('slot');
+    const textVal = umlWebClient.post('literalString');
+    textSlot.definingFeature.set('GJKibcaKH82QYL&Sm3&rX5Mlc8ps');
     textSlot.values.add(textVal);
     textVal.value = label.text;
     labelInstance.slots.add(textSlot);
@@ -420,7 +416,7 @@ export async function createDiagramLabel(label, umlWebClient, diagramContext) {
 
     await createDiagramShapeFeatures(label, labelInstance, umlWebClient, diagramContext);
 
-    await umlWebClient.head();
+    // await umlWebClient.head();
 
     umlWebClient.put(labelInstance);
     umlWebClient.put(diagramContext.diagram);
@@ -436,47 +432,44 @@ export async function createDiagramLabel(label, umlWebClient, diagramContext) {
 }
 
 export async function createDiagramEdge(relationship, umlWebClient, diagramContext) {
-    const edgeInstance = await umlWebClient.post('instanceSpecification', {id: relationship.id});
+    const edgeInstance = umlWebClient.post('instanceSpecification', {id: relationship.id});
     edgeInstance.classifiers.add(EDGE_ID);
 
     // source
-    const sourceSlot = await umlWebClient.post('slot');
+    const sourceSlot = umlWebClient.post('slot');
     sourceSlot.definingFeature.set('Xxh7mjF9IMK0rhyrbSXOGA1_7vVo');
-    const sourceValue = await umlWebClient.post('instanceValue');
-    sourceValue.instance.set(await umlWebClient.get(relationship.source.id));
+    const sourceValue = umlWebClient.post('instanceValue');
+    sourceValue.instance.set(relationship.source.id);
     sourceSlot.values.add(sourceValue);
     edgeInstance.slots.add(sourceSlot);
 
     // target
-    const targetSlot = await umlWebClient.post('slot')
+    const targetSlot = umlWebClient.post('slot')
     targetSlot.definingFeature.set('R2flL_8p_&Zc7HP07QfAyUI7EtCg');
-    const targetValue = await umlWebClient.post('instanceValue');
-    targetValue.instance.set(await umlWebClient.get(relationship.target.id));
+    const targetValue = umlWebClient.post('instanceValue');
+    targetValue.instance.set(relationship.target.id);
     targetSlot.values.add(targetValue);
     edgeInstance.slots.add(targetSlot);
     
     // waypoints
-    const waypointsSlot = await umlWebClient.post('slot');
+    const waypointsSlot = umlWebClient.post('slot');
     waypointsSlot.definingFeature.set('Zf2K&k0k&jwaAz1GLsTSk7rN742p');
-    await makeUMLWaypoints(relationship, umlWebClient, waypointsSlot, diagramContext);
+    makeUMLWaypoints(relationship, umlWebClient, waypointsSlot, diagramContext);
     edgeInstance.slots.add(waypointsSlot);
     
     diagramContext.diagram.packagedElements.add(edgeInstance);
 
-    await umlWebClient.put(sourceSlot);
-    await umlWebClient.put(sourceValue);
-    await umlWebClient.put(targetSlot);
-    await umlWebClient.put(targetValue);
-    await umlWebClient.put(diagramContext.diagram);
+    umlWebClient.put(sourceSlot);
+    umlWebClient.put(sourceValue);
+    umlWebClient.put(targetSlot);
+    umlWebClient.put(targetValue);
+    umlWebClient.put(diagramContext.diagram);
 
     // super type
     await createDiagramElementFeatures(relationship, umlWebClient, edgeInstance, diagramContext);
 
-    // just make sure everything is processed before moving on
-    await umlWebClient.head();
-
     // trigger other clients by putting this element
-    await umlWebClient.put(edgeInstance);
+    umlWebClient.put(edgeInstance);
     
     return edgeInstance;
 }
