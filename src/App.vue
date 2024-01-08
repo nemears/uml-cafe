@@ -184,20 +184,14 @@ export default {
             const tab = this.tabs[tabIndex];
             this.tabs.splice(tabIndex , 1);
             if (tab.isActive) {
-                if (tabIndex === 0) {
-					this.editorType = undefined;
-                    this.welcome = false;
-                    this.specification = false;
-                    this.diagram = false;
-                }
 				if (this.tabs.length > 0) {
 					this.specificationTab = this.tabs[tabIndex - 1].id;
 					this.focus(this.specificationTab);
 				} else {
+					this.editorType = undefined;
 					this.specificationTab = undefined;
 				}
             }
-            // this.$emit('closeTab', id);
         },
 	}
 }

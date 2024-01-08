@@ -10,6 +10,7 @@ export default {
             recentDraginfo: undefined,
             dragging: false,
             recentElementUpdate: undefined,
+            loading: true,
         };
     },
     props: ['umlID'],
@@ -21,6 +22,7 @@ export default {
             this.emitter.emit('dragenter', newDraginfo);
         },
         elementUpdate(newElementUpdate) {
+            if (this.loading) return;
             if (this.recentElementUpdate !== newElementUpdate) {
                 // send update to diagram via emitter
                 this.emitter.emit('elementUpdate', newElementUpdate);
@@ -233,6 +235,7 @@ export default {
                 diagramPage.$contextmenu(event);
             });
             this.emitter = Object.freeze(scopedEmitter);
+            this.loading = false;
         }
     }
 }
