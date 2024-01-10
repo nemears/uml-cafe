@@ -9,15 +9,21 @@ export default {
     props: [
         "umlID",
         "depth",
+        "selectedElements",
+        "treeGraph",
     ],
     inject: [
         'elementUpdate',
+        'treeUpdate',
     ],
     emits: [
         'specification',
         'elementUpdate',
         'diagram',
         'draginfo',
+        'select',
+        'deselect',
+        'updateTree',
     ],
     mounted() {
         this.populateDisplayInfo();
@@ -33,6 +39,8 @@ export default {
             editing: false,
             diagram: false,
             elementType: undefined,
+            expandSymbol: '+',
+            selected: false,
         };
     },
     components: [
@@ -52,10 +60,39 @@ export default {
     watch: {
         async elementUpdate(newElementUpdate) {
           await this.handleElementUpdate(newElementUpdate);  
+        },
+        selectedElements(newSelectedElements) {
+            if (this.selected) {
+                if (!newSelectedElements.includes(this.umlID)) {
+                    this.selected = false;
+                }
+            } else {
+                if (newSelectedElements.includes(this.umlID)) {
+                    this.selected = true;
+                }
+            }
+        },
+        treeUpdate(newTreeNode) {
+            if (this.umlID === newTreeNode.id) {
+                this.expanded = newTreeNode.expanded;
+                if (this.expanded) {
+                    this.expandSymbol = '-';
+                } else {
+                    this.expandSymbol = '+';
+                } 
+                this.children = newTreeNode.childOrder;
+            }
         }
     },
     methods: {
         async populateDisplayInfo() {
+            const treeNode = this.treeGraph.get(this.umlID);
+            this.expanded = treeNode.expanded;
+            if (this.expanded) {
+                this.expandSymbol = '-';
+            } else {
+                this.expandSymbol = '+';
+            }
             let el = await this.$umlWebClient.get(this.umlID);
             this.elementType = el.elementType();
             if (el.appliedStereotypes.size() > 0) {
@@ -251,7 +288,12 @@ export default {
             if (this.diagram) {
                 return;
             }
-            this.expanded = !this.expanded;
+            
+            this.$emit('updateTree', {
+                id: this.umlID,
+                children: this.children,
+                expanded: !this.expanded,
+            });
         },
         async stopRename() {
             this.editing = false;
@@ -352,22 +394,50 @@ export default {
         },
         propogateDraginfo(draginfo) {
             this.$emit('draginfo', draginfo);
+        },
+        select(modifier) {
+            this.selected = !this.selected;
+            if (this.selected) {
+                this.$emit('select', {
+                    el: this.umlID,
+                    modifier: modifier,
+                });
+            } else {
+                this.$emit('deselect', {
+                    el: this.umlID,
+                    modifier: modifier,
+                });
+            }
+        },
+        propogateSelect(event) {
+            this.$emit('select', event);
+        },
+        propogateDeselect(event) {
+            this.$emit('deselect', event);
+        },
+        propogateUpdateTree(event) {
+            this.$emit('updateTree', event);
         }
     }
 }
 </script>
 <template>
     <div class="elementExplorerBlock" v-if="!isFetching" :class="{notFirstBlock: depth !== 0}">
-        <div class="elementExplorerPanel" 
-             :class="{notEditable: !editing}" 
-             @click="childrenToggle" 
+        <div class="elementExplorerPanel"
+             :class="selected ? 'selectedElementExplorerPanel' : 'elementExplorerPanel'"
+             @click.exact="select('none')"
+             @click.ctrl="select('ctrl')"
+             @click.shift="select('shift')"
              @dblclick="specification"
              @contextmenu="onContextMenu($event)">
             <div :style="indent"></div>
+            <div v-if="children.length > 0 && !diagram" @click.stop="childrenToggle" class="expandSymbol">
+                {{ expandSymbol }}
+            </div>
+            <div v-if="children.length == 0 || diagram" class="noExpand"></div>
             <div style="display:inline-flex;" 
                  draggable="true"
-                 @dragstart="startDrag"
-                 >
+                 @dragstart="startDrag">
                 <img v-bind:src="image" draggable="false"/>
                 <div style="display:inline-flex;white-space:nowrap;" 
                      ref="nameDiv" :contenteditable="editing" 
@@ -381,12 +451,17 @@ export default {
         <div v-if="expanded && !isFetching">
             <ElementExplorer v-for="child in children" 
                     :umlID="child" 
-                    :depth="depth + 1" 
-                    :key="child" 
+                    :depth="depth + 1"
+                    :selected-elements="selectedElements"
+                    :tree-graph="treeGraph"
+                    :key="child"
                     @specification="propogateSpecification" 
                     @element-update="propogateElementUpdate"
                     @diagram="propogateDiagram"
-                    @draginfo="propogateDraginfo"></ElementExplorer>
+                    @draginfo="propogateDraginfo"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
+                    @update-tree="propogateUpdateTree"></ElementExplorer>
         </div>
     </div>
 </template>
@@ -394,6 +469,7 @@ export default {
 .elementExplorerBlock {
     min-width: 300px;
     display: inline-block;
+    font-size: 0px;
 }
 .notFirstBlock {
     width:100%;
@@ -403,8 +479,32 @@ export default {
     min-width: 300px;
     display: inline-flex;
     width: 100%;
+    font-size: 15px;
 }
 .elementExplorerPanel:hover {
     background-color: var(--vt-c-dark-soft);
+}
+.selectedElementExplorerPanel {
+    vertical-align: middle;
+    min-width: 300px;
+    display: inline-flex;
+    width: 100%;
+    background-color: var(--uml-cafe-selected);
+}
+.selectedElementExplorerPanel:hover {
+    background-color: var(--uml-cafe-selected-hover);
+}
+.expandSymbol {
+    padding-left: 5px;
+    padding-right: 5px;
+    font-size: 14px;
+    width: 15px;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+}
+.noExpand {
+    width: 15px;
 }
 </style>

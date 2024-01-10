@@ -36,12 +36,16 @@ export default {
 			elementExplorerHide: false,
 			elementExplorerButtonTitle: 'Collapse',
 			editorType: 'Welcome',
+            selectedElements: [],
+            treeUpdate: undefined,
+            treeGraph: new Map(),
 		}
 	},
 	provide() {
 		return {
 			draginfo: computed(() => this.recentDraginfo),
             elementUpdate: computed(() => this.elementUpdate),
+            treeUpdate: computed(() => this.treeUpdate),
 		}
 	},
 	mounted() {
@@ -72,6 +76,14 @@ export default {
 			if (this.$umlWebClient.initialized) {
 				const head = await this.$umlWebClient.head();
 				this.headID = head.id;
+                this.treeUpdate = {
+                    id: this.headID,
+                    expanded: false,
+                    children: {},
+                    childOrder: [],
+                    parent: undefined,
+                };
+                this.treeGraph.set(this.headID, this.treeUpdate);
 				this.isFetching = false;
 			}
 		},
@@ -193,6 +205,192 @@ export default {
 				}
             }
         },
+        shiftClickAction(event, fn) {
+            const lastSelectedNode = this.treeGraph.get(this.selectedElements.slice(-1)[0]);
+            if (lastSelectedNode) {
+                const selectedNode = this.treeGraph.get(event.el);
+                const selectedNodeParents = [selectedNode.id];
+                let currNode = selectedNode;
+                while (currNode.parent) {
+                    const parent = currNode.parent;
+                    selectedNodeParents.push(parent.id);
+                    currNode = parent;
+                }
+                if (selectedNodeParents.includes(lastSelectedNode)) {
+                    // select children until we hit selected node
+                    for (const child of lastSelectedNode.childOrder) {
+                        if (child === event.el) {
+                            break;
+                        }
+                        if (!this.selectedElements.includes(child)) {
+                            this.selectedElements.push(child);
+                            // TODO add dfs
+                        }
+                    }
+                } else {
+                    let closestParent = undefined;
+                    currNode = lastSelectedNode;
+                    do {
+                        if (selectedNodeParents.includes(currNode.id)) {
+                            closestParent = currNode;
+                            break;
+                        }
+                        currNode = currNode.parent;
+                    } while (currNode);
+                    if (!closestParent) {
+                        throw Error('Bad state for shift click select, could not find valid parent between last two elements!');
+                    }
+                    // dfs search for selectedNode or lastSelectedNode to find direction to select
+                    const selectBetween = (topElement, bottomElement) => {
+                        let hitBottom = false;
+                        let currNode = topElement;
+                        if (currNode.expanded && currNode.childOrder.length > 0) {
+                            currNode = currNode.children[currNode.childOrder[0]];
+                        } else {
+                            currNode = currNode.parent.children[currNode.parent.childOrder[currNode.parent.childOrder.indexOf(currNode.id) + 1]];
+                        }
+                        while (!hitBottom) {
+                            for (let i = currNode.parent.childOrder.indexOf(currNode.id); i < currNode.parent.childOrder.length; i++) {
+                                // select dfs until we hit bottom element
+                                const childNode = currNode.parent.children[currNode.parent.childOrder[i]];
+                                if (!childNode) {
+                                    throw Error('bad state for shift select');
+                                }
+                                if (childNode.id === bottomElement.id) {
+                                    hitBottom = true;
+                                    break;
+                                }
+                                //fn(childNode.id);
+                                const stack = [childNode];
+                                while (stack.length > 0) {
+                                    const front = stack.shift();
+                                    if (front.id === bottomElement.id) {
+                                        hitBottom = true;
+                                        break;
+                                    }
+                                    fn(front.id);
+                                    if (front.expanded) {
+                                        for (const frontChild of [...front.childOrder].reverse()) {
+                                            stack.unshift(front.children[frontChild]);
+                                        }
+                                    }
+                                }
+                                if (hitBottom) {
+                                    break;
+                                }
+                            }
+                            if (!hitBottom) {
+                                currNode = currNode.parent;
+                                if (!currNode.parent) {
+                                    throw Error('bad state for shift select!');
+                                }
+                                while (currNode.parent.childOrder.indexOf(currNode.id) === currNode.parent.childOrder.length - 1) {
+                                    currNode = currNode.parent;
+                                }
+                                currNode = currNode.parent.children[currNode.parent.childOrder[currNode.parent.childOrder.indexOf(currNode.id) + 1]];
+                            }
+                        }
+                    }; 
+                    const stack = [closestParent];
+                    while (stack.length > 0) {
+                        const front = stack.shift();
+                        
+                        if (front.id === event.el) {
+                            // select from selectedNode "down" until we hit lastSelectedNode
+                            selectBetween(selectedNode, lastSelectedNode);
+                            break;
+                        } else if (front.id === lastSelectedNode.id) {
+                            // select from selectedNod "up" until we hit lastSelectedNode
+                            selectBetween(lastSelectedNode, selectedNode);
+                            break;
+                        }
+                        if (front.expanded) {
+                            for (const child of [...front.childOrder].reverse()) {
+                                    stack.unshift(front.children[child]);
+                            }
+                        }
+                    }
+                }
+                
+            }
+            fn(event.el);
+        },
+        select(event) {
+            if (event.modifier === 'none') {
+                // clear list
+                this.selectedElements = [event.el];
+            } else if (event.modifier === 'shift') {
+                this.shiftClickAction(event, (id) => {
+                    if (!this.selectedElements.includes(id)) {
+                        this.selectedElements.push(id);
+                    }
+                });
+                this.selectedElements = [...this.selectedElements];
+            } else {
+                this.selectedElements.push(event.el);
+            }
+        },
+        deselect(event) {
+            if (event.modifier === 'none') {
+                this.selectedElements = [];
+            } else if (event.modifier === 'ctrl') {
+                const index = this.selectedElements.indexOf(event.el); 
+                if (index === -1) {
+                    console.warn('bad el given to deselect');
+                }
+                this.selectedElements.splice(index, 1);
+            } else if (event.modifier === 'shift') {
+                this.shiftClickAction(event, (id) => {
+                    const index = this.selectedElements.indexOf(id); 
+                    if (index === -1) {
+                        console.warn('bad el given to deselect');
+                    }
+                    this.selectedElements.splice(index, 1);    
+                });
+                this.selectedElements.pop();
+                this.selectedElements = [...this.selectedElements];
+            }
+        },
+        updateTree(event) {
+            const treeNode = this.treeGraph.get(event.id);
+            if (!treeNode) {
+                throw Error('bad update emited by element explorer panel not being tracked of by App! ' + event.id);
+            }
+            const newTreeNode = {
+                id: event.id,
+                expanded: event.expanded,
+                childOrder: [],
+                children: {},
+                parent: treeNode.parent,
+            };
+            for (const id of event.children) {
+                const oldChildNode = treeNode.children[id];
+                if (oldChildNode) {
+                    oldChildNode.parent = newTreeNode;
+                    newTreeNode.children[id] = oldChildNode;
+                    newTreeNode.childOrder.push(id);
+                } else {
+                    const childNode = {
+                        id: id,
+                        expanded: false,
+                        children: {},
+                        childOrder: [],
+                        parent: newTreeNode,
+                    };
+                    newTreeNode.children[id] = childNode;
+                    newTreeNode.childOrder.push(id);
+                    this.treeGraph.set(id, childNode);
+                }
+            }
+            if (treeNode.parent) {
+                treeNode.parent.children[event.id] = newTreeNode;
+            }
+            this.treeGraph.set(event.id, newTreeNode);
+            this.treeUpdate = newTreeNode;
+            if (newTreeNode.id === this.headID) {
+                this.rootofTree = newTreeNode;
+            }
+        }
 	}
 }
 </script>
@@ -231,11 +429,16 @@ export default {
 				<ElementExplorer 
 					v-if="!isFetching && headID !== undefined"
 					:umlID="headID" 
-					:depth="0" 
+					:depth="0"
+                    :selected-elements="selectedElements"
+                    :tree-graph="treeGraph"
 					@specification="specification" 
 					@element-update="elementUpdateHandler" 
 					@diagram="diagram"
-					@draginfo="dragInfo"></ElementExplorer>
+					@draginfo="dragInfo"
+                    @select="select"
+                    @deselect="deselect"
+                    @update-tree="updateTree"></ElementExplorer>
 			</div>
 			<div class="editor">
 				<WelcomePage v-if="editorType=='Welcome'"></WelcomePage>
