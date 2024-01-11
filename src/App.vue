@@ -116,6 +116,7 @@ export default {
                         this.remove(tab.id);
                     }
                 } else {
+                    // handle tab labels
                     const tab = this.tabs.find(tab => tab.id === newElement.id);
                     if (tab) {
                         tab.label = await assignTabLabel(newElement);
@@ -131,6 +132,42 @@ export default {
                                     tab.label = await assignTabLabel(elTab);
                                 }
                             }
+                        }
+                    }
+
+                    // helper function
+                    const createTreeNode = (treeNode, id) => {
+                        const newTreeNode = {
+                            id: id,
+                            childOrder: [],
+                            children: {},
+                            expanded: false,
+                            parent: treeNode,
+                        };
+                        this.treeGraph.set(id, newTreeNode);
+
+                        // just add new owned element to back of children
+                        treeNode.childOrder.push(id);
+                        treeNode.children[id] = newTreeNode; 
+                    }
+
+                    // check to see if there was an element that needs be tracked in the tree
+                    const treeNode = this.treeGraph.get(newElement.id);
+                    if (treeNode) {
+                        // update children
+                        // may be a different order we want in the future
+                        for (const ownedElementID of newElement.ownedElements.ids()) {
+                            if (!treeNode.childOrder.includes(ownedElementID)) {
+                                createTreeNode(treeNode, ownedElementID);
+                            }
+                        }
+                    }
+                    
+                    // check to see if owner is an element that is being tracked
+                    if (newElement.owner.has()) {
+                        const ownerTreeNode = this.treeGraph.get(newElement.owner.id());
+                        if (ownerTreeNode && !ownerTreeNode.childOrder.includes(newElement.id)) {
+                            createTreeNode(ownerTreeNode, newElement.id);
                         }
                     }
                 } 
@@ -318,34 +355,47 @@ export default {
         select(event) {
             if (event.modifier === 'none') {
                 // clear list
+                for (const id of this.selectedElements) {
+                    this.$umlWebClient.deselect(id);
+                }
                 this.selectedElements = [event.el];
+                this.$umlWebClient.select(event.el);
             } else if (event.modifier === 'shift') {
                 this.shiftClickAction(event, (id) => {
                     if (!this.selectedElements.includes(id)) {
                         this.selectedElements.push(id);
+                        this.$umlWebClient.select(id);
                     }
                 });
                 this.selectedElements = [...this.selectedElements];
             } else {
                 this.selectedElements.push(event.el);
+                this.$umlWebClient.select(event.el);
             }
         },
         deselect(event) {
             if (event.modifier === 'none') {
+                for (const id of this.selectedElements) {
+                    this.$umlWebClient.deselect(id);
+                }
                 this.selectedElements = [];
             } else if (event.modifier === 'ctrl') {
                 const index = this.selectedElements.indexOf(event.el); 
                 if (index === -1) {
                     console.warn('bad el given to deselect');
+                } else {
+                    this.selectedElements.splice(index, 1);
+                    this.$umlWebClient.deselect(event.el);
                 }
-                this.selectedElements.splice(index, 1);
             } else if (event.modifier === 'shift') {
                 this.shiftClickAction(event, (id) => {
                     const index = this.selectedElements.indexOf(id); 
                     if (index === -1) {
                         console.warn('bad el given to deselect');
+                    } else {
+                        this.selectedElements.splice(index, 1);
+                        this.$umlWebClient.deselect(id);
                     }
-                    this.selectedElements.splice(index, 1);    
                 });
                 this.selectedElements.pop();
                 this.selectedElements = [...this.selectedElements];
