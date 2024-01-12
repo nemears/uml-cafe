@@ -32,6 +32,14 @@
 
   --uml-cafe-selected: #2350d9;
   --uml-cafe-selected-hover: #809bed;
+  --uml-cafe-red-user : #f73725;
+  --uml-cafe-blue-user: #9925f7;
+  --uml-cafe-green-user: #25f741;
+  --uml-cafe-yellow-user: #f7f025;
+  --uml-cafe-magenta-user: #f425f7;
+  --uml-cafe-cyan-user: #25f7f4;
+  --uml-cafe-orange-user: #f7a725;
+  --uml-cafe-lime-user: #b8f725;
 }
 
 /* semantic color variables for this project */

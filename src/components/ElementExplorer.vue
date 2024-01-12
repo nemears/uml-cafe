@@ -15,6 +15,8 @@ export default {
     inject: [
         'elementUpdate',
         'treeUpdate',
+        'userSelected',
+        'userDeselected',
     ],
     emits: [
         'specification',
@@ -41,6 +43,7 @@ export default {
             elementType: undefined,
             expandSymbol: '+',
             selected: false,
+            currentUsers: [],
         };
     },
     components: [
@@ -82,9 +85,33 @@ export default {
                 } 
                 this.children = newTreeNode.childOrder;
             }
+        },
+        userSelected(newUserSelected) {
+            if (newUserSelected.id === this.umlID) {
+                this.currentUsers.push(this.mapColor(newUserSelected.color))
+                // this.currentUsers = [...this.currentUsers];
+            }
+        },
+        userDeselected(newUserDeselcted) {
+            if (newUserDeselcted.id === this.umlID && this.currentUsers.includes(this.mapColor(newUserDeselcted.color))) {
+                this.currentUsers.splice(this.currentUsers.indexOf(this.mapColor(newUserDeselcted.color)), 1);
+            }
         }
     },
     methods: {
+        mapColor(color) {
+            switch (color) {
+                case 'var(--uml-cafe-red-user)': return 'redUserPanel'
+                case 'var(--uml-cafe-blue-user)': return 'blueUserPanel'
+                case 'var(--uml-cafe-green-user)': return 'greenUserPanel'
+                case 'var(--uml-cafe-yellow-user)': return 'yellowUserPanel'
+                case 'var(--uml-cafe-magenta-user)': return 'magentaUserPanel'
+                case 'var(--uml-cafe-orange-user)': return 'orangeUserPanel'
+                case 'var(--uml-cafe-cyan-user)': return 'cyanUserPanel'
+                case 'var(--uml-cafe-lime-user)': return 'limeUserPanel'
+            }
+            return undefined;
+        },
         async populateDisplayInfo() {
             const treeNode = this.treeGraph.get(this.umlID);
             this.expanded = treeNode.expanded;
@@ -93,6 +120,10 @@ export default {
             } else {
                 this.expandSymbol = '+';
             }
+
+            // check if other users have selected this
+            this.currentUsers = treeNode.usersSelecting.map(user => this.mapColor(user.color));
+
             let el = await this.$umlWebClient.get(this.umlID);
             this.elementType = el.elementType();
             if (el.appliedStereotypes.size() > 0) {
@@ -424,7 +455,7 @@ export default {
 <template>
     <div class="elementExplorerBlock" v-if="!isFetching" :class="{notFirstBlock: depth !== 0}">
         <div class="elementExplorerPanel"
-             :class="selected ? 'selectedElementExplorerPanel' : 'elementExplorerPanel'"
+             :class="selected ? 'selectedElementExplorerPanel' : currentUsers.length > 0 ? currentUsers[0] : 'elementExplorerPanel'"
              @click.exact="select('none')"
              @click.ctrl="select('ctrl')"
              @click.shift="select('shift')"
@@ -474,7 +505,7 @@ export default {
 .notFirstBlock {
     width:100%;
 }
-.elementExplorerPanel {
+.elementExplorerPanel, .selectedElementExplorerPanel{
     vertical-align: middle;
     min-width: 300px;
     display: inline-flex;
@@ -485,14 +516,34 @@ export default {
     background-color: var(--vt-c-dark-soft);
 }
 .selectedElementExplorerPanel {
-    vertical-align: middle;
-    min-width: 300px;
-    display: inline-flex;
-    width: 100%;
     background-color: var(--uml-cafe-selected);
 }
 .selectedElementExplorerPanel:hover {
     background-color: var(--uml-cafe-selected-hover);
+}
+.redUserPanel {
+    background-color: var(--uml-cafe-red-user);
+}
+.blueUserPanel {
+    background-color: var(--uml-cafe-blue-user);
+}
+.greenUserPanel {
+    background-color: var(--uml-cafe-green-user);
+}
+.yellowUserPanel {
+    background-color: var(--uml-cafe-yellow-user);
+}
+.magentaUserPanel {
+    background-color: var(--uml-cafe-magenta-user);
+}
+.orangeUserPanel {
+    background-color: var(--uml-cafe-orange-user);
+}
+.cyanUserPanel {
+    background-color: var(--uml-cafe-cyan-user);
+}
+.limeUserPanel {
+    background-color: var(--uml-cafe-lime-user);
 }
 .expandSymbol {
     padding-left: 5px;

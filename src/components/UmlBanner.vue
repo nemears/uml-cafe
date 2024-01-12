@@ -7,6 +7,7 @@ import FreezeAndPopUp from './bannerComponents/FreezeAndPopUp.vue';
 import UserSelector from './bannerComponents/UserSelector.vue';
 import CreateDiagramButton from './bannerComponents/CreateDiagramButton.vue';
 export default {
+    props: ['users'],
     data() {
         return {
             optionsEnabled: false,
@@ -31,7 +32,7 @@ export default {
             viewUsers: [],
             editUsersInit: undefined,
             viewUsersInit: undefined,
-        };
+        }
     },
     mounted() {
         // TODO check if we need to enable login on startup
@@ -305,6 +306,7 @@ export default {
             </div>
         </div>
         <div class="bannerItems">
+            <div class="userCircle" v-for="user in users" :key="user.id" :style="{'background-color': user.color}"></div>
             <CreateDiagramButton @elementUpdate="propogateElementUpdate" @diagram="propogateDiagram"></CreateDiagramButton>
             <div :style="gapStyle"></div>
             <button type="button" class="logInButton" @click="toggleLogin">Log In</button>
@@ -578,5 +580,13 @@ hr {
 }
 .logInButton:hover {
     background-color: var(--vt-c-dark-soft);
+}
+.userCircle {
+    height: 25px;
+    width: 25px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-top: 10px;
+    margin: 5px;
 }
 </style>

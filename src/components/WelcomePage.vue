@@ -19,6 +19,13 @@
             <p>
                 <a href="https://github.com/nemears/uml-cpp">uml-cpp</a> A versatile reconfigurable uml API that can be used in a C++ environment. It can interface with the same uml protocol as uml-client.
             </p>
+            <h2>Why uml.cafe?</h2>
+            <ul>
+                <li>Accurate to the uml 2.5.2 spec</li>
+                <li>Made by a Systems Software Engineer with <a href="https://github.com/nemears/emory_mears_cv/blob/master/cv.pdf">4 years of experience</a></li>
+                <li>It is completely free to use</li>
+                <li>Open source api in C++ and javascript</li>
+            </ul>
             <p>
                 Contact: emory@uml.cafe
             </p>

@@ -39,6 +39,9 @@ export default {
             selectedElements: [],
             treeUpdate: undefined,
             treeGraph: new Map(),
+			users: [],
+			userSelected: undefined,
+			userDeselected: undefined,
 		}
 	},
 	provide() {
@@ -46,10 +49,36 @@ export default {
 			draginfo: computed(() => this.recentDraginfo),
             elementUpdate: computed(() => this.elementUpdate),
             treeUpdate: computed(() => this.treeUpdate),
+			userSelected: computed(() => this.userSelected),
+			userDeselected: computed(() => this.userDeselected),
 		}
 	},
 	mounted() {
-		this.getHeadFromServer();
+		// add ourselves as a user
+		const userList = [];
+		userList.push({
+			id: this.$umlWebClient.id,
+			color: 'var(--uml-cafe-selected)', // user is always blue
+			selectedElements: [],
+		});
+		const colorMap = new Map();
+		colorMap.set('Red', 'var(--uml-cafe-red-user)');
+		colorMap.set('Blue', 'var(--uml-cafe-blue-user)');
+		colorMap.set('Green', 'var(--uml-cafe-green-user)');
+		colorMap.set('Yellow', 'var(--uml-cafe-yellow-user)');
+		colorMap.set('Magenta', 'var(--uml-cafe-magenta-user)');
+		colorMap.set('Orange', 'var(--uml-cafe-orange-user)');
+		colorMap.set('Cyan', 'var(--uml-cafe-cyan-user)');
+		colorMap.set('Lime', 'var(--uml-cafe-lime-user)');
+
+		// add other users as well
+		this.$umlWebClient.otherClients.forEach((client, id) => {
+			userList.push({
+				id: id,
+				color: colorMap.get(client.color),
+				selectedElements: Array.from(client.selectedElements), //hopefully ?
+			});
+		});
 
 		this.$umlWebClient.onUpdate = async (element, oldElement) => {
             this.elementUpdate = {
@@ -60,6 +89,62 @@ export default {
                     }
                 ]
             };
+		}
+		this.$umlWebClient.onClient = (client) => {
+			this.users.push({
+				id: client.id,
+				color: colorMap.get(client.color),
+				selectedElements: [],
+			});
+		}
+
+		this.users = userList;
+
+		this.getHeadFromServer();
+
+		this.$umlWebClient.onDropClient = (clientID) => {
+			this.users.splice(this.users.findIndex(user => user.id === clientID), 1);
+		}
+
+		// handle other users selecting elements
+		this.$umlWebClient.onSelect = (event) => {
+			const user = this.users.find(el => el.id === event.client);
+			if (!user) {
+				throw Error("bad state, not tracking client that selection was made by!");
+			}
+			if (!user.selectedElements.includes(event.id)) {
+				user.selectedElements.push(event.id);
+				const treeNode = this.treeGraph.get(event.id);
+				if (treeNode) {
+					treeNode.usersSelecting.unshift(user);
+				}
+				this.userSelected = {
+					id: event.id,
+					color: user.color
+				}
+			}
+		}
+
+		this.$umlWebClient.onDeselect = (event) => {
+			const user = this.users.find(el => el.id === event.client);
+			if (!user) {
+				throw Error("bad state, not tracking client that selection was made by!");
+			}
+			const index = user.selectedElements.indexOf(event.id);
+			if (index >= 0) {
+				user.selectedElements.splice(index, 1);
+				const treeNode = this.treeGraph.get(event.id);
+				if (treeNode) {
+					const userIndex = treeNode.usersSelecting.findIndex(user => user.id === event.client);
+					if (userIndex >= 0) {
+						treeNode.usersSelecting.splice(userIndex, 1);
+					}
+				}
+				this.userDeselected = {
+					id: event.id,
+					color: user.color
+				};
+			}
 		}
 
         setInterval(() => {
@@ -76,12 +161,19 @@ export default {
 			if (this.$umlWebClient.initialized) {
 				const head = await this.$umlWebClient.head();
 				this.headID = head.id;
+				const usersSelecting = [];
+				for (const user of this.users) {
+					if (user.selectedElements.includes(this.headID)) {
+						usersSelecting.unshift(user)
+					}
+				}
                 this.treeUpdate = {
                     id: this.headID,
                     expanded: false,
                     children: {},
                     childOrder: [],
                     parent: undefined,
+					usersSelecting: usersSelecting,
                 };
                 this.treeGraph.set(this.headID, this.treeUpdate);
 				this.isFetching = false;
@@ -412,6 +504,7 @@ export default {
                 childOrder: [],
                 children: {},
                 parent: treeNode.parent,
+				usersSelecting: treeNode.usersSelecting,
             };
             for (const id of event.children) {
                 const oldChildNode = treeNode.children[id];
@@ -426,9 +519,17 @@ export default {
                         children: {},
                         childOrder: [],
                         parent: newTreeNode,
+						usersSelecting: [],
                     };
                     newTreeNode.children[id] = childNode;
                     newTreeNode.childOrder.push(id);
+					for (const user of this.users) {
+						for (const userSelectedID of user.selectedElements) {
+							if (id === userSelectedID) {
+								childNode.usersSelecting.unshift(user);
+							}
+						}
+					}
                     this.treeGraph.set(id, childNode);
                 }
             }
@@ -447,6 +548,7 @@ export default {
 <template>
 	<div style="display: flex;flex-direction: column;height:100vh;overflow: hidden;">
 		<UmlBanner 
+			:users="users"
 			@new-model-loaded="getHeadFromServer" 
 			@diagram="diagram" 
 			@element-update="elementUpdateHandler"></UmlBanner>
