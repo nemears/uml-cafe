@@ -26,7 +26,8 @@ export default class GeneralizationHandler extends RuleProvider {
                             event.hover, 
                             {
                                 id: randomID(),
-                                modelElement: generalization 
+                                modelElement: generalization,
+                                children: [],
                             }, {});
 
                         // create shape

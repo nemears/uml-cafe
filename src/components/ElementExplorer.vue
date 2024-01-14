@@ -93,8 +93,10 @@ export default {
             }
         },
         userDeselected(newUserDeselcted) {
-            if (newUserDeselcted.id === this.umlID && this.currentUsers.includes(this.mapColor(newUserDeselcted.color))) {
-                this.currentUsers.splice(this.currentUsers.indexOf(this.mapColor(newUserDeselcted.color)), 1);
+            for (const element of newUserDeselcted.elements) {
+                if (element === this.umlID && this.currentUsers.includes(this.mapColor(newUserDeselcted.color))) {
+                    this.currentUsers.splice(this.currentUsers.indexOf(this.mapColor(newUserDeselcted.color)), 1);
+                }
             }
         }
     },
@@ -173,6 +175,11 @@ export default {
                         await this.$umlWebClient.get(diagramPackage.id);
                         this.expanded = true;
                         this.children.push(diagramPackage.id);
+                        this.$emit('updateTree', {
+                            id: this.umlID,
+                            children: this.children,
+                            expanded: true,
+                        });
                         this.$emit('diagram', diagramPackage);
                     }
                 })
@@ -187,6 +194,11 @@ export default {
                 this.children.push(createdEl.id);
                 this.expanded = true;
                 this.$emit('elementUpdate', createElementUpdate(el));
+                this.$emit('updateTree', {
+                    id: this.umlID,
+                    children: this.children,
+                    expanded: true,
+                });
             }; 
 
             // create elements

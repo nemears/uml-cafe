@@ -227,7 +227,8 @@ async function drawGeneralization(element, generalization, umlWebClient, modelEl
                 modelElement: generalization,
                 source: element,
                 target: generalShape,
-                waypoints: connectRectangles(element, generalShape, getMid(element), getMid(generalShape))
+                waypoints: connectRectangles(element, generalShape, getMid(element), getMid(generalShape)),
+                children: [],
             },
             canvas.getRootElement()
         );

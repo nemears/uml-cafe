@@ -103,7 +103,12 @@ export default {
 		this.getHeadFromServer();
 
 		this.$umlWebClient.onDropClient = (clientID) => {
-			this.users.splice(this.users.findIndex(user => user.id === clientID), 1);
+			const userIndex = this.users.findIndex(user => user.id === clientID);
+			this.userDeselected = {
+				elements: this.users[userIndex].selectedElements,
+				color: this.users[userIndex].color
+			};
+			this.users.splice(userIndex, 1);
 		}
 
 		// handle other users selecting elements
@@ -141,7 +146,7 @@ export default {
 					}
 				}
 				this.userDeselected = {
-					id: event.id,
+					elements: [event.id],
 					color: user.color
 				};
 			}
@@ -235,6 +240,7 @@ export default {
                             children: {},
                             expanded: false,
                             parent: treeNode,
+							usersSelecting: [],
                         };
                         this.treeGraph.set(id, newTreeNode);
 
@@ -480,7 +486,7 @@ export default {
                     this.$umlWebClient.deselect(event.el);
                 }
             } else if (event.modifier === 'shift') {
-                this.shiftClickAction(event, (id) => {
+				const shiftDeselect = (id) => {
                     const index = this.selectedElements.indexOf(id); 
                     if (index === -1) {
                         console.warn('bad el given to deselect');
@@ -488,8 +494,10 @@ export default {
                         this.selectedElements.splice(index, 1);
                         this.$umlWebClient.deselect(id);
                     }
-                });
-                this.selectedElements.pop();
+                };
+                this.shiftClickAction(event, shiftDeselect);
+				shiftDeselect(this.selectedElements[this.selectedElements.length - 1]);
+                // this.selectedElements.pop();
                 this.selectedElements = [...this.selectedElements];
             }
         },
