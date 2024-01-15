@@ -20,6 +20,7 @@ import CommentHandler from './CommentHandler';
 import UmlShapeProvider from './UmlShapeProvider';
 import UmlEdgeProvider from './UmlEdgeProvider';
 import UmlLabelProvider from './UmlLabelProvider';
+import UserSelection from './UserSelection';
 
 export default {
   __init__: [
@@ -45,6 +46,7 @@ export default {
     'umlShapeProvider',
     'umlEdgeProvider',
     'umlLabelProvider',
+    'userSelection',
   ],
   generalizationHandler: ['type', GeneralizationHandler],
   association: ['type', Association],
@@ -68,4 +70,5 @@ export default {
   umlShapeProvider: ['type', UmlShapeProvider],
   umlEdgeProvider: ['type', UmlEdgeProvider],
   umlLabelProvider: ['type', UmlLabelProvider],
+  userSelection: ['type', UserSelection],
 };

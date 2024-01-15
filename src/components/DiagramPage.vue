@@ -15,7 +15,7 @@ export default {
     },
     props: ['umlID'],
     emits: ['specification', 'elementUpdate'],
-    inject: ['draginfo', 'elementUpdate'],
+    inject: ['draginfo', 'elementUpdate', 'userSelected', 'userDeselected'],
     watch : {
         draginfo(newDraginfo) {
             this.recentDraginfo = newDraginfo;
@@ -31,7 +31,12 @@ export default {
         umlID() {
             this.reloadDiagram();
         },
-
+        userSelected(newUserSelected) {
+            this.emitter.emit('user.selected',newUserSelected);
+        },
+        userDeselected(newUserDeselected) {
+            this.emitter.emit('user.deselected', newUserDeselected);
+        }
     },
     async mounted() {
         this.reloadDiagram();        
@@ -215,6 +220,23 @@ export default {
                     const umlLabel = await getUmlDiagramElement(packagedEl.id, this.$umlWebClient);
                     await drawDiagramElement(umlLabel);
                 }
+                const colorMap = new Map();
+                colorMap.set('Red', 'var(--uml-cafe-red-user)');
+                colorMap.set('Blue', 'var(--uml-cafe-blue-user)');
+                colorMap.set('Green', 'var(--uml-cafe-green-user)');
+                colorMap.set('Yellow', 'var(--uml-cafe-yellow-user)');
+                colorMap.set('Magenta', 'var(--uml-cafe-magenta-user)');
+                colorMap.set('Orange', 'var(--uml-cafe-orange-user)');
+                colorMap.set('Cyan', 'var(--uml-cafe-cyan-user)');
+                colorMap.set('Lime', 'var(--uml-cafe-lime-user)');
+                for (const client of this.$umlWebClient.otherClients.values()) {
+                    for (const selectedElement of client.selectedElements.keys()) {
+                        scopedEmitter.emit('user.selected', {
+                            id: selectedElement,
+                            color: colorMap.get(client.color),
+                        });
+                    }
+                }
             }
             
 
@@ -321,6 +343,42 @@ export default {
 }
 .context-pad-icon-bi-directional-association {
     background: url('diagram/icons/context/biDirectedAssociation.svg') !important;
+}
+.djs-element.redUser .djs-outline{
+    visibility: visible;
+    stroke: var(--uml-cafe-red-user);
+}
+.djs-element.blueUser .djs-outline {
+    visibility: visible;
+    stroke: var(--uml-cafe-blue-user);
+}
+.djs-element.blueUser .djs-outline {
+    visibility: visible;
+    stroke: var(--uml-cafe-blue-user);
+}
+.djs-element.greenUser .djs-outline {
+    visibility: visible;
+    stroke: var(--uml-cafe-green-user);
+}
+.djs-element.yellowUser .djs-outline {
+    visibility: visible;
+    stroke: var(--uml-cafe-yellow-user);
+}
+.djs-element.magentaUser .djs-outline {
+    visibility: visible;
+    stroke: var(--uml-cafe-magenta-user);
+}
+.djs-element.orangeUser .djs-outline {
+    visibility: visible;
+    stroke: var(--uml-cafe-orange-user);
+}
+.djs-element.limeUser .djs-outline {
+    visibility: visible;
+    stroke: var(--uml-cafe-lime-user);
+}
+.djs-element.cyanUser .djs-outline {
+    visibility: visible;
+    stroke: var(--uml-cafe-cyan-user);
 }
 @import "diagram-js/assets/diagram-js.css"
 </style>
