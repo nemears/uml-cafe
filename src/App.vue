@@ -28,8 +28,7 @@ export default {
 			],
 			specificationTab: 'VQvHG72Z_FjNQlEeeFEcrX1v6RRy',
 			recentDraginfo: {
-				id: nullID(),
-				element: 'element',
+				selectedElements: [],
 			},
             elementUpdate: [],
             autosaving: false,
@@ -295,8 +294,20 @@ export default {
 				this.focus(this.specificationTab);
 			}
 		},
-		dragInfo(draginfo) {
-			this.recentDraginfo = draginfo;
+		async dragInfo(info) {
+			const draggedElements = [];
+			for (const id of this.selectedElements) {
+				if (this.treeGraph.get(id)) {
+					draggedElements.push(await this.$umlWebClient.get(id));
+				} else {
+					// TODO
+					throw Error("dragging can only be handled from element explorer to other windows. Need to implement eventually!")
+				}
+			}
+			this.recentDraginfo = {
+				selectedElements: draggedElements,
+				event: info.event
+			};
 		},
 		closeTab(id) {
 			if (this.specificationTab === id) {
@@ -585,7 +596,7 @@ export default {
 			</div>
 		</div>
 		<div class="parent">
-			<div class="elementExplorer" v-if="!elementExplorerHide">
+			<div class="elementExplorer" v-if="!elementExplorerHide" draggable="false">
 				<ElementExplorer 
 					v-if="!isFetching && headID !== undefined"
 					:umlID="headID" 

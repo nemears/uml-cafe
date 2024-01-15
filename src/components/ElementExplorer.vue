@@ -425,11 +425,18 @@ export default {
                 this.$emit('specification', await this.$umlWebClient.get(this.umlID));
             }
         },
-        async startDrag(event) {
+        async startDrag(modifier, event) {
             const me = this;
             event.dataTransfer.setData('umlID', this.umlID);
             event.dataTransfer.dropEffect = 'copy';
             event.dataTransfer.effectAllowed = 'all';
+            if (!this.selected) {
+                this.selected = true;
+                this.$emit('select', {
+                    el: this.umlID,
+                    modifier: modifier,
+                });
+            }
             this.$emit('draginfo', {
                 element: await me.$umlWebClient.get(me.umlID),
                 event: event,
@@ -465,13 +472,17 @@ export default {
 }
 </script>
 <template>
-    <div class="elementExplorerBlock" v-if="!isFetching" :class="{notFirstBlock: depth !== 0}">
-        <div class="elementExplorerPanel"
+    <div class="elementExplorerBlock" v-if="!isFetching" :class="{notFirstBlock: depth !== 0}" draggable="false">
+        <div draggable="true"
+             class="elementExplorerPanel"
              :class="selected ? 'selectedElementExplorerPanel' : currentUsers.length > 0 ? currentUsers[0] : 'elementExplorerPanel'"
              @click.exact="select('none')"
              @click.ctrl="select('ctrl')"
              @click.shift="select('shift')"
              @dblclick="specification"
+             @dragstart.exact="startDrag('none', $event)"
+             @dragstart.ctrl="startDrag('ctrl', $event)"
+             @dragstart.shift="startDrag('shift', $event)"
              @contextmenu="onContextMenu($event)">
             <div :style="indent"></div>
             <div v-if="children.length > 0 && !diagram" @click.stop="childrenToggle" class="expandSymbol">
@@ -479,8 +490,7 @@ export default {
             </div>
             <div v-if="children.length == 0 || diagram" class="noExpand"></div>
             <div style="display:inline-flex;" 
-                 draggable="true"
-                 @dragstart="startDrag">
+                 draggable="true">
                 <img v-bind:src="image" draggable="false"/>
                 <div style="display:inline-flex;white-space:nowrap;" 
                      ref="nameDiv" :contenteditable="editing" 

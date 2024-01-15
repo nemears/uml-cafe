@@ -1,8 +1,6 @@
 import { deleteUmlDiagramElement } from '../api/diagramInterchange';
-import { removeShapeAndEdgeFromServer } from './ElementUpdate';
 import { deleteModelElement, showContextMenu } from './UmlContextMenu';
 import { createCommentClick } from '../../../umlUtil';
-import { PROPERTY_COMPARTMENT_HEIGHT } from './Property';
 
 /**
  * A example context pad provider.
@@ -43,35 +41,7 @@ export default class ClassDiagramContextPadProvider {
 
 
         async function remove() {
-            if (element.waypoints) {
-                await deleteUmlDiagramElement(element.id, umlWebClient);
-                modeling.removeConnection(element);
-            } else {
-                await removeShapeAndEdgeFromServer(element, umlWebClient); 
-                if (element.modelElement.elementType() === 'property' && element.parent.modelElement.isSubClassOf('classifier')){
-                    const clazzShape = element.parent;
-                    if (!clazzShape.waypoints) {
-                        let shiftUp = false;
-                        for (const child of clazzShape.children) {
-                            if (shiftUp) {
-                                modeling.resizeShape(
-                                    child,
-                                    {
-                                        x: child.x,
-                                        y: child.y - PROPERTY_COMPARTMENT_HEIGHT - 5,
-                                        width: child.width,
-                                        height: child.height,
-                                    }
-                                );
-                            }
-                            if (child.id === element.id) {
-                                shiftUp = true;
-                            }
-                        }
-                    }
-                }
-                modeling.removeShape(element);
-            }
+            await removeDiagramElement(element, canvas, umlWebClient);
         }
 
         function startGeneralization(event, element, autoActivate) {
@@ -237,3 +207,22 @@ export default class ClassDiagramContextPadProvider {
 }
 
 ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'create', 'modeling', 'umlWebClient', 'diagramEmitter', 'modelElementMap', 'elementFactory', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing'];
+
+export async function removeDiagramElement(diagramElement, canvas, umlWebClient) {
+    if (diagramElement.waypoints) {
+        for (const child of [...diagramElement.children]) {
+            await removeDiagramElement(child, canvas, umlWebClient);
+        }
+        await deleteUmlDiagramElement(diagramElement.id, umlWebClient);
+        canvas.removeConnection(diagramElement);
+    } else {
+        for (const edge of [...diagramElement.incoming]) {
+            await removeDiagramElement(edge, canvas, umlWebClient);
+        }
+        for (const edge of [...diagramElement.outgoing]) {
+            await removeDiagramElement(edge, canvas, umlWebClient);
+        }
+        await deleteUmlDiagramElement(diagramElement.id, umlWebClient);
+        canvas.removeShape(diagramElement);
+    }
+}

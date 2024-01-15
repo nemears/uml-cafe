@@ -7,6 +7,7 @@ import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { randomID } from "../umlUtil";
 import { createCommentClick } from "../../../umlUtil";
 import { createProperty } from "./Property";
+import { removeDiagramElement } from "./ClassDiagramContextPadProvider";
 
 export default class UmlContextMenu {
     constructor(eventBus, diagramEmitter, umlWebClient, modeling, modelElementMap, elementRegistry, canvas, diagramContext, directEditing, create, elementFactory) {    
@@ -84,26 +85,13 @@ export async function showContextMenu(x, y, element, umlWebClient, diagramEmitte
             }
         });
     }
-    if (element.waypoints) {
-        menu.items.push({
-            label: 'Remove Edge',
-            disabled: umlWebClient.readonly,
-            onClick: async () => {
-                await deleteUmlDiagramElement(element.id, umlWebClient);
-                modeling.removeConnection(element, umlWebClient);
-            }
-        });
-    } else {
-        menu.items.push({
-            label: 'Remove Shape',
-            disabled: umlWebClient.readonly,
-            onClick: async () => {
-                // delete shape or edge
-                await removeShapeAndEdgeFromServer(element, umlWebClient);
-                modeling.removeShape(element);
-            }
-        });
-    }
+    menu.items.push({
+        label: 'Remove Element',
+        disabled: umlWebClient.readonly,
+        onClick: async () => {
+            await removeDiagramElement(element, canvas, umlWebClient);
+        }
+    });
     menu.items.push({
         label: 'Delete Element',
         disabled: umlWebClient.readonly,
@@ -254,7 +242,8 @@ async function drawAssociation(element, association, umlWebClient, modelElementM
                 modelElement: association,
                 source: element,
                 target: targetShape,
-                waypoints: connectRectangles(element, targetShape, getMid(element), getMid(targetShape))
+                waypoints: connectRectangles(element, targetShape, getMid(element), getMid(targetShape)),
+                children: []
             },
             canvas.getRootElement()
         );
