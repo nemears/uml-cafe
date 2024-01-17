@@ -4,13 +4,16 @@ import CreationPopUp from './CreationPopUp.vue';
 import { createElementUpdate, assignTabLabel } from '../../umlUtil.js';
 export default {
     props: ['label', 'initialData', 'umlid', 'subsets', 'creatable', "setData"],
-    inject: ['elementUpdate'],
+    inject: ['elementUpdate', 'draginfo'],
     emits: ['specification', 'elementUpdate'],
     data() {
         return {
             data: [],
             createPopUp: false,
             drag: false,
+            badDrag: false,
+            recentDragInfo: undefined,
+            dragCounter: 0,
         };
     },
     mounted() {
@@ -58,6 +61,9 @@ export default {
                 }
  
             }
+        },
+        draginfo(newDragInfo) {
+            this.recentDragInfo = newDragInfo;
         }
     },
     methods: {
@@ -80,42 +86,53 @@ export default {
             this.$emit('elementUpdate', createElementUpdate(await this.$umlWebClient.get(this.umlid)));
         },
         dragenter(event) {
+            event.preventDefault();
+            this.dragCounter++;
             this.drag = true;
-        },
-        dragleave(event) {
-            this.drag = false;
-        },
-        async drop(event) {
-
-            this.drag = false;
-
-            if (this.$umlWebClient.readonly) {
-                return;
-            }
-
-            const elementID = event.dataTransfer.getData('umlid');
-            const me = await this.$umlWebClient.get(this.umlid);
-            const elementDragged = await this.$umlWebClient.get(elementID);
-
-            let isValidType = false;
-            for (let type of this.setData.validTypes) {
-                if (elementDragged.isSubClassOf(type)) {
-                    isValidType = true;
+            this.badDrag = this.setData.readonly || this.$umlWebClient.readonly;
+            if (!this.badDrag && this.creatable) {
+                for (const el of this.recentDragInfo.selectedElements) {
+                    let isValidType = false;
+                    for (const type of this.creatable.types) {
+                        if (el.isSubClassOf(type)) {
+                            isValidType = true;
+                            break;
+                        }
+                    }
+                    if (!isValidType) {
+                        this.badDrag = true;
+                        break;
+                    }
                 }
-            } 
-            
-            if (isValidType) {
-                me[this.setData.setName].add(elementDragged);
-                this.$umlWebClient.put(me);
-                this.$umlWebClient.put(elementDragged);
-                this.data.push({
-                    img: getImage(elementDragged),
-                    id: elementDragged.id,
-                    label: elementDragged.name !== undefined ? elementDragged.name : '' 
-                });
-            } else {
-                console.warn('TODO show client error');
             }
+        },
+        dragleave() {
+            this.dragCounter--;
+            if (this.dragCounter === 0) {
+                this.drag = false;
+            }
+        },
+        async drop() {
+            this.drag = false;
+            if (this.badDrag) {
+                return;
+            }    
+            const me = await this.$umlWebClient.get(this.umlid);
+            const oldOwners = [];
+            for (const element of this.recentDragInfo.selectedElements) {
+                if (element.owner.has()) {
+                    oldOwners.push(await element.owner.get());
+                }
+                me[this.setData.setName].add(element);
+                this.data.push({
+                    img: getImage(element),
+                    id: element.id,
+                    label: element.name !== undefined ? element.name : '',
+                });
+                this.$umlWebClient.put(element);
+            }
+            this.$umlWebClient.put(me);
+            this.$emit('elementUpdate', createElementUpdate(me, ...this.recentDragInfo.selectedElements, ...oldOwners))
         },
         async elementContextMenu(evt, el) {
             evt.preventDefault();
@@ -169,9 +186,9 @@ export default {
         <div class="setLabel">
             {{  label }}
         </div>
-        <div :class="{dragElement: drag}"
-             @dragenter.prevent="dragenter($event)"
-             @dragleave.prevent="dragleave($event)"
+        <div :class="drag ? badDrag ? 'badDrag' : 'dragElement' : 'noDrag'"
+             @dragenter="dragenter"
+             @dragleave="dragleave"
              @drop="drop($event)"
              @dragover.prevent>
             <div    class="setElement" 
@@ -238,9 +255,16 @@ export default {
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
 }
-.dragElement{
+.noDrag {
+    border: none;
+}
+.dragElement {
     border: 1px solid;
-    border-color: #5ac3ff;
+    border-color: var(--uml-cafe-selected-hover);
+}
+.badDrag {
+    border: 1px solid;
+    border-color: var(--uml-cafe-selected-error);
 }
 .createButton:hover {
     background-color: var(--vt-c-off-white);

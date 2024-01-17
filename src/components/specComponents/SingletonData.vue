@@ -223,7 +223,7 @@ export default {
 }
 .singletonBadDrag {
     border: 1px solid;
-    border-color: #d10000;
+    border-color: var(--uml-cafe-selected-error);
 }
 .singletonGoodDrag {
     border: 1px solid;
