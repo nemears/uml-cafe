@@ -369,7 +369,7 @@ export default {
                         :readonly="true" 
                         :initial-data="elementData.owner" 
                         :uml-i-d="umlID" 
-                        :singleton-data="{setName:'owner'}"
+                        :singleton-data="{setName:'owner', readonly: true}"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
@@ -380,6 +380,7 @@ export default {
                  :set-data="{
                     readonly: false,
                     setName: 'appliedStereotypes',
+                    type: 'instanceSpecification'
                  }"
                  @element-update="propogateElementUpdate"
                  ></SetData>
@@ -390,6 +391,7 @@ export default {
                  :set-data="{
                     readonly: false,
                     setName: 'ownedComments',
+                    type: 'comment',
                  }"
                 :creatable="{types:['comment'], set:'ownedComments'}"
                  @element-update="propogateElementUpdate"
@@ -408,7 +410,7 @@ export default {
                         :readonly="true" 
                         :initial-data="namedElementData.namespace" 
                         :uml-i-d="umlID"
-                        :singleton-data="{setName:'namespace'}"
+                        :singleton-data="{setName:'namespace', readonly: true}"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
@@ -452,14 +454,14 @@ export default {
         <SingletonData  :label="'Specific'" 
                         :initial-data="generalizationData.specific" 
                         :uml-i-d="umlID" 
-                        :singleton-data="{setName:'specific', validTypes:['classifier']}"
+                        :singleton-data="{setName:'specific', type:'classifier'}"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
         <SingletonData  :label="'General'" 
                         :initial-data="generalizationData.general" 
                         :uml-i-d="umlID" 
-                        :singleton-data="{setName:'general', validTypes:['classifier']}"
+                        :singleton-data="{setName:'general', type:'classifier'}"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
@@ -468,7 +470,7 @@ export default {
         <SingletonData  :label="'Type'" 
                         :initial-data="typedElementData.type" 
                         :uml-i-d="umlID" 
-                        :singleton-data="{setName:'type',validTypes:['classifier']}" 
+                        :singleton-data="{setName:'type',type:'classifier'}" 
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
@@ -477,7 +479,7 @@ export default {
         <SingletonData  :label="'OwningPackage'" 
                         :initial-data="packageableElementData.owningPackage" 
                         :uml-i-d="umlID" 
-                        :singleton-data="{setName:'owningPackage', validTypes:['package']}"
+                        :singleton-data="{setName:'owningPackage', type:'package'}"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
@@ -488,7 +490,7 @@ export default {
                         :uml-i-d="umlID"
                         :singleton-data="{
                                             setName: 'instance',
-                                            validTypes: ['instanceSpecification']    
+                                            type: 'instanceSpecification',    
                                          }"  
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
@@ -524,7 +526,7 @@ export default {
                         :createable="{types:['literalInt']}" 
                         :initial-data="multiplicityElementData.lowerValue" 
                         :uml-i-d="umlID" 
-                        :singleton-data="{setName:'lowerValue', validTypes:['valueSpecification']}"
+                        :singleton-data="{setName:'lowerValue', type:'valueSpecification'}"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
@@ -532,7 +534,7 @@ export default {
                         :createable="{types:['literalInt', 'literalUnlimitedNatural']}"
                         :initial-data="multiplicityElementData.upperValue" 
                         :uml-i-d="umlID" 
-                        :singleton-data="{setName:'upperValue', validTypes:['valueSpecification']}"
+                        :singleton-data="{setName:'upperValue', type:'valueSpecification'}"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
@@ -559,28 +561,28 @@ export default {
         <SingletonData  :label="'Class'" 
                         :initial-data="propertyData.clazz" 
                         :uml-i-d="umlID" 
-                        :singleton-data="{setName:'class', validTypes: ['class']}"
+                        :singleton-data="{setName:'class', type: 'class'}"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
         <SingletonData  :label="'DataType'" 
                         :initial-data="propertyData.dataType" 
                         :uml-i-d="umlID" 
-                        :singleton-data="{setName:'dataType', validTypes:['dataType']}"
+                        :singleton-data="{setName:'dataType', type:'dataType'}"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
         <SingletonData  :label="'Owning Association'" 
                         :initial-data="propertyData.owningAssociation" 
                         :uml-i-d="umlID" 
-                        :singleton-data="{setName:'owningAssociation', validTypes:['assoiation']}"
+                        :singleton-data="{setName:'owningAssociation', type:'assoiation'}"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
         <SingletonData  :label="'Association'" 
                         :initial-data="propertyData.association" 
                         :uml-i-d="umlID" 
-                        :singleton-data="{setName: 'association', validTypes:['association']}"
+                        :singleton-data="{setName: 'association', type:'association'}"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"     
                         ></SingletonData>
@@ -599,7 +601,7 @@ export default {
                                     }"
                         :initial-data="propertyData.defaultValue"
                         :uml-i-d="umlID"
-                        :singleton-data="{setName:'defaultValue', validTypes:['valueSpecification']}"
+                        :singleton-data="{setName:'defaultValue', type:'valueSpecification'}"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate" 
                         ></SingletonData>
@@ -652,7 +654,7 @@ export default {
                     :set-data="{
                                     setName: 'packagedElements',
                                     readonly: false,
-                                    validTypes: ['packageableElement']
+                                    type: 'packageableElement'
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
@@ -665,7 +667,7 @@ export default {
                     :subsets="[]"
                     :set-data="{
                                     setName: 'classifiers',
-                                    validTypes:['classifier'],
+                                    type:'classifier',
                                     readonly: false
                                 }"
                     @specification="propogateSpecification"
@@ -690,7 +692,7 @@ export default {
                         :uml-i-d="umlID"
                         :singleton-data="{
                                                 setName: 'enumeration',
-                                                validTypes: [ 'enumeration' ]
+                                                type: 'enumeration'
                                             }"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"  
@@ -701,7 +703,7 @@ export default {
             :label="'Owning Instance'"
             :initial-data="slotData.owningInstance"
             :uml-i-d="umlID" 
-            :singleton-data="{setName: 'owningInstance', validTypes:['instanceSpecification']}"
+            :singleton-data="{setName: 'owningInstance', type:'instanceSpecification'}"
             @specification="propogateSpecification"
             @element-update="propogateElementUpdate"
             ></SingletonData>
@@ -730,7 +732,7 @@ export default {
             :label="'Defining Feature'"
             :initial-data="slotData.definingFeature"
             :uml-i-d="umlID"
-            :singleton-data="{ setName: 'definingFeature', validTypes: ['property'] }"
+            :singleton-data="{ setName: 'definingFeature', type: 'property' }"
             @specification="propogateSpecification"
             @element-update="propogateElementUpdate" 
             ></SingletonData>
@@ -743,7 +745,8 @@ export default {
                     :creatable="{types:['generalization'], set: 'generalizations'}"
                     :set-data="{
                                     setName: 'generalizations',
-                                    readonly: false
+                                    readonly: false,
+                                    type: 'generalization',
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
@@ -767,7 +770,8 @@ export default {
                     :subsets="['ownedAttributes']"
                     :set-data="{
                                     setName: 'ownedAttributes',
-                                    readonly: false
+                                    readonly: false,
+                                    type: 'property',
                                 }"
                     :creatable="{
                                     types: [
@@ -786,7 +790,8 @@ export default {
                     :subsets="['ownedLiterals']"
                     :set-data="{
                                     setName: 'ownedLiterals',
-                                    readonly: false
+                                    readonly: false,
+                                    type: 'enumerationLiteral'
                                 }"
                     :creatable="{
                                     types: [ 'enumerationLiteral' ],
@@ -817,7 +822,7 @@ export default {
                     :set-data="{
                                     setName: 'memberEnds',
                                     readonly: false,
-                                    validTypes: ['property']
+                                    type: 'property'
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"   
@@ -829,7 +834,7 @@ export default {
                     :set-data="{
                                     setName: 'ownedEnds',
                                     readonly: false,
-                                    validTypes: ['property']
+                                    type: 'property'
                                 }"
                     :creatable="{
                                     types: [
@@ -846,7 +851,7 @@ export default {
                     :set-data="{
                                     setName: 'navigableOwnedEnds',
                                     readonly: false,
-                                    validTypes: ['property']
+                                    type: 'property'
                                 }"
                     :creatable="{
                                     types: [
@@ -887,7 +892,7 @@ export default {
                     :set-data="{
                                     setName: 'annotatedElements',
                                     readonly: false,
-                                    validTypes: ['element']
+                                    type: 'element'
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"

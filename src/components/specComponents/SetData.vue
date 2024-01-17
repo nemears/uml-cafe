@@ -90,16 +90,9 @@ export default {
             this.dragCounter++;
             this.drag = true;
             this.badDrag = this.setData.readonly || this.$umlWebClient.readonly;
-            if (!this.badDrag && this.creatable) {
+            if (!this.badDrag) {
                 for (const el of this.recentDragInfo.selectedElements) {
-                    let isValidType = false;
-                    for (const type of this.creatable.types) {
-                        if (el.isSubClassOf(type)) {
-                            isValidType = true;
-                            break;
-                        }
-                    }
-                    if (!isValidType) {
+                    if (!el.isSubClassOf(this.setData.type)) {
                         this.badDrag = true;
                         break;
                     }

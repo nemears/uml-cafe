@@ -5,7 +5,7 @@ import { createElementUpdate } from '../../umlUtil.js';
 export default {
     props: ['label', 'umlID', 'initialData', 'readonly', 'createable', 'singletonData'],
     emits: ['specification', 'elementUpdate'],
-    inject: ['elementUpdate'],
+    inject: ['elementUpdate', 'draginfo'],
     data() {
         return {
             img: undefined,
@@ -14,6 +14,8 @@ export default {
             drag: false,
             badDrag: false,
             creationPopUp: false,
+            dragCounter: 0,
+            recentDragInfo: undefined,
         }
     },
     mounted() {
@@ -31,6 +33,29 @@ export default {
             for (const update of newElementUpdate.updatedElements) {
                 const newElement = update.newElement;
                 if (newElement) {
+                    if (newElement.id === this.umlID) {
+                        if (this.valID) {
+                            if (newElement.sets[this.singletonData.setName].id() !== this.valID) {
+                                if (!newElement.sets[this.singletonData.setName].has()) {
+                                    this.setData({
+                                        id: undefined,
+                                        img: undefined,
+                                        label: undefined,
+                                    });
+                                } else {
+                                    const asyncSetData = async () => {
+                                        const el = await newElement.sets[this.singletonData.setName].get();
+                                        this.setData({
+                                            img: getImage(el),
+                                            id: el.id,
+                                            label: el.name !== undefined ? el.name : '' 
+                                        });
+                                    };
+                                    asyncSetData();
+                                }
+                            }
+                        }
+                    }
                     if (newElement.id === this.valID) {
                         if (newElement.isSubClassOf('namedElement')) {
                             if (newElement.name !== this.valLabel) {
@@ -41,6 +66,9 @@ export default {
                 } 
             }
         },
+        draginfo(newDragInfo) {
+            this.recentDragInfo = newDragInfo;
+        }
     },
     methods: {
         setData(data) {
@@ -54,50 +82,54 @@ export default {
             }
             this.$emit('specification', await this.$umlWebClient.get(this.valID));
         },
-        dragenter(event) {
+        dragenter() {
+            this.dragCounter++;
             this.drag = true;
-            const eventData = event.dataTransfer.getData('text/plain').split(',');
-            const elementType = eventData[1];
-        },
-        dragleave(event) {
-            this.drag = false;
-            this.badDrag = false;
-        },
-        async drop(event) {
-            console.log('dropped on singleton div ' + this.label);
-            const wasA_BadDrag = this.badDrag;
-            this.drag = false;
-            this.badDrag = false;
-            if (wasA_BadDrag || this.$umlWebClient.readonly) {
-                return;
-            }
-            const elementID = event.dataTransfer.getData('umlid');
-            const me = await this.$umlWebClient.get(this.umlID);
-            const elementDragged = await this.$umlWebClient.get(elementID);
-            
-            // determine if element dragged in is valid
-            let isValidElement = false;
-            for (let type of this.singletonData.validTypes) {
-                if (elementDragged.isSubClassOf(type)) {
-                   isValidElement = true;
+            this.badDrag = this.singletonData.readonly || this.$umlWebClient.readonly;
+            if (!this.badDrag) {
+                if (this.recentDragInfo.selectedElements.length !== 1) {
+                    this.badDrag = true;
+                }
+                const el = this.recentDragInfo.selectedElements[0];
+                if (!el.isSubClassOf(this.singletonData.type)) {
+                    this.badDrag = true;
                 }
             }
-
-            if (isValidElement) {
-                // TODO check if there is an element there already
-                me[this.singletonData.setName].set(elementDragged);
-                this.$umlWebClient.put(me);
-                this.$umlWebClient.put(elementDragged);
-                this.img = getImage(elementDragged);
-                this.valLabel = elementDragged.name !== undefined ? elementDragged.name : '';
-                this.valID = elementDragged.id;
-                // TODO emit data change
- 
-            } else {
-                console.warn('bad element dragged in, TODO alert user!');
+        },
+        dragleave() {
+            this.dragCounter--;
+            if (this.dragCounter === 0) {
+                this.drag = false;
+                this.badDrag = false;
             }
         },
-        createElement(event) {
+        async drop() {
+            this.drag = false;
+            if (this.badDrag) {
+                return;
+            }    
+            const me = await this.$umlWebClient.get(this.umlID);
+            const el = this.recentDragInfo.selectedElements[0];
+            const owners = [];
+            const oldOwner = await el.owner.get();
+            if (oldOwner) {
+                owners.push(oldOwner);
+            }
+            const myOldOwner = await me.owner.get();
+            if (myOldOwner) {
+                owners.push(myOldOwner);
+            }
+            me[this.singletonData.setName].set(el);
+            this.$umlWebClient.put(me);
+            this.$umlWebClient.put(el);
+            this.$emit('elementUpdate', createElementUpdate(me, el, ...owners));
+            this.setData({
+                img: getImage(el),
+                id: el.id,
+                label: el.name !== undefined ? el.name : '' 
+            });
+        },
+        createElement() {
             this.creationPopUp = true;
         },
         closePopUp(el) {
@@ -181,9 +213,9 @@ export default {
         <div class="singletonElement" 
             @dblclick="specification"
             :class="{singletonBadDrag: drag && (readonly || badDrag), singletonGoodDrag: drag && !readonly}"
-            @dragenter.prevent="dragenter($event)"
-            @dragleave.prevent="dragleave($event)"
-            @drop="drop($event)"
+            @dragenter="dragenter()"
+            @dragleave="dragleave()"
+            @drop="drop()"
             @dragover.prevent
             @contextmenu="onContextMenu($event)">
             <img v-bind:src="img" v-if="img !== undefined" />
@@ -227,7 +259,7 @@ export default {
 }
 .singletonGoodDrag {
     border: 1px solid;
-    border-color:#5ac3ff;
+    border-color: var(--uml-cafe-selected-hover);
 }
 .createButton {
     margin-left: auto;
