@@ -1,4 +1,4 @@
-import { createEdge } from "./relationshipUtil";
+import { createDiagramEdge } from "../../api/diagramInterchange";
 import { createElementUpdate } from '../../../../umlUtil';
 import { randomID } from 'uml-client/lib/element';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
@@ -11,16 +11,16 @@ export default class DependencyHandler extends RuleProvider {
         eventBus.on('connect.end', (event) => {
             if (event.context.start.connectType === 'dependency' || event.connectType === 'dependency') {
                 if (event.context.canExecute) {
-                    // create generalization
+                    // create dependency
                     const createDependency = async () => {
                         const dependency = await umlWebClient.post('dependency');
-                        // const specific = await umlWebClient.get(event.context.start.modelElement.id);
-                        // specific.generalizations.add(generalization);
-                        dependency.dependency.set(event.hover.modelElement.id);
+                        const client = await umlWebClient.get(event.context.start.modelElement.id);
+                        dependency.client.set(client);
+                        dependency.supplier.set(event.hover.modelElement.id);
                         umlWebClient.put(dependency);
-                        // umlWebClient.put(specific);
+                        umlWebClient.put(client);
 
-                        diagramEmitter.fire('elementUpdate', createElementUpdate(specific));
+                        diagramEmitter.fire('elementUpdate', createElementUpdate(client));
                         
                         event.context.connection = modeling.connect(event.context.start, 
                             event.hover, 
@@ -30,7 +30,7 @@ export default class DependencyHandler extends RuleProvider {
                             }, {});
 
                         // create shape
-                        await createEdge(event.context.connection, umlWebClient, diagramContext);
+                        await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
                     }
                     createDependency();
                     return false; // stop propogation
@@ -60,7 +60,7 @@ export default class DependencyHandler extends RuleProvider {
     }
 }
 
-GeneralizationHandler.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling'];
+DependencyHandler.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling'];
 
 function canConnect(context) {
     const ret = canConnectHelper(context);
@@ -76,14 +76,14 @@ function canConnectHelper(context) {
         if (!context.source.modelElement) {
             return false;
         }
-        if (!context.source.modelElement.isSubClassOf('classifier')) {
+        if (!context.source.modelElement.isSubClassOf('namedElement')) { 
             return false;
         }
         if (context.target) {
             if (!context.target.modelElement) {
                 return false;
             }
-            if (!context.target.modelElement.isSubClassOf('classifier')) {
+            if (!context.target.modelElement.isSubClassOf('namedElement')) {
                 return false;
             }
         }
