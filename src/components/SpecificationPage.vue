@@ -383,8 +383,11 @@ export default {
                         :initial-data="elementData.owner" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'owner', readonly: true}"
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
         <SetData :label="'Applied Stereotypes'" 
                  :initial-data="elementData.appliedStereotypes" 
@@ -430,8 +433,11 @@ export default {
                         :initial-data="namedElementData.namespace" 
                         :uml-i-d="umlID"
                         :singleton-data="{setName:'namespace', readonly: true}"
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
 	</ElementType>
 	<ElementType :element-type="'Relationship'" v-if="relationshipData !== undefined">
@@ -483,8 +489,11 @@ export default {
                         :initial-data="generalizationData.specific" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'specific', type:'classifier'}"
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
         <SingletonData  :label="'General'" 
                         :initial-data="generalizationData.general" 
@@ -498,9 +507,12 @@ export default {
         <SingletonData  :label="'Type'" 
                         :initial-data="typedElementData.type" 
                         :uml-i-d="umlID" 
-                        :singleton-data="{setName:'type',type:'classifier'}" 
+                        :singleton-data="{setName:'type',type:'classifier'}"
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
     </ElementType>
     <ElementType :element-type="'Packageable Element'" v-if="packageableElementData !== undefined">
@@ -508,8 +520,11 @@ export default {
                         :initial-data="packageableElementData.owningPackage" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'owningPackage', type:'package'}"
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
 	</ElementType>
     <ElementType :element-type="'Instance Value'" v-if="instanceValueData">
@@ -517,11 +532,14 @@ export default {
                         :initial-data="instanceValueData.instance"
                         :uml-i-d="umlID"
                         :singleton-data="{
-                                            setName: 'instance',
-                                            type: 'instanceSpecification',    
-                                         }"  
+                            setName: 'instance',
+                            type: 'instanceSpecification',    
+                        }" 
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
     </ElementType>
     <ElementType :element-type="'Literal Bool'" v-if="literalBoolData !== undefined">
@@ -555,16 +573,22 @@ export default {
                         :initial-data="multiplicityElementData.lowerValue" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'lowerValue', type:'valueSpecification'}"
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
         <SingletonData  :label="'Upper Value'" 
                         :createable="{types:['literalInt', 'literalUnlimitedNatural']}"
                         :initial-data="multiplicityElementData.upperValue" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'upperValue', type:'valueSpecification'}"
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
 	</ElementType>
 	<ElementType :element-type="'Property'" v-if="propertyData !== undefined">
@@ -590,29 +614,41 @@ export default {
                         :initial-data="propertyData.clazz" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'class', type: 'class'}"
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
         <SingletonData  :label="'DataType'" 
                         :initial-data="propertyData.dataType" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'dataType', type:'dataType'}"
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
         <SingletonData  :label="'Owning Association'" 
                         :initial-data="propertyData.owningAssociation" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'owningAssociation', type:'assoiation'}"
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
         <SingletonData  :label="'Association'" 
                         :initial-data="propertyData.association" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName: 'association', type:'association'}"
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
-                        @element-update="propogateElementUpdate"     
+                        @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
         <SingletonData  :label="'Default Value'"
                         :createable="
@@ -630,6 +666,9 @@ export default {
                         :initial-data="propertyData.defaultValue"
                         :uml-i-d="umlID"
                         :singleton-data="{setName:'defaultValue', type:'valueSpecification'}"
+                        :selected-elements="selectedElements"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate" 
                         ></SingletonData>
@@ -641,13 +680,13 @@ export default {
                     :selected-elements="selectedElements"
                     :subsets="['ownedAttributes', 'packagedElements']"
                     :set-data="{
-                                    readonly: true,
-                                    setName: 'members'
-                                }"
+                        readonly: true,
+                        setName: 'members'
+                    }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
                     @select="propogateSelect"
-                    @deselect="propogateDeselect"               
+                    @deselect="propogateDeselect"              
                     ></SetData>
         <SetData    :label="'Owned Members'" 
                     :initial-data="namespaceData.ownedMembers" 
@@ -734,11 +773,14 @@ export default {
                         :initial-data="enumerationLiteralData.enumeration"
                         :uml-i-d="umlID"
                         :singleton-data="{
-                                                setName: 'enumeration',
-                                                type: 'enumeration'
-                                            }"
+                            setName: 'enumeration',
+                            type: 'enumeration'
+                        }"
+                        :selected-elements="selectedElements"
                         @specification="propogateSpecification"
-                        @element-update="propogateElementUpdate"  
+                        @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
                         ></SingletonData>
     </ElementType>
 	<ElementType :element-type="'Slot'" v-if="slotData !== undefined">
@@ -747,8 +789,11 @@ export default {
             :initial-data="slotData.owningInstance"
             :uml-i-d="umlID" 
             :singleton-data="{setName: 'owningInstance', type:'instanceSpecification'}"
+            :selected-elements="selectedElements"
             @specification="propogateSpecification"
             @element-update="propogateElementUpdate"
+            @select="propogateSelect"
+            @deselect="propogateDeselect"
             ></SingletonData>
         <SetData    :label="'Values'"
                     :initial-data="slotData.values"
@@ -779,8 +824,11 @@ export default {
             :initial-data="slotData.definingFeature"
             :uml-i-d="umlID"
             :singleton-data="{ setName: 'definingFeature', type: 'property' }"
+            :selected-elements="selectedElements"
             @specification="propogateSpecification"
             @element-update="propogateElementUpdate" 
+            @select="propogateSelect"
+            @deselect="propogateDeselect"
             ></SingletonData>
 	</ElementType>
 	<ElementType :elementType="'Classifier'" v-if="classifierData !== undefined">
@@ -791,10 +839,10 @@ export default {
                     :subsets="['generalizations']" 
                     :creatable="{types:['generalization'], set: 'generalizations'}"
                     :set-data="{
-                                    setName: 'generalizations',
-                                    readonly: false,
-                                    type: 'generalization',
-                                }"
+                        setName: 'generalizations',
+                        readonly: false,
+                        type: 'generalization',
+                    }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
                     @select="propogateSelect"

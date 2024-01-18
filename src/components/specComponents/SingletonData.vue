@@ -1,11 +1,29 @@
 <script>
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
-import { createElementUpdate } from '../../umlUtil.js';
+import { createElementUpdate, mapColor } from '../../umlUtil.js';
 export default {
-    props: ['label', 'umlID', 'initialData', 'readonly', 'createable', 'singletonData'],
-    emits: ['specification', 'elementUpdate'],
-    inject: ['elementUpdate', 'draginfo'],
+    props: [
+        'label', 
+        'umlID', 
+        'initialData', 
+        'readonly', 
+        'createable', 
+        'singletonData',
+        'selectedElements'
+    ],
+    emits: [
+        'specification',
+        'elementUpdate',
+        'select',
+        'deselect',    
+    ],
+    inject: [
+        'elementUpdate', 
+        'draginfo',
+        'userSelected',
+        'userDeselected'
+    ],
     data() {
         return {
             img: undefined,
@@ -16,6 +34,8 @@ export default {
             creationPopUp: false,
             dragCounter: 0,
             recentDragInfo: undefined,
+            selected: false,
+            currentUsers: [],
         }
     },
     mounted() {
@@ -68,6 +88,35 @@ export default {
         },
         draginfo(newDragInfo) {
             this.recentDragInfo = newDragInfo;
+        },
+        selectedElements(newSelectedElements) {
+            if (this.valID) {
+                if (this.selected) {
+                    if (!newSelectedElements.includes(this.valID)) {
+                        this.selected = false;
+                    }
+                } else {
+                    if (newSelectedElements.includes(this.valID)) {
+                        this.selected = true;
+                    }
+                }
+            }
+        },
+        userSelected(newUserSelected) {
+            if (this.valID) {
+                if (newUserSelected.id === this.valID) {
+                    this.currentUsers.push(mapColor(newUserSelected.color))
+                }
+            }
+        },
+        userDeselected(newUserDeselcted) {
+            if (this.valID) {
+                for (const element of newUserDeselcted.elements) {
+                    if (element === this.valID && this.currentUsers.includes(mapColor(newUserDeselcted.color))) {
+                        this.currentUsers.splice(this.currentUsers.indexOf(mapColor(newUserDeselcted.color)), 1);
+                    }
+                }
+            }
         }
     },
     methods: {
@@ -200,7 +249,23 @@ export default {
                 y: evt.y,
                 items: items
             });
-        }, 
+        },
+        select(modifier) {
+            if (this.valID) {
+                this.selected = !this.selected;
+                if (this.selected) {
+                    this.$emit('select', {
+                        el: this.valID,
+                        modifier: modifier,
+                    });
+                } else {
+                    this.$emit('deselect', {
+                        el: this.valID,
+                        modifier: modifier,
+                    });
+                }
+            }
+        },
     },
     components: { CreationPopUp }
 }
@@ -211,11 +276,17 @@ export default {
             {{ label }}
         </div>
         <div class="singletonElement" 
+            :class="[
+                selected ? 'selectedSingletonElement' : currentUsers.length > 0 ? currentUsers[0] : 'singletonElement', 
+                drag ? badDrag ? 'singletonBadDrag' : 'singletonGoodDrag' : 'singletonElement'
+            ]"
+            @click.exact="select('none')"
+            @click.ctrl="select('ctrl')"
+            @click.shift="select('shift')"
             @dblclick="specification"
-            :class="{singletonBadDrag: drag && (readonly || badDrag), singletonGoodDrag: drag && !readonly}"
-            @dragenter="dragenter()"
-            @dragleave="dragleave()"
-            @drop="drop()"
+            @dragenter="dragenter"
+            @dragleave="dragleave"
+            @drop="drop"
             @dragover.prevent
             @contextmenu="onContextMenu($event)">
             <img v-bind:src="img" v-if="img !== undefined" />
@@ -252,6 +323,36 @@ export default {
 }
 .singletonElement:hover {
     background-color: var(--open-uml-selection-dark-2);
+}
+.selectedSingletonElement {
+    background-color: var(--uml-cafe-selected);
+}
+.selectedSingletonElement:hover {
+    background-color: var(--uml-cafe-selected-hover);
+}
+.redUserPanel {
+    background-color: var(--uml-cafe-red-user);
+}
+.blueUserPanel {
+    background-color: var(--uml-cafe-blue-user);
+}
+.greenUserPanel {
+    background-color: var(--uml-cafe-green-user);
+}
+.yellowUserPanel {
+    background-color: var(--uml-cafe-yellow-user);
+}
+.magentaUserPanel {
+    background-color: var(--uml-cafe-magenta-user);
+}
+.orangeUserPanel {
+    background-color: var(--uml-cafe-orange-user);
+}
+.cyanUserPanel {
+    background-color: var(--uml-cafe-cyan-user);
+}
+.limeUserPanel {
+    background-color: var(--uml-cafe-lime-user);
 }
 .singletonBadDrag {
     border: 1px solid;
