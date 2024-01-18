@@ -7,7 +7,6 @@ import DiagramPage from './components/DiagramPage.vue';
 import CloseSymbol from './components/icons/close_symbol.svg';
 import getImage from './GetUmlImage.vue';
 import classDiagramImage from './components/icons/class_diagram.svg';
-import { nullID } from 'uml-client/lib/element.js';
 import { computed } from 'vue';
 import { assignTabLabel } from './umlUtil';
 </script>
