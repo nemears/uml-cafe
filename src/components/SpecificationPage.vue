@@ -7,10 +7,12 @@ import InputData from './specComponents/InputData.vue';
 import EnumerationData from './specComponents/EnumerationData.vue';
 import { assignTabLabel } from '../umlUtil';
 export default {
-    props: ['umlID'],
+    props: ['umlID', 'selectedElements'],
     emits: [
         'specification', 
         'elementUpdate',
+        'select',
+        'deselect',
     ],
     inject: ['elementUpdate'],
     data() {
@@ -86,7 +88,9 @@ export default {
                     elementTypeData[setName].push({
                         img: getImage(element),
                         label: await assignTabLabel(element),
-                        id: element.id
+                        id: element.id,
+                        selected: this.selectedElements.includes(element.id),
+                        currentUsers: [],
                     });
                 }
                 return elementTypeData;
@@ -322,6 +326,12 @@ export default {
             }
             
             this.$emit('elementUpdate', newElementUpdate);
+        },
+        propogateSelect(newSelect) {
+            this.$emit('select', newSelect);
+        },
+        propogateDeselect(newDeselect) {
+            this.$emit('deselect', newDeselect);
         }
     },
     computed: {
@@ -357,6 +367,7 @@ export default {
         <SetData    :label="'Owned Elements'" 
                     :initial-data="elementData.ownedElements" 
                     :umlid="umlID" 
+                    :selected-elements="selectedElements"
                     :subsets="['ownedAttributes', 'packagedElements', 'generalizations']" 
                     :set-data="{
                         readonly: true,
@@ -364,6 +375,8 @@ export default {
                     }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
         <SingletonData  :label="'Owner'" 
                         :readonly="true" 
@@ -376,7 +389,10 @@ export default {
         <SetData :label="'Applied Stereotypes'" 
                  :initial-data="elementData.appliedStereotypes" 
                  :umlid="umlID" 
+                 :selected-elements="selectedElements"
                  @specification="propogateSpecification"
+                 @select="propogateSelect"
+                 @deselect="propogateDeselect"
                  :set-data="{
                     readonly: false,
                     setName: 'appliedStereotypes',
@@ -387,7 +403,10 @@ export default {
         <SetData :label="'Owned Comments'" 
                  :initial-data="elementData.ownedComments" 
                  :umlid="umlID" 
+                 :selected-elements="selectedElements"
                  @specification="propogateSpecification"
+                 @select="propogateSelect"
+                 @deselect="propogateDeselect"
                  :set-data="{
                     readonly: false,
                     setName: 'ownedComments',
@@ -419,7 +438,10 @@ export default {
         <SetData    :label="'Related Elements'" 
                     :initial-data="relationshipData.relatedElements" 
                     :umlid="umlID" 
+                    :selected-elements="selectedElements"
                     @specification="propogateSpecification" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     :subsets="['general', 'specific']"
                     :set-data="{
                                     readonly: true,
@@ -432,22 +454,28 @@ export default {
         <SetData    :label="'Targets'" 
                     :initial-data="directedRelationshipData.targets" 
                     :umlid="umlID"
+                    :selected-elements="selectedElements"
                     :set-data="{
                                     setName: 'targets',
                                     readonly: true
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
         <SetData    :label="'Sources'" 
                     :initial-data="directedRelationshipData.sources" 
                     :umlid="umlID"
+                    :selected-elements="selectedElements"
                     :set-data="{
                                     readonly: true,
                                     setName: sources
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
 	<ElementType :element-type="'Generalization'" v-if="generalizationData !== undefined">
@@ -610,29 +638,36 @@ export default {
         <SetData    :label="'Members'" 
                     :initial-data="namespaceData.members" 
                     :umlid="umlID" 
+                    :selected-elements="selectedElements"
                     :subsets="['ownedAttributes', 'packagedElements']"
                     :set-data="{
                                     readonly: true,
                                     setName: 'members'
                                 }"
                     @specification="propogateSpecification"
-                    @element-update="propogateElementUpdate"                     
+                    @element-update="propogateElementUpdate"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"               
                     ></SetData>
         <SetData    :label="'Owned Members'" 
                     :initial-data="namespaceData.ownedMembers" 
                     :umlid="umlID" 
+                    :selected-elements="selectedElements"
                     :subsets="['ownedAttributes', 'packagedElements']"
                     :set-data="{
                                     setName: 'ownedMembers',
                                     readonly: true
                                 }"
                     @element-update="propogateElementUpdate" 
-                    @specification="propogateSpecification"></SetData>
+                    @specification="propogateSpecification"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"></SetData>
 	</ElementType>
     <ElementType :element-type="'Package'" v-if="packageData !== undefined">
         <SetData    :label="'Packaged Elements'" 
                     :initial-data="packageData.packagedElements" 
                     :umlid="umlID" 
+                    :selected-elements="selectedElements"
                     :subsets="['packagedElements']"
                     :creatable="{
                                     types: [
@@ -658,12 +693,15 @@ export default {
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
 	<ElementType :element-type="'Instance Specification'" v-if="instanceSpecificationData !== undefined">
         <SetData    :label="'Classifiers'"
                     :initial-data="instanceSpecificationData.classifiers"
                     :umlid="umlID"
+                    :selected-elements="selectedElements"
                     :subsets="[]"
                     :set-data="{
                                     setName: 'classifiers',
@@ -672,10 +710,13 @@ export default {
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
         <SetData    :label="'Slots'"
                     :initial-data="instanceSpecificationData.slots"
                     :umlid="umlID"
+                    :selected-elements="selectedElements"
                     :subsets="[]"
                     :creatable="{types:['slot'], set:'slots'}"
                     :set-data="{
@@ -683,7 +724,9 @@ export default {
                                     readonly: false,
                                 }"
                     @specification="propogateSpecification"
-                    @element-update="propogateElementUpdate"  
+                    @element-update="propogateElementUpdate"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
     <ElementType :element-type="'Enumeration Literal'" v-if="enumerationLiteralData">
@@ -710,6 +753,7 @@ export default {
         <SetData    :label="'Values'"
                     :initial-data="slotData.values"
                     :umlid="umlID"
+                    :selected-elements="selectedElements"
                     :subsets="[]"
                     :creatable="{
                         types:[
@@ -727,6 +771,8 @@ export default {
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
         <SingletonData
             :label="'Defining Feature'"
@@ -741,6 +787,7 @@ export default {
         <SetData    :label="'Generalizations'" 
                     :initial-data="classifierData.generalizations" 
                     :umlid="umlID" 
+                    :selected-elements="selectedElements"
                     :subsets="['generalizations']" 
                     :creatable="{types:['generalization'], set: 'generalizations'}"
                     :set-data="{
@@ -750,23 +797,29 @@ export default {
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
         <SetData    :label="'Attributes'" 
                     :initial-data="classifierData.attributes" 
                     :umlid="umlID" 
+                    :selected-elements="selectedElements"
                     :subsets="['ownedAttributes']"
                     :set-data="{
                                     setName: 'attributes',
                                     readonly: true
                                 }"
                     @specification="propogateSpecification"
-                    @element-update="propogateElementUpdate"  
+                    @element-update="propogateElementUpdate"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
     <ElementType :elementType="'DataType'" v-if="dataTypeData">
         <SetData    :label="'Owned Attributes'"
                     :initial-data="dataTypeData.ownedAttributes"
                     :umlid="umlID"
+                    :selected-elements="selectedElements"
                     :subsets="['ownedAttributes']"
                     :set-data="{
                                     setName: 'ownedAttributes',
@@ -780,13 +833,16 @@ export default {
                                     set: 'ownedAttributes'
                                 }"
                     @specification="propogateSpecification"
-                    @element-update="propogateElementUpdate"  
+                    @element-update="propogateElementUpdate" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
     </ElementType>
     <ElementType :elementType="'Enumeration'" v-if="enumerationData">
         <SetData    :label="'Owned Literals'"
                     :initial-data="enumerationData.ownedLiterals"
                     :umlid="umlID"
+                    :selected-elements="selectedElements"
                     :subsets="['ownedLiterals']"
                     :set-data="{
                                     setName: 'ownedLiterals',
@@ -798,26 +854,32 @@ export default {
                                     set: 'ownedLiterals'
                                 }"
                     @specification="propogateSpecification"
-                    @element-update="propogateElementUpdate"  
+                    @element-update="propogateElementUpdate"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
     </ElementType>
 	<ElementType :elementType="'Structured Classifier'" v-if="structuredClassifierData !== undefined">
         <SetData    :label="'Owned Attributes'" 
                     :initial-data="structuredClassifierData.ownedAttributes" 
                     :umlid="umlID" 
+                    :selected-elements="selectedElements"
                     :subsets="['ownedAttributes']"
                     :set-data="{
                                     setName: 'ownedAttributes',
                                     readonly: true
                                 }"
                     @specification="propogateSpecification"
-                    @element-update="propogateElementUpdate"   
+                    @element-update="propogateElementUpdate" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
 	<ElementType :element-type="'Association'" v-if="associationData !== undefined">
         <SetData    :label="'Member Ends'" 
                     :initial-data="associationData.memberEnds" 
                     :umlid="umlID" 
+                    :selected-elements="selectedElements"
                     :subsets="['ownedEnds', 'navigableOwnedEnds']"
                     :set-data="{
                                     setName: 'memberEnds',
@@ -825,11 +887,14 @@ export default {
                                     type: 'property'
                                 }"
                     @specification="propogateSpecification"
-                    @element-update="propogateElementUpdate"   
+                    @element-update="propogateElementUpdate"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
         <SetData    :label="'Owned Ends'" 
                     :initial-data="associationData.ownedEnds" 
                     :umlid="umlID" 
+                    :selected-elements="selectedElements"
                     :subsets="['navigableOwnedEnds']"
                     :set-data="{
                                     setName: 'ownedEnds',
@@ -843,11 +908,14 @@ export default {
                                     set: 'ownedEnds'
                                 }"
                     @specification="propogateSpecification"
-                    @element-update="propogateElementUpdate"  
+                    @element-update="propogateElementUpdate"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
         <SetData    :label="'Navigable Owned Ends'" 
                     :initial-data="associationData.navigableOwnedEnds" 
                     :umlid="umlID"
+                    :selected-elements="selectedElements"
                     :set-data="{
                                     setName: 'navigableOwnedEnds',
                                     readonly: false,
@@ -860,13 +928,16 @@ export default {
                                     set: 'navigableOwnedEnds'
                                 }"
                     @specification="propogateSpecification"
-                    @element-update="propogateElementUpdate"  
+                    @element-update="propogateElementUpdate"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
 	<ElementType :elementType="'Class'" v-if="classData !== undefined">
         <SetData    :label="'Owned Attributes'" 
                     :initial-data="classData.ownedAttributes" 
                     :umlid="umlID" 
+                    :selected-elements="selectedElements"
                     :subsets="['ownedAttributes']"
                     :creatable="{types:['property'], set: 'ownedAttributes'}"
                     :set-data="{
@@ -875,6 +946,8 @@ export default {
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
     <ElementType :element-type="'Comment'" v-if="commentData !== undefined">
@@ -889,6 +962,7 @@ export default {
         <SetData    :label="'Annotated Elements'" 
                     :initial-data="commentData.annotatedElements" 
                     :umlid="umlID"
+                    :selected-elements="selectedElements"
                     :set-data="{
                                     setName: 'annotatedElements',
                                     readonly: false,
@@ -896,6 +970,8 @@ export default {
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
                     ></SetData>
     </ElementType>
     </div> 

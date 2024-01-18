@@ -109,3 +109,17 @@ export async function createClassDiagram(owner, umlWebClient) {
     await umlWebClient.get(diagramPackage.id);
     return diagramPackage;
 } 
+
+export function mapColor(color) {
+    switch (color) {
+        case 'var(--uml-cafe-red-user)': return 'redUserPanel'
+        case 'var(--uml-cafe-blue-user)': return 'blueUserPanel'
+        case 'var(--uml-cafe-green-user)': return 'greenUserPanel'
+        case 'var(--uml-cafe-yellow-user)': return 'yellowUserPanel'
+        case 'var(--uml-cafe-magenta-user)': return 'magentaUserPanel'
+        case 'var(--uml-cafe-orange-user)': return 'orangeUserPanel'
+        case 'var(--uml-cafe-cyan-user)': return 'cyanUserPanel'
+        case 'var(--uml-cafe-lime-user)': return 'limeUserPanel'
+    }
+    return undefined;
+}

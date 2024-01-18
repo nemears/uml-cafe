@@ -2,7 +2,7 @@
 import packageImage from './icons/package.svg';
 import getImage from '../GetUmlImage.vue';
 import classDiagramImage from './icons/class_diagram.svg';
-import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createClassDiagram } from '../umlUtil.js'
+import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createClassDiagram, mapColor } from '../umlUtil.js'
 
 export default {
     name: "ElementExplorer",
@@ -88,32 +88,18 @@ export default {
         },
         userSelected(newUserSelected) {
             if (newUserSelected.id === this.umlID) {
-                this.currentUsers.push(this.mapColor(newUserSelected.color))
-                // this.currentUsers = [...this.currentUsers];
+                this.currentUsers.push(mapColor(newUserSelected.color))
             }
         },
         userDeselected(newUserDeselcted) {
             for (const element of newUserDeselcted.elements) {
-                if (element === this.umlID && this.currentUsers.includes(this.mapColor(newUserDeselcted.color))) {
-                    this.currentUsers.splice(this.currentUsers.indexOf(this.mapColor(newUserDeselcted.color)), 1);
+                if (element === this.umlID && this.currentUsers.includes(mapColor(newUserDeselcted.color))) {
+                    this.currentUsers.splice(this.currentUsers.indexOf(mapColor(newUserDeselcted.color)), 1);
                 }
             }
         }
     },
     methods: {
-        mapColor(color) {
-            switch (color) {
-                case 'var(--uml-cafe-red-user)': return 'redUserPanel'
-                case 'var(--uml-cafe-blue-user)': return 'blueUserPanel'
-                case 'var(--uml-cafe-green-user)': return 'greenUserPanel'
-                case 'var(--uml-cafe-yellow-user)': return 'yellowUserPanel'
-                case 'var(--uml-cafe-magenta-user)': return 'magentaUserPanel'
-                case 'var(--uml-cafe-orange-user)': return 'orangeUserPanel'
-                case 'var(--uml-cafe-cyan-user)': return 'cyanUserPanel'
-                case 'var(--uml-cafe-lime-user)': return 'limeUserPanel'
-            }
-            return undefined;
-        },
         async populateDisplayInfo() {
             const treeNode = this.treeGraph.get(this.umlID);
             this.expanded = treeNode.expanded;
@@ -124,7 +110,7 @@ export default {
             }
 
             // check if other users have selected this
-            this.currentUsers = treeNode.usersSelecting.map(user => this.mapColor(user.color));
+            this.currentUsers = treeNode.usersSelecting.map(user => mapColor(user.color));
 
             let el = await this.$umlWebClient.get(this.umlID);
             this.elementType = el.elementType();

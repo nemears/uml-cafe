@@ -480,6 +480,7 @@ export default {
             } else {
                 this.selectedElements.push(event.el);
                 this.$umlWebClient.select(event.el);
+                this.selectedElements = [...this.selectedElements];
             }
         },
         deselect(event) {
@@ -495,6 +496,7 @@ export default {
                 } else {
                     this.selectedElements.splice(index, 1);
                     this.$umlWebClient.deselect(event.el);
+                    this.selectedElements = [...this.selectedElements];
                 }
             } else if (event.modifier === 'shift') {
 				const shiftDeselect = (id) => {
@@ -615,8 +617,11 @@ export default {
 				<WelcomePage v-if="editorType=='Welcome'"></WelcomePage>
 				<SpecificationPage v-if="editorType=='Specification'" 
 						:uml-i-d="specificationTab" 
+                        :selected-elements="selectedElements"
 						@specification="specification" 
 						@element-update="elementUpdateHandler"
+                        @select="select"
+                        @deselect="deselect"
 						></SpecificationPage>
 				<DiagramPage v-if="editorType=='Diagram'" 
 						:uml-i-d="specificationTab" 

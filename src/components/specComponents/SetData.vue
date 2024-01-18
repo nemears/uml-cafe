@@ -1,11 +1,24 @@
 <script>
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
-import { createElementUpdate, assignTabLabel } from '../../umlUtil.js';
+import { createElementUpdate, assignTabLabel, mapColor} from '../../umlUtil.js';
 export default {
-    props: ['label', 'initialData', 'umlid', 'subsets', 'creatable', "setData"],
-    inject: ['elementUpdate', 'draginfo'],
-    emits: ['specification', 'elementUpdate'],
+    props: [
+        'label', 
+        'initialData', 
+        'umlid', 
+        'subsets', 
+        'creatable', 
+        'setData',
+        'selectedElements',
+    ],
+    inject: [
+        'elementUpdate',
+        'draginfo',
+        'userSelected',
+        'userDeselected'
+    ],
+    emits: ['specification', 'elementUpdate', 'select', 'deselect'],
     data() {
         return {
             data: [],
@@ -41,6 +54,8 @@ export default {
                                     id: elementID,
                                     label: element.name !== undefined ? element.name : '',
                                     img: getImage(element),
+                                    selected: false,
+                                    currentUsers: []
                                 });
                             }
                         }
@@ -64,6 +79,33 @@ export default {
         },
         draginfo(newDragInfo) {
             this.recentDragInfo = newDragInfo;
+        }, selectedElements(newSelectedElements) {
+            for (const elData of this.data) {
+                if (elData.selected) {
+                    if (!newSelectedElements.includes(elData.id)) {
+                        elData.selected = false;
+                    }
+                } else {
+                    if (newSelectedElements.includes(elData.id)) {
+                        elData.selected = true;
+                    }
+                }
+            }
+        }, userSelected(newUserSelected) {
+            for (const elData of this.data) {
+                if (elData.id === newUserSelected.id) {
+                    elData.currentUsers.push(mapColor(newUserSelected.color))
+                }
+            }
+        }, userDeselected(newUserDeselcted) {
+            for (const elData of this.data) {
+                for (const deselectedEl of newUserDeselcted.elements) {
+                    if (elData.id === deselectedEl && elData.currentUsers.includes(mapColor(newUserDeselcted.color))) {
+                        elData.currentUsers.splice(elData.currentUsers.indexOf(mapColor(newUserDeselcted.color)), 1);
+                        break;
+                    }
+                }
+            }
         }
     },
     methods: {
@@ -81,7 +123,9 @@ export default {
             this.data.push({
                 img: getImage(element),
                 id: element.id,
-                label: await assignTabLabel(element)  
+                label: await assignTabLabel(element),
+                selected: false,
+                currentUsers: [],
             });
             this.$emit('elementUpdate', createElementUpdate(await this.$umlWebClient.get(this.umlid)));
         },
@@ -121,6 +165,8 @@ export default {
                     img: getImage(element),
                     id: element.id,
                     label: element.name !== undefined ? element.name : '',
+                    selected: false,
+                    currentUsers: [],
                 });
                 this.$umlWebClient.put(element);
             }
@@ -169,6 +215,20 @@ export default {
                 y: evt.y,
                 items: items
             });
+        },
+        select(element, modifier) {
+            this.selected = !this.selected;
+            if (this.selected) {
+                this.$emit('select', {
+                    el: element.id,
+                    modifier: modifier,
+                });
+            } else {
+                this.$emit('deselect', {
+                    el: element.id,
+                    modifier: modifier,
+                });
+            }
         }
     },
     components: { CreationPopUp }
@@ -185,8 +245,12 @@ export default {
              @drop="drop($event)"
              @dragover.prevent>
             <div    class="setElement" 
+                    :class="el.selected ? 'selectedSetElement' : el.currentUsers.length > 0 ? el.currentUsers[0] : 'setElement'"
                     v-for="el in data" 
                     :key="el.id" 
+                    @click.exact="select(el, 'none')"
+                    @click.ctrl="select(el, 'ctrl')"
+                    @click.shift="select(el, 'shift')"
                     @dblclick="specification(el.id)"
                     @contextmenu="elementContextMenu($event, el)">
                 <img v-if="el.img !== undefined" :src="el.img"/>
@@ -225,15 +289,50 @@ export default {
 .setLabel {
     min-width: 200px;
 }
-.setElement {
+.setElement, .selectedSetElement{
     width: 700px;
-    background-color: var(--open-uml-selection-dark-1);
     min-height: 24px;
     display: flex;
     padding-left: 5px;
 }
+.setElement {
+    background-color: var(--open-uml-selection-dark-1);
+}
 .setElement:hover {
     background-color: var(--open-uml-selection-dark-2);
+}
+.selectedSetElement {
+    background-color: var(--uml-cafe-selected);
+}
+.selectedSetElement:hover {
+    background-color: var(--uml-cafe-selected-hover);
+}
+.selectedSetElement {
+    background-color: var(--uml-cafe-selected);
+}
+.redUserPanel {
+    background-color: var(--uml-cafe-red-user);
+}
+.blueUserPanel {
+    background-color: var(--uml-cafe-blue-user);
+}
+.greenUserPanel {
+    background-color: var(--uml-cafe-green-user);
+}
+.yellowUserPanel {
+    background-color: var(--uml-cafe-yellow-user);
+}
+.magentaUserPanel {
+    background-color: var(--uml-cafe-magenta-user);
+}
+.orangeUserPanel {
+    background-color: var(--uml-cafe-orange-user);
+}
+.cyanUserPanel {
+    background-color: var(--uml-cafe-cyan-user);
+}
+.limeUserPanel {
+    background-color: var(--uml-cafe-lime-user);
 }
 .createButton {
     margin-left: auto;
