@@ -8,7 +8,7 @@ import { UmlWebClient } from 'uml-client';
 
 let projectName = randomID();
 let groupName = 'sessions';
-let serverAddress = 'ws:192.168.50.224:1672';//'ws:localhost:1672';//'wss://uml.cafe/api/';
+let serverAddress = 'wss://uml.cafe/api/';
 
 // this is some logic to determine wether we are accessing an already created project or if we are in a new state.
 if (location.pathname != "/") {
