@@ -4,7 +4,9 @@ import BendpointsModule from 'diagram-js/lib/features/bendpoints';
 import ConnectModule from 'diagram-js/lib/features/connect';
 import ContextPadModule from 'diagram-js/lib/features/context-pad';
 import CreateModule from 'diagram-js/lib/features/create';
+import EditorActionsModule from 'diagram-js/lib/features/editor-actions';
 import GlobalConnectModule from 'diagram-js/lib/features/global-connect';
+import KeyboardModule from 'diagram-js/lib/features/keyboard';
 import LassoToolModule from 'diagram-js/lib/features/lasso-tool';
 import LabelSupport from 'diagram-js/lib/features/label-support';
 import ModelingModule from 'diagram-js/lib/features/modeling';
@@ -111,7 +113,9 @@ export function Editor(options) {
     ConnectModule,
     ContextPadModule,
     CreateModule,
+    EditorActionsModule,
     GlobalConnectModule,
+    KeyboardModule,
     LassoToolModule,
     LabelSupport,
     ModelingModule,

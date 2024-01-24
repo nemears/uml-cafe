@@ -68,13 +68,15 @@ export default {
                 umlWebClient: this.$umlWebClient,
                 emitter: scopedEmitter,
                 context: await diagramPackage.owningPackage.get(),
-                diagramElement: diagramPackage
+                diagramElement: diagramPackage,
             });
             const canvas = this.diagram.get('canvas');
             const elementFactory = this.diagram.get('elementFactory');
             const elementRegistry = this.diagram.get('elementRegistry');
             const modelElementMap = this.diagram.get('modelElementMap');
             
+            this.diagram.get('keyboard').bind(document);
+
             // add root
             var root = elementFactory.createRoot({
                 id: diagramInstance.id
