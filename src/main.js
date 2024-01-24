@@ -8,7 +8,7 @@ import { UmlWebClient } from 'uml-client';
 
 let projectName = randomID();
 let groupName = 'sessions';
-let serverAddress = 'wss://uml.cafe/api/';
+let serverAddress = 'ws:192.168.50.224:1672';//'ws:localhost:1672';//'wss://uml.cafe/api/';
 
 // this is some logic to determine wether we are accessing an already created project or if we are in a new state.
 if (location.pathname != "/") {
@@ -36,8 +36,10 @@ if (location.pathname != "/") {
         project: projectName,
         user: user,
         passwordHash: passwordHash,
+        create: groupName !== 'sessions',
     });
     umlWebClient.initialization.catch((err) => {
+        console.error(err);
         try {
             const errObj = JSON.parse(err);
             if (errObj.error.code && errObj.error.code == 1) {
@@ -55,20 +57,9 @@ if (location.pathname != "/") {
         app.use(ContextMenu);
     });
 } else {
-    // todo create new session
-    const umlWebClient = new UmlWebClient({
-        address: serverAddress,
-        group: groupName,
-        project: projectName
-    });
-    const waitForServerAndForwardUrl = async () => {
-        await umlWebClient.initialization;
-        await umlWebClient.head();
-        let beginningOfURL = document.URL;
-        if (beginningOfURL.slice(-1) === '/') {
-            beginningOfURL = beginningOfURL.slice(0, beginningOfURL.length - 1);
-        }
-        window.location.replace(beginningOfURL + '/' + groupName + '/' + projectName);
+    let beginningOfURL = document.URL;
+    if (beginningOfURL.slice(-1) === '/') {
+        beginningOfURL = beginningOfURL.slice(0, beginningOfURL.length - 1);
     }
-    waitForServerAndForwardUrl();
+    window.location.replace(beginningOfURL + '/' + groupName + '/' + projectName);
 }
