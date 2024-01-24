@@ -4,11 +4,11 @@ import { adjustEdgeWaypoints } from './UmlEdgeProvider';
 export default class UmlShapeProvider {
 
     constructor(eventBus, umlWebClient, diagramContext, elementRegistry, elementFactory, canvas, graphicsFactory) {
-        eventBus.on('shape.added', (event) => {
-            if (event.element.newUMLElement || event.element.newShapeElement) {
-                createDiagramShape(event.element, umlWebClient, diagramContext);
-            }
-        });
+        // eventBus.on('shape.added', (event) => {
+        //     if (event.element.newUMLElement || event.element.newShapeElement) {
+        //         createDiagramShape(event.element, umlWebClient, diagramContext);
+        //     }
+        // });
         eventBus.on('shape.move.end', (event) => {
             for (const shape of event.context.shapes) {
                 const shapeMoveEnd = async () => {
