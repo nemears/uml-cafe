@@ -1,3 +1,4 @@
+import { roundBounds } from "diagram-js/lib/layout/LayoutUtil";
 import { BOUNDS_ID, EDGE_ID, LABEL_ID, SHAPE_ID } from "../api/diagramInterchange";
 import { adjustEdgeWaypoints } from './UmlEdgeProvider';
 
@@ -34,6 +35,7 @@ class MoveShapeHandler {
             shape.y += context.delta.y;
             this.graphicsFactory.update('shape', shape, this.canvas.getGraphics(shape));
             shapeMoveEnd();
+            return context.shapes;
         }
     }
     revert(context) {
@@ -59,31 +61,76 @@ class MoveShapeHandler {
             this.graphicsFactory.update('shape', shape, this.canvas.getGraphics(shape));
             doLater(shape);
         }
+        return context.shapes
     }
 }
 
 MoveShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory', 'canvas'];
 
+class ResizeShapeHandler {
+    constructor(umlWebClient, diagramContext, graphicsFactory, canvas) {
+        this.umlWebClient = umlWebClient;
+        this.diagramContext = diagramContext;
+        this.graphicsFactory = graphicsFactory;
+        this.canvas = canvas;
+    }
+
+    async resize(context) {
+        const shapeInstance = await this.umlWebClient.get(context.shape.id);
+        await adjustShape(context.shape, shapeInstance, this.umlWebClient);
+        for (const child of context.shape.children) {
+            const childInstance = await this.umlWebClient.get(child.id);
+            await adjustShape(child, childInstance, this.umlWebClient);
+        }
+        await adjustAttachedEdges(context.shape, this.umlWebClient);
+        this.umlWebClient.put(this.diagramContext.diagram);
+    }
+
+    assignBounds(context, bounds) {
+        const shape = context.shape;
+        shape.x = bounds.x;
+        shape.y = bounds.y;
+        shape.width = bounds.width;
+        shape.height = bounds.height;
+        this.graphicsFactory.update('shape', shape, this.canvas.getGraphics(shape));
+        this.resize(context);
+    }
+
+    execute(context) {
+        const newBounds = roundBounds(context.newBounds);
+        const shape = context.shape;
+        context.oldBounds = {
+            x: shape.x,
+            y: shape.y,
+            width: shape.width,
+            height: shape.height,
+        };
+        this.assignBounds(context, newBounds);
+        return shape;
+    }
+    revert(context) {
+        const oldBounds = context.oldBounds;
+        this.assignBounds(context, oldBounds);
+        return context.shape;
+    }
+}
+
+ResizeShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory', 'canvas'];
+
 export default class UmlShapeProvider {
 
     constructor(eventBus, umlWebClient, diagramContext, elementRegistry, elementFactory, canvas, graphicsFactory, commandStack) {
         commandStack.registerHandler('move.shape.uml', MoveShapeHandler);
+        commandStack.registerHandler('resize.shape.uml', ResizeShapeHandler);
         eventBus.on('shape.move.end', 1100, (event) => {
             commandStack.execute('move.shape.uml', event.context);
             return false; // stop propogation because we are overriding the default behavior at the end
         });
-        eventBus.on('resize.end', (event) => {
-            const resizeEnd = async () => {
-                const shapeInstance = await umlWebClient.get(event.shape.id);
-                await adjustShape(event.shape, shapeInstance, umlWebClient);
-                for (const child of event.shape.children) {
-                    const childInstance = await umlWebClient.get(child.id);
-                    await adjustShape(child, childInstance, umlWebClient);
-                }
-                await adjustAttachedEdges(event.shape, umlWebClient);
-                umlWebClient.put(diagramContext.diagram);
+        eventBus.on('resize.end', 1100, (event) => {
+            if (event.context.canExecute) {
+                commandStack.execute('resize.shape.uml', event.context);
+                event.context.canExecute = false;
             }
-            resizeEnd();
         });
         eventBus.on('server.create', (event) => {
             if (event.serverElement.elementType() === 'shape') {
