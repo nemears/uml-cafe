@@ -1,39 +1,76 @@
-import { BOUNDS_ID, EDGE_ID, LABEL_ID, SHAPE_ID, createDiagramShape } from "../api/diagramInterchange";
+import { BOUNDS_ID, EDGE_ID, LABEL_ID, SHAPE_ID } from "../api/diagramInterchange";
 import { adjustEdgeWaypoints } from './UmlEdgeProvider';
+
+class MoveShapeHandler {
+    constructor(umlWebClient, diagramContext, graphicsFactory, canvas) {
+        this.umlWebClient = umlWebClient;
+        this.diagramContext = diagramContext;
+        this.graphicsFactory = graphicsFactory;
+        this.canvas = canvas;
+    }
+    execute(context) {
+        for (const shape of context.shapes) {
+            const shapeMoveEnd = async () => {
+                const shapeInstance = await this.umlWebClient.get(shape.id);
+                for (const classifierID of shapeInstance.classifiers.ids()) {
+                    if (classifierID === SHAPE_ID || classifierID === LABEL_ID) {
+                        await adjustShape(shape, shapeInstance, this.umlWebClient);
+                        for (const child of shape.children) {
+                            const childInstance = await this.umlWebClient.get(child.id);
+                            await adjustShape(child, childInstance, this.umlWebClient);
+                        }
+                        await adjustAttachedEdges(shape, this.umlWebClient);
+                    } else if (classifierID === EDGE_ID) {
+                        await adjustEdgeWaypoints(shape, this.umlWebClient);
+                    }
+                }
+                this.umlWebClient.put(this.diagramContext.diagram);
+            }
+            if (shape.ignore) {
+                delete shape.ignore
+                continue;
+            }
+            shape.x += context.delta.x;
+            shape.y += context.delta.y;
+            this.graphicsFactory.update('shape', shape, this.canvas.getGraphics(shape));
+            shapeMoveEnd();
+        }
+    }
+    revert(context) {
+        const doLater = async (shape) => {
+            const shapeInstance = await this.umlWebClient.get(shape.id);
+            for (const classifierID of shapeInstance.classifiers.ids()) {
+                if (classifierID === SHAPE_ID || classifierID === LABEL_ID) {
+                    await adjustShape(shape, shapeInstance, this.umlWebClient);
+                    for (const child of shape.children) {
+                        const childInstance = await this.umlWebClient.get(child.id);
+                        await adjustShape(child, childInstance, this.umlWebClient);
+                    }
+                    await adjustAttachedEdges(shape, this.umlWebClient);
+                } else if (classifierID === EDGE_ID) {
+                    await adjustEdgeWaypoints(shape, this.umlWebClient);
+                }
+            }
+            this.umlWebClient.put(this.diagramContext.diagram);
+        }
+        for (const shape of context.shapes) {
+            shape.x -= context.delta.x;
+            shape.y -= context.delta.y;
+            this.graphicsFactory.update('shape', shape, this.canvas.getGraphics(shape));
+            doLater(shape);
+        }
+    }
+}
+
+MoveShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory', 'canvas'];
 
 export default class UmlShapeProvider {
 
-    constructor(eventBus, umlWebClient, diagramContext, elementRegistry, elementFactory, canvas, graphicsFactory) {
-        // eventBus.on('shape.added', (event) => {
-        //     if (event.element.newUMLElement || event.element.newShapeElement) {
-        //         createDiagramShape(event.element, umlWebClient, diagramContext);
-        //     }
-        // });
-        eventBus.on('shape.move.end', (event) => {
-            for (const shape of event.context.shapes) {
-                const shapeMoveEnd = async () => {
-                    console.log('moving shape ' + shape.id + ' to (' + shape.x + ',' + shape.y +')');
-                    const shapeInstance = await umlWebClient.get(shape.id);
-                    for (const classifierID of shapeInstance.classifiers.ids()) {
-                        if (classifierID === SHAPE_ID || classifierID === LABEL_ID) {
-                            await adjustShape(shape, shapeInstance, umlWebClient);
-                            for (const child of shape.children) {
-                                const childInstance = await umlWebClient.get(child.id);
-                                await adjustShape(child, childInstance, umlWebClient);
-                            }
-                            await adjustAttachedEdges(shape, umlWebClient);
-                        } else if (classifierID === EDGE_ID) {
-                            await adjustEdgeWaypoints(shape, umlWebClient);
-                        }
-                    }
-                    umlWebClient.put(diagramContext.diagram);
-                }
-                if (shape.ignore) {
-                    delete shape.ignore
-                } else {
-                    shapeMoveEnd();
-                }
-            }
+    constructor(eventBus, umlWebClient, diagramContext, elementRegistry, elementFactory, canvas, graphicsFactory, commandStack) {
+        commandStack.registerHandler('move.shape.uml', MoveShapeHandler);
+        eventBus.on('shape.move.end', 1100, (event) => {
+            commandStack.execute('move.shape.uml', event.context);
+            return false; // stop propogation because we are overriding the default behavior at the end
         });
         eventBus.on('resize.end', (event) => {
             const resizeEnd = async () => {
@@ -88,7 +125,7 @@ export default class UmlShapeProvider {
     }
 }
 
-UmlShapeProvider.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory'];
+UmlShapeProvider.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory', 'commandStack'];
 
 export async function adjustShape(shape, shapeInstance, umlWebClient) {
     let boundsInstance = undefined;
