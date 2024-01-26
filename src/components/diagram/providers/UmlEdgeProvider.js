@@ -1,13 +1,33 @@
 import { makeUMLWaypoints } from './relationships/relationshipUtil';
 
+class AdjustWaypointsHandler {
+    constructor(graphicsFactory, canvas, umlWebClient) {
+        this.graphicsFactory = graphicsFactory;
+        this.canvas = canvas;
+        this.umlWebClient = umlWebClient;
+    }
+    execute(context) {
+        context.connection.waypoints = context.newWaypoints;
+        this.graphicsFactory.update(context.connection, 'connection', this.canvas.getGraphics(context.connection));
+        adjustEdgeWaypoints(context.connection, this.umlWebClient);
+        return context.connection;
+    }
+    revert(context) {
+        context.connection.waypoints = context.originalWaypoints;
+        this.graphicsFactory.update(context.connection, 'connection', this.canvas.getGraphics(context.connection));
+        adjustEdgeWaypoints(context.connection, this.umlWebClient);
+        return context.connection;
+    }
+}
+
+AdjustWaypointsHandler.$inject= ['graphicsFactory', 'canvas', 'umlWebClient'];
+
 export default class UmlEdgeProvider {
-    constructor(eventBus, umlWebClient, diagramContext, elementRegistry, elementFactory, canvas, graphicsFactory) {
-        eventBus.on('connectionSegment.move.end', (event) => {
-            const connectionSegmentMoveEnd = async () => {
-                await adjustEdgeWaypoints(event.connection, umlWebClient);
-                umlWebClient.put(diagramContext.diagram);
-            };
-            connectionSegmentMoveEnd();
+    constructor(eventBus, umlWebClient, diagramContext, elementRegistry, elementFactory, canvas, graphicsFactory, commandStack) {
+        commandStack.registerHandler('move.edge.uml', AdjustWaypointsHandler);
+        eventBus.on('connectionSegment.move.end', 1100, (event) => {
+            commandStack.execute('move.edge.uml', event.context);
+            return false;
         });
     
         eventBus.on('connectionSegment.move.move', (event) => {
@@ -17,15 +37,29 @@ export default class UmlEdgeProvider {
             };
             if (umlWebClient.client.otherClients.size > 0) {
                 connectionSegmentMove();
+            } else {
+                event.context.connection.waypoints = event.context.newWaypoints;
+                graphicsFactory.update(event.context.connection, 'connection', canvas.getGraphics(event.context.connection));
             }
         });
     
-        eventBus.on('bendpoint.move.end', (event) => {
-            const bendpointMoveEnd = async () => {
-                await adjustEdgeWaypoints(event.connection, umlWebClient);
-                umlWebClient.put(diagramContext.diagram);
-            };
-            bendpointMoveEnd();
+        eventBus.on('bendpoint.move.end', 1100, (event) => {
+            const originalWaypoints = [];
+            event.context.waypoints.forEach(pt => originalWaypoints.push({x:pt.x,y:pt.y}));
+            const index = event.context.bendpointIndex;
+            if (event.context.insert) {
+                originalWaypoints.splice(index, 0, {x:event.x, y:event.y});
+            } else {
+                originalWaypoints[index].x += event.dx;
+                originalWaypoints[index].y += event.dy;
+            }
+            const context = {
+                connection : event.context.connection,
+                originalWaypoints: event.context.waypoints,
+                newWaypoints: originalWaypoints
+            }
+            commandStack.execute('move.edge.uml', context);
+            return false;
         });
 
         eventBus.on('server.create', (event) => {
@@ -77,7 +111,7 @@ export default class UmlEdgeProvider {
     }
 }
 
-UmlEdgeProvider.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory'];
+UmlEdgeProvider.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory', 'commandStack'];
 
 export async function adjustEdgeWaypoints(edge, umlWebClient) {
     const edgeInstance = await umlWebClient.get(edge.id);
