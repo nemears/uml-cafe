@@ -77,14 +77,16 @@ export default class NameEditProvider {
         }
         if (element.labelTarget) {
             element.text = newLabel;
-            const labelBounds = getLabelBounds(element.labelTarget, umlRenderer);
-            labelBounds.x = element.x;
-            labelBounds.y = element.y;
-            modeling.resizeShape(
-                element,
-                labelBounds,
-            );
-            updateLabel(element, umlWebClient);
+            if (element.modelElement.elementType() === 'property' && element.parent.modelElement.elementType() === 'association') {
+                const labelBounds = getLabelBounds(element.modelElement, element.parent, umlRenderer);
+                labelBounds.x = element.x;
+                labelBounds.y = element.y;
+                modeling.resizeShape(
+                    element,
+                    labelBounds,
+                );
+                updateLabel(element, umlWebClient);
+            }
         } else {
             element.x = bounds.x;
             element.y = bounds.y;

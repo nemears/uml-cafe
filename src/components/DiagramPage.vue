@@ -163,11 +163,10 @@ export default {
 
                         }
                         // TODO create label pointing to shape
-                        let labelTargets = modelElementMap.get(umlLabel.modelElement.id);
-                        for (const targetID of labelTargets) {
-                            const labelTarget = elementRegistry.get(targetID);
-                            if (labelTarget.parent && labelTarget.parent.modelElement && labelTarget.parent.modelElement.isSubClassOf('association')) {
-                                const label = elementFactory.createLabel({
+                        if (umlLabel.modelElement.elementType() === 'property' && umlLabel.modelElement.association.has()) {
+                            // it is a member end label
+                            const labelTarget = elementRegistry.get(umlLabel.owningElement);
+                            const label = elementFactory.createLabel({
                                     id: umlLabel.id,
                                     text: umlLabel.text,
                                     modelElement: umlLabel.modelElement,
@@ -177,12 +176,31 @@ export default {
                                     height: umlLabel.bounds.height,
                                     labelTarget: labelTarget
                                 });
-                                canvas.addShape(label, labelTarget.parent);
+                                canvas.addShape(label, labelTarget);
                                 return label;
-                            }
                         }
+
+                        // // assume target is owner
+                        // let labelTargets = modelElementMap.get(umlLabel.modelElement.id);
+                        // for (const targetID of labelTargets) {
+                        //     const labelTarget = elementRegistry.get(targetID);
+                        //     if (labelTarget.parent && labelTarget.parent.modelElement && labelTarget.parent.modelElement.isSubClassOf('association')) {
+                        //         const label = elementFactory.createLabel({
+                        //             id: umlLabel.id,
+                        //             text: umlLabel.text,
+                        //             modelElement: umlLabel.modelElement,
+                        //             x: umlLabel.bounds.x,
+                        //             y: umlLabel.bounds.y,
+                        //             width: umlLabel.bounds.width,
+                        //             height: umlLabel.bounds.height,
+                        //             labelTarget: labelTarget
+                        //         });
+                        //         canvas.addShape(label, labelTarget.parent);
+                        //         return label;
+                        //     }
+                        // }
                     }
-                } 
+                }
 
                 // draw all shapes
                 for await (let packagedEl of diagramPackage.packagedElements) {

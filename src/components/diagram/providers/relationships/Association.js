@@ -1,11 +1,10 @@
 import { createElementUpdate } from '../../../../umlUtil';
 import { createDiagramEdge } from '../../api/diagramInterchange';
 import { randomID } from 'uml-client/lib/element';
-import { createDiagramLabel, createDiagramShape } from '../../api/diagramInterchange';
+import { createDiagramLabel } from '../../api/diagramInterchange';
 import { adjustShape } from '../UmlShapeProvider';
 import { getMultiplicityText } from '../UMLRenderer';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
-import { assign } from 'min-dash';
 import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout';
 import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
 
@@ -42,13 +41,10 @@ export default class Association extends RuleProvider {
                     umlWebClient.put(diagramContext.context);
 
                     createAssociationConnection(event, association, elementFactory, canvas);
-                    const lastWaypoint = event.context.connection.waypoints.slice(-1)[0];
-                    const propertyShape = createAssociationEndShape(event, memberEnd, lastWaypoint, elementFactory, canvas);
-                    const propertyLabel = createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
+                    const propertyLabel = createAssociationEndLabel(event.context.connection, memberEnd, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
 
                     // send to server and rest of client
                     await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
-                    await createDiagramShape(propertyShape, umlWebClient, diagramContext);
                     await createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, clazz, association));
                 }
@@ -98,11 +94,8 @@ export default class Association extends RuleProvider {
                     umlWebClient.put(diagramContext.context);
 
                     createAssociationConnection(event, association, elementFactory, canvas);
-                    const lastWaypoint = event.context.connection.waypoints.slice(-1)[0];
-                    const propertyShape = createAssociationEndShape(event, memberEnd, lastWaypoint, elementFactory, canvas);
-                    const propertyLabel = createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas);
+                    const propertyLabel = createAssociationEndLabel(event.context.connection, memberEnd, umlRenderer, elementFactory, canvas);
                     await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
-                    await createDiagramShape(propertyShape , umlWebClient, diagramContext);
                     await createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, association));
                 };
@@ -153,21 +146,11 @@ export default class Association extends RuleProvider {
                     umlWebClient.put(diagramContext.context);
 
                     createAssociationConnection(event, association, elementFactory, canvas);
-                    const sourceShape = createAssociationEndShape(event, sourceEnd, event.context.connection.waypoints[0], elementFactory, canvas);
-                    const sourceLabel = createAssociationEndLabel(sourceShape, umlRenderer, elementFactory, canvas);
-                    const targetShape = createAssociationEndShape(event, targetEnd, event.context.connection.waypoints.slice(-1)[0], elementFactory, canvas);
-                    const targetLabel = createAssociationEndLabel(targetShape,umlRenderer, elementFactory, canvas);
+                    const sourceLabel = createAssociationEndLabel(event.context.connection, sourceEnd, umlRenderer, elementFactory, canvas);
+                    const targetLabel = createAssociationEndLabel(event.context.connection, targetEnd, umlRenderer, elementFactory, canvas);
                     await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
-                    console.log('createEdge');
-                    await umlWebClient.head();
-                    await createDiagramShape(sourceShape, umlWebClient, diagramContext);
-                    console.log('createShape1');
-                    await createDiagramShape(targetShape, umlWebClient, diagramContext);
-                    console.log('createShape2');
                     await createDiagramLabel(sourceLabel, umlWebClient, diagramContext);
-                    console.log('createLabel1');
                     await createDiagramLabel(targetLabel, umlWebClient, diagramContext);
-                    console.log('createLabel2');
                     diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));
                 };
                 createAssociation();
@@ -206,7 +189,7 @@ export default class Association extends RuleProvider {
             });
         });
 
-        eventBus.on('shape.move.end', (event) => {
+        eventBus.on('uml.shape.move', (event) => {
             const shape = event.shape;
             
             for (const connection of shape.incoming) {
@@ -218,16 +201,16 @@ export default class Association extends RuleProvider {
                 checkConnectionEnds(connection, graphicsFactory, canvas, umlRenderer, umlWebClient);
             }
         });
-        eventBus.on('shape.move.end', 900, (event) => {
-            const shape = event.shape;
-            if (shape.labelTarget && shape.labelTarget.modelElement && shape.labelTarget.modelElement.isSubClassOf('property')) {
-                assign(shape,
-                    {
-                        parent : shape.labelTarget.parent
-                    });
-                graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
-            }
-        });
+        // eventBus.on('shape.move.end', 900, (event) => {
+        //     const shape = event.shape;
+        //     if (shape.labelTarget && shape.labelTarget.modelElement && shape.labelTarget.modelElement.isSubClassOf('property')) {
+        //         assign(shape,
+        //             {
+        //                 parent : shape.labelTarget.parent
+        //             });
+        //         graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
+        //     }
+        // });
         eventBus.on('connection.move.end', (event) => {
             checkConnectionEnds(event.connection, graphicsFactory, canvas, umlRenderer, umlWebClient);
         });
@@ -296,61 +279,41 @@ function canConnect(context) {
 Association.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'umlRenderer', 'elementFactory', 'canvas', 'graphicsFactory'];
 
 async function checkConnectionEnds(connection, graphicsFactory, canvas, umlRenderer, umlWebClient) {
-    if (!connection.children) {
-        return;
-    }
-    for (const end of connection.children) {
-        if (end.modelElement.elementType() === 'property' && !end.labelTarget) {
-            end.width = 2 * OWNED_END_RADIUS;
-            end.height = 2 * OWNED_END_RADIUS;
-            let waypoint;
-            if (end.modelElement.type.id() === connection.source.modelElement.id) {
-                waypoint = connection.waypoints[0];
-            } else if (end.modelElement.type.id() === connection.target.modelElement.id) {
-                waypoint = connection.waypoints.slice(-1)[0];
-            }
-            end.x = waypoint.x - OWNED_END_RADIUS;
-            end.y = waypoint.y - OWNED_END_RADIUS;
+    // move label
+    for (const label of connection.labels) {
+        // TODO only update if the waypoint corresponding to the label has changed
+        const labelBounds = getLabelBounds(label.modelElement, connection, umlRenderer);
+        label.x = labelBounds.x;
+        label.y = labelBounds.y;
+        label.width = labelBounds.width;
+        label.height = labelBounds.height;
+        graphicsFactory.update('shape', label, canvas.getGraphics(label));
 
-            graphicsFactory.update('shape', end, canvas.getGraphics(end));
-            if (umlWebClient) await adjustShape(end, await umlWebClient.get(end.id), umlWebClient);
-
-            // move label
-            for (const label of end.labels) {
-                const labelBounds = getLabelBounds(end, umlRenderer);
-                label.x = labelBounds.x;
-                label.y = labelBounds.y;
-                label.width = labelBounds.width;
-                label.height = labelBounds.height;
-                graphicsFactory.update('shape', label, canvas.getGraphics(label));
-
-                // update it to server
-                if (umlWebClient) await adjustShape(label, await umlWebClient.get(label.id), umlWebClient);
-            }
-        }
+        // update it to server
+        if (umlWebClient) await adjustShape(label, await umlWebClient.get(label.id), umlWebClient);
     }
 }
 
-export function createAssociationEndLabel(propertyShape, umlRenderer, elementFactory, canvas) {
-    let labelName = propertyShape.modelElement.name;
-    let labelBounds = getLabelBounds(propertyShape, umlRenderer);
+export function createAssociationEndLabel(association, property, umlRenderer, elementFactory, canvas) {
+    let labelName = property.name;
+    let labelBounds = getLabelBounds(property, association, umlRenderer);
     const propertyLabel = elementFactory.createLabel({
         id: randomID(),
-        labelTarget: propertyShape,
-        modelElement: propertyShape.modelElement,
+        labelTarget: association,
+        modelElement: property,
         text: labelName,
         x: labelBounds.x,
         y: labelBounds.y,
         width: labelBounds.width,
         height: labelBounds.height,
     });
-    canvas.addShape(propertyLabel, propertyShape.parent);
+    canvas.addShape(propertyLabel, association);
     return propertyLabel;
 }
 
-export function getLabelBounds(propertyShape, umlRenderer) {
-    let labelName = propertyShape.modelElement.name;
-    labelName += " " + getMultiplicityText(propertyShape);
+export function getLabelBounds(property, association, umlRenderer) {
+    let labelName = property.name;
+    labelName += " " + getMultiplicityText(property);
     const options = {
         align: 'center-middle',
         box: {
@@ -367,35 +330,38 @@ export function getLabelBounds(propertyShape, umlRenderer) {
         labelBounds.height = 10;
     }
     let typeShape;
-    if (propertyShape.parent.source.modelElement.id === propertyShape.modelElement.type.id()) {
-        typeShape = propertyShape.parent.source;
-    } else if (propertyShape.parent.target.modelElement.id === propertyShape.modelElement.type.id()) {
-        typeShape = propertyShape.parent.target;
+    let propertyPoint;
+    if (association.source.modelElement.id === property.type.id()) {
+        typeShape = association.source;
+        propertyPoint = association.waypoints[0];
+    } else if (association.target.modelElement.id === property.type.id()) {
+        typeShape = association.target;
+        propertyPoint = association.waypoints.slice(-1)[0];
     } else {
         throw new Error('bad state!');
     }
-    if (propertyShape.y < typeShape.y) {
+    if (propertyPoint.y <= typeShape.y) {
         // it is above the shape
         // put it above and to the right
-        labelBounds.x = propertyShape.x + 20;
-        labelBounds.y = propertyShape.y - 10;
+        labelBounds.x = propertyPoint.x + 20;
+        labelBounds.y = propertyPoint.y - 20;
     } else {
         // it is either below or to either side
-        if (propertyShape.x < typeShape.x) {
+        if (propertyPoint.x <= typeShape.x) {
             // it is to left
             // place it above and to the left making sure it doesn't overflow above
-            labelBounds.x = propertyShape.x - labelBounds.width;
-            labelBounds.y = propertyShape.y - 20;
-        } else if (propertyShape.x + (2 * OWNED_END_RADIUS) > (typeShape.x + typeShape.width)) {
+            labelBounds.x = propertyPoint.x - labelBounds.width;
+            labelBounds.y = propertyPoint.y - 20;
+        } else if (propertyPoint.x + (2 * OWNED_END_RADIUS) > (typeShape.x + typeShape.width)) {
             // it is to the right
             // place it above and to the right
-            labelBounds.x = propertyShape.x + 20;
-            labelBounds.y = propertyShape.y - 10;
+            labelBounds.x = propertyPoint.x + 20;
+            labelBounds.y = propertyPoint.y - 20;
         } else {
             // it is below
             // place it below and to the right
-            labelBounds.x = propertyShape.x + 20;
-            labelBounds.y = propertyShape.y + labelBounds.height;
+            labelBounds.x = propertyPoint.x + 20;
+            labelBounds.y = propertyPoint.y + labelBounds.height;
         }
     }
     return labelBounds;
@@ -409,24 +375,10 @@ function createAssociationConnection(event, association, elementFactory, canvas)
         target: target,
         waypoints: connectRectangles(source, target, getMid(source), getMid(target)),
         id: randomID(),
-        modelElement: association
+        modelElement: association,
+        children: [],
     });
     canvas.addConnection(event.context.connection, canvas.findRoot(event.context.hover));
 
     return event.context.connection;
-}
-
-function createAssociationEndShape(event, modelElement, waypoint, elementFactory, canvas) {
-    const ret = elementFactory.createShape(
-        {
-            x: waypoint.x - OWNED_END_RADIUS,
-            y: waypoint.y - OWNED_END_RADIUS,
-            width: 2 * OWNED_END_RADIUS,
-            height: 2 * OWNED_END_RADIUS,
-            id: randomID(),
-            modelElement: modelElement
-        }
-    );
-    canvas.addShape(ret, event.context.connection);
-    return ret;
 }
