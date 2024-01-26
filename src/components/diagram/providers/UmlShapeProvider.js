@@ -126,7 +126,7 @@ ResizeShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory
 
 export default class UmlShapeProvider {
 
-    constructor(eventBus, umlWebClient, diagramContext, elementRegistry, elementFactory, canvas, graphicsFactory, commandStack) {
+    constructor(eventBus, elementRegistry, elementFactory, canvas, graphicsFactory, commandStack) {
         commandStack.registerHandler('move.shape.uml', MoveShapeHandler);
         commandStack.registerHandler('resize.shape.uml', ResizeShapeHandler);
         eventBus.on('shape.move.end', 1100, (event) => {
@@ -177,7 +177,7 @@ export default class UmlShapeProvider {
     }
 }
 
-UmlShapeProvider.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory', 'commandStack'];
+UmlShapeProvider.$inject = ['eventBus', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory', 'commandStack'];
 
 export async function adjustShape(shape, shapeInstance, umlWebClient) {
     let boundsInstance = undefined;
