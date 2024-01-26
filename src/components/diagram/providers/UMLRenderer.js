@@ -128,6 +128,9 @@ export default class UMLRenderer extends BaseRenderer {
                         const arrowPoints = createArrow(leadingLine);
                         if (memberEnd.owner.id() !== element.modelElement.id) { // TODO do this by looking for shape instead
                             moveArrow(leadingLine, arrowPoints);
+                            // draw circle
+                            // end shape
+                            svgAppend(group, this.drawEnd(leadingLine.reverse(), attrs));
                         }
                         createAssociationArrow(group, arrowPoints);
                     } else if (memberEnd.type.id() === element.target.modelElement.id) {
@@ -136,6 +139,7 @@ export default class UMLRenderer extends BaseRenderer {
                         const arrowPoints = createArrow(leadingLine);
                         if (memberEnd.owner.id() !== element.modelElement.id) {
                             moveArrow(leadingLine, arrowPoints); 
+                            svgAppend(group, this.drawEnd(leadingLine.reverse(), attrs));
                         }
                         createAssociationArrow(group, arrowPoints);
                     }
@@ -302,6 +306,7 @@ export default class UMLRenderer extends BaseRenderer {
                     );
                     svgAppend(group, text);
                 } else {
+                    // TODO move
                     // end shape
                     const circle = svgCreate('circle');
                     const options = {
@@ -346,6 +351,19 @@ export default class UMLRenderer extends BaseRenderer {
         svgAppend(gfx, group);
         return group;
     }
+
+    drawEnd(leadingLine, attrs) {
+        const circle = svgCreate('circle');
+        const options = {
+            cx: leadingLine[0].x,
+            cy: leadingLine[0].y,
+            r: 5
+        };
+        moveEnd(leadingLine.reverse(), options);
+        svgAttr(circle, options); 
+        svgAttr(circle, assign({}, this.OWNED_ATTRIBUTE_STYLE), attrs || {});
+        return circle;
+    }
 }
 
 UMLRenderer.$inject = ['eventBus'];
@@ -353,8 +371,8 @@ UMLRenderer.$inject = ['eventBus'];
 export function getMultiplicityText(element) {
     let textString = '';
     const multiplicity = {};
-    if (element.modelElement.lowerValue.has()) {
-        multiplicity.lower = element.modelElement.lowerValue.val.el.value;
+    if (element.lowerValue.has()) {
+        multiplicity.lower = element.lowerValue.val.el.value;
     }
     if (multiplicity.upper !== undefined) {
         if (multiplicity.lower !== undefined) {
@@ -363,8 +381,8 @@ export function getMultiplicityText(element) {
             textString += ' ' + multiplicity.upper;
         }
     }
-    if (element.modelElement.upperValue.has()) {
-        multiplicity.upper = element.modelElement.upperValue.val.el.value;
+    if (element.upperValue.has()) {
+        multiplicity.upper = element.upperValue.val.el.value;
     }
     return textString; 
 }

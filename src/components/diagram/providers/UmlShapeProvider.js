@@ -1,71 +1,78 @@
-import { roundBounds } from "diagram-js/lib/layout/LayoutUtil";
+import { getMid, roundBounds } from "diagram-js/lib/layout/LayoutUtil";
 import { BOUNDS_ID, EDGE_ID, LABEL_ID, SHAPE_ID } from "../api/diagramInterchange";
 import { adjustEdgeWaypoints } from './UmlEdgeProvider';
+import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 
 class MoveShapeHandler {
-    constructor(umlWebClient, diagramContext, graphicsFactory, canvas) {
+    constructor(umlWebClient, diagramContext, graphicsFactory, canvas, eventBus) {
         this.umlWebClient = umlWebClient;
         this.diagramContext = diagramContext;
         this.graphicsFactory = graphicsFactory;
         this.canvas = canvas;
+        this.eventBus = eventBus;
     }
+    async doLater(shape) {
+        const shapeInstance = await this.umlWebClient.get(shape.id);
+        for (const classifierID of shapeInstance.classifiers.ids()) {
+            if (classifierID === SHAPE_ID || classifierID === LABEL_ID) {
+                await adjustShape(shape, shapeInstance, this.umlWebClient);
+                for (const child of shape.children) {
+                    const childInstance = await this.umlWebClient.get(child.id);
+                    await adjustShape(child, childInstance, this.umlWebClient);
+                }
+                await adjustAttachedEdges(shape, this.umlWebClient);
+            } else if (classifierID === EDGE_ID) {
+                await adjustEdgeWaypoints(shape, this.umlWebClient);
+            }
+        }
+        this.umlWebClient.put(this.diagramContext.diagram);
+    }
+
+    async moveElementChildrenAndEdges(element, context, direction) {
+        if (element.waypoints) {
+            element.waypoints = connectRectangles(element.source, element.target, getMid(element.source), getMid(element.target));
+            this.graphicsFactory.update('connection', element, this.canvas.getGraphics(element));
+        } else {
+            element.x += direction * context.delta.x;
+            element.y += direction * context.delta.y;
+            this.graphicsFactory.update('shape', element, this.canvas.getGraphics(element));
+            for (const connection of element.incoming) {
+                this.moveElementChildrenAndEdges(connection, context, direction);
+            }
+            for (const connection of element.outgoing) {
+                this.moveElementChildrenAndEdges(connection, context, direction);
+            }
+        }
+        if (element.children) {
+            for (const child of element.children) {
+                this.moveElementChildrenAndEdges(child, context, direction);
+            }
+        }
+    }
+
     execute(context) {
         for (const shape of context.shapes) {
-            const shapeMoveEnd = async () => {
-                const shapeInstance = await this.umlWebClient.get(shape.id);
-                for (const classifierID of shapeInstance.classifiers.ids()) {
-                    if (classifierID === SHAPE_ID || classifierID === LABEL_ID) {
-                        await adjustShape(shape, shapeInstance, this.umlWebClient);
-                        for (const child of shape.children) {
-                            const childInstance = await this.umlWebClient.get(child.id);
-                            await adjustShape(child, childInstance, this.umlWebClient);
-                        }
-                        await adjustAttachedEdges(shape, this.umlWebClient);
-                    } else if (classifierID === EDGE_ID) {
-                        await adjustEdgeWaypoints(shape, this.umlWebClient);
-                    }
-                }
-                this.umlWebClient.put(this.diagramContext.diagram);
-            }
             if (shape.ignore) {
                 delete shape.ignore
                 continue;
             }
-            shape.x += context.delta.x;
-            shape.y += context.delta.y;
-            this.graphicsFactory.update('shape', shape, this.canvas.getGraphics(shape));
-            shapeMoveEnd();
-            return context.shapes;
+            this.moveElementChildrenAndEdges(shape, context, 1);
+            this.doLater(shape);
+            this.eventBus.fire('uml.shape.move', { shape: shape});
         }
+        return context.shapes;
     }
     revert(context) {
-        const doLater = async (shape) => {
-            const shapeInstance = await this.umlWebClient.get(shape.id);
-            for (const classifierID of shapeInstance.classifiers.ids()) {
-                if (classifierID === SHAPE_ID || classifierID === LABEL_ID) {
-                    await adjustShape(shape, shapeInstance, this.umlWebClient);
-                    for (const child of shape.children) {
-                        const childInstance = await this.umlWebClient.get(child.id);
-                        await adjustShape(child, childInstance, this.umlWebClient);
-                    }
-                    await adjustAttachedEdges(shape, this.umlWebClient);
-                } else if (classifierID === EDGE_ID) {
-                    await adjustEdgeWaypoints(shape, this.umlWebClient);
-                }
-            }
-            this.umlWebClient.put(this.diagramContext.diagram);
-        }
         for (const shape of context.shapes) {
-            shape.x -= context.delta.x;
-            shape.y -= context.delta.y;
-            this.graphicsFactory.update('shape', shape, this.canvas.getGraphics(shape));
-            doLater(shape);
+            this.moveElementChildrenAndEdges(shape, context, -1);
+            this.doLater(shape);
+            this.eventBus.fire('uml.shape.move', { shape: shape});
         }
         return context.shapes
     }
 }
 
-MoveShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory', 'canvas'];
+MoveShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory', 'canvas', 'eventBus'];
 
 class ResizeShapeHandler {
     constructor(umlWebClient, diagramContext, graphicsFactory, canvas) {
@@ -164,8 +171,6 @@ export default class UmlShapeProvider {
 
                 // update
                 graphicsFactory.update('shape', localShape, canvas.getGraphics(localShape));
-
-                console.log('updated shape');
                 console.log(umlShape);
             }
         });
