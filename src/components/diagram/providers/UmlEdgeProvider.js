@@ -65,8 +65,6 @@ export default class UmlEdgeProvider {
         eventBus.on('server.create', (event) => {
             if (event.serverElement.elementType() === 'edge') {
                 const umlEdge = event.serverElement;
-                console.log('creating edge');
-                console.log(umlEdge);
                 const createEdge = async () => {
                     const source = elementRegistry.get(umlEdge.source); 
                     const target = elementRegistry.get(umlEdge.target);
@@ -104,8 +102,6 @@ export default class UmlEdgeProvider {
                 localEdge.waypoints = serverEdge.waypoints;
 
                 graphicsFactory.update('connection', localEdge, canvas.getGraphics(localEdge));
-                console.log('updated edge');
-                console.log(serverEdge);
             }
         });
     }
