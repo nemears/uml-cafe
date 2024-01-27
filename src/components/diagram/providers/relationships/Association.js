@@ -240,16 +240,6 @@ export default class Association extends RuleProvider {
                 checkConnectionEnds(connection, graphicsFactory, canvas, umlRenderer, umlWebClient);
             }
         });
-        // eventBus.on('shape.move.end', 900, (event) => {
-        //     const shape = event.shape;
-        //     if (shape.labelTarget && shape.labelTarget.modelElement && shape.labelTarget.modelElement.isSubClassOf('property')) {
-        //         assign(shape,
-        //             {
-        //                 parent : shape.labelTarget.parent
-        //             });
-        //         graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
-        //     }
-        // });
         eventBus.on('connection.move.end', (event) => {
             checkConnectionEnds(event.connection, graphicsFactory, canvas, umlRenderer, umlWebClient);
         });
