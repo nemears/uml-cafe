@@ -100,7 +100,15 @@ class ResizeShapeHandler {
         shape.width = bounds.width;
         shape.height = bounds.height;
         this.graphicsFactory.update('shape', shape, this.canvas.getGraphics(shape));
-        this.resize(context);
+        // adjust edges
+        for (const edge of shape.incoming) {
+            edge.waypoints = connectRectangles(edge.source, edge.target, getMid(edge.source), getMid(edge.target));
+            this.graphicsFactory.update('connection', edge, this.canvas.getGraphics(edge));
+        }
+        for (const edge of shape.outgoing) {
+            edge.waypoints = connectRectangles(edge.source, edge.target, getMid(edge.source), getMid(edge.target));
+            this.graphicsFactory.update('connection', edge, this.canvas.getGraphics(edge));
+        }
     }
 
     execute(context) {
@@ -113,11 +121,13 @@ class ResizeShapeHandler {
             height: shape.height,
         };
         this.assignBounds(context, newBounds);
+        this.resize(context);
         return shape;
     }
     revert(context) {
         const oldBounds = context.oldBounds;
         this.assignBounds(context, oldBounds);
+        this.resize(context);
         return context.shape;
     }
 }
@@ -142,8 +152,6 @@ export default class UmlShapeProvider {
         eventBus.on('server.create', (event) => {
             if (event.serverElement.elementType() === 'shape') {
                 const umlShape = event.serverElement;
-                console.log('creating shape');
-                console.log(umlShape);
                 const owner = elementRegistry.get(umlShape.owningElement);
                 const shape = elementFactory.createShape({
                     x: umlShape.bounds.x,
@@ -171,7 +179,6 @@ export default class UmlShapeProvider {
 
                 // update
                 graphicsFactory.update('shape', localShape, canvas.getGraphics(localShape));
-                console.log(umlShape);
             }
         });
     }
