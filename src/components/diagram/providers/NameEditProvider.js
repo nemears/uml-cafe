@@ -2,14 +2,94 @@ import { createElementUpdate } from '../../../umlUtil';
 import { updateLabel } from '../api/diagramInterchange';
 import { getLabelBounds } from './relationships/Association';
 
-export default class NameEditProvider {
-
-    constructor(directEditing, umlWebClient, diagramEmitter, umlRenderer, modeling) {
-        directEditing.registerProvider(this);
+class UpdateNameHandler {
+    constructor(umlWebClient, diagramEmitter, umlRenderer, graphicsFactory, canvas) {
         this._umlWebClient = umlWebClient;
         this._diagramEmitter = diagramEmitter;
         this._umlRenderer = umlRenderer;
-        this._modeling = modeling;
+        this._graphicsFactory = graphicsFactory;
+        this._canvas = canvas;
+    }
+    execute(context) {
+        const umlWebClient = this._umlWebClient,
+        diagramEmitter = this._diagramEmitter,
+        umlRenderer = this._umlRenderer,
+        graphicsFactory = this._graphicsFactory,
+        canvas = this._canvas,
+        element = context.element,
+        newLabel = context.newLabel,
+        bounds = context.bounds;
+        context.oldBounds = {
+            x: element.x,
+            y: element.y,
+            width: element.width,
+            height: element.height,
+        };
+        if (element.modelElement) {
+            if (element.modelElement.isSubClassOf('namedElement')) {
+                context.oldText = element.modelElement.name;
+                element.modelElement.name = newLabel;
+                umlWebClient.put(element.modelElement);
+            } else if (element.modelElement.isSubClassOf('comment')) {
+                context.oldText = element.modelElement.body;
+                element.modelElement.body = newLabel;
+                umlWebClient.put(element.modelElement);
+            }
+        }
+        if (element.labelTarget) {
+            element.text = newLabel;
+            if (element.modelElement.elementType() === 'property' && element.parent.modelElement.elementType() === 'association') {
+                const labelBounds = getLabelBounds(element.modelElement, element.parent, umlRenderer);
+                element.width = labelBounds.width;
+                element.height = labelBounds.heigt;
+                graphicsFactory.update('shape', element, canvas.getGraphics(element));
+                updateLabel(element, umlWebClient);
+            }
+        } else {
+            element.x = bounds.x;
+            element.y = bounds.y;
+            element.width = bounds.width;
+            element.height = bounds.height;
+        }
+        diagramEmitter.fire('elementUpdate', createElementUpdate(element.modelElement));
+        return element;
+    }
+    revert(context) {
+        const oldBounds = context.oldBounds;
+        const element = context.element;
+        const oldText = context.oldText;
+        const graphicsFactory = this._graphicsFactory;
+        const canvas = this._canvas;
+        const diagramEmitter = this._diagramEmitter;
+        element.x = oldBounds.x;
+        element.y = oldBounds.y;
+        element.width = oldBounds.width;
+        element.height = oldBounds.height;
+        if (element.labelTarget) {
+            element.text = oldText;
+        }
+        if (element.modelElement) {
+            if (element.modelElement.isSubClassOf('namedElement')) {
+                element.modelElement.name = oldText;
+            } else if (element.modelElement.elementType() === 'comment') {
+                element.modelElement.body = oldText;
+            }
+        }
+        graphicsFactory.update('shape', element, canvas.getGraphics(element));
+        diagramEmitter.fire('elementUpdate', createElementUpdate(element.modelElement));
+        return element;
+    }
+}
+
+UpdateNameHandler.$inject = ['umlWebClient', 'diagramEmitter', 'umlRenderer', 'graphicsFactory', 'canvas'];
+
+export default class NameEditProvider {
+
+    constructor(directEditing, umlRenderer, commandStack) {
+        directEditing.registerProvider(this);
+        this._umlRenderer = umlRenderer;
+        this.commandStack = commandStack;
+        commandStack.registerHandler('uml.name.update', UpdateNameHandler);
     }
 
     activate(element) {
@@ -62,39 +142,12 @@ export default class NameEditProvider {
     }
 
     update(element, newLabel, activeContextText, bounds) {
-        const umlWebClient = this._umlWebClient,
-        diagramEmitter = this._diagramEmitter,
-        umlRenderer = this._umlRenderer,
-        modeling = this._modeling;
-        if (element.modelElement) {
-            if (element.modelElement.isSubClassOf('namedElement')) {
-                element.modelElement.name = newLabel;
-                umlWebClient.put(element.modelElement);
-            } else if (element.modelElement.isSubClassOf('comment')) {
-                element.modelElement.body = newLabel;
-                umlWebClient.put(element.modelElement);
-            }
-        }
-        if (element.labelTarget) {
-            element.text = newLabel;
-            if (element.modelElement.elementType() === 'property' && element.parent.modelElement.elementType() === 'association') {
-                const labelBounds = getLabelBounds(element.modelElement, element.parent, umlRenderer);
-                labelBounds.x = element.x;
-                labelBounds.y = element.y;
-                modeling.resizeShape(
-                    element,
-                    labelBounds,
-                );
-                updateLabel(element, umlWebClient);
-            }
-        } else {
-            element.x = bounds.x;
-            element.y = bounds.y;
-            element.width = bounds.width;
-            element.height = bounds.height;
-        }
-        diagramEmitter.fire('elementUpdate', createElementUpdate(element.modelElement));
+        this.commandStack.execute('uml.name.update', {
+            element: element,
+            newLabel: newLabel,
+            bounds: bounds,
+        });
     }
 }
 
-NameEditProvider.$inject = ['directEditing', 'umlWebClient', 'diagramEmitter', 'umlRenderer', 'modeling'];
+NameEditProvider.$inject = ['directEditing', 'umlRenderer', 'commandStack'];
