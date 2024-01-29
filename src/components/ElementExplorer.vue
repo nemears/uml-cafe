@@ -52,7 +52,7 @@ export default {
     computed: {
         indent() {
             return {
-                width: 25 * this.depth + "px",
+                "min-width": 25 * this.depth + "px",
                 overflow: 'visible'
             };
         },
@@ -564,6 +564,6 @@ export default {
     user-select: none; /* Standard */
 }
 .noExpand {
-    width: 15px;
+    min-width: 15px;
 }
 </style>
