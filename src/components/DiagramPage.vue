@@ -13,8 +13,8 @@ export default {
             loading: true,
         };
     },
-    props: ['umlID'],
-    emits: ['specification', 'elementUpdate'],
+    props: ['umlID', 'commandStack'],
+    emits: ['specification', 'elementUpdate', 'command'],
     inject: ['draginfo', 'elementUpdate', 'userSelected', 'userDeselected'],
     watch : {
         draginfo(newDraginfo) {
@@ -40,6 +40,9 @@ export default {
     },
     async mounted() {
         this.reloadDiagram();        
+    },
+    unmounted() {
+        this.diagram.get('keyboard').unbind(document);
     },
     methods: {
         specification(event) {
@@ -73,7 +76,7 @@ export default {
             const canvas = this.diagram.get('canvas');
             const elementFactory = this.diagram.get('elementFactory');
             const elementRegistry = this.diagram.get('elementRegistry');
-            const modelElementMap = this.diagram.get('modelElementMap');
+            const commandStack = this.diagram.get('commandStack');
             
             this.diagram.get('keyboard').bind(document);
 
@@ -179,26 +182,6 @@ export default {
                                 canvas.addShape(label, labelTarget);
                                 return label;
                         }
-
-                        // // assume target is owner
-                        // let labelTargets = modelElementMap.get(umlLabel.modelElement.id);
-                        // for (const targetID of labelTargets) {
-                        //     const labelTarget = elementRegistry.get(targetID);
-                        //     if (labelTarget.parent && labelTarget.parent.modelElement && labelTarget.parent.modelElement.isSubClassOf('association')) {
-                        //         const label = elementFactory.createLabel({
-                        //             id: umlLabel.id,
-                        //             text: umlLabel.text,
-                        //             modelElement: umlLabel.modelElement,
-                        //             x: umlLabel.bounds.x,
-                        //             y: umlLabel.bounds.y,
-                        //             width: umlLabel.bounds.width,
-                        //             height: umlLabel.bounds.height,
-                        //             labelTarget: labelTarget
-                        //         });
-                        //         canvas.addShape(label, labelTarget.parent);
-                        //         return label;
-                        //     }
-                        // }
                     }
                 }
 
@@ -276,6 +259,15 @@ export default {
             scopedEmitter.on('contextmenu', (event) => {
                 diagramPage.$contextmenu(event);
             });
+            scopedEmitter.on('command', (event) => {
+                event.diagram = diagramPage.umlID;
+                diagramPage.$emit('command', event);
+            });
+
+            for (let command of this.commandStack.reverse()) {  // linter says bad but vue likes it
+                command.context.proxy = true;
+                commandStack.execute(command.name, JSON.parse(JSON.stringify(command.context)));
+            }
             this.emitter = Object.freeze(scopedEmitter);
             this.loading = false;
         }

@@ -1,13 +1,38 @@
 import { createDiagramShape, deleteUmlDiagramElement } from "../api/diagramInterchange";
 
 class ElementCreationHandler {
-    constructor(eventBus, umlWebClient, diagramContext, canvas) {
+    constructor(eventBus, umlWebClient, diagramContext, canvas, elementRegistry, diagramEmitter) {
         this.eventBus = eventBus;
         this.umlWebClient = umlWebClient;
         this.diagramContext = diagramContext;
         this.canvas = canvas;
+        this.elementRegistry = elementRegistry;
+        this.diagramEmitter = diagramEmitter;
     }
     execute(event) {
+        if (event.proxy) {
+            delete event.proxy;
+            const elements = [];
+            for (const element of event.elements) {
+                const realElement = this.elementRegistry.get(element.id);
+                if (element.newUMLElement) {
+                    realElement.newUMLElement = true;
+                }
+                elements.push(realElement);
+            }
+            event.context.elements = elements;
+            return event.context.elements;
+        }
+        const elements = [];
+        for (const element of event.context.elements) {
+            elements.push({id: element.id, newUMLElement: element.newUMLElement});
+        }
+        this.diagramEmitter.fire('command', {name: 'elementCreation', context: {
+            elements: elements,
+            x: event.x,
+            y: event.y,
+            context : {},
+        }});
         for (const element of event.context.elements) {
             element.x = event.x - element.width / 2;
             element.y = event.y - element.height / 2;
@@ -25,6 +50,9 @@ class ElementCreationHandler {
         return event.context.elements;
     }
     revert(event) {
+        this.diagramEmitter.fire('command', {undo: {
+            // TODO
+        }});
         for (const element of event.context.elements) {
             this.eventBus.fire('diagramElementDeleted', {
                 element: element
@@ -41,7 +69,7 @@ class ElementCreationHandler {
     }
 }
 
-ElementCreationHandler.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'canvas'];
+ElementCreationHandler.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'canvas', 'elementRegistry', 'diagramEmitter'];
 
 export default class ElementCreator {
     constructor(eventBus, commandStack) {

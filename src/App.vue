@@ -40,6 +40,7 @@ export default {
 			users: [],
 			userSelected: undefined,
 			userDeselected: undefined,
+            commandStack: [],
 		}
 	},
 	provide() {
@@ -561,7 +562,15 @@ export default {
             if (newTreeNode.id === this.headID) {
                 this.rootofTree = newTreeNode;
             }
-        }
+        },
+        command(event) {
+            if (event.undo) {
+                // TODO do some handling
+                this.commandStack.shift();
+            } else {
+                this.commandStack.unshift(event);
+            }
+        },
 	}
 }
 </script>
@@ -624,8 +633,10 @@ export default {
 						></SpecificationPage>
 				<DiagramPage v-if="editorType=='Diagram'" 
 						:uml-i-d="specificationTab" 
+                        :command-stack="commandStack"
 						@specification="specification"
 						@element-update="elementUpdateHandler"
+                        @command="command"
 						></DiagramPage>
 			</div>
 		</div>
