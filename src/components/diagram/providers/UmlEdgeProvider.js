@@ -1,18 +1,35 @@
 import { makeUMLWaypoints } from './relationships/relationshipUtil';
 
 class AdjustWaypointsHandler {
-    constructor(graphicsFactory, canvas, umlWebClient) {
+    constructor(graphicsFactory, canvas, umlWebClient, diagramEmitter, elementRegistry) {
         this.graphicsFactory = graphicsFactory;
         this.canvas = canvas;
         this.umlWebClient = umlWebClient;
+        this.diagramEmitter = diagramEmitter;
+        this.elementRegistry = elementRegistry;
     }
     execute(context) {
+        context.connection = this.elementRegistry.get(context.connection.id);
+        if (context.proxy) {
+            delete context.proxy;
+            return context.connection;
+        }
+        this.diagramEmitter.fire('command', {name: 'move.edge.uml', context: {
+            connection: {
+                id: context.connection.id,
+            },
+            newWaypoints: context.connection.waypoints,
+            originalWaypoints: context.originalWaypoints,
+        }});
         context.connection.waypoints = context.newWaypoints;
         this.graphicsFactory.update(context.connection, 'connection', this.canvas.getGraphics(context.connection));
         adjustEdgeWaypoints(context.connection, this.umlWebClient);
         return context.connection;
     }
     revert(context) {
+        this.diagramEmitter.fire('command', {undo: {
+            // TODO
+        }});
         context.connection.waypoints = context.originalWaypoints;
         this.graphicsFactory.update(context.connection, 'connection', this.canvas.getGraphics(context.connection));
         adjustEdgeWaypoints(context.connection, this.umlWebClient);
@@ -20,7 +37,7 @@ class AdjustWaypointsHandler {
     }
 }
 
-AdjustWaypointsHandler.$inject= ['graphicsFactory', 'canvas', 'umlWebClient'];
+AdjustWaypointsHandler.$inject= ['graphicsFactory', 'canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry'];
 
 export default class UmlEdgeProvider {
     constructor(eventBus, umlWebClient, diagramContext, elementRegistry, elementFactory, canvas, graphicsFactory, commandStack) {

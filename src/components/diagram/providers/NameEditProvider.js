@@ -3,12 +3,13 @@ import { updateLabel } from '../api/diagramInterchange';
 import { getLabelBounds } from './relationships/Association';
 
 class UpdateNameHandler {
-    constructor(umlWebClient, diagramEmitter, umlRenderer, graphicsFactory, canvas) {
+    constructor(umlWebClient, diagramEmitter, umlRenderer, graphicsFactory, canvas, elementRegistry) {
         this._umlWebClient = umlWebClient;
         this._diagramEmitter = diagramEmitter;
         this._umlRenderer = umlRenderer;
         this._graphicsFactory = graphicsFactory;
         this._canvas = canvas;
+        this._elementRegistry = elementRegistry;
     }
     execute(context) {
         const umlWebClient = this._umlWebClient,
@@ -16,7 +17,13 @@ class UpdateNameHandler {
         umlRenderer = this._umlRenderer,
         graphicsFactory = this._graphicsFactory,
         canvas = this._canvas,
-        element = context.element,
+        elementRegistry = this._elementRegistry;
+        context.element = elementRegistry.get(context.element.id);
+        if (context.proxy) {
+            delete context.proxy;
+            return context.element;
+        }
+        const element = context.element,
         newLabel = context.newLabel,
         bounds = context.bounds;
         context.oldBounds = {
@@ -25,6 +32,14 @@ class UpdateNameHandler {
             width: element.width,
             height: element.height,
         };
+        diagramEmitter.fire('command', {name: 'uml.name.update', context: {
+            element: {
+                id: element.id,
+            },
+            bounds: bounds,
+            newLabel: newLabel,
+            oldBounds: context.oldBounds,
+        }});
         if (element.modelElement) {
             if (element.modelElement.isSubClassOf('namedElement')) {
                 context.oldText = element.modelElement.name;
@@ -61,6 +76,9 @@ class UpdateNameHandler {
         const graphicsFactory = this._graphicsFactory;
         const canvas = this._canvas;
         const diagramEmitter = this._diagramEmitter;
+        diagramEmitter.fire('command', {undo: {
+            // TODO
+        }});
         element.x = oldBounds.x;
         element.y = oldBounds.y;
         element.width = oldBounds.width;
@@ -81,7 +99,7 @@ class UpdateNameHandler {
     }
 }
 
-UpdateNameHandler.$inject = ['umlWebClient', 'diagramEmitter', 'umlRenderer', 'graphicsFactory', 'canvas'];
+UpdateNameHandler.$inject = ['umlWebClient', 'diagramEmitter', 'umlRenderer', 'graphicsFactory', 'canvas', 'elementRegistry'];
 
 export default class NameEditProvider {
 

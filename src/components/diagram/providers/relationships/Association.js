@@ -12,13 +12,14 @@ export const OWNED_END_RADIUS = 5;
 
 class CreateAssociationHandler {
 
-    constructor(umlWebClient, diagramContext, diagramEmitter, elementFactory, canvas, umlRenderer) {
+    constructor(umlWebClient, diagramContext, diagramEmitter, elementFactory, canvas, umlRenderer, elementRegistry) {
         this.umlWebClient = umlWebClient;
         this.diagramContext = diagramContext;
         this.diagramEmitter = diagramEmitter;
         this.elementFactory = elementFactory;
         this.canvas = canvas;
         this.umlRenderer = umlRenderer;
+        this.elementRegistry = elementRegistry;
     }
 
     async doLater(connection, label, clazz) {
@@ -42,6 +43,27 @@ class CreateAssociationHandler {
         this.diagramEmitter.fire('elementUpdate', createElementUpdate(this.diagramContext.context));
     }
     execute(event) {
+        if (event.proxy) {
+            delete event.proxy;
+            event.hover = this.elementRegistry.get(event.hover.id);
+            const connectType = event.context.start.connectType;
+            event.context.start = this.elementRegistry.get(event.context.start.id);
+            event.context.start.connectType = connectType;
+            event.context.connection = this.elementRegistry.get(event.connectionID);
+            return event.context.connection;
+        }
+        this.diagramEmitter.fire('command', {name: 'association.create', context: {
+            hover: {
+                id: event.hover.id
+            },
+            connectionID : event.connectionID,
+            context: {
+                start : {
+                    id: event.context.start.id,
+                    connectType: event.context.start.connectType
+                }
+            }
+        }});
         if (event.context.start.connectType === 'directedComposition') {
             // create the association and properties
             const association = this.umlWebClient.post('association');
@@ -148,6 +170,8 @@ class CreateAssociationHandler {
             const sourceLabel = createAssociationEndLabel(event.context.connection, sourceEnd, this.umlRenderer, this.elementFactory, this.canvas);
             const targetLabel = createAssociationEndLabel(event.context.connection, targetEnd, this.umlRenderer, this.elementFactory, this.canvas);
             this.biDirectionalDoLater(event.context.connection, targetLabel, sourceLabel);
+        } else {
+            throw Error("bad type given for association!");
         }
     }
     async deleteLater(event) {
@@ -169,6 +193,9 @@ class CreateAssociationHandler {
         await deleteUmlDiagramElement(event.context.connection.id, this.umlWebClient);
     }
     revert(event) {
+        this.diagramEmitter.fire('command', {undo: {
+            // TODO
+        }});
         this.deleteLater(event);
         event.context.connection.source.outgoing.splice(event.context.connection.source.outgoing.indexOf(event.context.connection), 1);
         event.context.connection.target.incoming.splice(event.context.connection.target.incoming.indexOf(event.context.connection), 1);
@@ -177,7 +204,7 @@ class CreateAssociationHandler {
     }
 }
 
-CreateAssociationHandler.$inject = ['umlWebClient', 'diagramContext', 'diagramEmitter', 'elementFactory', 'canvas', 'umlRenderer'];
+CreateAssociationHandler.$inject = ['umlWebClient', 'diagramContext', 'diagramEmitter', 'elementFactory', 'canvas', 'umlRenderer', 'elementRegistry'];
 
 export default class Association extends RuleProvider {
     constructor(eventBus, umlWebClient, umlRenderer, canvas, graphicsFactory, commandStack) {
@@ -192,6 +219,7 @@ export default class Association extends RuleProvider {
                 event.context.start.connectType === 'association' ||
                 event.context.start.connectType === 'biDirectionalAssociation'
             ) {
+                event.connectionID = randomID();
                 commandStack.execute('association.create', event);
                 return false; // stop propogation
             }
@@ -403,7 +431,7 @@ function createAssociationConnection(event, association, elementFactory, canvas)
         source: source,
         target: target,
         waypoints: connectRectangles(source, target, getMid(source), getMid(target)),
-        id: randomID(),
+        id: event.connectionID,
         modelElement: association,
         children: [],
     });

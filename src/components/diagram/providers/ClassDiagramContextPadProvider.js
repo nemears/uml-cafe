@@ -1,39 +1,32 @@
-import { deleteUmlDiagramElement } from '../api/diagramInterchange';
-import { deleteModelElement, showContextMenu } from './UmlContextMenu';
+import { createDiagramEdge, createDiagramShape, deleteUmlDiagramElement } from '../api/diagramInterchange';
+import { deleteModelElement } from './UmlContextMenu';
 import { createCommentClick } from '../../../umlUtil';
 
 /**
  * A example context pad provider.
  */
 export default class ClassDiagramContextPadProvider {
-  constructor(connect, contextPad, create, modeling, umlWebClient, diagramEmitter, modelElementMap, elementFactory, elementRegistry, canvas, diagramContext, directEditing) {
+  constructor(connect, contextPad, create, umlWebClient, diagramEmitter, elementFactory, umlContextMenu, commandStack) {
     this._connect = connect;
     this._create = create;
-    this._modeling = modeling;
     this._umlWebClient = umlWebClient;
     this._diagramEmitter = diagramEmitter;
-    this._modelElementMap = modelElementMap;
     this._elementFactory = elementFactory;
-    this._elementRegistry = elementRegistry;
-    this._canvas = canvas;
-    this._diagramContext = diagramContext;
-    this._directEditing = directEditing;
-  
+    this._umlContextMenu = umlContextMenu;
+    this._commandStack = commandStack;
+    
+    commandStack.registerHandler('removeDiagramElement', RemoveDiagramElementHandler);
     contextPad.registerProvider(this);
   }
 
     getContextPadEntries(element) {
         const connect = this._connect,
-        modeling = this._modeling,
         umlWebClient = this._umlWebClient,
         diagramEmitter = this._diagramEmitter,
-        modelElementMap = this._modelElementMap,
         elementFactory = this._elementFactory,
-        elementRegistry = this._elementRegistry,
-        canvas = this._canvas,
-        diagramContext = this._diagramContext,
-        directEditing = this._directEditing,
-        create = this._create;
+        create = this._create,
+        umlContextMenu = this._umlContextMenu,
+        commandStack = this._commandStack;
 
         if (umlWebClient.client.readonly) {
             return {};
@@ -41,7 +34,7 @@ export default class ClassDiagramContextPadProvider {
 
 
         async function remove() {
-            await removeDiagramElement(element, canvas, umlWebClient);
+            removeDiagramElement(element, commandStack);
         }
 
         function startGeneralization(event, element, autoActivate) {
@@ -59,25 +52,11 @@ export default class ClassDiagramContextPadProvider {
         }
 
         function deleteElementFromModel() {
-            deleteModelElement(element, diagramEmitter, umlWebClient, modeling);
+            deleteModelElement(element, commandStack);
         }
 
         function contextMenu(event) {
-            showContextMenu(
-                event.clientX, 
-                event.clientY, 
-                element, 
-                umlWebClient, 
-                diagramEmitter, 
-                modeling, 
-                modelElementMap,
-                elementFactory, 
-                elementRegistry, 
-                canvas, 
-                diagramContext,
-                directEditing,
-                create
-            );
+            umlContextMenu.show(event.clientX, event.clientY, element);
         }
 
         function startCreateCommentClick (event) {
@@ -206,23 +185,83 @@ export default class ClassDiagramContextPadProvider {
     }
 }
 
-ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'create', 'modeling', 'umlWebClient', 'diagramEmitter', 'modelElementMap', 'elementFactory', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing'];
+ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'create', 'umlWebClient', 'diagramEmitter', 'elementFactory', 'umlContextMenu', 'commandStack'];
 
-export async function removeDiagramElement(diagramElement, canvas, umlWebClient) {
-    if (diagramElement.waypoints) {
-        for (const child of [...diagramElement.children]) {
-            await removeDiagramElement(child, canvas, umlWebClient);
-        }
-        await deleteUmlDiagramElement(diagramElement.id, umlWebClient);
-        canvas.removeConnection(diagramElement);
-    } else {
-        for (const edge of [...diagramElement.incoming]) {
-            await removeDiagramElement(edge, canvas, umlWebClient);
-        }
-        for (const edge of [...diagramElement.outgoing]) {
-            await removeDiagramElement(edge, canvas, umlWebClient);
-        }
-        await deleteUmlDiagramElement(diagramElement.id, umlWebClient);
-        canvas.removeShape(diagramElement);
+class RemoveDiagramElementHandler {
+    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext) {
+        this._canvas = canvas;
+        this._umlWebClient = umlWebClient;
+        this._diagramEmitter = diagramEmitter;
+        this._elementRegistry = elementRegistry;
+        this._diagramContext = diagramContext;
     }
+    removeElement(diagramElement) {
+        const canvas = this._canvas,
+        umlWebClient = this._umlWebClient;
+        if (diagramElement.waypoints) {
+            for (const child of [...diagramElement.children]) {
+                this.removeElement(child);
+            }
+            deleteUmlDiagramElement(diagramElement.id, umlWebClient);
+            canvas.removeConnection(diagramElement);
+        } else {
+            for (const edge of [...diagramElement.incoming]) {
+                this.removeElement(edge);
+            }
+            for (const edge of [...diagramElement.outgoing]) {
+                this.removeElement(edge);
+            }
+            deleteUmlDiagramElement(diagramElement.id, umlWebClient);
+            canvas.removeShape(diagramElement);
+        }
+    }
+    execute(context) {
+        const diagramEmitter = this._diagramEmitter,
+        elementRegistry = this._elementRegistry;
+        if (context.proxy) {
+            delete context.proxy;
+            context.element = elementRegistry.get(context.element.id); // TODO ??? elementFactory?
+            context.parent = elementRegistry.get(context.parent.id);
+            return context.element;
+        }
+        context.parent = context.element.parent;
+        diagramEmitter.fire('command', {name: 'removeDiagramElement', context: {
+            element: {
+                id: context.element.id
+            },
+            parent: {
+                id: context.parent.id
+            }
+        }});
+        this.removeElement(context.element);
+        return context.element;
+    }
+    revert(context) {
+        const diagramEmitter = this._diagramEmitter,
+        canvas = this._canvas,
+        umlWebClient = this._umlWebClient,
+        diagramContext = this._diagramContext;
+        diagramEmitter.fire('command', {undo: {
+            // TODO
+        }});
+
+        // TODO
+        if (context.element.waypoints) {
+            canvas.addConnection(context.element, context.parent);
+            createDiagramEdge(context.element, umlWebClient, diagramContext);
+        } else {
+            canvas.addShape(context.element, context.parent);
+            createDiagramShape(context.element, umlWebClient, diagramContext);
+        }
+
+        return context.element;
+    }
+}
+
+RemoveDiagramElementHandler.$inject = ['canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry', 'diagramContext'];
+
+export function removeDiagramElement(diagramElement, commandStack) {
+    commandStack.execute('removeDiagramElement', {
+        element: diagramElement
+    });
 }
