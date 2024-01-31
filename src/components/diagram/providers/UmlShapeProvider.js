@@ -4,12 +4,14 @@ import { adjustEdgeWaypoints } from './UmlEdgeProvider';
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 
 class MoveShapeHandler {
-    constructor(umlWebClient, diagramContext, graphicsFactory, canvas, eventBus) {
+    constructor(umlWebClient, diagramContext, graphicsFactory, canvas, eventBus, diagramEmitter, elementRegistry) {
         this.umlWebClient = umlWebClient;
         this.diagramContext = diagramContext;
         this.graphicsFactory = graphicsFactory;
         this.canvas = canvas;
         this.eventBus = eventBus;
+        this.diagramEmitter = diagramEmitter;
+        this.elementRegistry = elementRegistry;
     }
     async doLater(shape) {
         const shapeInstance = await this.umlWebClient.get(shape.id);
@@ -51,6 +53,22 @@ class MoveShapeHandler {
     }
 
     execute(context) {
+        if (context.proxy) {
+            delete context.proxy;
+            const shapes = [];
+            for (const shape of context.shapes) {
+                shapes.push(this.elementRegistry.get(shape.id));
+            }
+            context.shapes = shapes;
+            return context.shapes;
+        }
+        this.diagramEmitter.fire('command', {name: 'move.shape.uml', context: {
+            shapes: context.shapes.map(shape => ({id: shape.id})),
+            delta: {
+                x: context.delta.x,
+                y: context.delta.y,
+            }
+        }});
         for (const shape of context.shapes) {
             if (shape.ignore) {
                 delete shape.ignore
@@ -63,6 +81,9 @@ class MoveShapeHandler {
         return context.shapes;
     }
     revert(context) {
+        this.diagramEmitter.fire('command', {undo: {
+            // TODO
+        }});
         for (const shape of context.shapes) {
             this.moveElementChildrenAndEdges(shape, context, -1);
             this.doLater(shape);
@@ -72,14 +93,16 @@ class MoveShapeHandler {
     }
 }
 
-MoveShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory', 'canvas', 'eventBus'];
+MoveShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory', 'canvas', 'eventBus', 'diagramEmitter', 'elementRegistry'];
 
 class ResizeShapeHandler {
-    constructor(umlWebClient, diagramContext, graphicsFactory, canvas) {
+    constructor(umlWebClient, diagramContext, graphicsFactory, canvas, diagramEmitter, elementRegistry) {
         this.umlWebClient = umlWebClient;
         this.diagramContext = diagramContext;
         this.graphicsFactory = graphicsFactory;
         this.canvas = canvas;
+        this.diagramEmitter = diagramEmitter;
+        this.elementRegistry = elementRegistry;
     }
 
     async resize(context) {
@@ -112,6 +135,11 @@ class ResizeShapeHandler {
     }
 
     execute(context) {
+        if (context.proxy) {
+            delete context.proxy;
+            context.shape = this.elementRegistry.get(context.shape.id);
+            return context.shape;
+        }
         const newBounds = roundBounds(context.newBounds);
         const shape = context.shape;
         context.oldBounds = {
@@ -120,11 +148,21 @@ class ResizeShapeHandler {
             width: shape.width,
             height: shape.height,
         };
+        this.diagramEmitter.fire('command', {name: 'resize.shape.uml', context: {
+            shape : {
+                id: shape.id,
+            },
+            newBounds: newBounds,
+            oldBounds: context.oldBounds,
+        }});
         this.assignBounds(context, newBounds);
         this.resize(context);
         return shape;
     }
     revert(context) {
+        this.diagramEmitter.fire('command', {undo: {
+            // TODO
+        }});
         const oldBounds = context.oldBounds;
         this.assignBounds(context, oldBounds);
         this.resize(context);
@@ -132,7 +170,7 @@ class ResizeShapeHandler {
     }
 }
 
-ResizeShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory', 'canvas'];
+ResizeShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory', 'canvas', 'diagramEmitter', 'elementRegistry'];
 
 export default class UmlShapeProvider {
 

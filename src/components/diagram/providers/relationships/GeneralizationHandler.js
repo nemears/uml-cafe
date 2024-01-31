@@ -6,12 +6,13 @@ import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { getMid } from "diagram-js/lib/layout/LayoutUtil";
 
 class CreateGeneralizationHandler {
-    constructor(umlWebClient, diagramContext, elementFactory, canvas, diagramEmitter) {
+    constructor(umlWebClient, diagramContext, elementFactory, canvas, diagramEmitter, elementRegistry) {
         this.umlWebClient = umlWebClient;
         this.diagramContext = diagramContext;
         this.elementFactory = elementFactory;
         this.canvas = canvas;
         this.diagramEmitter = diagramEmitter;
+        this.elementRegistry = elementRegistry;
     }
     async doLater(event) {
         const specific = await this.umlWebClient.get(event.context.start.modelElement.id);
@@ -24,6 +25,27 @@ class CreateGeneralizationHandler {
         await createDiagramEdge(event.context.connection, this.umlWebClient, this.diagramContext);
     }
     execute(event) {
+        if (event.proxy) {
+            delete event.proxy;
+            event.hover = this.elementRegistry.get(event.hover.id);
+            const connectType = event.context.start.connectType;
+            event.context.start = this.elementRegistry.get(event.context.start.id);
+            event.context.start.connectType = connectType;
+            event.context.connection = this.elementRegistry.get(event.connectionID);
+            return event.context.connection;
+        }
+        this.diagramEmitter.fire('command', {name: 'generalization', context: {
+            hover: {
+                id: event.hover.id
+            },
+            connectionID : event.connectionID,
+            context: {
+                start : {
+                    id: event.context.start.id,
+                    connectType: event.context.start.connectType
+                }
+            }
+        }});
         const generalization = this.umlWebClient.post('generalization');
         const source = event.context.start;
         const target = event.hover;
@@ -31,7 +53,7 @@ class CreateGeneralizationHandler {
             source: source,
             target: target,
             waypoints: connectRectangles(source, target, getMid(source), getMid(target)),
-            id: randomID(),
+            id: event.connectionID,
             modelElement: generalization,
             children: [],
         });
@@ -49,6 +71,9 @@ class CreateGeneralizationHandler {
         await deleteUmlDiagramElement(event.context.connection.id, this.umlWebClient);
     }
     revert(event) {
+        this.diagramEmitter.fire('command', {undo: {
+            // TODO
+        }});
         this.deleteLater(event);
         event.context.connection.source.outgoing.splice(event.context.connection.source.outgoing.indexOf(event.context.connection), 1);
         event.context.connection.target.incoming.splice(event.context.connection.target.incoming.indexOf(event.context.connection), 1);
@@ -57,7 +82,7 @@ class CreateGeneralizationHandler {
     }
 }
 
-CreateGeneralizationHandler.$inject = ['umlWebClient', 'diagramContext', 'elementFactory', 'canvas', 'diagramEmitter'];
+CreateGeneralizationHandler.$inject = ['umlWebClient', 'diagramContext', 'elementFactory', 'canvas', 'diagramEmitter', 'elementRegistry'];
 
 export default class GeneralizationHandler extends RuleProvider {
     
@@ -66,6 +91,7 @@ export default class GeneralizationHandler extends RuleProvider {
         commandStack.registerHandler('generalization', CreateGeneralizationHandler);
         eventBus.on('connect.end', (event) => {
             if (event.context.start.connectType === 'generalization' || event.connectType === 'generalization') {
+                event.connectionID = randomID();
                 commandStack.execute('generalization', event);
                 return false; // stop propogation
             }
