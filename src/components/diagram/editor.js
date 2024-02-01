@@ -64,6 +64,9 @@ export function Editor(options) {
     async get(id) {
       return await this.client.get(id);
     }
+    getLocal(id) {
+        return this.client.getLocal(id);
+    }
     put(el) {
       return this.client.put(el);
     }

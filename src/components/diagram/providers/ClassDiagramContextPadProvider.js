@@ -188,12 +188,13 @@ export default class ClassDiagramContextPadProvider {
 ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'create', 'umlWebClient', 'diagramEmitter', 'elementFactory', 'umlContextMenu', 'commandStack'];
 
 class RemoveDiagramElementHandler {
-    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext) {
+    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext, elementFactory) {
         this._canvas = canvas;
         this._umlWebClient = umlWebClient;
         this._diagramEmitter = diagramEmitter;
         this._elementRegistry = elementRegistry;
         this._diagramContext = diagramContext;
+        this._elementFactory = elementFactory;
     }
     removeElement(diagramElement) {
         const canvas = this._canvas,
@@ -217,18 +218,48 @@ class RemoveDiagramElementHandler {
     }
     execute(context) {
         const diagramEmitter = this._diagramEmitter,
-        elementRegistry = this._elementRegistry;
+        elementRegistry = this._elementRegistry,
+        elementFactory = this._elementFactory,
+        umlWebClient = this._umlWebClient;
+        const elementProxy = context.element;
+        context.element = elementRegistry.get(context.element.id); // TODO ??? elementFactory?
+        if (!context.element) {
+            context.element = elementProxy;
+            const createElementShape = async () => {
+                elementProxy.modelElement = await umlWebClient.get(elementProxy.modelElement);
+                if (elementProxy.waypoints) {
+                    elementProxy.source = elementRegistry.get(elementProxy.source);
+                    elementProxy.target = elementRegistry.get(elementProxy.target);
+                    context.element = elementFactory.createConnection(elementProxy);
+                } else {
+                    context.element = elementFactory.createShape(elementProxy);
+                }
+            }
+            createElementShape();
+        }
+        context.parent = elementRegistry.get(context.parent.id);
         if (context.proxy) {
             delete context.proxy;
-            context.element = elementRegistry.get(context.element.id); // TODO ??? elementFactory?
-            context.parent = elementRegistry.get(context.parent.id);
             return context.element;
         }
         context.parent = context.element.parent;
+        const simpleElement = {
+            id: context.element.id
+        }
+        if (context.element.waypoints) {
+            simpleElement.waypoints = context.element.waypoints;
+            simpleElement.target = context.element.target.id;
+            simpleElement.source = context.element.source.id;
+            simpleElement.children = [];
+        } else {
+            simpleElement.x = context.element.x;
+            simpleElement.y = context.element.y;
+            simpleElement.width = context.element.width;
+            simpleElement.height = context.element.height;
+        }
+        simpleElement.modelElement = context.element.modelElement.id;
         diagramEmitter.fire('command', {name: 'removeDiagramElement', context: {
-            element: {
-                id: context.element.id
-            },
+            element: simpleElement,
             parent: {
                 id: context.parent.id
             }
@@ -258,10 +289,11 @@ class RemoveDiagramElementHandler {
     }
 }
 
-RemoveDiagramElementHandler.$inject = ['canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry', 'diagramContext'];
+RemoveDiagramElementHandler.$inject = ['canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry', 'diagramContext', 'elementFactory'];
 
 export function removeDiagramElement(diagramElement, commandStack) {
     commandStack.execute('removeDiagramElement', {
-        element: diagramElement
+        element: diagramElement,
+        parent: diagramElement.parent
     });
 }

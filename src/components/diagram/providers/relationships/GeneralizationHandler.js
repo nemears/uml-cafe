@@ -25,40 +25,61 @@ class CreateGeneralizationHandler {
         await createDiagramEdge(event.context.connection, this.umlWebClient, this.diagramContext);
     }
     execute(event) {
+        const elementRegistry = this.elementRegistry,
+        umlWebClient = this.umlWebClient,
+        elementFactory = this.elementFactory;
         if (event.proxy) {
             delete event.proxy;
             event.hover = this.elementRegistry.get(event.hover.id);
             const connectType = event.context.start.connectType;
-            event.context.start = this.elementRegistry.get(event.context.start.id);
+            event.context.start = elementRegistry.get(event.context.start.id);
             event.context.start.connectType = connectType;
+            const connectionProxy = event.context.connection;
             event.context.connection = this.elementRegistry.get(event.connectionID);
+            if (!event.context.connection) {
+                connectionProxy.source = elementRegistry.get(connectionProxy.source);
+                connectionProxy.target = elementRegistry.get(connectionProxy.target);
+                connectionProxy.modelElement = umlWebClient.getLocal(connectionProxy.modelElement);
+                event.context.connection = elementFactory.createConnection(connectionProxy);
+            }
             return event.context.connection;
         }
+        const generalization = umlWebClient.post('generalization', {id: event.generalizationID});
+        const source = event.context.start;
+        const target = event.hover;
+        event.context.connection = elementRegistry.get(event.connectionID);
+        if (!event.context.connection) {
+            event.context.connection = elementFactory.createConnection({
+                source: source,
+                target: target,
+                waypoints: connectRectangles(source, target, getMid(source), getMid(target)),
+                id: event.connectionID,
+                modelElement: generalization,
+                children: [],
+            });
+        }
+        this.canvas.addConnection(event.context.connection, this.canvas.findRoot(event.context.hover));
+        this.doLater(event);
         this.diagramEmitter.fire('command', {name: 'generalization', context: {
             hover: {
                 id: event.hover.id
             },
             connectionID : event.connectionID,
+            generalizationID: event.generalizationID,
             context: {
                 start : {
                     id: event.context.start.id,
                     connectType: event.context.start.connectType
+                },
+                connection: {
+                    id: event.context.connection.id,
+                    source: event.context.connection.source.id,
+                    target: event.context.connection.target.id,
+                    waypoints: event.context.connection.waypoints,
+                    modelElement: generalization.id
                 }
             }
         }});
-        const generalization = this.umlWebClient.post('generalization');
-        const source = event.context.start;
-        const target = event.hover;
-        event.context.connection = this.elementFactory.createConnection({
-            source: source,
-            target: target,
-            waypoints: connectRectangles(source, target, getMid(source), getMid(target)),
-            id: event.connectionID,
-            modelElement: generalization,
-            children: [],
-        });
-        this.canvas.addConnection(event.context.connection, this.canvas.findRoot(event.context.hover));
-        this.doLater(event);
         return event.context.connection;
     }
     async deleteLater(event) {
@@ -92,6 +113,7 @@ export default class GeneralizationHandler extends RuleProvider {
         eventBus.on('connect.end', (event) => {
             if (event.context.start.connectType === 'generalization' || event.connectType === 'generalization') {
                 event.connectionID = randomID();
+                event.generalizationID = randomID();
                 commandStack.execute('generalization', event);
                 return false; // stop propogation
             }
