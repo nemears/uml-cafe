@@ -25,6 +25,7 @@ export default class UmlContextMenu {
         this._commandStack = commandStack;
 
         commandStack.registerHandler('deleteModelElement', DeleteModelElementHandler);
+        commandStack.registerHandler('edgeCreation', EdgeCreationHandler);
 
         const me = this;
         
@@ -147,12 +148,12 @@ export default class UmlContextMenu {
                     onClick: async () => {
                         for await (const generalization of element.modelElement.generalizations) {
                             if (!modelElementMap.get(generalization.id)) {
-                                await drawGeneralization(element, generalization, umlWebClient, modelElementMap, elementRegistry, modeling, canvas, diagramContext);
+                                await drawGeneralization(element, generalization, commandStack);
                             }
                         }
                         for (const association of associations) {
                             if (!modelElementMap.get(association.id)) {
-                                await drawAssociation(element, association, umlWebClient, modelElementMap, elementRegistry, modeling, canvas, diagramContext);
+                                await drawAssociation(element, association, commandStack);
                             }
                         }
                     }
@@ -165,7 +166,7 @@ export default class UmlContextMenu {
                         }),
                         disabled: umlWebClient.readonly || modelElementMap.get(generalization.id) !== undefined,
                         onClick: () => {
-                            drawGeneralization(element, generalization, umlWebClient, modelElementMap, elementRegistry, modeling, canvas, diagramContext);
+                            drawGeneralization(element, generalization, commandStack);
                         }
                     });
                 }
@@ -177,7 +178,7 @@ export default class UmlContextMenu {
                         }),
                         disabled: umlWebClient.readonly || modelElementMap.get(association.id) !== undefined,
                         onClick: () => {
-                            drawAssociation(element, association, umlWebClient, modelElementMap, elementRegistry, modeling, canvas, diagramContext);
+                            drawAssociation(element, association, commandStack);
                         }
                     });
                 }
@@ -285,6 +286,97 @@ class DeleteModelElementHandler {
 
 DeleteModelElementHandler.$inject = ['canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry', 'diagramContext'];
 
+class EdgeCreationHandler {
+    constructor(modelElementMap, elementRegistry, diagramEmitter, elementFactory, canvas, umlWebClient, diagramContext) {
+        this._modelElementMap = modelElementMap;
+        this._elementRegistry = elementRegistry;
+        this._diagramEmitter = diagramEmitter;
+        this._elementFactory = elementFactory;
+        this._canvas = canvas;
+        this._umlWebClient = umlWebClient;
+        this._diagramContext = diagramContext;
+    }
+    execute(context) {
+        const modelElementMap = this._modelElementMap,
+        elementRegistry = this._elementRegistry,
+        elementFactory = this._elementFactory,
+        canvas = this._canvas,
+        umlWebClient = this._umlWebClient,
+        diagramContext = this._diagramContext,
+        diagramEmitter = this._diagramEmitter;
+        if (context.proxy) {
+            delete context.proxy;
+            context.source = elementRegistry.get(context.source.id);
+            const connections = [];
+            for (const connection of context.connections) {
+                connections.push(elementRegistry.get(connection.id));
+            }
+            context.connections = connections;
+            context.modelElement = umlWebClient.getLocal(context.modelElement);
+            return context.source;
+        }
+        const targetShapeIds = modelElementMap.get(context.targetID);
+        let oldConnections = context.connections;
+        if (!oldConnections) {
+            oldConnections = [];    
+        }
+        context.connections = [];
+        let index = 0;
+        for (const targetShapeID of targetShapeIds) {
+            const target = elementRegistry.get(targetShapeID);
+            if (oldConnections.length <= index) {
+                oldConnections.push({id: randomID()});
+            }
+            const connection = elementFactory.createConnection(
+                {
+                    source: context.source,
+                    target: target,
+                    waypoints: connectRectangles(context.source, target, getMid(context.source), getMid(target)), 
+                    id: oldConnections[index].id,
+                    modelElement: context.modelElement,
+                    children: []
+                }
+            );
+            canvas.addConnection(connection, canvas.findRoot(target));
+            context.connections.push(connection);
+            createDiagramEdge(connection, umlWebClient, diagramContext); // async
+            index++;
+        }
+        const connections = [];
+        for (const connection of context.connections) {
+            connections.push(
+                {
+                    id: connection.id
+                }
+            )
+        }
+        diagramEmitter.fire('command', {name: 'edgeCreation', context: {
+            source: {
+                id: context.source.id
+            },
+            targetID: context.targetID,
+            modelElement: context.modelElement.id,
+            connections: connections,
+        }});
+        return context.connections;
+    }
+    revert(context) {
+        const canvas = this._canvas,
+        umlWebClient = this._umlWebClient,
+        diagramContext = this._diagramContext,
+        diagramEmitter = this._diagramEmitter;
+        diagramEmitter.fire('command', {undo: {
+            // TODO
+        }});
+        for (const connection of context.connections) {
+            deleteUmlDiagramElement(connection.id, umlWebClient, diagramContext);
+            canvas.removeConnection(connection);
+        }
+    }
+}
+
+EdgeCreationHandler.$inject = ['modelElementMap', 'elementRegistry', 'diagramEmitter', 'elementFactory', 'canvas', 'umlWebClient', 'diagramContext'];
+
 export function deleteModelElement(element, commandStack) {
     commandStack.execute('deleteModelElement', {
         element: element
@@ -292,51 +384,25 @@ export function deleteModelElement(element, commandStack) {
     
 }
 
-async function drawGeneralization(element, generalization, umlWebClient, modelElementMap, elementRegistry, modeling, canvas, diagramContext) {
-    const generalShapeIDs = modelElementMap.get(generalization.general.id());
-    for (const shapeID of generalShapeIDs) {
-        const generalShape = elementRegistry.get(shapeID);
-        const relationship = modeling.createConnection(
-            element,
-            generalShape,
-            0, 
-            {
-                id: randomID(),
-                modelElement: generalization,
-                source: element,
-                target: generalShape,
-                waypoints: connectRectangles(element, generalShape, getMid(element), getMid(generalShape)),
-                children: [],
-            },
-            canvas.getRootElement()
-        );
-        await createDiagramEdge(relationship, umlWebClient, diagramContext);
-    }
+async function drawGeneralization(element, generalization, commandStack) {
+    commandStack.execute('edgeCreation', {
+        targetID : generalization.general.id(),
+        source: element,
+        modelElement: generalization,
+        id: randomID(),
+    });
 }
 
-async function drawAssociation(element, association, umlWebClient, modelElementMap, elementRegistry, modeling, canvas, diagramContext) {
-    let targetShapeIds;
-    for await (const end of association.memberEnds) {
-        if (end.featuringClassifier.id() === element.modelElement.id) {
-            targetShapeIds = modelElementMap.get(end.type.id());
+async function drawAssociation(element, association, commandStack) {
+    let targetID;
+    for await(const end of association.memberEnds) {
+        if (end.type.id() !== element.modelElement.id) {
+            targetID = end.type.id();     
         }
     }
-    for (const shapeID of targetShapeIds) {
-        const targetShape = elementRegistry.get(shapeID);
-        const relationship = modeling.createConnection(
-            element,
-            targetShape,
-            0, 
-            {
-                id: randomID(),
-                modelElement: association,
-                source: element,
-                target: targetShape,
-                waypoints: connectRectangles(element, targetShape, getMid(element), getMid(targetShape)),
-                children: []
-            },
-            canvas.getRootElement()
-        );
-        await createDiagramEdge(relationship, umlWebClient, diagramContext);
-    }
+    commandStack.execute('edgeCreation', {
+        targetID: targetID,
+        source: element,
+        modelElement: association,
+    }); 
 }

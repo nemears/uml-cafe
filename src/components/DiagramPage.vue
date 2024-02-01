@@ -155,6 +155,7 @@ export default {
                             modelElement: umlEdge.modelElement,
                             source: source,
                             target: target,
+                            children: [],
                         });
                         canvas.addConnection(relationship, root);
                         return relationship;
@@ -264,7 +265,7 @@ export default {
                 diagramPage.$emit('command', event);
             });
 
-            for (let command of this.commandStack.reverse()) {  // linter says bad but vue likes it
+            for (let command of this.commandStack.toReversed()) {  // linter says bad but vue likes it
                 command.context.proxy = true;
                 commandStack.execute(command.name, JSON.parse(JSON.stringify(command.context)));
             }
