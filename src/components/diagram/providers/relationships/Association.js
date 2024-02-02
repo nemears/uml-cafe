@@ -1,5 +1,4 @@
 import { createElementUpdate } from '../../../../umlUtil';
-import { createDiagramEdge, deleteUmlDiagramElement } from '../../api/diagramInterchange';
 import { randomID } from 'uml-client/lib/element';
 import { createDiagramLabel } from '../../api/diagramInterchange';
 import { adjustShape } from '../UmlShapeProvider';
@@ -10,206 +9,9 @@ import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
 
 export const OWNED_END_RADIUS = 5;
 
-class CreateAssociationHandler {
-
-    constructor(umlWebClient, diagramContext, diagramEmitter, elementFactory, canvas, umlRenderer, elementRegistry) {
-        this.umlWebClient = umlWebClient;
-        this.diagramContext = diagramContext;
-        this.diagramEmitter = diagramEmitter;
-        this.elementFactory = elementFactory;
-        this.canvas = canvas;
-        this.umlRenderer = umlRenderer;
-        this.elementRegistry = elementRegistry;
-    }
-
-    async doLater(connection, label, clazz) {
-        await createDiagramEdge(connection, this.umlWebClient, this.diagramContext);
-        await createDiagramLabel(label, this.umlWebClient, this.diagramContext);
-        this.diagramEmitter.fire('elementUpdate', createElementUpdate(this.diagramContext.context, clazz, connection.modelElement));
-    }
-    async connectionDoLater(connection) {
-        await createDiagramEdge(connection, this.umlWebClient, this.diagramContext);
-        this.diagramEmitter.fire('elementUpdate', createElementUpdate(this.diagramContext.context, connection.modelElement));
-    }
-    async directedAssociationDoLater(connection, label) {
-        await createDiagramEdge(connection, this.umlWebClient, this.diagramContext);
-        await createDiagramLabel(label, this.umlWebClient, this.diagramContext);
-        this.diagramEmitter.fire('elementUpdate', createElementUpdate(this.diagramContext.context, connection.modelElement));
-    }
-    async biDirectionalDoLater(connection, targetLabel, sourceLabel) {
-        await createDiagramEdge(connection, this.umlWebClient, this.diagramContext);
-        await createDiagramLabel(sourceLabel, this.umlWebClient, this.diagramContext);
-        await createDiagramLabel(targetLabel, this.umlWebClient, this.diagramContext);
-        this.diagramEmitter.fire('elementUpdate', createElementUpdate(this.diagramContext.context));
-    }
-    execute(event) {
-        if (event.proxy) {
-            delete event.proxy;
-            event.hover = this.elementRegistry.get(event.hover.id);
-            const connectType = event.context.start.connectType;
-            event.context.start = this.elementRegistry.get(event.context.start.id);
-            event.context.start.connectType = connectType;
-            event.context.connection = this.elementRegistry.get(event.connectionID);
-            return event.context.connection;
-        }
-        this.diagramEmitter.fire('command', {name: 'association.create', context: {
-            hover: {
-                id: event.hover.id
-            },
-            connectionID : event.connectionID,
-            context: {
-                start : {
-                    id: event.context.start.id,
-                    connectType: event.context.start.connectType
-                }
-            }
-        }});
-        if (event.context.start.connectType === 'directedComposition') {
-            // create the association and properties
-            const association = this.umlWebClient.post('association');
-            const memberEnd = this.umlWebClient.post('property');
-            const ownedEnd = this.umlWebClient.post('property');
-            memberEnd.type.set(event.hover.modelElement);
-            memberEnd.aggregation = 'composite';
-
-            // custom to call ends the lower case of their type
-            memberEnd.name = event.hover.modelElement.name.toLowerCase();
-
-            ownedEnd.type.set(event.context.start.modelElement);
-            association.memberEnds.add(memberEnd);
-            association.ownedEnds.add(ownedEnd); 
-            const clazz = event.context.start.modelElement;
-            memberEnd.clazz.set(clazz);
-            this.diagramContext.context.packagedElements.add(association);
-
-            this.umlWebClient.put(association);
-            this.umlWebClient.put(memberEnd);
-            this.umlWebClient.put(ownedEnd);
-            this.umlWebClient.put(clazz);
-            this.umlWebClient.put(this.diagramContext.context);
-
-            createAssociationConnection(event, association, this.elementFactory, this.canvas);
-            const propertyLabel = createAssociationEndLabel(event.context.connection, memberEnd, this.umlRenderer, this.elementFactory, this.canvas, this.umlWebClient, this.diagramContext);
-            this.doLater(event.context.connection, propertyLabel, clazz);
-            return event.context.connection;
-        } else if (event.context.start.connectType === 'composition') {
-            const association = this.umlWebClient.post('association');
-            const sourceEnd = this.umlWebClient.post('property');
-            const targetEnd = this.umlWebClient.post('property');
-            sourceEnd.type.set(event.context.start.modelElement);
-            targetEnd.aggregation = 'composite';
-            targetEnd.type.set(event.hover.modelElement);
-            association.ownedEnds.add(sourceEnd);
-            association.ownedEnds.add(targetEnd);
-            this.diagramContext.context.packagedElements.add(association);
-            
-            this.umlWebClient.put(association);
-            this.umlWebClient.put(sourceEnd);
-            this.umlWebClient.put(targetEnd);
-            this.umlWebClient.put(this.diagramContext.context);
-
-            createAssociationConnection(event, association, this.elementFactory, this.canvas);
-            this.connectionDoLater(event.context.connection);
-        } else if (event.context.start.connectType === 'directedAssociation') {
-            const association = this.umlWebClient.post('association');
-            const memberEnd = this.umlWebClient.post('property');
-            const ownedEnd = this.umlWebClient.post('property');
-            memberEnd.clazz.set(event.context.start.modelElement);
-            memberEnd.type.set(event.hover.modelElement);
-            memberEnd.name = event.hover.modelElement.name.toLowerCase();
-            ownedEnd.type.set(event.context.start.modelElement);
-            association.ownedEnds.add(ownedEnd);
-            association.memberEnds.add(memberEnd);
-            this.diagramContext.context.packagedElements.add(association);
-            this.umlWebClient.put(association);
-            this.umlWebClient.put(memberEnd);
-            this.umlWebClient.put(ownedEnd);
-            this.umlWebClient.put(event.context.start.modelElement);
-            this.umlWebClient.put(this.diagramContext.context);
-
-            createAssociationConnection(event, association, this.elementFactory, this.canvas);
-            const propertyLabel = createAssociationEndLabel(event.context.connection, memberEnd, this.umlRenderer, this.elementFactory, this.canvas);
-            this.directedAssociationDoLater(event.context.connection, propertyLabel);
-        } else if (event.context.start.connectType === 'association') {
-            const association = this.umlWebClient.post('association');
-            const sourceEnd = this.umlWebClient.post('property');
-            const targetEnd = this.umlWebClient.post('property');
-            sourceEnd.type.set(event.context.start.modelElement);
-            association.ownedEnds.add(sourceEnd);
-            targetEnd.type.set(event.hover.modelElement);
-            association.ownedEnds.add(targetEnd);
-            this.diagramContext.context.packagedElements.add(association);
-            this.umlWebClient.put(association);
-            this.umlWebClient.put(sourceEnd);
-            this.umlWebClient.put(targetEnd);
-            this.umlWebClient.put(this.diagramContext.context);
-
-            createAssociationConnection(event, association, this.elementFactory, this.canvas);
-            this.connectionDoLater(event.context.connection);
-        } else if (event.context.start.connectType === 'biDirectionalAssociation') {
-            const association = this.umlWebClient.post('association');
-            const sourceEnd = this.umlWebClient.post('property');
-            const targetEnd = this.umlWebClient.post('property');
-            sourceEnd.type.set(event.context.start.modelElement);
-            sourceEnd.clazz.set(event.hover.modelElement);
-            sourceEnd.name = event.context.start.modelElement.name.toLowerCase();
-            association.memberEnds.add(sourceEnd);
-            targetEnd.type.set(event.hover.modelElement);
-            targetEnd.clazz.set(event.context.start.modelElement);
-            targetEnd.name = event.hover.modelElement.name.toLowerCase();
-            association.memberEnds.add(targetEnd);
-            this.diagramContext.context.packagedElements.add(association);
-            this.umlWebClient.put(association);
-            this.umlWebClient.put(sourceEnd);
-            this.umlWebClient.put(targetEnd);
-            this.umlWebClient.put(event.hover.modelElement);
-            this.umlWebClient.put(event.context.start.modelElement);
-            this.umlWebClient.put(this.diagramContext.context);
-
-            createAssociationConnection(event, association, this.elementFactory, this.canvas);
-            const sourceLabel = createAssociationEndLabel(event.context.connection, sourceEnd, this.umlRenderer, this.elementFactory, this.canvas);
-            const targetLabel = createAssociationEndLabel(event.context.connection, targetEnd, this.umlRenderer, this.elementFactory, this.canvas);
-            this.biDirectionalDoLater(event.context.connection, targetLabel, sourceLabel);
-        } else {
-            throw Error("bad type given for association!");
-        }
-    }
-    async deleteLater(event) {
-        const elsToDeleteOwners = [await event.context.connection.modelElement.owner.get()];
-        for await (const memberEnd of event.context.connection.modelElement.memberEnds) {
-            const memberEndOwner = await memberEnd.owner.get();
-            if (!elsToDeleteOwners.includes(memberEndOwner)) {
-                elsToDeleteOwners.push(memberEndOwner);
-            }
-        }
-        for await (const memberEnd of event.context.connection.modelElement.memberEnds) {
-            await this.umlWebClient.deleteElement(memberEnd)
-        }
-        await this.umlWebClient.deleteElement(event.context.connection.modelElement);
-        this.diagramEmitter.fire('elementUpdate', createElementUpdate(...elsToDeleteOwners));
-        for (const label of event.context.connection.labels) {
-            await deleteUmlDiagramElement(label.id, this.umlWebClient);
-        }
-        await deleteUmlDiagramElement(event.context.connection.id, this.umlWebClient);
-    }
-    revert(event) {
-        this.diagramEmitter.fire('command', {undo: {
-            // TODO
-        }});
-        this.deleteLater(event);
-        event.context.connection.source.outgoing.splice(event.context.connection.source.outgoing.indexOf(event.context.connection), 1);
-        event.context.connection.target.incoming.splice(event.context.connection.target.incoming.indexOf(event.context.connection), 1);
-        this.canvas.removeConnection(event.context.connection);
-        return event.context.connection;
-    }
-}
-
-CreateAssociationHandler.$inject = ['umlWebClient', 'diagramContext', 'diagramEmitter', 'elementFactory', 'canvas', 'umlRenderer', 'elementRegistry'];
-
 export default class Association extends RuleProvider {
-    constructor(eventBus, umlWebClient, umlRenderer, canvas, graphicsFactory, commandStack) {
+    constructor(eventBus, umlWebClient, umlRenderer, canvas, graphicsFactory, commandStack, diagramContext, elementFactory, diagramEmitter) {
         super(eventBus);
-        commandStack.registerHandler('association.create', CreateAssociationHandler);
         eventBus.on('connect.end', 1100, (event) => {
             // check if it can connect
             if (
@@ -220,9 +22,133 @@ export default class Association extends RuleProvider {
                 event.context.start.connectType === 'biDirectionalAssociation'
             ) {
                 event.connectionID = randomID();
-                commandStack.execute('association.create', event);
+                event.modelElementID = randomID();
+                event.context.type = 'association';
+                commandStack.execute('edgeCreate', event);
                 return false; // stop propogation
             }
+        });
+        eventBus.on('edgeCreate', (context) => {
+            if (context.context.start.connectType === 'directedComposition') {
+                // create the association and properties
+                const association = context.context.connection.modelElement;
+                const memberEnd = umlWebClient.post('property');
+                const ownedEnd = umlWebClient.post('property');
+                memberEnd.type.set(context.hover.modelElement);
+                memberEnd.aggregation = 'composite';
+
+                // custom to call ends the lower case of their type
+                memberEnd.name = context.hover.modelElement.name.toLowerCase();
+
+                ownedEnd.type.set(context.context.start.modelElement);
+                association.memberEnds.add(memberEnd);
+                association.ownedEnds.add(ownedEnd); 
+                const clazz = context.context.start.modelElement;
+                memberEnd.clazz.set(clazz);
+                diagramContext.context.packagedElements.add(association);
+
+                umlWebClient.put(association);
+                umlWebClient.put(memberEnd);
+                umlWebClient.put(ownedEnd);
+                umlWebClient.put(clazz);
+                umlWebClient.put(diagramContext.context);
+
+                const propertyLabel = createAssociationEndLabel(context.context.connection, memberEnd, umlRenderer, elementFactory, canvas, umlWebClient, diagramContext);
+                createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
+                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, clazz, context.context.connection.modelElement)); 
+            } else if (context.context.start.connectType === 'composition') {
+                const association = context.context.connection.modelElement;
+                const sourceEnd = umlWebClient.post('property');
+                const targetEnd = umlWebClient.post('property');
+                sourceEnd.type.set(context.context.start.modelElement);
+                targetEnd.aggregation = 'composite';
+                targetEnd.type.set(context.hover.modelElement);
+                association.ownedEnds.add(sourceEnd);
+                association.ownedEnds.add(targetEnd);
+                diagramContext.context.packagedElements.add(association);
+                
+                umlWebClient.put(association);
+                umlWebClient.put(sourceEnd);
+                umlWebClient.put(targetEnd);
+                umlWebClient.put(diagramContext.context);
+                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, context.context.connection.modelElement));
+            } else if (context.context.start.connectType === 'directedAssociation') {
+                const association = context.context.connection.modelElement;
+                const memberEnd = umlWebClient.post('property');
+                const ownedEnd = umlWebClient.post('property');
+                memberEnd.clazz.set(context.context.start.modelElement);
+                memberEnd.type.set(context.hover.modelElement);
+                memberEnd.name = context.hover.modelElement.name.toLowerCase();
+                ownedEnd.type.set(context.context.start.modelElement);
+                association.ownedEnds.add(ownedEnd);
+                association.memberEnds.add(memberEnd);
+                diagramContext.context.packagedElements.add(association);
+                umlWebClient.put(association);
+                umlWebClient.put(memberEnd);
+                umlWebClient.put(ownedEnd);
+                umlWebClient.put(context.context.start.modelElement);
+                context.umlWebClient.put(context.diagramContext.context);
+
+                const propertyLabel = createAssociationEndLabel(context.context.connection, memberEnd, umlRenderer, elementFactory, canvas);
+                createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
+                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, context.context.connection.modelElement));
+            } else if (context.context.start.connectType === 'association') {
+                const association = context.context.connection.modelElement;
+                const sourceEnd = umlWebClient.post('property');
+                const targetEnd = umlWebClient.post('property');
+                sourceEnd.type.set(context.context.start.modelElement);
+                association.ownedEnds.add(sourceEnd);
+                targetEnd.type.set(context.hover.modelElement);
+                association.ownedEnds.add(targetEnd);
+                diagramContext.context.packagedElements.add(association);
+                umlWebClient.put(association);
+                umlWebClient.put(sourceEnd);
+                umlWebClient.put(targetEnd);
+                umlWebClient.put(diagramContext.context);
+                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, context.context.connection.modelElement));
+            } else if (context.context.start.connectType === 'biDirectionalAssociation') {
+                const association = context.context.connection.modelElement;
+                const sourceEnd = umlWebClient.post('property');
+                const targetEnd = umlWebClient.post('property');
+                sourceEnd.type.set(context.context.start.modelElement);
+                sourceEnd.clazz.set(context.hover.modelElement);
+                sourceEnd.name = context.context.start.modelElement.name.toLowerCase();
+                association.memberEnds.add(sourceEnd);
+                targetEnd.type.set(context.hover.modelElement);
+                targetEnd.clazz.set(context.context.start.modelElement);
+                targetEnd.name = context.hover.modelElement.name.toLowerCase();
+                association.memberEnds.add(targetEnd);
+                diagramContext.context.packagedElements.add(association);
+                umlWebClient.put(association);
+                umlWebClient.put(sourceEnd);
+                umlWebClient.put(targetEnd);
+                umlWebClient.put(context.hover.modelElement);
+                umlWebClient.put(context.context.start.modelElement);
+                umlWebClient.put(diagramContext.context);
+
+                const sourceLabel = createAssociationEndLabel(context.context.connection, sourceEnd, umlRenderer, elementFactory, canvas);
+                const targetLabel = createAssociationEndLabel(context.context.connection, targetEnd, umlRenderer, elementFactory, canvas);
+                createDiagramLabel(sourceLabel, umlWebClient, diagramContext);
+                createDiagramLabel(targetLabel, umlWebClient, diagramContext);
+                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context)); 
+            }
+        });
+        eventBus.on('edgeCreateUndo', (context) => {
+            const deleteMembers = async () => {
+                const elsToDeleteOwners = [await context.context.connection.modelElement.owner.get()];
+                for await (const memberEnd of context.context.connection.modelElement.memberEnds) {
+                    const memberEndOwner = await memberEnd.owner.get();
+                    if (!elsToDeleteOwners.includes(memberEndOwner)) {
+                        elsToDeleteOwners.push(memberEndOwner);
+                    }
+                }
+                for await (const memberEnd of context.context.connection.modelElement.memberEnds) {
+                    await umlWebClient.deleteElement(memberEnd)
+                }
+                await umlWebClient.deleteElement(context.context.connection.modelElement);
+                diagramEmitter.fire('elementUpdate', createElementUpdate(...elsToDeleteOwners));
+            }
+            deleteMembers();
         });
 
         // handle all global connects
@@ -333,7 +259,7 @@ function canConnect(context) {
     return true;
 }
 
-Association.$inject = ['eventBus', 'umlWebClient', 'umlRenderer', 'canvas', 'graphicsFactory', 'commandStack'];
+Association.$inject = ['eventBus', 'umlWebClient', 'umlRenderer', 'canvas', 'graphicsFactory', 'commandStack', 'diagramContext', 'elementFactory', 'diagramEmitter'];
 
 async function checkConnectionEnds(connection, graphicsFactory, canvas, umlRenderer, umlWebClient) {
     // move label
