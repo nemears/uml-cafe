@@ -52,13 +52,6 @@ export default {
             }
             
         },
-        //dataChange(newDataChange, oldDataChange) {
-        //    for (let data of newDataChange.data) {
-        //        if (data.id === this.umlID && data.type === 'name') {
-        //            this.namedElementData.name = data.value;
-        //        }
-        //    }
-        //}
     },
     methods: {
         async reloadSpec() {
@@ -108,6 +101,7 @@ export default {
                     name: el.name
                 };
                 reloadSingleton(this.namedElementData, el.namespace, 'namespace');
+                await reloadSet(this.namedElementData, el.clientDependencies, 'clientDependencies');
             } else {
                 this.namedElementData = undefined;
             }
@@ -197,6 +191,14 @@ export default {
                 reloadSingleton(this.packageableElementData, el.owningPackage, 'owningPackage');
             } else {
                 this.packageableElementData = undefined;
+            }
+
+            if (el.isSubClassOf('dependency')) {
+                this.dependencyData = {};
+                await reloadSet(this.dependencyData, el.clients, 'clients');
+                await reloadSet(this.dependencyData, el.suppliers, 'suppliers');
+            } else {
+                this.dependencyData = undefined;
             }
 
             if (el.isSubClassOf('package')) {
@@ -304,12 +306,6 @@ export default {
         propogateSpecification(spec) {
             this.$emit('specification', spec);
         },
-        /**propogateDataChange(dataChange) {
-            if (dataChange.type === 'name') {
-                this.namedElementData.name = dataChange.value;
-            }
-            this.$emit('dataChange', dataChange);
-        },**/
         propogateElementUpdate(newElementUpdate) {
             for (const update of newElementUpdate.updatedElements) {
                 const newElement = update.newElement;
@@ -439,6 +435,19 @@ export default {
                         @select="propogateSelect"
                         @deselect="propogateDeselect"
                         ></SingletonData>
+        <SetData    :label="'Client Dependencies'" 
+                    :initial-data="namedElementData.clientDependencies" 
+                    :umlid="umlID" 
+                    :selected-elements="selectedElements" 
+                    :set-data="{
+                        readonly: true,
+                        setName: 'clientDependencies'
+                    }"
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
+                    ></SetData>                        
 	</ElementType>
 	<ElementType :element-type="'Relationship'" v-if="relationshipData !== undefined">
         <SetData    :label="'Related Elements'" 
@@ -476,7 +485,7 @@ export default {
                     :selected-elements="selectedElements"
                     :set-data="{
                                     readonly: true,
-                                    setName: sources
+                                    setName: 'sources'
                                 }"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
@@ -502,6 +511,34 @@ export default {
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
+    </ElementType>
+    <ElementType :element-type="'Dependency'" v-if="dependencyData !== undefined">
+        <SetData  :label="'Clients'" 
+                        :initial-data="dependencyData.clients" 
+                        :umlid="umlID" 
+                        :set-data="{
+                                    readonly: false,
+                                    setName: 'clients'
+                                    }"
+                        :selected-elements="selectedElements"
+                        @specification="propogateSpecification"
+                        @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
+                        ></SetData>
+        <SetData  :label="'Suppliers'" 
+                        :initial-data="dependencyData.suppliers" 
+                        :umlid="umlID" 
+                        :set-data="{
+                                    readonly: false,
+                                    setName: 'suppliers'
+                                    }"
+                        :selected-elements="selectedElements"
+                        @specification="propogateSpecification"
+                        @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
+                        ></SetData>
     </ElementType>
     <ElementType :element-type="'Typed Element'" v-if="typedElementData !== undefined">
         <SingletonData  :label="'Type'" 

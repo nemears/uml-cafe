@@ -2,9 +2,10 @@ import { randomID } from '../umlUtil';
 import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
 import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout'
 import { createDiagramEdge } from '../api/diagramInterchange';
+import { createElementUpdate } from '../../../umlUtil';
 
 export default class CommentHandler {
-	constructor(eventBus, umlWebClient, diagramContext, modelElementMap, elementRegistry, elementFactory, canvas) {
+	constructor(eventBus, umlWebClient, diagramContext, modelElementMap, elementRegistry, elementFactory, canvas, diagramEmitter) {
 		eventBus.on('diagramElementCreated', (event) => {
 			const element = event.element;
 			if (element.modelElement.elementType() === 'comment') {
@@ -52,6 +53,7 @@ export default class CommentHandler {
 				for (const el of modelElementMap.get(commentID)) {
 					elementRegistry.get(el).modelElement = comment;
 				}
+				diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));
 			}
 		});
 		eventBus.on('diagramElementDeleted', (event) => {
@@ -79,4 +81,4 @@ export default class CommentHandler {
 	}
 }
 
-CommentHandler.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'modelElementMap', 'elementRegistry', 'elementFactory', 'canvas'];
+CommentHandler.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'modelElementMap', 'elementRegistry', 'elementFactory', 'canvas', 'diagramEmitter'];

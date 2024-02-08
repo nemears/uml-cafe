@@ -77,6 +77,17 @@ export default class ClassDiagramPaletteProvider {
             }
           }
       },
+      'create-dependency': {
+        group: 'dependency',
+        className: 'palette-icon-create-dependency',
+        title: 'Create Dependency',
+        action: {
+            click: (event) => {
+                eventBus.fire('dependency.start');
+                globalConnect.start(event);
+            }
+        }
+      },
       'create-directed-composition': {
         group: 'association',
         className: 'palette-icon-create-directed-composition',

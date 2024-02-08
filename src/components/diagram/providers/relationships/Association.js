@@ -130,7 +130,7 @@ export default class Association extends RuleProvider {
                 const targetLabel = createAssociationEndLabel(context.context.connection, targetEnd, umlRenderer, elementFactory, canvas);
                 createDiagramLabel(sourceLabel, umlWebClient, diagramContext);
                 createDiagramLabel(targetLabel, umlWebClient, diagramContext);
-                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context)); 
+                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));
             }
         });
         eventBus.on('edgeCreateUndo', (context) => {

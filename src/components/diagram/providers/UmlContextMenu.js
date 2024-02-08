@@ -141,7 +141,7 @@ export default class UmlContextMenu {
             } else {
                 showPropertiesOption.disabled = true;
             }
-            if (!(element.modelElement.generalizations.size() === 0 && associations.length === 0)) {
+            if (!(element.modelElement.generalizations.size() === 0 && element.modelElement.clientDependencies === 0 && associations.length === 0)) {
                 showRelationshipsOption.children.push({
                     label: 'Show All',
                     disabled: umlWebClient.readonly,
@@ -149,6 +149,11 @@ export default class UmlContextMenu {
                         for await (const generalization of element.modelElement.generalizations) {
                             if (!modelElementMap.get(generalization.id)) {
                                 await drawGeneralization(element, generalization, commandStack);
+                            }
+                        }
+                        for await (const dependency of element.modelElement.clientDependencies) {
+                            if (!modelElementMap.get(dependency.id)) {
+                                await drawDependency(element, dependency, commandStack);
                             }
                         }
                         for (const association of associations) {
@@ -179,6 +184,18 @@ export default class UmlContextMenu {
                         disabled: umlWebClient.readonly || modelElementMap.get(association.id) !== undefined,
                         onClick: () => {
                             drawAssociation(element, association, commandStack);
+                        }
+                    });
+                }
+                for await (const dependency of element.modelElement.clientDependencies) {
+                    showRelationshipsOption.children.push({
+                        label: (await dependency.suppliers.front()).name,
+                        icon: h('img', {
+                            src: require('../../icons/dependency.svg')
+                        }),
+                        disabled: umlWebClient.readonly || modelElementMap.get(dependency.id) !== undefined,
+                        onClick: () => {
+                            drawDependency(element, dependency, commandStack);
                         }
                     });
                 }
@@ -389,6 +406,15 @@ async function drawGeneralization(element, generalization, commandStack) {
         targetID : generalization.general.id(),
         source: element,
         modelElement: generalization,
+        id: randomID(),
+    });
+}
+
+async function drawDependency(element, dependency, commandStack) {
+    commandStack.execute('edgeCreation', {
+        targetID : dependency.suppliers.ids().front(),
+        source: element,
+        modelElement: dependency,
         id: randomID(),
     });
 }
