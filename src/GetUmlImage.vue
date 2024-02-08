@@ -15,6 +15,7 @@ import LiteralUnlimitedNaturalSVG from './components/icons/literal_unlimited_nat
 import InstanceSpecificationSVG from './components/icons/instance_specification.svg';
 import InstanceValueSVG from './components/icons/instance_value.svg';
 import SlotSVG from './components/icons/slot.svg';
+import DependencySVG from './components/icons/dependency.svg';
 export default function getImage(el) {
     let elementType = typeof el === 'string' ? el : el.elementType();
     switch(elementType) {
@@ -83,6 +84,9 @@ export default function getImage(el) {
         }
         case 'stereotype': {
             return StereotypeSVG;
+        }
+        case 'dependency': {
+            return DependencySVG;
         }
     }
     return undefined;

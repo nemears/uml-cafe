@@ -42,6 +42,11 @@ export default class ClassDiagramContextPadProvider {
             connect.start(event, element, autoActivate);
         }
 
+        function startDependency(event, element, autoActivate) {
+            element.connectType = 'dependency';
+            connect.start(event, element, autoActivate);
+        }
+
         function startDirectedComposition(event, element, autoActivate) {
             element.connectType = 'directedComposition';
             connect.start(event, element, autoActivate);
@@ -176,6 +181,17 @@ export default class ClassDiagramContextPadProvider {
                         element.connectType = 'biDirectionalAssociation';
                         connect.start(event, element);
                     }
+                }
+            };
+        }
+        if (element.modelElement.isSubClassOf('namedElement')) {
+            ret.createDependency = {
+                group: 'edit',
+                className: 'context-pad-icon-dependency',
+                title: 'Create Dependency',
+                action: {
+                    click: startDependency,
+                    dragstart: startDependency
                 }
             };
         }

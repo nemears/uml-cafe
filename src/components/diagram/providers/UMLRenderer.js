@@ -190,6 +190,39 @@ export default class UMLRenderer extends BaseRenderer {
             svgAppend(group, line);
             svgAppend(gfx, group);
             return group;
+        } else if (element.modelElement.elementType() === 'dependency') {
+            const group = svgCreate('g');
+            const line = createLine(element.waypoints, assign({}, this.ANCHOR_STYLE, attrs || {}));
+            const arrow = createArrow(element.waypoints.slice(-2));
+            const tip = createLine([
+                {
+                    x: arrow[1].x,
+                    y: arrow[1].y
+                },
+                {
+                    x: arrow[0].x,
+                    y: arrow[0].y
+                },
+                {
+                    x: arrow[2].x,
+                    y: arrow[2].y
+                }
+            ], assign({}, this.CONNECTION_STYLE, attrs || {}));
+            const tipLine = createLine([
+                {
+                    x: arrow[0].x,
+                    y: arrow[0].y
+                },
+                {
+                    x: (arrow[1].x + arrow[2].x)/2,
+                    y: (arrow[1].y + arrow[2].y)/2
+                }
+            ], assign({}, this.CONNECTION_STYLE, attrs || {}));
+            svgAppend(group, tip);
+            svgAppend(group, tipLine);
+            svgAppend(group, line);
+            svgAppend(gfx, group);
+            return group;
         }
     }
 

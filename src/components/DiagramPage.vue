@@ -291,6 +291,11 @@ export default {
     background-repeat: no-repeat;
     background-size: 100%;
 }
+.palette-icon-create-dependency {
+    background: url('icons/dependency.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
 .palette-icon-create-generalization {
     background: url('icons/generalization.svg');
     background-repeat: no-repeat;
@@ -347,6 +352,9 @@ export default {
 }
 .context-pad-icon-composition {
     background: url('diagram/icons/context/composition.svg') !important;
+}
+.context-pad-icon-dependency {
+    background: url('diagram/icons/context/dependency.svg') !important;
 }
 .context-pad-icon-directed-association {
     background: url('diagram/icons/context/directedAssociation.svg') !important;

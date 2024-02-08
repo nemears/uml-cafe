@@ -1,40 +1,46 @@
-import { createDiagramEdge } from "../../api/diagramInterchange";
 import { createElementUpdate } from '../../../../umlUtil';
 import { randomID } from 'uml-client/lib/element';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 
 export default class DependencyHandler extends RuleProvider {
     
-    constructor(eventBus, umlWebClient, diagramEmitter, diagramContext, modeling) {
+    constructor(eventBus, commandStack, umlWebClient, diagramEmitter, diagramContext) {
         super(eventBus);
 
-        eventBus.on('connect.end', (event) => {
+        eventBus.on('connect.end', 1100, (event) => {
             if (event.context.start.connectType === 'dependency' || event.connectType === 'dependency') {
-                if (event.context.canExecute) {
-                    // create dependency
-                    const createDependency = async () => {
-                        const dependency = await umlWebClient.post('dependency');
-                        const client = await umlWebClient.get(event.context.start.modelElement.id);
-                        dependency.client.set(client);
-                        dependency.supplier.set(event.hover.modelElement.id);
-                        umlWebClient.put(dependency);
-                        umlWebClient.put(client);
-
-                        diagramEmitter.fire('elementUpdate', createElementUpdate(client));
-                        
-                        event.context.connection = modeling.connect(event.context.start, 
-                            event.hover, 
-                            {
-                                id: randomID(),
-                                modelElement: dependency 
-                            }, {});
-
-                        // create shape
-                        await createDiagramEdge(event.context.connection, umlWebClient, diagramContext);
-                    }
-                    createDependency();
-                    return false; // stop propogation
-                }
+                event.connectionID = randomID();
+                event.modelElementID = randomID();
+                event.context.type = 'dependency';
+                commandStack.execute('edgeCreate', event);
+                return false; // stop propogation
+            }
+        });
+        eventBus.on('edgeCreate', (context) => {
+            const createDependency = async () => {
+                const dependency = context.context.connection.modelElement;
+                const client = await umlWebClient.get(context.context.start.modelElement.id);
+                dependency.clients.add(client);
+                dependency.suppliers.add(context.hover.modelElement.id);
+                diagramContext.context.packagedElements.add(dependency);
+                umlWebClient.put(dependency);
+                umlWebClient.put(client);
+                umlWebClient.put(diagramContext.context);
+                diagramEmitter.fire('elementUpdate', createElementUpdate(client));
+                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));
+            }
+            if (context.context.type === 'dependency') {
+                createDependency();
+            }
+        });
+        eventBus.on('edgeCreateUndo', (context) => {
+            const deleteModelElement = async () => {
+                const owner = await context.context.connection.modelElement.owner.get();
+                await umlWebClient.deleteElement(context.context.connection.modelElement);
+                diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
+            }
+            if (context.context.type === 'dependency') {
+                deleteModelElement(); 
             }
         });
         eventBus.on('dependency.start', () => {
@@ -60,7 +66,7 @@ export default class DependencyHandler extends RuleProvider {
     }
 }
 
-DependencyHandler.$inject = ['eventBus', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'modeling'];
+DependencyHandler.$inject = ['eventBus', 'commandStack', 'umlWebClient', 'diagramEmitter', 'diagramContext'];
 
 function canConnect(context) {
     const ret = canConnectHelper(context);
