@@ -59,10 +59,13 @@ export default class ClassDiagramPaletteProvider {
                   return 'class';
                 }
               },
-              newUMLElement: true,
+              compartments : []
             });
 
-            create.start(event, shape);
+            create.start(event, shape, {
+                createModelElement: true,
+                shapeType: 'classifierShape'
+            });
           }
         }
       },

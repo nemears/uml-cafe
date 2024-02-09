@@ -1,6 +1,6 @@
-import { createDiagramShape, deleteUmlDiagramElement } from "../api/diagramInterchange";
+import { createClassifierShape, deleteUmlDiagramElement } from "../api/diagramInterchange";
 
-class ElementCreationHandler {
+class ClassifierShapeCreationHandler {
     constructor(eventBus, umlWebClient, diagramContext, canvas, elementRegistry, diagramEmitter) {
         this.eventBus = eventBus;
         this.umlWebClient = umlWebClient;
@@ -15,9 +15,6 @@ class ElementCreationHandler {
             const elements = [];
             for (const element of event.elements) {
                 const realElement = this.elementRegistry.get(element.id);
-                if (element.newUMLElement) {
-                    realElement.newUMLElement = true;
-                }
                 elements.push(realElement);
             }
             event.context.elements = elements;
@@ -25,23 +22,26 @@ class ElementCreationHandler {
         }
         const elements = [];
         for (const element of event.context.elements) {
-            elements.push({id: element.id, newUMLElement: element.newUMLElement});
+            elements.push({id: element.id});
         }
-        this.diagramEmitter.fire('command', {name: 'elementCreation', context: {
+        this.diagramEmitter.fire('command', {name: 'classifierShapeCreation', context: {
             elements: elements,
             x: event.x,
             y: event.y,
-            context : {},
+            context : {
+                createModelElement : event.context.createModelElement,
+                shapeType: event.context.shapeType,
+            },
         }});
         for (const element of event.context.elements) {
             element.x = event.x - element.width / 2;
             element.y = event.y - element.height / 2;
             this.canvas.addShape(element);
-            createDiagramShape(element, this.umlWebClient, this.diagramContext);
+            createClassifierShape(element, this.umlWebClient, this.diagramContext);
             this.eventBus.fire('diagramElementCreated', {
                 element: element
             });
-            if (element.newUMLElement) {
+            if (event.context.createModelElement) {
                 this.eventBus.fire('elementCreated', {
                     element: element
                 });
@@ -59,7 +59,7 @@ class ElementCreationHandler {
             });
             this.canvas.removeShape(element);
             deleteUmlDiagramElement(element.id, this.umlWebClient); // async doing later
-            if (element.newUMLElement) {
+            if (event.context.createModelElement) {
                 this.eventBus.fire('elementDeleted', {
                     element: element
                 });
@@ -69,16 +69,18 @@ class ElementCreationHandler {
     }
 }
 
-ElementCreationHandler.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'canvas', 'elementRegistry', 'diagramEmitter'];
+ClassifierShapeCreationHandler.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'canvas', 'elementRegistry', 'diagramEmitter'];
 
-export default class ElementCreator {
+export default class ClassifierShapeCreator {
     constructor(eventBus, commandStack) {
-        commandStack.registerHandler('elementCreation', ElementCreationHandler);
+        commandStack.registerHandler('classifierShapeCreation', ClassifierShapeCreationHandler);
         eventBus.on('create.end', 1100, (event) => {
-            commandStack.execute('elementCreation', event);
-            return false; // stop propogation
+            if (event.context.shapeType === 'classifierShape') {
+                commandStack.execute('classifierShapeCreation', event);
+                return false; // stop propogation
+            }
         });
     }
 }
 
-ElementCreator.$inject = ['eventBus', 'commandStack'];
+ClassifierShapeCreator.$inject = ['eventBus', 'commandStack'];
