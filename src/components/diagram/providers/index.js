@@ -4,7 +4,8 @@ import ClassDiagramRuleProvider from './ClassDiagramRuleProvider';
 import ConnectionDocking from 'diagram-js/lib/layout/CroppingConnectionDocking.js'
 import DragFromTree from './DragFromTree';
 import EdgeCreator from './EdgeCreator';
-import ElementCreator from './ElementCreator';
+import ShapeCreator from './ShapeCreator';
+import ClassifierShapeCreator from './ClassifierShapeCreator';
 import UMLRenderer from './UMLRenderer';
 import GeneralizationHandler from './relationships/GeneralizationHandler';
 import Association from './relationships/Association';
@@ -31,10 +32,10 @@ export default {
     'association',
     'classDiagramContextPadProvider',
     'classDiagramPaletteProvider',
+    'classifierShapeCreator',
     'dragFromTree',
     'classDiagramRuleProvider',
     'edgeCreator',
-    'elementCreator',
     'umlRenderer',
     'layouter',
     'connectionDocking',
@@ -43,6 +44,7 @@ export default {
     'modelElementMap',
     'umlContextMenu',
     'nameEditProvider',
+    'shapeCreator',
     'directEditing',
     'editOnCreate',
     'property',
@@ -58,9 +60,9 @@ export default {
   classDiagramContextPadProvider: [ 'type', ClassDiagramContextPadProvider ],
   classDiagramPaletteProvider: [ 'type', ClassDiagramPaletteProvider ],
   classDiagramRuleProvider: [ 'type', ClassDiagramRuleProvider ],
+  classifierShapeCreator: ['type', ClassifierShapeCreator],
   dragFromTree: ['type', DragFromTree],
   edgeCreator: ['type', EdgeCreator],
-  elementCreator: ['type', ElementCreator],
   umlRenderer: ['type', UMLRenderer],
   layouter: ['type', UmlLayouter],
   connectionDocking: ['type', ConnectionDocking],
@@ -69,6 +71,7 @@ export default {
   modelElementMap: ['type', ModelElementMap],
   umlContextMenu: ['type', UmlContextMenu],
   nameEditProvider: ['type', NameEditProvider],
+  shapeCreator: ['type', ShapeCreator],
   directEditing: ['type', DirectEditing],
   editOnCreate: ['type', EditOnCreate],
   property: ['type', Property],

@@ -43,6 +43,7 @@ export function createCommentClick (event, element, create, elementFactory) {
         }
       },
       newUMLElement: true,
+      shapeType: 'shape',
     });
 
     create.start(event, comment);

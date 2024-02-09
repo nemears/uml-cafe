@@ -45,11 +45,49 @@ export class Label extends Shape {
     }
 }
 
+export class NameLabel extends Label {
+    elementType() {
+        return 'nameLabel';
+    }
+}
+
+export class KeywordLabel extends Label {
+    elementType() {
+        return 'keywordLabel';
+    }
+}
+
+export class Compartment extends DiagramElement {
+    // maybe TODO
+    elementType() {
+        return 'compartment';
+    }
+}
+
+export class CompartmentableShape extends Shape {
+    compartment = [];
+    elementType() {
+        return 'compartmentableShape';
+    }
+}
+
+export class ClassifierShape extends CompartmentableShape {
+    elementType() {
+        return 'classifierShape';
+    }
+}
+
 export const BOUNDS_ID = 'KbKmDNU19SWMJwggKTQ9FrzAzozO';
 const TEXT_ID = 'GJKibcaKH82QYL&Sm3&rX5Mlc8ps';
 export const LABEL_ID = 'urWpoxZVhva76RnwyRAhLgduprmm';
 export const SHAPE_ID = 'KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g'; 
 export const EDGE_ID = 'u2fIGW2nEDfMfVxqDvSmPd5e_wNR';
+export const NAME_LABEL_ID = 'zEjDYYrgzD&3EaysBzu0Gd362cVa';
+export const KEYWORD_LABEL_ID = 'LhAHXAksl7rSYGupT6s7tfl9oDsY';
+export const COMPARTMENT_ID = 'XEkIdyR4AD2A_BIxl8WN5ZrcRP0&';
+export const COMPARTMENTABLE_SHAPE_ID = 'z1DL0UzKw39EJh&SA5llseAEYgyd';
+export const CLASSIFIER_SHAPE_ID = 'Z6TrdLUX1PnxDxERdehoiwuo4Thd';
+export const COMPARTMENTS_ID = '94EL1DpEJq&sqIIyUkljNkGiLErL';
 
 export async function getUmlDiagramElement(id, umlClient) {
     // get the element with the client
@@ -121,6 +159,22 @@ export async function getUmlDiagramElement(id, umlClient) {
                 } 
             }
 
+            return ret;
+        } else if (classifierID === CLASSIFIER_SHAPE_ID) {
+            // ClassifierShape
+            const ret = new ClassifierShape();
+            ret.id = id;
+            for await (const classifierShapeSlot of umlDiagramElement.slots) {
+                if (classifierShapeSlot.definingFeature.id() === COMPARTMENTS_ID) {
+                    for await (const values of classifierShapeSlot.values) {
+                        ret.compartments.push(values.instance.id());
+                    }
+                } else if (classifierShapeSlot.definingFeature.id() === BOUNDS_ID) {
+                    await filloutBounds(classifierShapeSlot, ret);
+                } else if (await getDiagramElementFeatures(classifierShapeSlot, ret, umlClient)) {
+                    continue;
+                }
+            }
             return ret;
         }
     }
@@ -377,6 +431,38 @@ async function createDiagramShapeFeatures(shape, shapeInstance, umlWebClient, di
     umlWebClient.put(widthValue);
 }
 
+async function createDiagramLabelFeatures(label, labelInstance, umlWebClient, diagramContext) {
+    // text
+    const textSlot = umlWebClient.post('slot');
+    const textVal = umlWebClient.post('literalString');
+    textSlot.definingFeature.set('GJKibcaKH82QYL&Sm3&rX5Mlc8ps');
+    textSlot.values.add(textVal);
+    textVal.value = label.text;
+    labelInstance.slots.add(textSlot);
+
+    umlWebClient.put(textSlot);
+    umlWebClient.put(textVal);
+
+    await createDiagramShapeFeatures(label, labelInstance, umlWebClient, diagramContext);
+
+    
+}
+
+async function createCompartmentableShapeFeatures(shape, shapeInstance, umlWebClient, diagramContext) {
+    const compartmentSlot = umlWebClient.post('slot');
+    compartmentSlot.definingFeature.set(COMPARTMENTS_ID);
+    for (const compartment of shape.compartments) {
+        const compartmentVal = umlWebClient.post('instanceValue');
+        compartmentVal.instance.set(compartment.id);
+        umlWebClient.put(compartmentVal);
+    }
+    shapeInstance.slots.add(compartmentSlot);
+
+    umlWebClient.put(compartmentSlot);
+
+    await createDiagramShapeFeatures(shape, shapeInstance, umlWebClient, diagramContext);
+}
+
 export async function createDiagramShape(shape, umlWebClient, diagramContext) {
     // set up shape
     const shapeInstance = umlWebClient.post('instanceSpecification', {id:shape.id});
@@ -403,23 +489,10 @@ export async function createDiagramLabel(label, umlWebClient, diagramContext) {
     labelInstance.classifiers.add(LABEL_ID);
     diagramContext.diagram.packagedElements.add(labelInstance); 
 
-    // text
-    const textSlot = umlWebClient.post('slot');
-    const textVal = umlWebClient.post('literalString');
-    textSlot.definingFeature.set('GJKibcaKH82QYL&Sm3&rX5Mlc8ps');
-    textSlot.values.add(textVal);
-    textVal.value = label.text;
-    labelInstance.slots.add(textSlot);
-
-    umlWebClient.put(textSlot);
-    umlWebClient.put(textVal);
-
-    await createDiagramShapeFeatures(label, labelInstance, umlWebClient, diagramContext);
-
-    // await umlWebClient.head();
+    await createDiagramLabelFeatures(label, labelInstance, umlWebClient, diagramContext);
 
     umlWebClient.put(labelInstance);
-    umlWebClient.put(diagramContext.diagram);
+    umlWebClient.put(diagramContext.diagram); 
 
     const ret = new Label();
     ret.bounds.x = label.x;
@@ -428,6 +501,104 @@ export async function createDiagramLabel(label, umlWebClient, diagramContext) {
     ret.bounds.height = label.height;
     ret.id = label.id;
     ret.text = label.text;
+    return ret;
+}
+
+export async function createNameLabel(label, umlWebClient, diagramContext) {
+    // set up shape
+    const labelInstance = umlWebClient.post('instanceSpecification', { id : label.id });
+    labelInstance.classifiers.add(NAME_LABEL_ID);
+    diagramContext.diagram.packagedElements.add(labelInstance); 
+
+    await createDiagramLabel(label, labelInstance, umlWebClient, diagramContext);
+
+    umlWebClient.put(labelInstance);
+    umlWebClient.put(diagramContext.diagram);
+
+    const ret = new NameLabel();
+    ret.bounds.x = label.x;
+    ret.bounds.y = label.y;
+    ret.bounds.width = label.width;
+    ret.bounds.height = label.height;
+    ret.id = label.id;
+    ret.text = label.text;
+    return ret;
+}
+
+export async function createKeywordLabel(label, umlWebClient, diagramContext) {
+    // set up shape
+    const labelInstance = umlWebClient.post('instanceSpecification', { id : label.id });
+    labelInstance.classifiers.add(KEYWORD_LABEL_ID);
+    diagramContext.diagram.packagedElements.add(labelInstance); 
+
+    await createDiagramLabel(label, labelInstance, umlWebClient, diagramContext);
+
+    umlWebClient.put(labelInstance);
+    umlWebClient.put(diagramContext.diagram);
+
+    const ret = new KeywordLabel();
+    ret.bounds.x = label.x;
+    ret.bounds.y = label.y;
+    ret.bounds.width = label.width;
+    ret.bounds.height = label.height;
+    ret.id = label.id;
+    ret.text = label.text;
+    return ret; 
+}
+
+export async function createComparment(compartment, umlWebClient, diagramContext) {
+    const compartmentInstance = umlWebClient.post('instanceSpecification', { id: compartment.id });
+    compartmentInstance.classifiers.add(COMPARTMENT_ID);
+    diagramContext.diagram.packagedElements.add(compartmentInstance);
+
+    await createDiagramElementFeatures(compartment, umlWebClient, diagramContext);
+
+    umlWebClient.put(compartmentInstance);
+    umlWebClient.put(diagramContext.diagram);
+
+    const ret = new Compartment();
+    return ret;
+}
+
+export async function createCompartmentableShape(shape, umlWebClient, diagramContext) {
+    const compartmentableShapeInstance = umlWebClient.post('instanceSpecification', { id: shape.id });
+    compartmentableShapeInstance.classifiers.add(COMPARTMENTABLE_SHAPE_ID);
+    diagramContext.diagram.packagedElements.add(compartmentableShapeInstance);
+
+    await createCompartmentableShapeFeatures(shape, compartmentableShapeInstance, umlWebClient, diagramContext);
+
+    umlWebClient.put(compartmentableShapeInstance);
+    umlWebClient.put(diagramContext.diagram);
+
+    const ret = new CompartmentableShape();
+    ret.bounds.x = shape.x;
+    ret.bounds.y = shape.y;
+    ret.bounds.width = shape.width;
+    ret.bounds.height = shape.height;
+    for (const compartment of shape.compartments) {
+        ret.compartments.push(compartment.id); // change in future
+    }
+    return ret;
+}
+
+export async function createClassifierShape(shape, umlWebClient, diagramContext) {
+    const classifierShapeInstance = umlWebClient.post('instanceSpecification', { id : shape.id });
+    classifierShapeInstance.classifiers.add(CLASSIFIER_SHAPE_ID);
+    diagramContext.diagram.packagedElements.add(classifierShapeInstance);
+
+    await createCompartmentableShapeFeatures(shape, classifierShapeInstance, umlWebClient, diagramContext);
+
+    umlWebClient.put(classifierShapeInstance);
+    umlWebClient.put(diagramContext.diagram);
+
+    const ret = new ClassifierShape();
+    ret.bounds.x = shape.x;
+    ret.bounds.y = shape.y;
+    ret.bounds.width = shape.width;
+    ret.bounds.height = shape.height;
+    for (const compartment of shape.compartments) {
+        ret.compartments.push(compartment.id);
+    }
     return ret;
 }
 

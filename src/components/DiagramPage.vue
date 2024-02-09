@@ -2,7 +2,7 @@
 import { Editor } from './diagram/editor';
 const EventEmitter = require('events');
 import { createElementUpdate } from '../umlUtil.js';
-import { getUmlDiagramElement, deleteUmlDiagramElement } from './diagram/api/diagramInterchange';
+import { getUmlDiagramElement, deleteUmlDiagramElement , CLASSIFIER_SHAPE_ID, SHAPE_ID } from './diagram/api/diagramInterchange';
 export default {
     data() {
         return {
@@ -128,6 +128,27 @@ export default {
                         });
                         canvas.addShape(shape, parent);
                         return shape;
+                    } else if (umlDiagramElement.elementType() === 'classifierShape') {
+                        const umlClassifierShape = umlDiagramElement;
+                        if (!umlClassifierShape.modelElement) {
+                            await deleteUmlDiagramElement(umlShape.id, this.$umlWebClient);
+                            return undefined;
+                        }
+                        let parent = elementRegistry.get(umlClassifierShape.owningElement);
+                        if (!parent) {
+                            parent = await drawDiagramElement(await getUmlDiagramElement(umlClassifierShape.owningElement, this.$umlWebClient));
+                        }
+                        // todo compartments
+                        const shape = elementFactory.createShape({
+                            x: umlClassifierShape.bounds.x,
+                            y: umlClassifierShape.bounds.y,
+                            width: umlClassifierShape.bounds.width,
+                            height: umlClassifierShape.bounds.height,
+                            id: umlClassifierShape.id,
+                            modelElement: umlClassifierShape.modelElement,
+                            compartments: [], // todo
+                        });
+                        canvas.addShape(shape, parent);
                     } else if (umlDiagramElement.elementType() === 'edge') {
                         const umlEdge = umlDiagramElement;
                         if (!umlEdge.modelElement) {
@@ -191,7 +212,7 @@ export default {
                     if (!packagedEl.isSubClassOf('instanceSpecification')) {
                         continue;
                     }
-                    if (!packagedEl.classifiers.contains('KYV0Pg5b5r4KJ6qCA3_RAU2bWI4g')) {
+                    if (!packagedEl.classifiers.contains(SHAPE_ID) && !packagedEl.classifiers.contains(CLASSIFIER_SHAPE_ID)) {
                         continue;
                     }
                     // draw shape
