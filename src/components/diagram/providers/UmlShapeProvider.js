@@ -1,5 +1,5 @@
 import { getMid, roundBounds } from "diagram-js/lib/layout/LayoutUtil";
-import { BOUNDS_ID, EDGE_ID, LABEL_ID, SHAPE_ID } from "../api/diagramInterchange";
+import { BOUNDS_ID, CLASSIFIER_SHAPE_ID, EDGE_ID, LABEL_ID, SHAPE_ID } from "../api/diagramInterchange";
 import { adjustEdgeWaypoints } from './UmlEdgeProvider';
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 
@@ -16,9 +16,10 @@ class MoveShapeHandler {
     async doLater(shape) {
         const shapeInstance = await this.umlWebClient.get(shape.id);
         for (const classifierID of shapeInstance.classifiers.ids()) {
-            if (classifierID === SHAPE_ID || classifierID === LABEL_ID) {
+            if (classifierID === SHAPE_ID || classifierID === LABEL_ID || classifierID === CLASSIFIER_SHAPE_ID) {
                 await adjustShape(shape, shapeInstance, this.umlWebClient);
                 for (const child of shape.children) {
+                    if (child.elementType === 'compartment') continue;
                     const childInstance = await this.umlWebClient.get(child.id);
                     await adjustShape(child, childInstance, this.umlWebClient);
                 }
@@ -109,6 +110,7 @@ class ResizeShapeHandler {
         const shapeInstance = await this.umlWebClient.get(context.shape.id);
         await adjustShape(context.shape, shapeInstance, this.umlWebClient);
         for (const child of context.shape.children) {
+            if (child.elementType === 'compartment') continue;
             const childInstance = await this.umlWebClient.get(child.id);
             await adjustShape(child, childInstance, this.umlWebClient);
         }
@@ -122,16 +124,22 @@ class ResizeShapeHandler {
         shape.y = bounds.y;
         shape.width = bounds.width;
         shape.height = bounds.height;
-        this.graphicsFactory.update('shape', shape, this.canvas.getGraphics(shape));
-        // adjust edges
-        for (const edge of shape.incoming) {
-            edge.waypoints = connectRectangles(edge.source, edge.target, getMid(edge.source), getMid(edge.target));
-            this.graphicsFactory.update('connection', edge, this.canvas.getGraphics(edge));
+        const updateShape = (element) => {
+            this.graphicsFactory.update('shape', element, this.canvas.getGraphics(element));
+            for (const child of shape.children) {
+                updateShape(child);
+            }
+            // adjust edges
+            for (const edge of element.incoming) {
+                edge.waypoints = connectRectangles(edge.source, edge.target, getMid(edge.source), getMid(edge.target));
+                this.graphicsFactory.update('connection', edge, this.canvas.getGraphics(edge));
+            }
+            for (const edge of element.outgoing) {
+                edge.waypoints = connectRectangles(edge.source, edge.target, getMid(edge.source), getMid(edge.target));
+                this.graphicsFactory.update('connection', edge, this.canvas.getGraphics(edge));
+            }
         }
-        for (const edge of shape.outgoing) {
-            edge.waypoints = connectRectangles(edge.source, edge.target, getMid(edge.source), getMid(edge.target));
-            this.graphicsFactory.update('connection', edge, this.canvas.getGraphics(edge));
-        }
+        updateShape(shape);
     }
 
     execute(context) {
@@ -182,7 +190,7 @@ export default class UmlShapeProvider {
             return false; // stop propogation because we are overriding the default behavior at the end
         });
         eventBus.on('resize.end', 1100, (event) => {
-            if (event.context.canExecute) {
+            if (event.context.canExecute && event.shape.elementType === 'shape') {
                 commandStack.execute('resize.shape.uml', event.context);
                 event.context.canExecute = false;
             }
@@ -261,7 +269,7 @@ async function adjustListOfEdges(listOfEdges, umlWebClient) {
     } 
 }
 
-async function adjustAttachedEdges(shape, umlWebClient) {
+export async function adjustAttachedEdges(shape, umlWebClient) {
     await adjustListOfEdges(shape.incoming, umlWebClient);
     await adjustListOfEdges(shape.outgoing, umlWebClient); 
 }

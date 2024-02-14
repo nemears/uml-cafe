@@ -3,6 +3,8 @@ import { Editor } from './diagram/editor';
 const EventEmitter = require('events');
 import { createElementUpdate } from '../umlUtil.js';
 import { getUmlDiagramElement, deleteUmlDiagramElement , CLASSIFIER_SHAPE_ID, SHAPE_ID } from './diagram/api/diagramInterchange';
+import { toRaw } from 'vue';
+import { CLASS_SHAPE_HEADER_HEIGHT } from './diagram/providers/ClassHandler'; 
 export default {
     data() {
         return {
@@ -125,13 +127,14 @@ export default {
                             height: umlShape.bounds.height,
                             id: umlShape.id,
                             modelElement: umlShape.modelElement,
+                            elementType: 'shape',
                         });
                         canvas.addShape(shape, parent);
                         return shape;
                     } else if (umlDiagramElement.elementType() === 'classifierShape') {
                         const umlClassifierShape = umlDiagramElement;
                         if (!umlClassifierShape.modelElement) {
-                            await deleteUmlDiagramElement(umlShape.id, this.$umlWebClient);
+                            await deleteUmlDiagramElement(umlClassifierShape.id, this.$umlWebClient);
                             return undefined;
                         }
                         let parent = elementRegistry.get(umlClassifierShape.owningElement);
@@ -139,6 +142,20 @@ export default {
                             parent = await drawDiagramElement(await getUmlDiagramElement(umlClassifierShape.owningElement, this.$umlWebClient));
                         }
                         // todo compartments
+                        const compartments = [];
+                        for (const compartmentID of umlClassifierShape.compartments) {
+                            const compartment = await getUmlDiagramElement(compartmentID, this.$umlWebClient);
+                            const compartmentShape = elementFactory.createShape({
+                                id: compartment.id,
+                                x: umlClassifierShape.bounds.x,
+                                y: umlClassifierShape.bounds.y + CLASS_SHAPE_HEADER_HEIGHT,
+                                width: umlClassifierShape.bounds.width,
+                                height: umlClassifierShape.bounds.height - CLASS_SHAPE_HEADER_HEIGHT,
+                                modelElement: umlClassifierShape.modelElement,
+                                elementType: 'compartment',
+                            });
+                            compartments.push(compartmentShape);
+                        }
                         const shape = elementFactory.createShape({
                             x: umlClassifierShape.bounds.x,
                             y: umlClassifierShape.bounds.y,
@@ -146,9 +163,13 @@ export default {
                             height: umlClassifierShape.bounds.height,
                             id: umlClassifierShape.id,
                             modelElement: umlClassifierShape.modelElement,
-                            compartments: [], // todo
+                            compartments: compartments,
+                            elementType: 'classifierShape',
                         });
                         canvas.addShape(shape, parent);
+                        for (const compartmentShape of compartments) {
+                            canvas.addShape(compartmentShape, shape);
+                        }
                     } else if (umlDiagramElement.elementType() === 'edge') {
                         const umlEdge = umlDiagramElement;
                         if (!umlEdge.modelElement) {
@@ -177,6 +198,7 @@ export default {
                             source: source,
                             target: target,
                             children: [],
+                            elementType: 'edge'
                         });
                         canvas.addConnection(relationship, root);
                         return relationship;
@@ -199,7 +221,8 @@ export default {
                                     y: umlLabel.bounds.y,
                                     width: umlLabel.bounds.width,
                                     height: umlLabel.bounds.height,
-                                    labelTarget: labelTarget
+                                    labelTarget: labelTarget,
+                                    elementType: 'label',
                                 });
                                 canvas.addShape(label, labelTarget);
                                 return label;
@@ -288,7 +311,7 @@ export default {
 
             for (let command of this.commandStack.toReversed()) {  // linter says bad but vue likes it
                 command.context.proxy = true;
-                commandStack.execute(command.name, JSON.parse(JSON.stringify(command.context)));
+                commandStack.execute(command.name, toRaw(command.context));
             }
             this.emitter = Object.freeze(scopedEmitter);
             this.loading = false;
