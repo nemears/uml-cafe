@@ -55,42 +55,59 @@ class ResizeCompartmentableShapeHandler {
 
         // TODO subshapes that are not compartments
         
-        // compartments
-        let yPos = shape.y + CLASS_SHAPE_HEADER_HEIGHT;
-        let index = 0;
-        for (const compartment of shape.compartments) {
-            compartment.width = shape.width;
-            compartment.x = shape.x;
-            compartment.y = yPos;
-            if (index == shape.compartments.length - 1) {
-                // last element make height the rest of the shape
-                compartment.height = shape.height + shape.y - yPos;
-            } else {
-                throw Error("TODO multiple compartments");
-                // TODO adjust height based on children, change yPos
-                // TODO compartment children
-            }
-            this.graphicsFactory.update('shape', compartment, this.canvas.getGraphics(compartment));
-            index++;
-        }
+        adjustCompartmentsAndEdges(shape, this.graphicsFactory, this.canvas);
 
-        // edges
-        for (const edge of shape.incoming) {
-            edge.waypoints = connectRectangles(edge.source, edge.target, getMid(edge.source), getMid(edge.target));
-            this.graphicsFactory.update('connection', edge, this.canvas.getGraphics(edge));
-        }
-        for (const edge of shape.outgoing) {
-            edge.waypoints = connectRectangles(edge.source, edge.target, getMid(edge.source), getMid(edge.target));
-        }
         this.resize(context);
         return context.shape;
     }
     revert(context) {
-        throw Error("TODO rever compartmentableShape resize");
+        this.diagramEmitter.fire('command', {undo: {}});
+        const oldBounds = context.oldBounds,
+        shape = context.shape;
+        shape.x = oldBounds.x;
+        shape.y = oldBounds.y;
+        shape.width = oldBounds.width;
+        shape.height = oldBounds.height;
+       
+        adjustCompartmentsAndEdges(shape, this.graphicsFactory, this.canvas);
+
+        this.resize(context);
+        return context.shape;
     }
 }
 
 ResizeCompartmentableShapeHandler.$inject = ['diagramEmitter', 'graphicsFactory', 'canvas', 'umlWebClient', 'diagramContext']; 
+
+function adjustCompartmentsAndEdges(shape, graphicsFactory, canvas) {
+    // compartments
+    let yPos = shape.y + CLASS_SHAPE_HEADER_HEIGHT;
+    let index = 0;
+    for (const compartment of shape.compartments) {
+        compartment.width = shape.width;
+        compartment.x = shape.x;
+        compartment.y = yPos;
+        if (index == shape.compartments.length - 1) {
+            // last element make height the rest of the shape
+            compartment.height = shape.height + shape.y - yPos;
+        } else {
+            throw Error("TODO multiple compartments");
+            // TODO adjust height based on children, change yPos
+            // TODO compartment children
+        }
+        graphicsFactory.update('shape', compartment, canvas.getGraphics(compartment));
+        index++;
+    }
+
+    // edges
+    for (const edge of shape.incoming) {
+        edge.waypoints = connectRectangles(edge.source, edge.target, getMid(edge.source), getMid(edge.target));
+        graphicsFactory.update('connection', edge, canvas.getGraphics(edge));
+    }
+    for (const edge of shape.outgoing) {
+        edge.waypoints = connectRectangles(edge.source, edge.target, getMid(edge.source), getMid(edge.target));
+        graphicsFactory.update('connection', edge, canvas.getGraphics(edge));
+    }
+}
 
 export default class UmlCompartmentableShapeProvider {
     constructor(eventBus, commandStack) {

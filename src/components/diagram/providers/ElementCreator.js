@@ -1,4 +1,4 @@
-import { createClassifierShape, createComparment, createDiagramEdge, createDiagramLabel, createDiagramShape } from '../api/diagramInterchange';
+import { createClassifierShape, createComparment, createDiagramEdge, createDiagramLabel, createDiagramShape, deleteUmlDiagramElement } from '../api/diagramInterchange';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler'; 
 /**
  * context for this commandHandler looks like this
@@ -48,24 +48,29 @@ class ElementCreationHandler {
             switch (element.elementType) {
                 case 'shape':
                     canvas.addShape(element);
+                    // TODO children
                     createDiagramShape(element, umlWebClient, diagramContext);
                     break;
                 case 'edge':
                     canvas.addConnection(element);
                     createDiagramEdge(element, umlWebClient, diagramContext);
+                    // TODO children
                     break;
                 case 'label':
                     canvas.addShape(element);
+                    // TODO children?
                     createDiagramLabel(element, umlWebClient, diagramContext);
                     break;
                 case 'classifierShape':
                     canvas.addShape(element);
+                    // TODO children?
                     createClassifierShape(element, umlWebClient, diagramContext);
                     for (const compartment of element.compartments) {
                         compartment.x = element.x;
                         compartment.y = element.y + CLASS_SHAPE_HEADER_HEIGHT;
                         canvas.addShape(compartment, element);
-                        createComparment(compartment, umlWebClient, diagramContext)
+                        createComparment(compartment, umlWebClient, diagramContext);
+                        // TODO children?
                     }
                     break;
                 default:
@@ -83,6 +88,53 @@ class ElementCreationHandler {
         return context.elements;
     }
     revert(context) {
+        const diagramEmitter = this._diagramEmitter,
+        eventBus = this._eventBus,
+        canvas = this._canvas,
+        umlWebClient = this._umlWebClient;
+        diagramEmitter.fire('command', {undo: {
+                       // TODO
+        }});
+        for (const element of context.elements) {
+            eventBus.fire('diagramElementDeleted', {
+                element: element
+            });
+            switch (element.elementType) {
+                case 'shape':
+                    // TODO children
+                    canvas.removeShape(element);
+                    deleteUmlDiagramElement(element);
+                    break;
+                case 'edge':
+                    // TODO children
+                    canvas.removeConnection(element);
+                    deleteUmlDiagramElement(element);
+                    break;
+                case 'label':
+                    // TODO children?
+                    canvas.removeShape(element);
+                    deleteUmlDiagramElement(element);
+                    break;
+                case 'classifierShape':
+                    // TODO remove children
+                    for (const compartment of element.compartments) {
+                        // TODO remove children
+                        canvas.removeShape(compartment);
+                        deleteUmlDiagramElement(compartment.id, umlWebClient);
+                    }
+                    canvas.removeShape(element);
+                    deleteUmlDiagramElement(element.id, umlWebClient); // async doing later
+                    if (element.createModelElement) {
+                        eventBus.fire('elementDeleted', {
+                            element: element
+                        });
+                    }
+                    break;
+                default:
+                    throw Error('invalid uml di elementType given to ElementCreationHandler!');
+            }
+        }
+        return context.elements;
     }
 }
 

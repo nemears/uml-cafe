@@ -289,6 +289,8 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
             }
             await umlWebClient.deleteElement(diagramElementInstance);
             break;
+        } else {
+            await umlWebClient.deleteElement(diagramElementInstance);
         }
     }
 }
