@@ -47,6 +47,21 @@ export default class ClassDiagramContextPadProvider {
             connect.start(event, element, autoActivate);
         }
 
+        function startUsage(event, element, autoActivate) {
+            element.connectType = 'usage';
+            connect.start(event, element, autoActivate);
+        }
+
+        function startAbstraction(event, element, autoActivate) {
+            element.connectType = 'abstraction';
+            connect.start(event, element, autoActivate);
+        }
+
+        function startRealization(event, element, autoActivate) {
+            element.connectType = 'realization';
+            connect.start(event, element, autoActivate);
+        }
+
         function startDirectedComposition(event, element, autoActivate) {
             element.connectType = 'directedComposition';
             connect.start(event, element, autoActivate);
@@ -192,6 +207,33 @@ export default class ClassDiagramContextPadProvider {
                 action: {
                     click: startDependency,
                     dragstart: startDependency
+                }
+            };
+            ret.createUsage = {
+                group: 'edit',
+                className: 'context-pad-icon-usage',
+                title: 'Create Usage',
+                action: {
+                    click: startUsage,
+                    dragstart: startUsage
+                }
+            };
+            ret.createAbstraction = {
+                group: 'edit',
+                className: 'context-pad-icon-abstraction',
+                title: 'Create Abstraction',
+                action: {
+                    click: startAbstraction,
+                    dragstart: startAbstraction
+                }
+            };
+            ret.createRealization = {
+                group: 'edit',
+                className: 'context-pad-icon-realization',
+                title: 'Create Realization',
+                action: {
+                    click: startRealization,
+                    dragstart: startRealization
                 }
             };
         }

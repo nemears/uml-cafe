@@ -13,7 +13,7 @@
     "diagram-js": "^13.4.0",
     "diagram-js-direct-editing": "^2.0.0",
     "events": "^3.3.0",
-    "uml-client": "^0.3.7",
+    "uml-client": "file:../uml-client",
     "vue": "^3.2.26"
   },
   "devDependencies": {

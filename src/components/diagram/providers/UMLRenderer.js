@@ -190,7 +190,7 @@ export default class UMLRenderer extends BaseRenderer {
             svgAppend(group, line);
             svgAppend(gfx, group);
             return group;
-        } else if (element.modelElement.elementType() === 'dependency') {
+        } else if (element.modelElement.isSubClassOf('dependency')) {
             const group = svgCreate('g');
             const line = createLine(element.waypoints, assign({}, this.ANCHOR_STYLE, attrs || {}));
             const arrow = createArrow(element.waypoints.slice(-2));

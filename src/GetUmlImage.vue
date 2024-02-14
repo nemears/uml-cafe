@@ -16,9 +16,16 @@ import InstanceSpecificationSVG from './components/icons/instance_specification.
 import InstanceValueSVG from './components/icons/instance_value.svg';
 import SlotSVG from './components/icons/slot.svg';
 import DependencySVG from './components/icons/dependency.svg';
+import AbstractionSVG from './components/icons/abstraction.svg';
+import RealizationSVG from './components/icons/realization.svg';
+import UsageSVG from './components/icons/usage.svg';
+
 export default function getImage(el) {
     let elementType = typeof el === 'string' ? el : el.elementType();
     switch(elementType) {
+        case 'abstraction': {
+            return AbstractionSVG;
+        }
         case 'association' : {
             return AssociationSVG;
         }
@@ -30,6 +37,9 @@ export default function getImage(el) {
         }
         case 'dataType': {
             return ClassSVG;
+        }
+        case 'dependency': {
+            return DependencySVG;
         }
         case 'enumeration': {
             return ClassSVG;
@@ -79,14 +89,17 @@ export default function getImage(el) {
         case 'property': {
             return PropertySVG;
         }
+        case 'realization': {
+            return RealizationSVG;
+        }
         case 'slot': {
             return SlotSVG;
         }
         case 'stereotype': {
             return StereotypeSVG;
         }
-        case 'dependency': {
-            return DependencySVG;
+        case 'usage': {
+            return UsageSVG;
         }
     }
     return undefined;

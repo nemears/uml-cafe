@@ -296,6 +296,21 @@ export default {
     background-repeat: no-repeat;
     background-size: 100%;
 }
+.palette-icon-create-usage {
+    background: url('icons/usage.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+.palette-icon-create-abstraction {
+    background: url('icons/abstraction.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+.palette-icon-create-realization {
+    background: url('icons/realization.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
 .palette-icon-create-generalization {
     background: url('icons/generalization.svg');
     background-repeat: no-repeat;
@@ -355,6 +370,15 @@ export default {
 }
 .context-pad-icon-dependency {
     background: url('diagram/icons/context/dependency.svg') !important;
+}
+.context-pad-icon-abstraction {
+    background: url('diagram/icons/context/abstraction.svg') !important;
+}
+.context-pad-icon-realization {
+    background: url('diagram/icons/context/realization.svg') !important;
+}
+.context-pad-icon-usage {
+    background: url('diagram/icons/context/usage.svg') !important;
 }
 .context-pad-icon-directed-association {
     background: url('diagram/icons/context/directedAssociation.svg') !important;

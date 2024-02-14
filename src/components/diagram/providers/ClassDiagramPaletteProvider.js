@@ -88,6 +88,39 @@ export default class ClassDiagramPaletteProvider {
             }
         }
       },
+      'create-usage': {
+        group: 'dependency',
+        className: 'palette-icon-create-usage',
+        title: 'Create Usage',
+        action: {
+            click: (event) => {
+                eventBus.fire('usage.start');
+                globalConnect.start(event);
+            }
+        }
+      },
+      'create-abstraction': {
+        group: 'dependency',
+        className: 'palette-icon-create-abstraction',
+        title: 'Create Abstraction',
+        action: {
+            click: (event) => {
+                eventBus.fire('abstraction.start');
+                globalConnect.start(event);
+            }
+        }
+      },
+      'create-realization': {
+        group: 'dependency',
+        className: 'palette-icon-create-realization',
+        title: 'Create Realization',
+        action: {
+            click: (event) => {
+                eventBus.fire('realization.start');
+                globalConnect.start(event);
+            }
+        }
+      },
       'create-directed-composition': {
         group: 'association',
         className: 'palette-icon-create-directed-composition',

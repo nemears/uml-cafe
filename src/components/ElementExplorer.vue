@@ -195,11 +195,11 @@ export default {
             for (let commentID of el.ownedComments.ids()) {
                 this.children.push(commentID);
             }
-            if (el.isSubClassOf('namedElement')) {
+/*             if (el.isSubClassOf('namedElement')) {
                 for (let dependencyID of el.clientDependencies.ids()) {
                     this.children.push(dependencyID);
                 }
-            }
+            } */
             if (el.isSubClassOf('classifier')) {
                 for (let generalizationID of el.generalizations.ids()) {
                     this.children.push(generalizationID);

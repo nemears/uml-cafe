@@ -24,6 +24,9 @@ import UmlEdgeProvider from './UmlEdgeProvider';
 import UmlLabelProvider from './UmlLabelProvider';
 import UserSelection from './UserSelection';
 import DependencyHandler from './relationships/DependencyHandler';
+import AbstractionHandler from './relationships/AbstractionHandler';
+import RealizationHandler from './relationships/RealizationHandler';
+import UsageHandler from './relationships/UsageHandler';
 
 export default {
   __init__: [
@@ -52,6 +55,9 @@ export default {
     'umlEdgeProvider',
     'umlLabelProvider',
     'dependencyHandler',
+    'abstractionHandler',
+    'realizationHandler',
+    'usageHandler',
   ],
   generalizationHandler: ['type', GeneralizationHandler],
   association: ['type', Association],
@@ -79,4 +85,7 @@ export default {
   umlLabelProvider: ['type', UmlLabelProvider],
   userSelection: ['type', UserSelection],
   dependencyHandler: ['type', DependencyHandler],
+  abstractionHandler: ['type', AbstractionHandler],
+  realizationHandler: ['type', RealizationHandler],
+  usageHandler: ['type', UsageHandler]
 };
