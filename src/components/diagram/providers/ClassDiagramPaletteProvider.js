@@ -1,4 +1,5 @@
 import { randomID } from "uml-client/lib/element";
+import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler' 
 
 /**
  * A example palette provider.
@@ -49,7 +50,21 @@ export default class ClassDiagramPaletteProvider {
           click: function(event) {
             const classID = randomID();
             const shapeID = randomID();
-            var shape = elementFactory.createShape({
+            const compartmentID = randomID();
+            const compartment = elementFactory.createShape({
+                width: 100,
+                height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
+                id: compartmentID,
+                modelElement: {
+                    id: classID,
+                    elementType() {
+                        return 'class';
+                    }
+                },
+                elementType: 'compartment',
+            });
+            // TODO create name label
+            const shape = elementFactory.createShape({
               width: 100,
               height: 80,
               id: shapeID,
@@ -59,13 +74,12 @@ export default class ClassDiagramPaletteProvider {
                   return 'class';
                 }
               },
-              compartments : []
+              compartments : [compartment],
+              createModelElement: true,
+              elementType: 'classifierShape',
             });
 
-            create.start(event, shape, {
-                createModelElement: true,
-                shapeType: 'classifierShape'
-            });
+            create.start(event, shape);
           }
         }
       },

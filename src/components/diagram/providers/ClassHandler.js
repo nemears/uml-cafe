@@ -1,5 +1,5 @@
 import { createElementUpdate, deleteElementElementUpdate } from '../../../umlUtil';
-import { PROPERTY_COMPARTMENT_HEIGHT } from './Property';
+//import { PROPERTY_COMPARTMENT_HEIGHT } from './Property';
 
 export const CLASS_SHAPE_HEADER_HEIGHT = 40;
 
@@ -31,7 +31,7 @@ export default class ClassHandler {
                 canvas.removeShape(element);
             }
         });
-        eventBus.on('resize.start', (event) => {
+        /**eventBus.on('resize.start', (event) => {
             if (event.shape.modelElement && event.shape.modelElement.isSubClassOf('classifier')) {
                 // overiding resize.start so that minSize is different
                 delete event.context.resizeConstraints;
@@ -69,8 +69,18 @@ export default class ClassHandler {
                     );
                 }
             } 
+        });**/
+        eventBus.on('selection.changed', 1100, (context) => {
+            const selectedCompartments = context.newSelection.filter(el => el.elementType === 'compartment');
+            for (const compartment of selectedCompartments) {
+                // remove compartment from selection
+                context.newSelection.splice(context.newSelection.indexOf(compartment), 1);
+                if (!context.newSelection.includes(compartment.parent)) {
+                    context.newSelection.push(compartment.parent);
+                }
+            }
         });
-   }
+    }
 }
 
 ClassHandler.$inject = ['eventBus', 'modeling', 'umlWebClient', 'diagramContext', 'diagramEmitter', 'canvas'];

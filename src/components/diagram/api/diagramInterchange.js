@@ -65,7 +65,7 @@ export class Compartment extends DiagramElement {
 }
 
 export class CompartmentableShape extends Shape {
-    compartment = [];
+    compartments = [];
     elementType() {
         return 'compartmentableShape';
     }
@@ -159,6 +159,15 @@ export async function getUmlDiagramElement(id, umlClient) {
                 } 
             }
 
+            return ret;
+        } else if (classifierID === COMPARTMENT_ID) {
+            const ret = new Compartment();
+            ret.id = id;
+            for await (const compartmentSlot of umlDiagramElement.slots) {
+                if (await getDiagramElementFeatures(compartmentSlot, ret, umlClient)) {
+                    continue;
+                }
+            }
             return ret;
         } else if (classifierID === CLASSIFIER_SHAPE_ID) {
             // ClassifierShape
@@ -454,6 +463,7 @@ async function createCompartmentableShapeFeatures(shape, shapeInstance, umlWebCl
     for (const compartment of shape.compartments) {
         const compartmentVal = umlWebClient.post('instanceValue');
         compartmentVal.instance.set(compartment.id);
+        compartmentSlot.values.add(compartmentVal);
         umlWebClient.put(compartmentVal);
     }
     shapeInstance.slots.add(compartmentSlot);
@@ -551,7 +561,7 @@ export async function createComparment(compartment, umlWebClient, diagramContext
     compartmentInstance.classifiers.add(COMPARTMENT_ID);
     diagramContext.diagram.packagedElements.add(compartmentInstance);
 
-    await createDiagramElementFeatures(compartment, umlWebClient, diagramContext);
+    await createDiagramElementFeatures(compartment, umlWebClient, compartmentInstance, diagramContext);
 
     umlWebClient.put(compartmentInstance);
     umlWebClient.put(diagramContext.diagram);
