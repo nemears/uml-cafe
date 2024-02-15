@@ -155,63 +155,63 @@ export default class ClassDiagramPaletteProvider {
             }
         }
       },
-      'create-directed-composition': {
-        group: 'association',
-        className: 'palette-icon-create-directed-composition',
-        title: 'Create Directed Composition',
-        action: {
-            click: (event) => {
-                eventBus.fire('directedComposition.start');
-                globalConnect.start(event);
+            'create-directed-composition': {
+                group: 'association',
+                className: 'palette-icon-create-directed-composition',
+                title: 'Create Directed Composition',
+                action: {
+                    click: (event) => {
+                        eventBus.fire('directedComposition.start');
+                        globalConnect.start(event);
+                    }
+                }
+            },
+            'create-composition': {
+                group: 'association',
+                className: 'palette-icon-create-composition',
+                title: 'Create Composition',
+                action: {
+                    click: (event) => {
+                        eventBus.fire('composition.start');
+                        globalConnect.start(event);
+                    }
+                }
+            },
+            'create-association': {
+                group: 'association',
+                className: 'palette-icon-create-association',
+                title: 'Create Association',
+                action: {
+                    click: (event) => {
+                        eventBus.fire('association.start');
+                        globalConnect.start(event);
+                    }
+                }
+            },
+            'create-directed-association': {
+                group: 'association',
+                className: 'palette-icon-create-directed-association',
+                title: 'Create Directed Association',
+                action: {
+                    click: (event) => {
+                        eventBus.fire('directedAssociation.start');
+                        globalConnect.start(event);
+                    }
+                }
+            },
+            'create-bi-directional-association': {
+                group: 'association',
+                className: 'palette-icon-create-bi-directional-association',
+                title: 'Create Bi-directional Association',
+                action: {
+                    click: (event) => {
+                        eventBus.fire('biDirectionalAssociation.start');
+                        globalConnect.start(event);
+                    }
+                }
             }
         }
-      },
-      'create-composition': {
-        group: 'association',
-        className: 'palette-icon-create-composition',
-        title: 'Create Composition',
-        action: {
-            click: (event) => {
-                eventBus.fire('composition.start');
-                globalConnect.start(event);
-            }
-        }
-      },
-      'create-association': {
-        group: 'association',
-        className: 'palette-icon-create-association',
-        title: 'Create Association',
-        action: {
-            click: (event) => {
-                eventBus.fire('association.start');
-                globalConnect.start(event);
-            }
-        }
-      },
-      'create-directed-association': {
-        group: 'association',
-        className: 'palette-icon-create-directed-association',
-        title: 'Create Directed Association',
-        action: {
-            click: (event) => {
-                eventBus.fire('directedAssociation.start');
-                globalConnect.start(event);
-            }
-        }
-      },
-      'create-bi-directional-association': {
-        group: 'association',
-        className: 'palette-icon-create-bi-directional-association',
-        title: 'Create Bi-directional Association',
-        action: {
-            click: (event) => {
-                eventBus.fire('biDirectionalAssociation.start');
-                globalConnect.start(event);
-            }
-        }
-      }
     }
-  }
 }
 
 ClassDiagramPaletteProvider.$inject = ['create', 'elementFactory', 'lassoTool', 'palette', 'umlWebClient', 'globalConnect', 'eventBus'];
