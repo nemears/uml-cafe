@@ -8,7 +8,7 @@ export default class CommentHandler {
 	constructor(eventBus, umlWebClient, diagramContext, modelElementMap, elementRegistry, elementFactory, canvas, diagramEmitter) {
 		eventBus.on('diagramElementCreated', (event) => {
 			const element = event.element;
-			if (element.modelElement.elementType() === 'comment') {
+			if (element.modelElement && element.modelElement.elementType() === 'comment') {
 				// draw anchors
 				let annotatedElements = element.modelElement.annotatedElements;
 				if (annotatedElements.subSets) {

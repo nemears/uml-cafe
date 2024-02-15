@@ -185,6 +185,20 @@ export async function getUmlDiagramElement(id, umlClient) {
                 }
             }
             return ret;
+        } else if (classifierID === NAME_LABEL_ID) {
+            // NameLabel
+            const ret = new NameLabel();
+            ret.id = id;
+            for await (const nameLabelSlot of umlDiagramElement.slots) {
+                if (nameLabelSlot.definingFeature.id() === BOUNDS_ID) {
+                    await filloutBounds(nameLabelSlot, ret);
+                } else if (nameLabelSlot.definingFeature.id() === TEXT_ID) {
+                    ret.text = (await nameLabelSlot.values.front()).value;
+                } else if (await getDiagramElementFeatures(nameLabelSlot, ret, umlClient)) {
+                    continue;
+                } 
+            }
+            return ret;
         }
     }
     return undefined;
@@ -298,9 +312,7 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
 
 
 export async function createDiagramElementFeatures(shape, umlWebClient, shapeInstance, diagramContext) {
-    if (!shape.modelElement) {
-        console.warn('no model element for ' + shape.ElementType() + ' ' + shape.id);
-    } else {
+    if (shape.modelElement) {
         const modelElementInstance = umlWebClient.post('instanceSpecification');
         const modelElementSlot = umlWebClient.post('slot');
         const modelElementValue = umlWebClient.post('instanceValue');
@@ -522,7 +534,7 @@ export async function createNameLabel(label, umlWebClient, diagramContext) {
     labelInstance.classifiers.add(NAME_LABEL_ID);
     diagramContext.diagram.packagedElements.add(labelInstance); 
 
-    await createDiagramLabel(label, labelInstance, umlWebClient, diagramContext);
+    await createDiagramLabelFeatures(label, labelInstance, umlWebClient, diagramContext);
 
     umlWebClient.put(labelInstance);
     umlWebClient.put(diagramContext.diagram);

@@ -13,7 +13,19 @@ export default class ClassHandler {
                 diagramContext.context.packagedElements.add(clazz);
                 umlWebClient.put(clazz);
                 umlWebClient.put(diagramContext.context);
-                element.modelElement = clazz;
+
+                // bfs set modelElement
+                const queue = [element];
+                while (queue.length > 0) {
+                    const front = queue.shift();
+                    if (front.modelElement && front.modelElement.id === classID) {
+                        front.modelElement = clazz; 
+                    }
+                    for (const child of front.children) {
+                        queue.push(child);
+                    }
+                }
+
                 diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));
             }
         });

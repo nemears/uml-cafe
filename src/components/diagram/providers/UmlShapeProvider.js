@@ -227,6 +227,29 @@ export default class UmlShapeProvider {
                 graphicsFactory.update('shape', localShape, canvas.getGraphics(localShape));
             }
         });
+
+        /**
+         * Inselectable elements can be toggled inselectable with attribute inselectable = true,
+         * when inselectable, when clicked the elements parent will be selected unless the elements parent is root
+         * also when the element is moved the parent will be moved instead
+         **/
+        eventBus.on('selection.changed', 1100, (context) => {
+            const selectedInselectableElements = context.newSelection.filter(el => el.inselectable);
+            for (const inselectableElement of selectedInselectableElements) {
+                // remove compartment from selection
+                context.newSelection.splice(context.newSelection.indexOf(inselectableElement), 1);
+                if (inselectableElement.parent != canvas.findRoot(inselectableElement) && 
+                    !context.newSelection.includes(inselectableElement.parent)) {
+                    context.newSelection.push(inselectableElement.parent);
+                }
+            }
+        });
+        eventBus.on('shape.move.start', 1600, (event) => {
+            const shape = event.shape;
+            if (shape.inselectable && shape.parent != canvas.findRoot(shape)) {
+                event.shape = shape.parent;
+            }
+        });
     }
 }
 

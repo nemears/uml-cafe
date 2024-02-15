@@ -1,5 +1,6 @@
-import { createClassifierShape, createComparment, createDiagramEdge, createDiagramLabel, createDiagramShape, deleteUmlDiagramElement } from '../api/diagramInterchange';
-import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler'; 
+import { createClassifierShape, createComparment, createDiagramEdge, createDiagramLabel, createDiagramShape, createNameLabel, deleteUmlDiagramElement } from '../api/diagramInterchange';
+import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
+import { CLASSIFIER_SHAPE_GAP_HEIGHT } from './UmlCompartmentableShapeProvider';
 /**
  * context for this commandHandler looks like this
  * {
@@ -34,19 +35,20 @@ class ElementCreationHandler {
             delete context.proxy;
             return context.elements; // TODO get valid element
         }
-        for (const element of context.elements) {
-            switch(element.elementType) {
-                case 'shape':
-                case 'label':
-                case 'classifierShape':
-                    element.x = context.x - element.width / 2;
-                    element.y = context.y - element.height / 2;
-            }
+        const assignPosition = (shape) => {
+            shape.x = context.x - shape.width / 2;
+            shape.y = context.y - shape.height / 2;
         }
         diagramEmitter.fire('command', {name: 'elementCreation', context: context});
         for (const element of context.elements) {
             switch (element.elementType) {
                 case 'shape':
+                    if (element.parent) {
+                        // place within parent
+                        throw Error('TODO');
+                    } else {
+                        assignPosition(element);
+                    }
                     canvas.addShape(element);
                     // TODO children
                     createDiagramShape(element, umlWebClient, diagramContext);
@@ -57,11 +59,23 @@ class ElementCreationHandler {
                     // TODO children
                     break;
                 case 'label':
+                    if (element.parent) {
+                        // TODO place within parent
+                        throw Error('TODO');
+                    } else {
+                        assignPosition(element);
+                    }
                     canvas.addShape(element);
                     // TODO children?
                     createDiagramLabel(element, umlWebClient, diagramContext);
                     break;
                 case 'classifierShape':
+                    if (element.parent) {
+                        // TODO place within parent
+                        throw Error('TODO');
+                    } else {
+                        assignPosition(element);
+                    }
                     canvas.addShape(element);
                     // TODO children?
                     createClassifierShape(element, umlWebClient, diagramContext);
@@ -72,6 +86,19 @@ class ElementCreationHandler {
                         createComparment(compartment, umlWebClient, diagramContext);
                         // TODO children?
                     }
+                    break;
+                case 'nameLabel':
+                    if (element.parent) {
+                        // TODO place within parent
+                        element.x = element.parent.x;
+                        element.y = element.parent.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
+                        canvas.addShape(element, element.parent);
+                    } else {
+                        assignPosition(element);
+                        canvas.addShape(element);
+                    }
+                    // TODO children?
+                    createNameLabel(element, umlWebClient, diagramContext);
                     break;
                 default:
                     throw Error('invalid uml di elementType given to ElementCreationHandler!');

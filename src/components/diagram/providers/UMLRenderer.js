@@ -59,6 +59,8 @@ export default class UMLRenderer extends BaseRenderer {
         this.COMMENT_STYLE = { fill: '#f0deb9', stroke: 'var(--vt-c-black-soft)', strokeWidth: 2 }; 
         this.PROPERTY_STYLE = { fill: '#ff9955ff', stroke: '#8f552f', strokewidth: 2 };
         this.OWNED_ATTRIBUTE_STYLE = { fill: 'var(--vt-c-black)' };
+        this.COMPARTMENT_STYLE = { fill: 'none', strokewidth: 2, stroke: 'var(--vt-c-black)' };
+        this.EDIT_STYLE = { fill: 'var(--uml-cafe-selected)' }; // TODO change based on user
         this.textStyle = {
             fontFamily: 'Arial, sans-serif',
             fontSize: 12,
@@ -72,10 +74,11 @@ export default class UMLRenderer extends BaseRenderer {
     }
 
     canRender(element) {
-        return element.umlType || element.modelElement;
+        return true; // TODO determine valid props for rendering
     }
 
     drawConnection(gfx, element, attrs) {
+        
         if (element.modelElement.elementType() === 'generalization') {
             const arrow = createArrow(element.waypoints.slice(-2));
 
@@ -234,8 +237,50 @@ export default class UMLRenderer extends BaseRenderer {
                 textString = textString.slice(0, -4) + '...';
             } while (textString.length > 4 && (text.dimensions.width > bounds.width || text.dimensions.height > bounds.height));
             return text.element;
-        } 
-        if (!element.modelElement) {
+        }
+
+        // create shape
+        const group = svgCreate('g');
+        const createRectangle = () => {
+            const rect = svgCreate('rect');
+            svgAttr(rect, {
+                x: 0,
+                y: 0,
+                width: element.width || 0,
+                height: element.height || 0
+            }); 
+            svgAppend(group, rect);
+            return rect
+        };
+    
+        // shapes that do not depend on the element's type
+        if (element.elementType === 'compartment') {
+            // TODO
+            const rect = createRectangle();
+            svgAttr(rect, assign({}, this.COMPARTMENT_STYLE), attrs || {});
+        } else if (element.elementType === 'nameLabel') {
+            const rect = createRectangle();
+            svgAttr(rect, assign({}, this.LABEL_STYLE), attrs || {});
+            if (!element.text) {
+                console.warn('no text provided to label assuming empty, please add text = "" to your label to supress this warning');
+            } else {
+                const text = cropText(element.text, element, {
+                    align: 'center-middle',
+                    box: {
+                        width: element.width - 5,
+                        height: element.height,
+                        x: 0,
+                        y: 0,
+                    }
+                });
+                svgAppend(group, text);
+            }
+        } else if (element.elementType === 'classifierShape') {
+            const rect = createRectangle();
+            svgAttr(rect, assign({}, this.CLASS_STYLE), attrs || {});
+        }
+
+        /**if (!element.modelElement) {
             if (element.parent && element.parent.modelElement && element.parent.modelElement.isSubClassOf('property')) {
                 // we are a label
                 const group = svgCreate('g');
@@ -261,23 +306,12 @@ export default class UMLRenderer extends BaseRenderer {
                 console.warn('TODO remove me, no modelElement calling super.drawShape()');
                 return super.drawShape(gfx, element, attrs);
             }
-        }
+        }**/
         
-
+        // OLD BEHAVIOR
+        // TODO override with styles
         // create shape
-        const group = svgCreate('g');
-        const createRectangle = () => {
-            const rect = svgCreate('rect');
-            svgAttr(rect, {
-                x: 0,
-                y: 0,
-                width: element.width || 0,
-                height: element.height || 0
-            }); 
-            svgAppend(group, rect);
-            return rect
-        };
-        if (element.modelElement.elementType() === 'class') {
+        else if (element.modelElement.elementType() === 'class') {
             const rect = createRectangle();
             svgAttr(rect, assign({}, this.CLASS_STYLE), attrs || {});
 
