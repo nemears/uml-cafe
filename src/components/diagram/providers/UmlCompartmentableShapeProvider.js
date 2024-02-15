@@ -3,6 +3,8 @@ import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { adjustAttachedEdges, adjustShape } from './UmlShapeProvider';
 
+export const CLASSIFIER_SHAPE_GAP_HEIGHT = 5;
+
 class ResizeCompartmentableShapeHandler {
     constructor(diagramEmitter, graphicsFactory, canvas, umlWebClient, diagramContext) {
         this.diagramEmitter = diagramEmitter;
@@ -52,13 +54,19 @@ class ResizeCompartmentableShapeHandler {
         shape.width = newBounds.width;
         shape.height = newBounds.height;
         this.graphicsFactory.update('shape', shape, this.canvas.getGraphics(shape));
-
-        // TODO subshapes that are not compartments
+         
+        for (const child of shape.children) {
+            if (child.elementType === 'compartment') {
+                continue;
+            }
+            child.x = shape.x;
+            child.width = shape.width;
+        }
         
         adjustCompartmentsAndEdges(shape, this.graphicsFactory, this.canvas);
 
         this.resize(context);
-        return context.shape;
+        return [context.shape, ... shape.children];
     }
     revert(context) {
         this.diagramEmitter.fire('command', {undo: {}});

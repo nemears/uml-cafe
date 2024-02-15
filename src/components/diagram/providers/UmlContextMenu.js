@@ -30,8 +30,13 @@ export default class UmlContextMenu {
         const me = this;
         
         eventBus.on('element.contextmenu', (event) => {
+            const x = event.originalEvent.clientX,
+            y = event.originalEvent.clientY;
             if (event.element.modelElement && !event.originalEvent.ctrlKey) {
-                me.show(event.originalEvent.clientX, event.originalEvent.clientY, event.element);
+                me.show(x, y, event.element);
+                event.originalEvent.preventDefault();
+            } else if (event.element.elementType === 'compartment') {
+                me.show(x, y, event.element.parent);
                 event.originalEvent.preventDefault();
             }
         });
@@ -63,7 +68,22 @@ export default class UmlContextMenu {
             menu.items.push({
                 label: 'Rename',
                 onClick: () => {
-                    directEditing.activate(element);
+                    if (element.elementType === 'classifierShape') {
+                        // find nameLabel
+                        let nameLabel;
+                        for (const child of element.children) {
+                            if (child.elementType === 'nameLabel') {
+                                nameLabel = child;
+                                break;
+                            }
+                        }
+                        if (!nameLabel) {
+                            throw Error('could not find name label in children of classifierShape!');
+                        }
+                        directEditing.activate(nameLabel);
+                    } else {
+                        directEditing.activate(element);
+                    }
                 }
             });
         } else if (element.modelElement.isSubClassOf('comment')) {

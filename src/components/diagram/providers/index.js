@@ -13,7 +13,6 @@ import DoubleClickSpecification from './DoubleClickSpecification';
 import ElementUpdate from './ElementUpdate';
 import ModelElementMap from './ModelElementMap';
 import UmlContextMenu from './UmlContextMenu';
-import NameEditProvider from './NameEditProvider';
 import DirectEditing from 'diagram-js-direct-editing/lib/DirectEditing';
 import EditOnCreate from './EditOnCreate';
 import Property from './Property';
@@ -24,6 +23,7 @@ import UmlCompartmentProvider from './UmlCompartmentProvider';
 import UmlShapeProvider from './UmlShapeProvider';
 import UmlEdgeProvider from './UmlEdgeProvider';
 import UmlLabelProvider from './UmlLabelProvider';
+import UmlDirectEditingProvider from './UmlDirectEditingProvider';
 import UserSelection from './UserSelection';
 import DependencyHandler from './relationships/DependencyHandler';
 
@@ -44,7 +44,6 @@ export default {
         'elementUpdate',
         'modelElementMap',
         'umlContextMenu',
-        'nameEditProvider',
         'directEditing',
         'editOnCreate',
         'property',
@@ -55,6 +54,7 @@ export default {
         'umlShapeProvider',
         'umlEdgeProvider',
         'umlLabelProvider',
+        'umlDirectEditingProvider',
         'userSelection',
         'dependencyHandler',
     ],
@@ -73,7 +73,6 @@ export default {
     elementUpdate: ['type', ElementUpdate],
     modelElementMap: ['type', ModelElementMap],
     umlContextMenu: ['type', UmlContextMenu],
-    nameEditProvider: ['type', NameEditProvider],
     directEditing: ['type', DirectEditing],
     editOnCreate: ['type', EditOnCreate],
     property: ['type', Property],
@@ -84,6 +83,7 @@ export default {
     umlShapeProvider: ['type', UmlShapeProvider],
     umlEdgeProvider: ['type', UmlEdgeProvider],
     umlLabelProvider: ['type', UmlLabelProvider],
+    umlDirectEditingProvider: ['type', UmlDirectEditingProvider],
     userSelection: ['type', UserSelection],
     dependencyHandler: ['type', DependencyHandler],
 };
