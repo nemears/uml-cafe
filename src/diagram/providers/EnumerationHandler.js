@@ -1,5 +1,4 @@
 import { createElementUpdate, deleteElementElementUpdate } from '../../umlUtil';
-//import { PROPERTY_COMPARTMENT_HEIGHT } from './Property';
 
 export const CLASS_SHAPE_HEADER_HEIGHT = 40;
 
