@@ -255,23 +255,26 @@ class RemoveDiagramElementHandler {
         this._diagramContext = diagramContext;
         this._elementFactory = elementFactory;
     }
-    removeElement(diagramElement) {
+    async removeElement(diagramElement) {
         const canvas = this._canvas,
         umlWebClient = this._umlWebClient;
         if (diagramElement.waypoints) {
             for (const child of [...diagramElement.children]) {
-                this.removeElement(child);
+                await this.removeElement(child);
             }
-            deleteUmlDiagramElement(diagramElement.id, umlWebClient);
+            await deleteUmlDiagramElement(diagramElement.id, umlWebClient);
             canvas.removeConnection(diagramElement);
         } else {
+            for (const child of [...diagramElement.children]) {
+                await this.removeElement(child);
+            }
             for (const edge of [...diagramElement.incoming]) {
-                this.removeElement(edge);
+                await this.removeElement(edge);
             }
             for (const edge of [...diagramElement.outgoing]) {
-                this.removeElement(edge);
+                await this.removeElement(edge);
             }
-            deleteUmlDiagramElement(diagramElement.id, umlWebClient);
+            await deleteUmlDiagramElement(diagramElement.id, umlWebClient);
             canvas.removeShape(diagramElement);
         }
     }
