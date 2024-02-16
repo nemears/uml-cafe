@@ -274,7 +274,7 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
         return;
     }
     for (const classifierID of diagramElementInstance.classifiers.ids()) {
-        if (classifierID === SHAPE_ID || classifierID === LABEL_ID) {
+        if (classifierID === SHAPE_ID || classifierID === LABEL_ID || classifierID === CLASSIFIER_SHAPE_ID || classifierID === NAME_LABEL_ID) {
             // shape
             for await (const shapeSlot of diagramElementInstance.slots) {
                 if (shapeSlot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {

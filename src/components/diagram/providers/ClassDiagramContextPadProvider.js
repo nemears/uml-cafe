@@ -1,6 +1,7 @@
 import { createDiagramEdge, createDiagramShape, deleteUmlDiagramElement } from '../api/diagramInterchange';
 import { deleteModelElement } from './UmlContextMenu';
 import { createCommentClick } from '../../../umlUtil';
+import { pick } from 'min-dash';
 
 /**
  * A example context pad provider.
@@ -284,13 +285,13 @@ class RemoveDiagramElementHandler {
         if (!context.element) {
             context.element = elementProxy;
             const createElementShape = async () => {
-                elementProxy.modelElement = await umlWebClient.get(elementProxy.modelElement);
+                elementProxy.modelElement = await umlWebClient.get(elementProxy.modelElement.id);
                 if (elementProxy.waypoints) {
                     elementProxy.source = elementRegistry.get(elementProxy.source);
                     elementProxy.target = elementRegistry.get(elementProxy.target);
                     context.element = elementFactory.createConnection(elementProxy);
                 } else {
-                    context.element = elementFactory.createShape(elementProxy);
+                    context.element = elementFactory.createShape(pick(elementProxy, ['x','y','height','width', 'modelElement', 'inselectable', 'elementType']));
                 }
             }
             createElementShape();
@@ -315,7 +316,7 @@ class RemoveDiagramElementHandler {
             simpleElement.width = context.element.width;
             simpleElement.height = context.element.height;
         }
-        simpleElement.modelElement = context.element.modelElement.id;
+        simpleElement.modelElement = { id: context.element.modelElement.id };
         diagramEmitter.fire('command', {name: 'removeDiagramElement', context: {
             element: simpleElement,
             parent: {
