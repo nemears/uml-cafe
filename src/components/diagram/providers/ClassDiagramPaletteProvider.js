@@ -72,53 +72,16 @@ export default class ClassDiagramPaletteProvider {
                 action: {
                     click: function(event) {
                         const dataTypeID = randomID();
-                        const shapeID = randomID();
-                        const compartmentID = randomID();
-                        const nameLabelID = randomID();
-
-                        // create compartment
-                        const compartment = elementFactory.createShape({
-                            width: 100,
-                            height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
-                            id: compartmentID,
-                            elementType: 'compartment',
-                        });
-                        
                         const proxyModelElement = {
                             id: dataTypeID,
                             elementType() {
                                 return 'dataType';
                             }
                         }
-
-                        // create classifierShape
-                        const shape = elementFactory.createShape({
-                            width: 100,
-                            height: 80,
-                            id: shapeID,
-                            modelElement : proxyModelElement,
-                            compartments : [compartment],
-                            createModelElement: true,
-                            elementType: 'classifierShape',
-                        });
-                        
-                        // create name label
-                        const nameLabel = elementFactory.createLabel({
-                            width: 100, // TODO change to defaults??
-                            height: 24,
-                            x: 0,
-                            y: CLASSIFIER_SHAPE_GAP_HEIGHT,
-                            labelTarget: shape,
-                            text: '',
-                            parent: shape,
-                            id: nameLabelID,
-                            modelElement: proxyModelElement,
-                            elementType: 'nameLabel',
-                            inselectable: true,
-                        });
+                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, proxyModelElement, true);
 
                         // start create
-                        create.start(event, [shape, nameLabel]);
+                        create.start(event, elsToCreate);
                     }
                 }
             },
@@ -129,18 +92,6 @@ export default class ClassDiagramPaletteProvider {
                 action: {
                     click: function(event) {
                         const enumerationID = randomID();
-                        const shapeID = randomID();
-                        const compartmentID = randomID();
-                        const nameLabelID = randomID();
-
-                        // create compartment
-                        const compartment = elementFactory.createShape({
-                            width: 100,
-                            height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
-                            id: compartmentID,
-                            elementType: 'compartment',
-                        });
-                        
                         const proxyModelElement = {
                             id: enumerationID,
                             elementType() {
@@ -148,34 +99,10 @@ export default class ClassDiagramPaletteProvider {
                             }
                         }
 
-                        // create classifierShape
-                        const shape = elementFactory.createShape({
-                            width: 100,
-                            height: 80,
-                            id: shapeID,
-                            modelElement : proxyModelElement,
-                            compartments : [compartment],
-                            createModelElement: true,
-                            elementType: 'classifierShape',
-                        });
-                        
-                        // create name label
-                        const nameLabel = elementFactory.createLabel({
-                            width: 100, // TODO change to defaults??
-                            height: 24,
-                            x: 0,
-                            y: CLASSIFIER_SHAPE_GAP_HEIGHT,
-                            labelTarget: shape,
-                            text: '',
-                            parent: shape,
-                            id: nameLabelID,
-                            modelElement: proxyModelElement,
-                            elementType: 'nameLabel',
-                            inselectable: true,
-                        });
+                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, proxyModelElement, true);
 
                         // start create
-                        create.start(event, [shape, nameLabel]);
+                        create.start(event, elsToCreate);
                     }
                 }
             },
@@ -186,18 +113,6 @@ export default class ClassDiagramPaletteProvider {
                 action: {
                     click: function(event) {
                         const primitiveTypeID = randomID();
-                        const shapeID = randomID();
-                        const compartmentID = randomID();
-                        const nameLabelID = randomID();
-
-                        // create compartment
-                        const compartment = elementFactory.createShape({
-                            width: 100,
-                            height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
-                            id: compartmentID,
-                            elementType: 'compartment',
-                        });
-                        
                         const proxyModelElement = {
                             id: primitiveTypeID,
                             elementType() {
@@ -205,34 +120,10 @@ export default class ClassDiagramPaletteProvider {
                             }
                         }
 
-                        // create classifierShape
-                        const shape = elementFactory.createShape({
-                            width: 100,
-                            height: 80,
-                            id: shapeID,
-                            modelElement : proxyModelElement,
-                            compartments : [compartment],
-                            createModelElement: true,
-                            elementType: 'classifierShape',
-                        });
-                        
-                        // create name label
-                        const nameLabel = elementFactory.createLabel({
-                            width: 100, // TODO change to defaults??
-                            height: 24,
-                            x: 0,
-                            y: CLASSIFIER_SHAPE_GAP_HEIGHT,
-                            labelTarget: shape,
-                            text: '',
-                            parent: shape,
-                            id: nameLabelID,
-                            modelElement: proxyModelElement,
-                            elementType: 'nameLabel',
-                            inselectable: true,
-                        });
+                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, proxyModelElement, true);
 
                         // start create
-                        create.start(event, [shape, nameLabel]);
+                        create.start(event, elsToCreate);
                     }
                 }
             },
@@ -243,18 +134,6 @@ export default class ClassDiagramPaletteProvider {
                 action: {
                     click: function(event) {
                         const interfaceID = randomID();
-                        const shapeID = randomID();
-                        const compartmentID = randomID();
-                        const nameLabelID = randomID();
-
-                        // create compartment
-                        const compartment = elementFactory.createShape({
-                            width: 100,
-                            height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
-                            id: compartmentID,
-                            elementType: 'compartment',
-                        });
-                        
                         const proxyModelElement = {
                             id: interfaceID,
                             elementType() {
@@ -262,34 +141,10 @@ export default class ClassDiagramPaletteProvider {
                             }
                         }
 
-                        // create classifierShape
-                        const shape = elementFactory.createShape({
-                            width: 100,
-                            height: 80,
-                            id: shapeID,
-                            modelElement : proxyModelElement,
-                            compartments : [compartment],
-                            createModelElement: true,
-                            elementType: 'classifierShape',
-                        });
-                        
-                        // create name label
-                        const nameLabel = elementFactory.createLabel({
-                            width: 100, // TODO change to defaults??
-                            height: 24,
-                            x: 0,
-                            y: CLASSIFIER_SHAPE_GAP_HEIGHT,
-                            labelTarget: shape,
-                            text: '',
-                            parent: shape,
-                            id: nameLabelID,
-                            modelElement: proxyModelElement,
-                            elementType: 'nameLabel',
-                            inselectable: true,
-                        });
+                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, proxyModelElement, true);
 
                         // start create
-                        create.start(event, [shape, nameLabel]);
+                        create.start(event, elsToCreate);
                     }
                 }
             },
@@ -300,53 +155,17 @@ export default class ClassDiagramPaletteProvider {
                 action: {
                     click: function(event) {
                         const signalID = randomID();
-                        const shapeID = randomID();
-                        const compartmentID = randomID();
-                        const nameLabelID = randomID();
-
-                        // create compartment
-                        const compartment = elementFactory.createShape({
-                            width: 100,
-                            height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
-                            id: compartmentID,
-                            elementType: 'compartment',
-                        });
-                        
                         const proxyModelElement = {
                             id: signalID,
                             elementType() {
                                 return 'signal';
                             }
                         }
-
-                        // create classifierShape
-                        const shape = elementFactory.createShape({
-                            width: 100,
-                            height: 80,
-                            id: shapeID,
-                            modelElement : proxyModelElement,
-                            compartments : [compartment],
-                            createModelElement: true,
-                            elementType: 'classifierShape',
-                        });
                         
-                        // create name label
-                        const nameLabel = elementFactory.createLabel({
-                            width: 100, // TODO change to defaults??
-                            height: 24,
-                            x: 0,
-                            y: CLASSIFIER_SHAPE_GAP_HEIGHT,
-                            labelTarget: shape,
-                            text: '',
-                            parent: shape,
-                            id: nameLabelID,
-                            modelElement: proxyModelElement,
-                            elementType: 'nameLabel',
-                            inselectable: true,
-                        });
+                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, proxyModelElement, true);
 
                         // start create
-                        create.start(event, [shape, nameLabel]);
+                        create.start(event, elsToCreate);
                     }
                 }
             }, 
