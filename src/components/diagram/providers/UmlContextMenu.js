@@ -32,11 +32,14 @@ export default class UmlContextMenu {
         eventBus.on('element.contextmenu', (event) => {
             const x = event.originalEvent.clientX,
             y = event.originalEvent.clientY;
-            if (event.element.modelElement && !event.originalEvent.ctrlKey) {
-                me.show(x, y, event.element);
-                event.originalEvent.preventDefault();
-            } else if (event.element.elementType === 'compartment') {
-                me.show(x, y, event.element.parent);
+            if (!event.originalEvent.ctrlKey) {
+                if (event.element.elementType === 'compartment') {
+                    me.show(x, y, event.element.parent);
+                } else if (event.element.elementType === 'nameLabel' && event.element.parent != canvas.findRoot(event.element)) {
+                    me.show(x,y, event.element.parent);
+                } else if (event.element.modelElement) {
+                    me.show(x, y, event.element);
+                }
                 event.originalEvent.preventDefault();
             }
         });

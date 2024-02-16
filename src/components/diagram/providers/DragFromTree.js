@@ -1,6 +1,4 @@
-import { randomID } from "uml-client/lib/element";
-import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
-import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout'
+import { createClassDiagramClassifierShape } from './ClassDiagramPaletteProvider';
 
 export default class DragFromTree {
     constructor(create, elementFactory, diagramEmitter) {
@@ -8,15 +6,10 @@ export default class DragFromTree {
             const elements = [];
             for (const element of event.selectedElements) {
                 if (element.elementType() === 'class') {
-                    elements.push(elementFactory.createShape({
-                        width: 100,
-                        height: 80,
-                        // TODO uml stuff
-                        id: randomID(),
-                        modelElement: element,
-                        newUMLElement: false,
-                        newShapeElement: true,
-                    }));
+                    const classElements = createClassDiagramClassifierShape(elementFactory, element);
+                    for (const el of classElements) {
+                        elements.push(el);
+                    }
                 }
             }
             create.start(event.event, elements);
