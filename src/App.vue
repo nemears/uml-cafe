@@ -4,9 +4,9 @@ import ElementExplorer from './components/ElementExplorer.vue';
 import SpecificationPage from './components/SpecificationPage.vue';
 import WelcomePage from './components/WelcomePage.vue';
 import DiagramPage from './components/DiagramPage.vue';
-import CloseSymbol from './components/icons/close_symbol.svg';
+import CloseSymbol from './assets/icons/general/close_symbol.svg';
 import getImage from './GetUmlImage.vue';
-import classDiagramImage from './components/icons/class_diagram.svg';
+import classDiagramImage from './assets/icons/general/class_diagram.svg';
 import { computed } from 'vue';
 import { assignTabLabel } from './umlUtil';
 </script>

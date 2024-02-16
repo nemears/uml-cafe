@@ -1,15 +1,15 @@
-import { createElementUpdate, deleteElementElementUpdate } from '../../../umlUtil';
+import { createElementUpdate, deleteElementElementUpdate } from '../../umlUtil';
 //import { PROPERTY_COMPARTMENT_HEIGHT } from './Property';
 
 export const CLASS_SHAPE_HEADER_HEIGHT = 40;
 
-export default class DataTypeHandler {
+export default class InterfaceHandler {
     constructor(eventBus, modeling, umlWebClient, diagramContext, diagramEmitter, canvas) {
         eventBus.on('elementCreated', (event) => {
             const element = event.element;
-            if (element.modelElement.elementType() === 'dataType') {
-                const dataTypeID = element.modelElement.id;
-                let clazz = umlWebClient.post('dataType', {id:dataTypeID});
+            if (element.modelElement.elementType() === 'interface') {
+                const interfaceID = element.modelElement.id;
+                let clazz = umlWebClient.post('interface', {id:interfaceID});
                 diagramContext.context.packagedElements.add(clazz);
                 umlWebClient.put(clazz);
                 umlWebClient.put(diagramContext.context);
@@ -18,7 +18,7 @@ export default class DataTypeHandler {
                 const queue = [element];
                 while (queue.length > 0) {
                     const front = queue.shift();
-                    if (front.modelElement && front.modelElement.id === dataTypeID) {
+                    if (front.modelElement && front.modelElement.id === interfaceID) {
                         front.modelElement = clazz; 
                     }
                     for (const child of front.children) {
@@ -31,7 +31,7 @@ export default class DataTypeHandler {
         });
         eventBus.on('elementDeleted', (event) => {
             const element = event.element;
-            if (element.modelElement.elementType() === 'dataType') {
+            if (element.modelElement.elementType() === 'interface') {
                 const doLater = async (element) => {
                     const modelElement = await umlWebClient.get(element.modelElement.id);
                     const owner = await modelElement.owner.get();
@@ -57,4 +57,4 @@ export default class DataTypeHandler {
     }
 }
 
-DataTypeHandler.$inject = ['eventBus', 'modeling', 'umlWebClient', 'diagramContext', 'diagramEmitter', 'canvas'];
+InterfaceHandler.$inject = ['eventBus', 'modeling', 'umlWebClient', 'diagramContext', 'diagramEmitter', 'canvas'];

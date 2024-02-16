@@ -1,7 +1,7 @@
 <script>
-import packageImage from './icons/package.svg';
+import packageImage from '../assets/icons/general/package.svg';
 import getImage from '../GetUmlImage.vue';
-import classDiagramImage from './icons/class_diagram.svg';
+import classDiagramImage from '../assets/icons/general/class_diagram.svg';
 import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createClassDiagram, mapColor } from '../umlUtil.js'
 
 export default {

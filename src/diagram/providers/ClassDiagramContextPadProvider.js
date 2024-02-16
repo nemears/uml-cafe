@@ -1,6 +1,6 @@
 import { createDiagramEdge, createDiagramShape, deleteUmlDiagramElement } from '../api/diagramInterchange';
 import { deleteModelElement } from './UmlContextMenu';
-import { createCommentClick } from '../../../umlUtil';
+import { createCommentClick } from '../../umlUtil';
 import { pick } from 'min-dash';
 
 /**

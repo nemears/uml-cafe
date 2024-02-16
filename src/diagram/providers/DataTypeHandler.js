@@ -1,15 +1,15 @@
-import { createElementUpdate, deleteElementElementUpdate } from '../../../umlUtil';
+import { createElementUpdate, deleteElementElementUpdate } from '../../umlUtil';
 //import { PROPERTY_COMPARTMENT_HEIGHT } from './Property';
 
 export const CLASS_SHAPE_HEADER_HEIGHT = 40;
 
-export default class PrimitiveTypeHandler {
+export default class DataTypeHandler {
     constructor(eventBus, modeling, umlWebClient, diagramContext, diagramEmitter, canvas) {
         eventBus.on('elementCreated', (event) => {
             const element = event.element;
-            if (element.modelElement.elementType() === 'primitiveType') {
-                const primitiveTypeID = element.modelElement.id;
-                let clazz = umlWebClient.post('primitiveType', {id:primitiveTypeID});
+            if (element.modelElement.elementType() === 'dataType') {
+                const dataTypeID = element.modelElement.id;
+                let clazz = umlWebClient.post('dataType', {id:dataTypeID});
                 diagramContext.context.packagedElements.add(clazz);
                 umlWebClient.put(clazz);
                 umlWebClient.put(diagramContext.context);
@@ -18,7 +18,7 @@ export default class PrimitiveTypeHandler {
                 const queue = [element];
                 while (queue.length > 0) {
                     const front = queue.shift();
-                    if (front.modelElement && front.modelElement.id === primitiveTypeID) {
+                    if (front.modelElement && front.modelElement.id === dataTypeID) {
                         front.modelElement = clazz; 
                     }
                     for (const child of front.children) {
@@ -31,7 +31,7 @@ export default class PrimitiveTypeHandler {
         });
         eventBus.on('elementDeleted', (event) => {
             const element = event.element;
-            if (element.modelElement.elementType() === 'primitiveType') {
+            if (element.modelElement.elementType() === 'dataType') {
                 const doLater = async (element) => {
                     const modelElement = await umlWebClient.get(element.modelElement.id);
                     const owner = await modelElement.owner.get();
@@ -57,4 +57,4 @@ export default class PrimitiveTypeHandler {
     }
 }
 
-PrimitiveTypeHandler.$inject = ['eventBus', 'modeling', 'umlWebClient', 'diagramContext', 'diagramEmitter', 'canvas'];
+DataTypeHandler.$inject = ['eventBus', 'modeling', 'umlWebClient', 'diagramContext', 'diagramEmitter', 'canvas'];

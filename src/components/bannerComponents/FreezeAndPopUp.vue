@@ -1,5 +1,5 @@
 <script>
-import closeSVG from '../icons/close_symbol.svg';
+import closeSVG from '../../assets/icons/general/close_symbol.svg';
 export default {
     props: ['label', 'toggle'],
     data() {
