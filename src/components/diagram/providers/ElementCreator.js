@@ -18,21 +18,34 @@ import { CLASSIFIER_SHAPE_GAP_HEIGHT } from './UmlCompartmentableShapeProvider';
  * }
  **/
 class ElementCreationHandler {
-    constructor(eventBus, canvas, umlWebClient, diagramContext, diagramEmitter) {
+    constructor(eventBus, canvas, umlWebClient, diagramContext, diagramEmitter, elementRegistry) {
         this._eventBus = eventBus;
         this._canvas = canvas;
         this._umlWebClient = umlWebClient;
         this._diagramContext = diagramContext;
         this._diagramEmitter = diagramEmitter;
+        this._elementRegistry = elementRegistry;
     }
     execute(context) {
         const eventBus = this._eventBus,
         canvas = this._canvas,
         umlWebClient = this._umlWebClient,
         diagramContext = this._diagramContext,
-        diagramEmitter = this._diagramEmitter;
+        diagramEmitter = this._diagramEmitter,
+        elementRegistry = this._elementRegistry;
         if (context.proxy) {
             delete context.proxy;
+            const elements = [];
+            for (const element of elements) {
+                // replace with new elements?
+                const newElement = elementRegistry.get(element.id);
+                if (newElement) {
+                    elements.push(newElement);
+                } else {
+                    elements.push({id: element.id, elementType: element.elementType}); // TODO this is probs bad :/
+                }
+            }
+            context.elements = elements;
             return context.elements; // TODO get valid element
         }
         const assignPosition = (shape) => {

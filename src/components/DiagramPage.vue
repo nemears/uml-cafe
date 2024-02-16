@@ -2,7 +2,7 @@
 import { Editor } from './diagram/editor';
 const EventEmitter = require('events');
 import { createElementUpdate } from '../umlUtil.js';
-import { getUmlDiagramElement, deleteUmlDiagramElement , CLASSIFIER_SHAPE_ID, SHAPE_ID } from './diagram/api/diagramInterchange';
+import { getUmlDiagramElement, deleteUmlDiagramElement , CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID } from './diagram/api/diagramInterchange';
 import { toRaw } from 'vue';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './diagram/providers/ClassHandler'; 
 export default {
@@ -227,6 +227,25 @@ export default {
                                 canvas.addShape(label, labelTarget);
                                 return label;
                         }
+                    } else if (umlDiagramElement.elementType() === 'nameLabel') {
+                        const umlNameLabel = umlDiagramElement;
+                        const labelTarget = elementRegistry.get(umlNameLabel.owningElement);
+                        const label = elementFactory.createLabel({
+                            id: umlNameLabel.id,
+                            text: umlNameLabel.text,
+                            modelElement: umlNameLabel.modelElement,
+                            x: umlNameLabel.bounds.x,
+                            y: umlNameLabel.bounds.y,
+                            width: umlNameLabel.bounds.width,
+                            height: umlNameLabel.bounds.height,
+                            labelTarget: labelTarget,
+                            elementType: 'nameLabel',
+                            inselectable: true, // TODO determine this elsewhere
+                        });
+                        canvas.addShape(label, labelTarget);
+                        return label;
+                    } else {
+                        throw Error('unhandled uml di type on diagram loading!');
                     }
                 }
 
@@ -261,7 +280,7 @@ export default {
                     if (!packagedEl.isSubClassOf('instanceSpecification')) {
                         continue;
                     }
-                    if (!packagedEl.classifiers.contains('urWpoxZVhva76RnwyRAhLgduprmm')) {
+                    if (!packagedEl.classifiers.contains(LABEL_ID) && !packagedEl.classifiers.contains(NAME_LABEL_ID)) {
                         continue;
                     }
 
