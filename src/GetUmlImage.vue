@@ -19,6 +19,11 @@ import DependencySVG from './components/icons/dependency.svg';
 import AbstractionSVG from './components/icons/abstraction.svg';
 import RealizationSVG from './components/icons/realization.svg';
 import UsageSVG from './components/icons/usage.svg';
+import DataTypeSVG from './components/icons/data_type.svg';
+import EnumerationLiteralSVG from './components/icons/enumeration_literal.svg';
+import InterfaceSVG from './components/icons/interface.svg';
+import PrimitiveTypeSVG from './components/icons/primitive_type.svg';
+import SignalSVG from './components/icons/signal.svg';
 
 export default function getImage(el) {
     let elementType = typeof el === 'string' ? el : el.elementType();
@@ -36,7 +41,7 @@ export default function getImage(el) {
             return CommentSVG;
         }
         case 'dataType': {
-            return ClassSVG;
+            return DataTypeSVG;
         }
         case 'dependency': {
             return DependencySVG;
@@ -45,7 +50,7 @@ export default function getImage(el) {
             return ClassSVG;
         }
         case 'enumerationLiteral': {
-            return PropertySVG;
+            return EnumerationLiteralSVG;
         }
         case 'extension': {
             return AssociationSVG;
@@ -58,6 +63,9 @@ export default function getImage(el) {
         }
         case 'instanceValue': {
             return InstanceValueSVG;
+        }
+        case 'interface': {
+            return InterfaceSVG;
         }
         case 'literalBool': {
             return LiteralBoolSVG;
@@ -81,7 +89,7 @@ export default function getImage(el) {
             return PackageSVG;
         }
         case 'primitiveType': {
-            return ClassSVG;
+            return PrimitiveTypeSVG;
         }
         case 'profile': {
             return PackageSVG;
@@ -91,6 +99,9 @@ export default function getImage(el) {
         }
         case 'realization': {
             return RealizationSVG;
+        }
+        case 'signal': {
+            return SignalSVG;
         }
         case 'slot': {
             return SlotSVG;

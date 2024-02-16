@@ -65,6 +65,291 @@ export default class ClassDiagramPaletteProvider {
                     }
                 }
             },
+            'create-data-type': {
+                group: 'shape',
+                className: 'palette-icon-create-data-type',
+                title: 'Create Data Type',
+                action: {
+                    click: function(event) {
+                        const dataTypeID = randomID();
+                        const shapeID = randomID();
+                        const compartmentID = randomID();
+                        const nameLabelID = randomID();
+
+                        // create compartment
+                        const compartment = elementFactory.createShape({
+                            width: 100,
+                            height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
+                            id: compartmentID,
+                            elementType: 'compartment',
+                        });
+                        
+                        const proxyModelElement = {
+                            id: dataTypeID,
+                            elementType() {
+                                return 'dataType';
+                            }
+                        }
+
+                        // create classifierShape
+                        const shape = elementFactory.createShape({
+                            width: 100,
+                            height: 80,
+                            id: shapeID,
+                            modelElement : proxyModelElement,
+                            compartments : [compartment],
+                            createModelElement: true,
+                            elementType: 'classifierShape',
+                        });
+                        
+                        // create name label
+                        const nameLabel = elementFactory.createLabel({
+                            width: 100, // TODO change to defaults??
+                            height: 24,
+                            x: 0,
+                            y: CLASSIFIER_SHAPE_GAP_HEIGHT,
+                            labelTarget: shape,
+                            text: '',
+                            parent: shape,
+                            id: nameLabelID,
+                            modelElement: proxyModelElement,
+                            elementType: 'nameLabel',
+                            inselectable: true,
+                        });
+
+                        // start create
+                        create.start(event, [shape, nameLabel]);
+                    }
+                }
+            },
+            'create-enumeration-literal': {
+                group: 'shape',
+                className: 'palette-icon-create-enumeration-literal',
+                title: 'Create Enumeration Literal',
+                action: {
+                    click: function(event) {
+                        const enumerationLiteralID = randomID();
+                        const shapeID = randomID();
+                        const compartmentID = randomID();
+                        const nameLabelID = randomID();
+
+                        // create compartment
+                        const compartment = elementFactory.createShape({
+                            width: 100,
+                            height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
+                            id: compartmentID,
+                            elementType: 'compartment',
+                        });
+                        
+                        const proxyModelElement = {
+                            id: enumerationLiteralID,
+                            elementType() {
+                                return 'enumerationLiteral';
+                            }
+                        }
+
+                        // create classifierShape
+                        const shape = elementFactory.createShape({
+                            width: 100,
+                            height: 80,
+                            id: shapeID,
+                            modelElement : proxyModelElement,
+                            compartments : [compartment],
+                            createModelElement: true,
+                            elementType: 'classifierShape',
+                        });
+                        
+                        // create name label
+                        const nameLabel = elementFactory.createLabel({
+                            width: 100, // TODO change to defaults??
+                            height: 24,
+                            x: 0,
+                            y: CLASSIFIER_SHAPE_GAP_HEIGHT,
+                            labelTarget: shape,
+                            text: '',
+                            parent: shape,
+                            id: nameLabelID,
+                            modelElement: proxyModelElement,
+                            elementType: 'nameLabel',
+                            inselectable: true,
+                        });
+
+                        // start create
+                        create.start(event, [shape, nameLabel]);
+                    }
+                }
+            },
+            'create-primitive-type': {
+                group: 'shape',
+                className: 'palette-icon-create-primitive-type',
+                title: 'Create Primitive Type',
+                action: {
+                    click: function(event) {
+                        const primitiveTypeID = randomID();
+                        const shapeID = randomID();
+                        const compartmentID = randomID();
+                        const nameLabelID = randomID();
+
+                        // create compartment
+                        const compartment = elementFactory.createShape({
+                            width: 100,
+                            height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
+                            id: compartmentID,
+                            elementType: 'compartment',
+                        });
+                        
+                        const proxyModelElement = {
+                            id: primitiveTypeID,
+                            elementType() {
+                                return 'primitiveType';
+                            }
+                        }
+
+                        // create classifierShape
+                        const shape = elementFactory.createShape({
+                            width: 100,
+                            height: 80,
+                            id: shapeID,
+                            modelElement : proxyModelElement,
+                            compartments : [compartment],
+                            createModelElement: true,
+                            elementType: 'classifierShape',
+                        });
+                        
+                        // create name label
+                        const nameLabel = elementFactory.createLabel({
+                            width: 100, // TODO change to defaults??
+                            height: 24,
+                            x: 0,
+                            y: CLASSIFIER_SHAPE_GAP_HEIGHT,
+                            labelTarget: shape,
+                            text: '',
+                            parent: shape,
+                            id: nameLabelID,
+                            modelElement: proxyModelElement,
+                            elementType: 'nameLabel',
+                            inselectable: true,
+                        });
+
+                        // start create
+                        create.start(event, [shape, nameLabel]);
+                    }
+                }
+            },
+            'create-interface': {
+                group: 'shape',
+                className: 'palette-icon-create-interface',
+                title: 'Create Interface',
+                action: {
+                    click: function(event) {
+                        const interfaceID = randomID();
+                        const shapeID = randomID();
+                        const compartmentID = randomID();
+                        const nameLabelID = randomID();
+
+                        // create compartment
+                        const compartment = elementFactory.createShape({
+                            width: 100,
+                            height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
+                            id: compartmentID,
+                            elementType: 'compartment',
+                        });
+                        
+                        const proxyModelElement = {
+                            id: interfaceID,
+                            elementType() {
+                                return 'class';
+                            }
+                        }
+
+                        // create classifierShape
+                        const shape = elementFactory.createShape({
+                            width: 100,
+                            height: 80,
+                            id: shapeID,
+                            modelElement : proxyModelElement,
+                            compartments : [compartment],
+                            createModelElement: true,
+                            elementType: 'classifierShape',
+                        });
+                        
+                        // create name label
+                        const nameLabel = elementFactory.createLabel({
+                            width: 100, // TODO change to defaults??
+                            height: 24,
+                            x: 0,
+                            y: CLASSIFIER_SHAPE_GAP_HEIGHT,
+                            labelTarget: shape,
+                            text: '',
+                            parent: shape,
+                            id: nameLabelID,
+                            modelElement: proxyModelElement,
+                            elementType: 'nameLabel',
+                            inselectable: true,
+                        });
+
+                        // start create
+                        create.start(event, [shape, nameLabel]);
+                    }
+                }
+            },
+            'create-signal': {
+                group: 'shape',
+                className: 'palette-icon-create-signal',
+                title: 'Create Signal',
+                action: {
+                    click: function(event) {
+                        const signalID = randomID();
+                        const shapeID = randomID();
+                        const compartmentID = randomID();
+                        const nameLabelID = randomID();
+
+                        // create compartment
+                        const compartment = elementFactory.createShape({
+                            width: 100,
+                            height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
+                            id: compartmentID,
+                            elementType: 'compartment',
+                        });
+                        
+                        const proxyModelElement = {
+                            id: signalID,
+                            elementType() {
+                                return 'class';
+                            }
+                        }
+
+                        // create classifierShape
+                        const shape = elementFactory.createShape({
+                            width: 100,
+                            height: 80,
+                            id: shapeID,
+                            modelElement : proxyModelElement,
+                            compartments : [compartment],
+                            createModelElement: true,
+                            elementType: 'classifierShape',
+                        });
+                        
+                        // create name label
+                        const nameLabel = elementFactory.createLabel({
+                            width: 100, // TODO change to defaults??
+                            height: 24,
+                            x: 0,
+                            y: CLASSIFIER_SHAPE_GAP_HEIGHT,
+                            labelTarget: shape,
+                            text: '',
+                            parent: shape,
+                            id: nameLabelID,
+                            modelElement: proxyModelElement,
+                            elementType: 'nameLabel',
+                            inselectable: true,
+                        });
+
+                        // start create
+                        create.start(event, [shape, nameLabel]);
+                    }
+                }
+            }, 
             'create-generalization': {
                 group: 'generalization',
                 className: 'palette-icon-create-generalization',

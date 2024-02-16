@@ -301,6 +301,20 @@ export default {
                 this.commentData = undefined;
             }
 
+            if (el.isSubClassOf('interface')) {
+                this.interfaceData = {};
+                await reloadSet(this.interfaceData, el.ownedAttributes, 'ownedAttributes');
+            } else {
+                this.interfaceData = undefined;
+            }
+
+            if (el.isSubClassOf('signal')) {
+                this.signalData = {};
+                await reloadSet(this.signalData, el.ownedAttributes, 'ownedAttributes');
+            } else {
+                this.signalData = undefined;
+            }
+
             this.isFetching = false;
         },
         propogateSpecification(spec) {
