@@ -537,6 +537,22 @@ export default {
                         }
                         canvas.addShape(label, labelTarget);
                         return label;
+                    } else if (umlDiagramElement.elementType() === 'typedElementLabel') {
+                        const umlTypedElementLabel = umlDiagramElement;
+                        const labelTarget = elementRegistry.get(umlTypedElementLabel.owningElement);
+                        const label = elementFactory.createLabel({
+                            id: umlTypedElementLabel.id,
+                            text: umlTypedElementLabel.text,
+                            modelElement: umlTypedElementLabel.modelElement,
+                            x: umlTypedElementLabel.bounds.x,
+                            y: umlTypedElementLabel.bounds.y,
+                            width: umlTypedElementLabel.bounds.width,
+                            height: umlTypedElementLabel.bounds.height,
+                            labelTarget: labelTarget,
+                            elementType: 'typedElementLabel',
+                        });
+                        canvas.addShape(label, labelTarget);
+                        return label;
                     } else {
                         throw Error('unhandled uml di type on diagram loading!');
                     }
@@ -583,7 +599,6 @@ export default {
 
                 for (const edge of edges) {
                     await drawDiagramElementAndChildren(edge);
-                }
 
                 for (const label of labels) {
                     await drawDiagramElementAndChildren(label);

@@ -258,14 +258,3 @@ export default class ClassDiagramContextPadProvider {
 }
 
 ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'create', 'umlWebClient', 'diagramEmitter', 'elementFactory', 'umlContextMenu', 'commandStack'];
-
-export function removeDiagramElement(diagramElement, commandStack) {
-    commandStack.execute('removeDiagramElement', {
-        elements: [
-            {
-                element: diagramElement,
-                parent: diagramElement.parent
-            }
-        ]
-    });
-}
