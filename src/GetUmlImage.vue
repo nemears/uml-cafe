@@ -20,7 +20,7 @@ import AbstractionSVG from './components/icons/abstraction.svg';
 import RealizationSVG from './components/icons/realization.svg';
 import UsageSVG from './components/icons/usage.svg';
 import DataTypeSVG from './components/icons/data_type.svg';
-import EnumerationLiteralSVG from './components/icons/enumeration_literal.svg';
+import EnumerationSVG from './components/icons/enumeration.svg';
 import InterfaceSVG from './components/icons/interface.svg';
 import PrimitiveTypeSVG from './components/icons/primitive_type.svg';
 import SignalSVG from './components/icons/signal.svg';
@@ -47,10 +47,10 @@ export default function getImage(el) {
             return DependencySVG;
         }
         case 'enumeration': {
-            return ClassSVG;
+            return EnumerationSVG;
         }
         case 'enumerationLiteral': {
-            return EnumerationLiteralSVG;
+            return PropertySVG;
         }
         case 'extension': {
             return AssociationSVG;

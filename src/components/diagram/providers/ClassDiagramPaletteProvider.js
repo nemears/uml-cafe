@@ -122,13 +122,13 @@ export default class ClassDiagramPaletteProvider {
                     }
                 }
             },
-            'create-enumeration-literal': {
+            'create-enumeration': {
                 group: 'shape',
-                className: 'palette-icon-create-enumeration-literal',
-                title: 'Create Enumeration Literal',
+                className: 'palette-icon-create-enumeration',
+                title: 'Create Enumeration',
                 action: {
                     click: function(event) {
-                        const enumerationLiteralID = randomID();
+                        const enumerationID = randomID();
                         const shapeID = randomID();
                         const compartmentID = randomID();
                         const nameLabelID = randomID();
@@ -142,9 +142,9 @@ export default class ClassDiagramPaletteProvider {
                         });
                         
                         const proxyModelElement = {
-                            id: enumerationLiteralID,
+                            id: enumerationID,
                             elementType() {
-                                return 'enumerationLiteral';
+                                return 'enumeration';
                             }
                         }
 
@@ -258,7 +258,7 @@ export default class ClassDiagramPaletteProvider {
                         const proxyModelElement = {
                             id: interfaceID,
                             elementType() {
-                                return 'class';
+                                return 'interface';
                             }
                         }
 
@@ -315,7 +315,7 @@ export default class ClassDiagramPaletteProvider {
                         const proxyModelElement = {
                             id: signalID,
                             elementType() {
-                                return 'class';
+                                return 'signal';
                             }
                         }
 

@@ -227,10 +227,10 @@ export default {
                     this.children.push(literalID);
                 }
                 createOption.children.push({
-                    label: 'Create Enumeration Literal',
+                    label: 'Create Enumeration',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('enumerationLiteral', 'ownedLiterals')
+                        createAndAddToSet('enumeration', 'ownedLiterals')
                     }
                 });
             }
@@ -269,13 +269,6 @@ export default {
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
                         createAndAddToSet('dataType', 'packagedElements')
-                    }
-                }); 
-                createOption.children.push({
-                    label: 'Create Enumeration',
-                    disabled: this.$umlWebClient.readonly,
-                    onClick: () => {
-                        createAndAddToSet('enumeration', 'packagedElements')
                     }
                 }); 
                 createOption.children.push({

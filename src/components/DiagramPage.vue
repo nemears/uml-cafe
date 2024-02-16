@@ -375,8 +375,8 @@ export default {
     background-repeat: no-repeat;
     background-size: 100%;
 }
-.palette-icon-create-enumeration-literal {
-    background: url('icons/enumeration_literal.svg');
+.palette-icon-create-enumeration {
+    background: url('icons/enumeration.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
