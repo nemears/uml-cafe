@@ -117,9 +117,10 @@ export default class UmlDirecteEditingProvider{
                     width: element.parent.width,
                     height: element.height, // TODO allow height more than 1 line?
                 }**/
+                const viewbox = this.canvas.viewbox();
                 ret.bounds = {
-                    x: element.x,
-                    y: element.y,
+                    x: element.x - viewbox.x,
+                    y: element.y - viewbox.y,
                     width: element.width,
                     height: element.height,
                 }
