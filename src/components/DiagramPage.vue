@@ -2,7 +2,7 @@
 import { Editor } from './diagram/editor';
 const EventEmitter = require('events');
 import { createElementUpdate } from '../umlUtil.js';
-import { getUmlDiagramElement, deleteUmlDiagramElement , CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID } from './diagram/api/diagramInterchange';
+import { getUmlDiagramElement, deleteUmlDiagramElement , CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID , TYPED_ELEMENT_LABEL_ID } from './diagram/api/diagramInterchange';
 import { toRaw } from 'vue';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './diagram/providers/ClassHandler'; 
 export default {
@@ -244,6 +244,22 @@ export default {
                         });
                         canvas.addShape(label, labelTarget);
                         return label;
+                    } else if (umlDiagramElement.elementType() === 'typedElementLabel') {
+                        const umlTypedElementLabel = umlDiagramElement;
+                        const labelTarget = elementRegistry.get(umlTypedElementLabel.owningElement);
+                        const label = elementFactory.createLabel({
+                            id: umlTypedElementLabel.id,
+                            text: umlTypedElementLabel.text,
+                            modelElement: umlTypedElementLabel.modelElement,
+                            x: umlTypedElementLabel.bounds.x,
+                            y: umlTypedElementLabel.bounds.y,
+                            width: umlTypedElementLabel.bounds.width,
+                            height: umlTypedElementLabel.bounds.height,
+                            labelTarget: labelTarget,
+                            elementType: 'typedElementLabel',
+                        });
+                        canvas.addShape(label, labelTarget);
+                        return label;
                     } else {
                         throw Error('unhandled uml di type on diagram loading!');
                     }
@@ -280,7 +296,7 @@ export default {
                     if (!packagedEl.isSubClassOf('instanceSpecification')) {
                         continue;
                     }
-                    if (!packagedEl.classifiers.contains(LABEL_ID) && !packagedEl.classifiers.contains(NAME_LABEL_ID)) {
+                    if (!packagedEl.classifiers.contains(LABEL_ID) && !packagedEl.classifiers.contains(NAME_LABEL_ID) && !packagedEl.classifiers.contains(TYPED_ELEMENT_LABEL_ID)) {
                         continue;
                     }
 

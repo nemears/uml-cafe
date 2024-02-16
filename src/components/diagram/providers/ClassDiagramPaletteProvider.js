@@ -475,6 +475,8 @@ export function createClassDiagramClassifierShape(elementFactory, modelElement, 
     const compartment = elementFactory.createShape({
         width: 100,
         height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
+        x: 0,
+        y: CLASS_SHAPE_HEADER_HEIGHT,
         id: compartmentID,
         elementType: 'compartment',
     });
@@ -505,5 +507,30 @@ export function createClassDiagramClassifierShape(elementFactory, modelElement, 
         inselectable: true,
     });
 
-    return [shape, nameLabel];
+    // properties
+    const properties = [];
+    if (modelElement.attributes) {
+        let yPos = compartment.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
+        for (const property of modelElement.attributes.unsafe()) { // unsafe invocation, attributes must be loaded before this
+            let label = property.name;
+            if (property.type.has()) {
+                label += ' : ' + property.type.unsafe().name;
+            }
+            const propertyLabel = elementFactory.createLabel({
+                id: randomID(),
+                y: yPos,
+                x: compartment.x,
+                width: compartment.width,
+                height: 24,
+                elementType: 'typedElementLabel',
+                labelTarget: compartment,
+                parent: compartment,
+                text: label,
+            }); 
+            properties.push(propertyLabel);
+            yPos += propertyLabel.height + CLASSIFIER_SHAPE_GAP_HEIGHT;
+        }
+    }
+
+    return [shape, nameLabel, ...properties];
 }

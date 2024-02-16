@@ -278,6 +278,26 @@ export default class UMLRenderer extends BaseRenderer {
         } else if (element.elementType === 'classifierShape') {
             const rect = createRectangle();
             svgAttr(rect, assign({}, this.CLASS_STYLE), attrs || {});
+        } else if (element.elementType === 'typedElementLabel') {
+            const rect = createRectangle();
+            svgAttr(rect, this.LABEL_STYLE);
+            if (!element.text) {
+                console.warn('no text provided to label assuming empty, please add text = "" to your label to supress this warning');
+            } else {
+                const text = cropText(element.text, element, {
+                    align: 'left-middle',
+                    padding: {
+                        left: 5,
+                    },
+                    box: {
+                        width: element.width - 5,
+                        height: element.height,
+                        x: 0,
+                        y: 0,
+                    }
+                });
+                svgAppend(group, text);
+            }
         }
 
         /**if (!element.modelElement) {

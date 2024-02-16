@@ -57,6 +57,12 @@ export class KeywordLabel extends Label {
     }
 }
 
+export class TypedElementLabel extends Label {
+    elementType() {
+        return 'typedElementLabel';
+    }
+}
+
 export class Compartment extends DiagramElement {
     // maybe TODO
     elementType() {
@@ -88,6 +94,7 @@ export const COMPARTMENT_ID = 'XEkIdyR4AD2A_BIxl8WN5ZrcRP0&';
 export const COMPARTMENTABLE_SHAPE_ID = 'z1DL0UzKw39EJh&SA5llseAEYgyd';
 export const CLASSIFIER_SHAPE_ID = 'Z6TrdLUX1PnxDxERdehoiwuo4Thd';
 export const COMPARTMENTS_ID = '94EL1DpEJq&sqIIyUkljNkGiLErL';
+export const TYPED_ELEMENT_LABEL_ID = 'kY&kIIA_XPbHZrs73YN&uDcSAhuh';
 
 export async function getUmlDiagramElement(id, umlClient) {
     // get the element with the client
@@ -199,6 +206,19 @@ export async function getUmlDiagramElement(id, umlClient) {
                 } 
             }
             return ret;
+        } else if (classifierID === TYPED_ELEMENT_LABEL_ID) {
+            const ret = new TypedElementLabel();
+            ret.id = id;
+            for await (const typedElementLabelSlot of umlDiagramElement.slots) {
+                if (typedElementLabelSlot .definingFeature.id() === BOUNDS_ID) {
+                    await filloutBounds(typedElementLabelSlot , ret);
+                } else if (typedElementLabelSlot.definingFeature.id() === TEXT_ID) {
+                    ret.text = (await typedElementLabelSlot.values.front()).value;
+                } else if (await getDiagramElementFeatures(typedElementLabelSlot, ret, umlClient)) {
+                    continue;
+                } 
+            }
+            return ret;
         }
     }
     return undefined;
@@ -274,7 +294,7 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
         return;
     }
     for (const classifierID of diagramElementInstance.classifiers.ids()) {
-        if (classifierID === SHAPE_ID || classifierID === LABEL_ID || classifierID === CLASSIFIER_SHAPE_ID || classifierID === NAME_LABEL_ID) {
+        if (classifierID === SHAPE_ID || classifierID === LABEL_ID || classifierID === CLASSIFIER_SHAPE_ID || classifierID === NAME_LABEL_ID || classifierID === TYPED_ELEMENT_LABEL_ID) {
             // shape
             for await (const shapeSlot of diagramElementInstance.slots) {
                 if (shapeSlot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
@@ -555,7 +575,7 @@ export async function createKeywordLabel(label, umlWebClient, diagramContext) {
     labelInstance.classifiers.add(KEYWORD_LABEL_ID);
     diagramContext.diagram.packagedElements.add(labelInstance); 
 
-    await createDiagramLabel(label, labelInstance, umlWebClient, diagramContext);
+    await createDiagramLabelFeatures(label, labelInstance, umlWebClient, diagramContext);
 
     umlWebClient.put(labelInstance);
     umlWebClient.put(diagramContext.diagram);
@@ -568,6 +588,22 @@ export async function createKeywordLabel(label, umlWebClient, diagramContext) {
     ret.id = label.id;
     ret.text = label.text;
     return ret; 
+}
+export async function createTypedElementLabel(label, umlWebClient, diagramContext) {
+    const labelInstance = umlWebClient.post('instanceSpecification', { id: label.id });
+    labelInstance.classifiers.add(TYPED_ELEMENT_LABEL_ID);
+    diagramContext.diagram.packagedElements.add(labelInstance);
+
+    await createDiagramLabelFeatures(label, labelInstance, umlWebClient, diagramContext);
+
+    const ret = new TypedElementLabel();
+    ret.bounds.x = label.x;
+    ret.bounds.y = label.y;
+    ret.bounds.width = label.width;
+    ret.bounds.height = label.height;
+    ret.id = label.id;
+    ret.text - label.text;
+    return ret;
 }
 
 export async function createComparment(compartment, umlWebClient, diagramContext) {
