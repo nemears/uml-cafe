@@ -29,6 +29,11 @@ import DependencyHandler from './relationships/DependencyHandler';
 import AbstractionHandler from './relationships/AbstractionHandler';
 import RealizationHandler from './relationships/RealizationHandler';
 import UsageHandler from './relationships/UsageHandler';
+import PrimitiveTypeHandler from './PrimitiveTypeHandler';
+import DataTypeHandler from './DataTypeHandler';
+import EnumerationLiteralHandler from './EnumerationLiteralHandler';
+import InterfaceHandler from './InterfaceHandler';
+import SignalHandler from './SignalHandler';
 
 export default {
     __init__: [
@@ -63,6 +68,11 @@ export default {
         'abstractionHandler',
         'realizationHandler',
         'usageHandler',
+        'primitiveTypeHandler',
+        'dataTypeHandler',
+        'enumerationLiteralHandler',
+        'interfaceHandler',
+        'signalHandler',
     ],
     generalizationHandler: ['type', GeneralizationHandler],
     association: ['type', Association],
@@ -94,5 +104,10 @@ export default {
     dependencyHandler: ['type', DependencyHandler],
     abstractionHandler: ['type', AbstractionHandler],
     realizationHandler: ['type', RealizationHandler],
-    usageHandler: ['type', UsageHandler]
+    usageHandler: ['type', UsageHandler],
+    primitiveTypeHandler: ['type', PrimitiveTypeHandler],
+    dataTypeHandler: ['type', DataTypeHandler],
+    enumerationLiteralHandler: ['type', EnumerationLiteralHandler],
+    interfaceHandler: ['type', InterfaceHandler],
+    signalHandler: ['type', SignalHandler]
 };

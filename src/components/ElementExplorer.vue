@@ -284,7 +284,7 @@ export default {
                     onClick: () => {
                         createAndAddToSet('primitiveType', 'packagedElements')
                     }
-                }); 
+                });
                 createOption.children.push({
                     label: 'Create Association',
                     disabled: this.$umlWebClient.readonly,
@@ -297,6 +297,20 @@ export default {
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
                         createAndAddToSet('instanceSpecification', 'packagedElements')
+                    }
+                });
+                createOption.children.push({
+                    label: 'Create Interface',
+                    disabled: this.$umlWebClient.readonly,
+                    onClick: () => {
+                        createAndAddToSet('interface', 'packagedElements')
+                    }
+                });
+                createOption.children.push({
+                    label: 'Create Signal',
+                    disabled: this.$umlWebClient.readonly,
+                    onClick: () => {
+                        createAndAddToSet('signal', 'packagedElements')
                     }
                 });
             }

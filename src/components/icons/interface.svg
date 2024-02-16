@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="25px"
+   height="25px"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg2437"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   sodipodi:docname="interface.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview2439"
+     pagecolor="#ffffff"
+     bordercolor="#111111"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="19.02887"
+     inkscape:cx="12.638691"
+     inkscape:cy="11.666484"
+     inkscape:window-width="1256"
+     inkscape:window-height="650"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2434" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <ellipse
+       style="fill:#9edeab;fill-opacity:1;stroke:#359d49;stroke-width:13.47023625;stroke-dasharray:none;stroke-opacity:1"
+       id="path6730"
+       cx="100.41425"
+       cy="143.45334"
+       rx="128.2625"
+       ry="123.0241" />
+    <text
+       xml:space="preserve"
+       style="font-size:142.56px;fill:#9edeab;fill-opacity:1;stroke:#359d49;stroke-width:0;stroke-dasharray:none;stroke-opacity:1"
+       x="83.24073"
+       y="197.33459"
+       id="text17978"><tspan
+         sodipodi:role="line"
+         id="tspan17976"
+         style="stroke-width:0;stroke-dasharray:none"
+         x="83.24073"
+         y="197.33459">I</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:227.041px;font-family:'DejaVu Serif';-inkscape-font-specification:'DejaVu Serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#359d49;fill-opacity:1;stroke:#359d49;stroke-width:0;stroke-dasharray:none;stroke-opacity:1"
+       x="39.118893"
+       y="251.76962"
+       id="text17978-3"
+       transform="scale(1.2099736,0.82646432)"><tspan
+         sodipodi:role="line"
+         id="tspan17976-6"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:227.041px;font-family:'DejaVu Serif';-inkscape-font-specification:'DejaVu Serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#359d49;fill-opacity:1;stroke-width:0;stroke-dasharray:none"
+         x="39.118893"
+         y="251.76962">I</tspan></text>
+  </g>
+</svg>

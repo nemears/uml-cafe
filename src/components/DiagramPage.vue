@@ -335,6 +335,31 @@ export default {
     background-repeat: no-repeat;
     background-size: 100%;
 }
+.palette-icon-create-data-type {
+    background: url('icons/data_type.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+.palette-icon-create-enumeration-literal {
+    background: url('icons/enumeration_literal.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+.palette-icon-create-primitive-type {
+    background: url('icons/primitive_type.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+.palette-icon-create-interface {
+    background: url('icons/interface.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+.palette-icon-create-signal {
+    background: url('icons/signal.svg');
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
 .palette-icon-create-dependency {
     background: url('icons/dependency.svg');
     background-repeat: no-repeat;
