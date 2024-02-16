@@ -3,13 +3,13 @@ import { createElementUpdate, deleteElementElementUpdate } from '../../../umlUti
 
 export const CLASS_SHAPE_HEADER_HEIGHT = 40;
 
-export default class EnumerationLiteralHandler {
+export default class EnumerationHandler {
     constructor(eventBus, modeling, umlWebClient, diagramContext, diagramEmitter, canvas) {
         eventBus.on('elementCreated', (event) => {
             const element = event.element;
-            if (element.modelElement.elementType() === 'enumerationLiteral') {
-                const enumerationLiteralID = element.modelElement.id;
-                let clazz = umlWebClient.post('enumerationLiteral', {id:enumerationLiteralID});
+            if (element.modelElement.elementType() === 'enumeration') {
+                const enumerationID = element.modelElement.id;
+                let clazz = umlWebClient.post('enumeration', {id:enumerationID});
                 diagramContext.context.packagedElements.add(clazz);
                 umlWebClient.put(clazz);
                 umlWebClient.put(diagramContext.context);
@@ -18,7 +18,7 @@ export default class EnumerationLiteralHandler {
                 const queue = [element];
                 while (queue.length > 0) {
                     const front = queue.shift();
-                    if (front.modelElement && front.modelElement.id === enumerationLiteralID) {
+                    if (front.modelElement && front.modelElement.id === enumerationID) {
                         front.modelElement = clazz; 
                     }
                     for (const child of front.children) {
@@ -31,7 +31,7 @@ export default class EnumerationLiteralHandler {
         });
         eventBus.on('elementDeleted', (event) => {
             const element = event.element;
-            if (element.modelElement.elementType() === 'enumerationLiteral') {
+            if (element.modelElement.elementType() === 'enumeration') {
                 const doLater = async (element) => {
                     const modelElement = await umlWebClient.get(element.modelElement.id);
                     const owner = await modelElement.owner.get();
@@ -57,4 +57,4 @@ export default class EnumerationLiteralHandler {
     }
 }
 
-EnumerationLiteralHandler.$inject = ['eventBus', 'modeling', 'umlWebClient', 'diagramContext', 'diagramEmitter', 'canvas'];
+EnumerationHandler.$inject = ['eventBus', 'modeling', 'umlWebClient', 'diagramContext', 'diagramEmitter', 'canvas'];

@@ -31,7 +31,7 @@ import RealizationHandler from './relationships/RealizationHandler';
 import UsageHandler from './relationships/UsageHandler';
 import PrimitiveTypeHandler from './PrimitiveTypeHandler';
 import DataTypeHandler from './DataTypeHandler';
-import EnumerationLiteralHandler from './EnumerationLiteralHandler';
+import EnumerationHandler from './EnumerationHandler';
 import InterfaceHandler from './InterfaceHandler';
 import SignalHandler from './SignalHandler';
 
@@ -70,7 +70,7 @@ export default {
         'usageHandler',
         'primitiveTypeHandler',
         'dataTypeHandler',
-        'enumerationLiteralHandler',
+        'enumerationHandler',
         'interfaceHandler',
         'signalHandler',
     ],
@@ -107,7 +107,7 @@ export default {
     usageHandler: ['type', UsageHandler],
     primitiveTypeHandler: ['type', PrimitiveTypeHandler],
     dataTypeHandler: ['type', DataTypeHandler],
-    enumerationLiteralHandler: ['type', EnumerationLiteralHandler],
+    enumerationHandler: ['type', EnumerationHandler],
     interfaceHandler: ['type', InterfaceHandler],
     signalHandler: ['type', SignalHandler]
 };
