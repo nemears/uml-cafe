@@ -83,7 +83,7 @@ export default class UmlDirecteEditingProvider{
         this.umlRenderer = umlRenderer;
         this.commandStack = commandStack;
         this.canvas = canvas;
-        commandStack.registerHandler('namelabel.update', UpdateNameLabelHandler);
+        commandStack.registerHandler('nameLabel.update', UpdateNameLabelHandler);
     }
     activate(element) {
         if (element.elementType === 'nameLabel') {
@@ -142,7 +142,7 @@ export default class UmlDirecteEditingProvider{
     }
     update(element, newName, activeContextText, bounds) {
         if (element.elementType === 'nameLabel') {
-            this.commandStack.execute('namelabel.update', {
+            this.commandStack.execute('nameLabel.update', {
                 element: element,
                 newName: newName,
                 bounds: bounds,

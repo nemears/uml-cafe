@@ -1,5 +1,5 @@
 import { getMid, roundBounds } from "diagram-js/lib/layout/LayoutUtil";
-import { BOUNDS_ID, CLASSIFIER_SHAPE_ID, EDGE_ID, LABEL_ID, SHAPE_ID } from "../api/diagramInterchange";
+import { BOUNDS_ID, CLASSIFIER_SHAPE_ID, EDGE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID } from "../api/diagramInterchange";
 import { adjustEdgeWaypoints } from './UmlEdgeProvider';
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 
@@ -16,12 +16,11 @@ class MoveShapeHandler {
     async doLater(shape) {
         const shapeInstance = await this.umlWebClient.get(shape.id);
         for (const classifierID of shapeInstance.classifiers.ids()) {
-            if (classifierID === SHAPE_ID || classifierID === LABEL_ID || classifierID === CLASSIFIER_SHAPE_ID) {
+            if (classifierID === SHAPE_ID || classifierID === LABEL_ID || classifierID === CLASSIFIER_SHAPE_ID || classifierID === NAME_LABEL_ID) {
                 await adjustShape(shape, shapeInstance, this.umlWebClient);
                 for (const child of shape.children) {
                     if (child.elementType === 'compartment') continue;
-                    const childInstance = await this.umlWebClient.get(child.id);
-                    await adjustShape(child, childInstance, this.umlWebClient);
+                    await this.doLater(child);
                 }
                 await adjustAttachedEdges(shape, this.umlWebClient);
             } else if (classifierID === EDGE_ID) {
