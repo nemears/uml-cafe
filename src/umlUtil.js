@@ -1,5 +1,5 @@
-import { randomID } from "./components/diagram/umlUtil";
-import { createDiagramElementFeatures } from "./components/diagram/api/diagramInterchange";
+import { randomID } from "./diagram/umlUtil";
+import { createDiagramElementFeatures } from "./diagram/api/diagramInterchange";
 export function createElementUpdate() {
     const ret = {
         updatedElements: []

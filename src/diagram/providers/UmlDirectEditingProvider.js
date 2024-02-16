@@ -1,4 +1,4 @@
-import { createElementUpdate } from '../../../umlUtil';
+import { createElementUpdate } from '../../umlUtil';
 import { updateLabel } from '../api/diagramInterchange';
 import { CLASSIFIER_SHAPE_GAP_HEIGHT } from './UmlCompartmentableShapeProvider';
 

@@ -1,36 +1,36 @@
-import { createElementUpdate } from '../../../../umlUtil';
+import { createElementUpdate } from '../../../umlUtil';
 import { randomID } from 'uml-client/lib/element';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 
-export default class AbstractionHandler extends RuleProvider {
+export default class UsageHandler extends RuleProvider {
     
     constructor(eventBus, commandStack, umlWebClient, diagramEmitter, diagramContext) {
         super(eventBus);
 
         eventBus.on('connect.end', 1100, (event) => {
-            if (event.context.start.connectType === 'abstraction' || event.connectType === 'abstraction') {
+            if (event.context.start.connectType === 'usage' || event.connectType === 'usage') {
                 event.connectionID = randomID();
                 event.modelElementID = randomID();
-                event.context.type = 'abstraction';
+                event.context.type = 'usage';
                 commandStack.execute('edgeCreate', event);
                 return false; // stop propogation
             }
         });
         eventBus.on('edgeCreate', (context) => {
-            const createAbstraction = async () => {
-                const abstraction = context.context.connection.modelElement;
+            const createUsage = async () => {
+                const usage = context.context.connection.modelElement;
                 const client = await umlWebClient.get(context.context.start.modelElement.id);
-                abstraction.clients.add(client);
-                abstraction.suppliers.add(context.hover.modelElement.id);
-                diagramContext.context.packagedElements.add(abstraction);
-                umlWebClient.put(abstraction);
+                usage.clients.add(client);
+                usage.suppliers.add(context.hover.modelElement.id);
+                diagramContext.context.packagedElements.add(usage);
+                umlWebClient.put(usage);
                 umlWebClient.put(client);
                 umlWebClient.put(diagramContext.context);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(client));
                 diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));
             }
-            if (context.context.type === 'abstraction') {
-                createAbstraction();
+            if (context.context.type === 'usage') {
+                createUsage();
             }
         });
         eventBus.on('edgeCreateUndo', (context) => {
@@ -39,13 +39,13 @@ export default class AbstractionHandler extends RuleProvider {
                 await umlWebClient.deleteElement(context.context.connection.modelElement);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
             }
-            if (context.context.type === 'abstraction') {
+            if (context.context.type === 'usage') {
                 deleteModelElement(); 
             }
         });
-        eventBus.on('abstraction.start', () => {
+        eventBus.on('usage.start', () => {
             eventBus.once('connect.init', (event) => {
-                event.context.start.connectType = 'abstraction';
+                event.context.start.connectType = 'usage';
             });
         });
     }
@@ -66,7 +66,7 @@ export default class AbstractionHandler extends RuleProvider {
     }
 }
 
-AbstractionHandler.$inject = ['eventBus', 'commandStack', 'umlWebClient', 'diagramEmitter', 'diagramContext'];
+UsageHandler.$inject = ['eventBus', 'commandStack', 'umlWebClient', 'diagramEmitter', 'diagramContext'];
 
 function canConnect(context) {
     const ret = canConnectHelper(context);
@@ -78,7 +78,7 @@ function canConnectHelper(context) {
     if (context.source && !context.source.connectType) {
         return true;
     }
-    if (context.source && context.source.connectType === 'abstraction') {
+    if (context.source && context.source.connectType === 'usage') {
         if (!context.source.modelElement) {
             return false;
         }

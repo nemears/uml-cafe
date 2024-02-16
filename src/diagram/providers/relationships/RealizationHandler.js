@@ -1,36 +1,36 @@
-import { createElementUpdate } from '../../../../umlUtil';
+import { createElementUpdate } from '../../../umlUtil';
 import { randomID } from 'uml-client/lib/element';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 
-export default class DependencyHandler extends RuleProvider {
+export default class RealizationHandler extends RuleProvider {
     
     constructor(eventBus, commandStack, umlWebClient, diagramEmitter, diagramContext) {
         super(eventBus);
 
         eventBus.on('connect.end', 1100, (event) => {
-            if (event.context.start.connectType === 'dependency' || event.connectType === 'dependency') {
+            if (event.context.start.connectType === 'realization' || event.connectType === 'realization') {
                 event.connectionID = randomID();
                 event.modelElementID = randomID();
-                event.context.type = 'dependency';
+                event.context.type = 'realization';
                 commandStack.execute('edgeCreate', event);
                 return false; // stop propogation
             }
         });
         eventBus.on('edgeCreate', (context) => {
-            const createDependency = async () => {
-                const dependency = context.context.connection.modelElement;
+            const createRealization = async () => {
+                const realization = context.context.connection.modelElement;
                 const client = await umlWebClient.get(context.context.start.modelElement.id);
-                dependency.clients.add(client);
-                dependency.suppliers.add(context.hover.modelElement.id);
-                diagramContext.context.packagedElements.add(dependency);
-                umlWebClient.put(dependency);
+                realization.clients.add(client);
+                realization.suppliers.add(context.hover.modelElement.id);
+                diagramContext.context.packagedElements.add(realization);
+                umlWebClient.put(realization);
                 umlWebClient.put(client);
                 umlWebClient.put(diagramContext.context);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(client));
                 diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));
             }
-            if (context.context.type === 'dependency') {
-                createDependency();
+            if (context.context.type === 'realization') {
+                createRealization();
             }
         });
         eventBus.on('edgeCreateUndo', (context) => {
@@ -39,13 +39,13 @@ export default class DependencyHandler extends RuleProvider {
                 await umlWebClient.deleteElement(context.context.connection.modelElement);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
             }
-            if (context.context.type === 'dependency') {
+            if (context.context.type === 'realization') {
                 deleteModelElement(); 
             }
         });
-        eventBus.on('dependency.start', () => {
+        eventBus.on('realization.start', () => {
             eventBus.once('connect.init', (event) => {
-                event.context.start.connectType = 'dependency';
+                event.context.start.connectType = 'realization';
             });
         });
     }
@@ -66,7 +66,7 @@ export default class DependencyHandler extends RuleProvider {
     }
 }
 
-DependencyHandler.$inject = ['eventBus', 'commandStack', 'umlWebClient', 'diagramEmitter', 'diagramContext'];
+RealizationHandler.$inject = ['eventBus', 'commandStack', 'umlWebClient', 'diagramEmitter', 'diagramContext'];
 
 function canConnect(context) {
     const ret = canConnectHelper(context);
@@ -78,7 +78,7 @@ function canConnectHelper(context) {
     if (context.source && !context.source.connectType) {
         return true;
     }
-    if (context.source && context.source.connectType === 'dependency') {
+    if (context.source && context.source.connectType === 'realization') {
         if (!context.source.modelElement) {
             return false;
         }
@@ -96,4 +96,4 @@ function canConnectHelper(context) {
         return true;
     }
     return false;
-} 
+}

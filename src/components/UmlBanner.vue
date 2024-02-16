@@ -1,7 +1,7 @@
 <script>
-import hamburgerSVG from './icons/hamburger.svg';
-import hamburgerHoverSVG from './icons/hamburger_hover.svg';
-import classSVG from './icons/class.svg'
+import hamburgerSVG from '../assets/icons/general/hamburger.svg';
+import hamburgerHoverSVG from '../assets/icons/general/hamburger_hover.svg';
+import classSVG from '../assets/icons/general/class.svg'
 const packageJSON = require('../../package.json');
 import FreezeAndPopUp from './bannerComponents/FreezeAndPopUp.vue';
 import UserSelector from './bannerComponents/UserSelector.vue';

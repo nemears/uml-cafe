@@ -1,4 +1,4 @@
-import { createElementUpdate } from '../../../../umlUtil';
+import { createElementUpdate } from '../../../umlUtil';
 import { randomID } from 'uml-client/lib/element';
 import { createDiagramLabel } from '../../api/diagramInterchange';
 import { adjustShape } from '../UmlShapeProvider';

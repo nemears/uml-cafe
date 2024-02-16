@@ -2,7 +2,7 @@ import { randomID } from '../umlUtil';
 import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
 import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout'
 import { createDiagramEdge } from '../api/diagramInterchange';
-import { createElementUpdate } from '../../../umlUtil';
+import { createElementUpdate } from '../../umlUtil';
 
 export default class CommentHandler {
 	constructor(eventBus, umlWebClient, diagramContext, modelElementMap, elementRegistry, elementFactory, canvas, diagramEmitter) {

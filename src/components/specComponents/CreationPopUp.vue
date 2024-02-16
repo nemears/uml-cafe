@@ -1,5 +1,5 @@
 <script>
-import CloseSymbol from '../icons/close_symbol.svg';
+import CloseSymbol from '../../assets/icons/general/close_symbol.svg';
 import getImage from '../../GetUmlImage.vue';
 export default {
     props: ['types', 'umlid', 'set'],

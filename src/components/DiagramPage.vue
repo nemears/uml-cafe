@@ -1,10 +1,10 @@
 <script>
-import { Editor } from './diagram/editor';
+import { Editor } from '../diagram/editor';
 const EventEmitter = require('events');
 import { createElementUpdate } from '../umlUtil.js';
-import { getUmlDiagramElement, deleteUmlDiagramElement , CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID , TYPED_ELEMENT_LABEL_ID } from './diagram/api/diagramInterchange';
+import { getUmlDiagramElement, deleteUmlDiagramElement , CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID , TYPED_ELEMENT_LABEL_ID } from '../diagram/api/diagramInterchange';
 import { toRaw } from 'vue';
-import { CLASS_SHAPE_HEADER_HEIGHT } from './diagram/providers/ClassHandler'; 
+import { CLASS_SHAPE_HEADER_HEIGHT } from '../diagram/providers/ClassHandler'; 
 export default {
     data() {
         return {
@@ -366,132 +366,132 @@ export default {
 }
 
 .palette-icon-create-class {
-    background: url('icons/class.svg');
+    background: url('../assets/icons/general/class.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-data-type {
-    background: url('icons/data_type.svg');
+    background: url('../assets/icons/general/data_type.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-enumeration {
-    background: url('icons/enumeration.svg');
+    background: url('../assets/icons/general/enumeration.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-primitive-type {
-    background: url('icons/primitive_type.svg');
+    background: url('../assets/icons/general/primitive_type.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-interface {
-    background: url('icons/interface.svg');
+    background: url('../assets/icons/general/interface.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-signal {
-    background: url('icons/signal.svg');
+    background: url('../assets/icons/general/signal.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-dependency {
-    background: url('icons/dependency.svg');
+    background: url('../assets/icons/general/dependency.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-usage {
-    background: url('icons/usage.svg');
+    background: url('../assets/icons/general/usage.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-abstraction {
-    background: url('icons/abstraction.svg');
+    background: url('../assets/icons/general/abstraction.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-realization {
-    background: url('icons/realization.svg');
+    background: url('../assets/icons/general/realization.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-generalization {
-    background: url('icons/generalization.svg');
+    background: url('../assets/icons/general/generalization.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-directed-composition {
-    background: url('icons/association.svg');
+    background: url('../assets/icons/general/association.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-composition {
-    background: url('diagram/icons/palette/composition.svg');
+    background: url('../assets/icons/diagram/palette/composition.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-association {
-    background: url('diagram/icons/palette/association.svg');
+    background: url('../assets/icons/diagram/palette/association.svg');
     background-repeat: no-repeat;
     background-size: 100%;
 }
 .palette-icon-create-directed-association {
-    background: url('diagram/icons/palette/directedAssociation.svg');
+    background: url('../assets/icons/diagram/palette/directedAssociation.svg');
     background-repeat: no-repeat;
     background-size: 100%; 
 }
 .palette-icon-create-bi-directional-association {
-    background: url('diagram/icons/palette/biDirectionalAssociation.svg');
+    background: url('../assets/icons/diagram/palette/biDirectionalAssociation.svg');
     background-repeat: no-repeat;
     background-size: 100%; 
 }
 
 .context-pad-icon-remove {
-    background: url('diagram/icons/context/deleteShapeDark.svg') !important;
+    background: url('../assets/icons/diagram/context/deleteShapeDark.svg') !important;
 }
 
 .context-pad-icon-connect {
-    background: url('diagram/icons/context/createGeneralizationDark.svg') !important;
+    background: url('../assets/icons/diagram/context/createGeneralizationDark.svg') !important;
 }
 
 .context-pad-icon-directed-composition {
-    background: url('diagram/icons/context/directedComposition.svg') !important;
+    background: url('../assets/icons/diagram/context/directedComposition.svg') !important;
 }
 .context-pad-icon-spec {
-    background: url('diagram/icons/context/info.svg') !important;
+    background: url('../assets/icons/diagram/context/info.svg') !important;
 }
 .context-pad-icon-delete {
-    background: url('diagram/icons/context/trash.svg') !important;
+    background: url('../assets/icons/diagram/context/trash.svg') !important;
 }
 .context-pad-icon-options {
-    background: url('diagram/icons/context/gear.svg') !important;
+    background: url('../assets/icons/diagram/context/gear.svg') !important;
 }
 .context-pad-icon-comment {
-    background: url('diagram/icons/context/comment.svg') !important;
+    background: url('../assets/icons/diagram/context/comment.svg') !important;
 }
 .context-pad-icon-composition {
-    background: url('diagram/icons/context/composition.svg') !important;
+    background: url('../assets/icons/diagram/context/composition.svg') !important;
 }
 .context-pad-icon-dependency {
-    background: url('diagram/icons/context/dependency.svg') !important;
+    background: url('../assets/icons/diagram/context/dependency.svg') !important;
 }
 .context-pad-icon-abstraction {
-    background: url('diagram/icons/context/abstraction.svg') !important;
+    background: url('../assets/icons/diagram/context/abstraction.svg') !important;
 }
 .context-pad-icon-realization {
-    background: url('diagram/icons/context/realization.svg') !important;
+    background: url('../assets/icons/diagram/context/realization.svg') !important;
 }
 .context-pad-icon-usage {
-    background: url('diagram/icons/context/usage.svg') !important;
+    background: url('../assets/icons/diagram/context/usage.svg') !important;
 }
 .context-pad-icon-directed-association {
-    background: url('diagram/icons/context/directedAssociation.svg') !important;
+    background: url('../assets/icons/diagram/context/directedAssociation.svg') !important;
 }
 .context-pad-icon-association {
-    background: url('diagram/icons/context/association.svg') !important;
+    background: url('../assets/icons/diagram/context/association.svg') !important;
 }
 .context-pad-icon-bi-directional-association {
-    background: url('diagram/icons/context/biDirectedAssociation.svg') !important;
+    background: url('../assets/icons/diagram/context/biDirectedAssociation.svg') !important;
 }
 .djs-element.redUser .djs-outline{
     visibility: visible;

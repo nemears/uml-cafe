@@ -1,10 +1,10 @@
-import { createElementUpdate, deleteElementElementUpdate } from "../../../umlUtil";
+import { createElementUpdate, deleteElementElementUpdate } from "../../umlUtil";
 import { createDiagramEdge, createDiagramShape, deleteUmlDiagramElement } from "../api/diagramInterchange";
 import { h } from "vue";
 import { getMid } from "diagram-js/lib/layout/LayoutUtil";
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { randomID } from "../umlUtil";
-import { createCommentClick } from "../../../umlUtil";
+import { createCommentClick } from "../../umlUtil";
 import { createProperty } from "./Property";
 import { removeDiagramElement } from "./ClassDiagramContextPadProvider";
 import parse from "uml-client/lib/parse";
@@ -148,7 +148,7 @@ export default class UmlContextMenu {
                     const propertyOption = {
                         label: property.name,
                         icon: h('img', {
-                            src: require('../../icons/property.svg')
+                            src: require('../../assets/icons/general/property.svg')
                         }),
                         disabled: umlWebClient.readonly,
                     };
@@ -190,7 +190,7 @@ export default class UmlContextMenu {
                     showRelationshipsOption.children.push({
                         label: (await generalization.general.get()).name,
                         icon: h('img', {
-                            src: require('../../icons/generalization.svg')
+                            src: require('../../assets/icons/general/generalization.svg')
                         }),
                         disabled: umlWebClient.readonly || modelElementMap.get(generalization.id) !== undefined,
                         onClick: () => {
@@ -202,7 +202,7 @@ export default class UmlContextMenu {
                     showRelationshipsOption.children.push({
                         label: await association.name, // TODO better label
                         icon: h('img', {
-                            src: require('../../icons/association.svg')
+                            src: require('../../assets/icons/general/association.svg')
                         }),
                         disabled: umlWebClient.readonly || modelElementMap.get(association.id) !== undefined,
                         onClick: () => {
@@ -214,7 +214,7 @@ export default class UmlContextMenu {
                     showRelationshipsOption.children.push({
                         label: (await dependency.suppliers.front()).name,
                         icon: h('img', {
-                            src: require('../../icons/dependency.svg')
+                            src: require('../../assets/icons/general/dependency.svg')
                         }),
                         disabled: umlWebClient.readonly || modelElementMap.get(dependency.id) !== undefined,
                         onClick: () => {
