@@ -1,7 +1,7 @@
 import { createClassDiagramClassifierShape } from './ClassDiagramPaletteProvider';
 
 export default class DragFromTree {
-    constructor(create, elementFactory, diagramEmitter) {
+    constructor(create, elementFactory, diagramEmitter, umlRenderer) {
         diagramEmitter.on('dragenter', async (event) => {
             const elements = [];
             for (const element of event.selectedElements) {
@@ -12,7 +12,7 @@ export default class DragFromTree {
                             await attr.type.get();
                         }
                     }
-                    const classElements = createClassDiagramClassifierShape(elementFactory, element);
+                    const classElements = createClassDiagramClassifierShape(elementFactory, umlRenderer, element);
                     for (const el of classElements) {
                         elements.push(el);
                     }
@@ -23,4 +23,4 @@ export default class DragFromTree {
     }
 }
 
-DragFromTree.$inject = ['create', 'elementFactory', 'diagramEmitter'];
+DragFromTree.$inject = ['create', 'elementFactory', 'diagramEmitter', 'umlRenderer'];

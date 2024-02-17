@@ -596,6 +596,9 @@ export async function createTypedElementLabel(label, umlWebClient, diagramContex
 
     await createDiagramLabelFeatures(label, labelInstance, umlWebClient, diagramContext);
 
+    umlWebClient.put(labelInstance);
+    umlWebClient.put(diagramContext.diagram);
+
     const ret = new TypedElementLabel();
     ret.bounds.x = label.x;
     ret.bounds.y = label.y;

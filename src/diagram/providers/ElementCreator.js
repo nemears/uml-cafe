@@ -102,9 +102,9 @@ class ElementCreationHandler {
                     break;
                 case 'nameLabel':
                     if (element.parent) {
-                        // TODO place within parent
-                        element.x = element.parent.x;
-                        element.y = element.parent.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
+                        // place within parent
+                        element.x = element.x + context.x;
+                        element.y = element.y + context.y;
                         canvas.addShape(element, element.parent);
                     } else {
                         assignPosition(element);
@@ -115,8 +115,8 @@ class ElementCreationHandler {
                     break;
                 case 'typedElementLabel':
                     if (element.parent) {
-                        element.x = element.parent.x;
-                        element.y = element.parent.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
+                        element.x = element.x + context.x;
+                        element.y = element.y + context.y;
                         canvas.addShape(element, element.parent);
                     } else {
                         assignPosition(element);
