@@ -2,11 +2,14 @@ import { randomID } from "uml-client/lib/element";
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler' 
 import { CLASSIFIER_SHAPE_GAP_HEIGHT } from './UmlCompartmentableShapeProvider';
 
+export const LABEL_HEIGHT = 24;
+export const PROPERTY_GAP = 20;
+
 /**
  * A example palette provider.
  */
 export default class ClassDiagramPaletteProvider {
-    constructor(create, elementFactory, lassoTool, palette, umlWebClient, globalConnect, eventBus) {
+    constructor(create, elementFactory, lassoTool, palette, umlWebClient, globalConnect, eventBus, umlRenderer) {
         this._create = create;
         this._elementFactory = elementFactory;
         this._lassoTool = lassoTool;
@@ -14,6 +17,7 @@ export default class ClassDiagramPaletteProvider {
         this.umlWebClient = umlWebClient;
         this._globalConnect = globalConnect;
         this._eventBus = eventBus;
+        this._umlRenderer = umlRenderer;
       
         palette.registerProvider(this);
     }
@@ -26,7 +30,8 @@ export default class ClassDiagramPaletteProvider {
         elementFactory = this._elementFactory,
         lassoTool = this._lassoTool,
         globalConnect = this._globalConnect,
-        eventBus = this._eventBus;
+        eventBus = this._eventBus,
+        umlRenderer = this._umlRenderer;
 
         return {
             'lasso-tool': {
@@ -58,7 +63,7 @@ export default class ClassDiagramPaletteProvider {
                             }
                         }
 
-                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, proxyModelElement, true);
+                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, umlRenderer, proxyModelElement, true);
 
                         // start create
                         create.start(event, elsToCreate);
@@ -78,7 +83,7 @@ export default class ClassDiagramPaletteProvider {
                                 return 'dataType';
                             }
                         }
-                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, proxyModelElement, true);
+                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, umlRenderer, proxyModelElement, true);
 
                         // start create
                         create.start(event, elsToCreate);
@@ -99,7 +104,7 @@ export default class ClassDiagramPaletteProvider {
                             }
                         }
 
-                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, proxyModelElement, true);
+                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, umlRenderer, proxyModelElement, true);
 
                         // start create
                         create.start(event, elsToCreate);
@@ -120,7 +125,7 @@ export default class ClassDiagramPaletteProvider {
                             }
                         }
 
-                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, proxyModelElement, true);
+                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, umlRenderer, proxyModelElement, true);
 
                         // start create
                         create.start(event, elsToCreate);
@@ -141,7 +146,7 @@ export default class ClassDiagramPaletteProvider {
                             }
                         }
 
-                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, proxyModelElement, true);
+                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, umlRenderer, proxyModelElement, true);
 
                         // start create
                         create.start(event, elsToCreate);
@@ -162,7 +167,7 @@ export default class ClassDiagramPaletteProvider {
                             }
                         }
                         
-                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, proxyModelElement, true);
+                        const elsToCreate = createClassDiagramClassifierShape(elementFactory, umlRenderer, proxyModelElement, true);
 
                         // start create
                         create.start(event, elsToCreate);
@@ -283,27 +288,67 @@ export default class ClassDiagramPaletteProvider {
     }
 }
 
-ClassDiagramPaletteProvider.$inject = ['create', 'elementFactory', 'lassoTool', 'palette', 'umlWebClient', 'globalConnect', 'eventBus'];
+ClassDiagramPaletteProvider.$inject = ['create', 'elementFactory', 'lassoTool', 'palette', 'umlWebClient', 'globalConnect', 'eventBus', 'umlRenderer'];
 
-export function createClassDiagramClassifierShape(elementFactory, modelElement, createModelElement) {
+export function getTextDimensions(text, umlRenderer) {
+        return umlRenderer.textUtil.getDimensions(text, {
+            align: 'left-middle',
+            padding: {
+                left: 5,
+            },
+            box: {
+                width: 1000, // TODO infinite because we are basing our width of these lengths
+                height: LABEL_HEIGHT,
+                x: 0,
+                y: 0,
+            }
+        }); 
+    }
+
+export function createClassDiagramClassifierShape(elementFactory, umlRenderer, modelElement, createModelElement) {
     const shapeID = randomID();
     const compartmentID = randomID();
     const nameLabelID = randomID();
 
+    const getTypedElementText = (typedElement) => {
+        let label = typedElement.name;
+        if (typedElement.type.has()) {
+            label += ' : ' + typedElement.type.unsafe().name;
+        }
+        return label;
+    }
+
+    // get height and width
+    let classifierShapeHeight = CLASS_SHAPE_HEADER_HEIGHT;
+    let classifierShapeWidth = 100;
+    if (modelElement.attributes) {
+        for (const property of modelElement.attributes.unsafe()) {
+            classifierShapeHeight += PROPERTY_GAP;
+            const dimensions = getTextDimensions(getTypedElementText(property), umlRenderer);
+            if (dimensions.width + 20 > classifierShapeWidth) {
+                classifierShapeWidth = dimensions.width + 20;
+            }
+        }
+        classifierShapeHeight += 2 * CLASSIFIER_SHAPE_GAP_HEIGHT;
+    } else {
+        classifierShapeHeight = 80;
+    }
+
     // create compartment
     const compartment = elementFactory.createShape({
-        width: 100,
-        height: 80 - CLASS_SHAPE_HEADER_HEIGHT,
+        width: classifierShapeWidth,
+        height: classifierShapeHeight - CLASS_SHAPE_HEADER_HEIGHT,
         x: 0,
         y: CLASS_SHAPE_HEADER_HEIGHT,
         id: compartmentID,
         elementType: 'compartment',
     });
-    
+
     // create classifierShape
+    
     const shape = elementFactory.createShape({
-        width: 100,
-        height: 80,
+        width: classifierShapeWidth,
+        height: classifierShapeHeight,
         id: shapeID,
         modelElement : modelElement,
         compartments : [compartment],
@@ -313,8 +358,8 @@ export function createClassDiagramClassifierShape(elementFactory, modelElement, 
     
     // create name label
     const nameLabel = elementFactory.createLabel({
-        width: 100, // TODO change to defaults??
-        height: 24,
+        width: classifierShapeWidth, // TODO change to defaults??
+        height: LABEL_HEIGHT,
         x: 0,
         y: CLASSIFIER_SHAPE_GAP_HEIGHT,
         labelTarget: shape,
@@ -331,23 +376,22 @@ export function createClassDiagramClassifierShape(elementFactory, modelElement, 
     if (modelElement.attributes) {
         let yPos = compartment.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
         for (const property of modelElement.attributes.unsafe()) { // unsafe invocation, attributes must be loaded before this
-            let label = property.name;
-            if (property.type.has()) {
-                label += ' : ' + property.type.unsafe().name;
-            }
+            const text = getTypedElementText(property);
+            const dimensions = getTextDimensions(text, umlRenderer);
             const propertyLabel = elementFactory.createLabel({
                 id: randomID(),
                 y: yPos,
-                x: compartment.x,
-                width: compartment.width,
-                height: 24,
+                x: compartment.x + 5,
+                width: dimensions.width + 15,
+                height: LABEL_HEIGHT,
+                modelElement: property,
                 elementType: 'typedElementLabel',
                 labelTarget: compartment,
                 parent: compartment,
-                text: label,
+                text: text,
             }); 
             properties.push(propertyLabel);
-            yPos += propertyLabel.height + CLASSIFIER_SHAPE_GAP_HEIGHT;
+            yPos += PROPERTY_GAP;
         }
     }
 

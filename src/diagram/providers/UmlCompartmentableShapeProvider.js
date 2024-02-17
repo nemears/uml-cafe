@@ -1,17 +1,17 @@
 import { getMid, roundBounds } from 'diagram-js/lib/layout/LayoutUtil';
 import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout';
+import { getTextDimensions, LABEL_HEIGHT, PROPERTY_GAP } from './ClassDiagramPaletteProvider';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { adjustAttachedEdges, adjustShape } from './UmlShapeProvider';
 
 export const CLASSIFIER_SHAPE_GAP_HEIGHT = 5;
 
 class ResizeCompartmentableShapeHandler {
-    constructor(diagramEmitter, graphicsFactory, canvas, umlWebClient, diagramContext) {
+    constructor(diagramEmitter, umlWebClient, diagramContext, umlRenderer) {
         this.diagramEmitter = diagramEmitter;
-        this.graphicsFactory = graphicsFactory;
-        this.canvas = canvas;
         this.umlWebClient = umlWebClient;
-        this.diagramContext = diagramContext;
+        this.diagramContext = diagramContext,
+        this.umlRenderer = umlRenderer;
     }
 
     async resize(context) {
@@ -19,6 +19,9 @@ class ResizeCompartmentableShapeHandler {
         await adjustShape(context.shape, shapeInstance, this.umlWebClient);
         for (const child of context.shape.children) {
             if (context.shape.compartments.includes(child)) {
+                for (const compartmentChild of child.children) {
+                    adjustShape(compartmentChild, await this.umlWebClient.get(compartmentChild.id), this.umlWebClient);
+                }
                 continue;
             }
             const childInstance = await this.umlWebClient.get(child.id);
@@ -28,12 +31,44 @@ class ResizeCompartmentableShapeHandler {
         this.umlWebClient.put(this.diagramContext.diagram);
     }
 
+    allChildren(element) {
+        const ret = [];
+        const queue = [element];
+        while (queue.length > 0) {
+            const front = queue.shift();
+            ret.push(front);
+            for (const child of front.children) {
+                queue.push(child);
+            }
+            if (front.incoming) {
+                for (const edge of front.incoming) {
+                    queue.push(edge);
+                }
+            }
+            if (front.outgoing) {
+                for (const edge of front.outgoing) {
+                    queue.push(edge);
+                }
+            }
+        }
+        return ret;
+    }
+
     execute(context) {
         if (context.proxy) {
             delete context.proxy;
             // TODO
             return context.shape;
         }
+
+        // enforce minBounds
+        if (context.minBounds.width > context.newBounds.width) {
+            context.newBounds.width = context.minBounds.width;
+        }
+        if (context.minBounds.height > context.newBounds.height) {
+            context.newBounds.height = context.minBounds.height;
+        }
+
         const newBounds = roundBounds(context.newBounds);
         const shape = context.shape;
         context.oldBounds = {
@@ -42,7 +77,7 @@ class ResizeCompartmentableShapeHandler {
             width: shape.width,
             height: shape.height,
         };
-        this.diagramEmitter.fire('command', {name: 'resize.shape.uml', context: {
+        this.diagramEmitter.fire('command', {name: 'resize.compartmentableShape.uml', context: {
             shape : {
                 id: shape.id,
             },
@@ -53,20 +88,11 @@ class ResizeCompartmentableShapeHandler {
         shape.y = newBounds.y;
         shape.width = newBounds.width;
         shape.height = newBounds.height;
-        this.graphicsFactory.update('shape', shape, this.canvas.getGraphics(shape));
-         
-        for (const child of shape.children) {
-            if (child.elementType === 'compartment') {
-                continue;
-            }
-            child.x = shape.x;
-            child.width = shape.width;
-        }
         
-        adjustCompartmentsAndEdges(shape, this.graphicsFactory, this.canvas);
+        adjustCompartmentsAndEdges(shape, this.umlRenderer);
 
         this.resize(context);
-        return [context.shape, ... shape.children];
+        return this.allChildren(context.shape);
     }
     revert(context) {
         this.diagramEmitter.fire('command', {undo: {}});
@@ -77,18 +103,30 @@ class ResizeCompartmentableShapeHandler {
         shape.width = oldBounds.width;
         shape.height = oldBounds.height;
        
-        adjustCompartmentsAndEdges(shape, this.graphicsFactory, this.canvas);
+        adjustCompartmentsAndEdges(shape, this.umlRenderer);
 
         this.resize(context);
-        return context.shape;
+        return this.allChildren(context.shape);
     }
 }
 
-ResizeCompartmentableShapeHandler.$inject = ['diagramEmitter', 'graphicsFactory', 'canvas', 'umlWebClient', 'diagramContext']; 
+ResizeCompartmentableShapeHandler.$inject = ['diagramEmitter', 'umlWebClient', 'diagramContext', 'umlRenderer']; 
 
-function adjustCompartmentsAndEdges(shape, graphicsFactory, canvas) {
+function adjustCompartmentsAndEdges(shape, umlRenderer) {
+    let yPos = shape.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
+    for (const child of shape.children) {
+        if (child.elementType === 'compartment') {
+            continue;
+        } else if (child.elementType !== 'nameLabel') {
+            throw Error('TODO handle compartmentableShape resize for uml di elementType ' + child.elementType);
+        }
+        child.x = shape.x;
+        child.y = yPos;
+        child.width = shape.width;
+        yPos += CLASSIFIER_SHAPE_GAP_HEIGHT + LABEL_HEIGHT; // TODO test
+    } 
     // compartments
-    let yPos = shape.y + CLASS_SHAPE_HEADER_HEIGHT;
+    yPos = shape.y + CLASS_SHAPE_HEADER_HEIGHT;
     let index = 0;
     for (const compartment of shape.compartments) {
         compartment.width = shape.width;
@@ -102,18 +140,32 @@ function adjustCompartmentsAndEdges(shape, graphicsFactory, canvas) {
             // TODO adjust height based on children, change yPos
             // TODO compartment children
         }
-        graphicsFactory.update('shape', compartment, canvas.getGraphics(compartment));
         index++;
+
+        let childYPos = compartment.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
+        for (const child of compartment.children) {
+            if (child.elementType === 'typedElementLabel') {
+                // resize typedElementLabel
+                child.x = compartment.x;
+                child.y = childYPos;
+                let width = Math.round(getTextDimensions(child.text, umlRenderer).width) + 15;
+                if (width > compartment.width) {
+                    width = compartment.width;
+                }
+                child.width = width;
+                childYPos += PROPERTY_GAP;
+            } else {
+                throw Error('TODO handle resize of elementType ' + child.elementType + ' in compartment!');
+            }
+        }
     }
 
     // edges
     for (const edge of shape.incoming) {
         edge.waypoints = connectRectangles(edge.source, edge.target, getMid(edge.source), getMid(edge.target));
-        graphicsFactory.update('connection', edge, canvas.getGraphics(edge));
     }
     for (const edge of shape.outgoing) {
         edge.waypoints = connectRectangles(edge.source, edge.target, getMid(edge.source), getMid(edge.target));
-        graphicsFactory.update('connection', edge, canvas.getGraphics(edge));
     }
 }
 
@@ -127,7 +179,14 @@ export default class UmlCompartmentableShapeProvider {
                 delete event.context.resizeConstraints;
                 let totalHeight = CLASS_SHAPE_HEADER_HEIGHT;
                 for (const compartment of shape.compartments) {
-                    // TODO add compartment items to height
+                    totalHeight += CLASSIFIER_SHAPE_GAP_HEIGHT;
+                    for (const child of compartment.children) {
+                        if (child.elementType === 'typedElementLabel') {
+                            totalHeight += PROPERTY_GAP;
+                        } else {
+                            throw Error('TODO handle minimum resize of compartmentable shape with child of type ' + child.elementType + ' in compartment');
+                        }
+                    }
                 }
                 event.context.minBounds = {
                     width: 0,
