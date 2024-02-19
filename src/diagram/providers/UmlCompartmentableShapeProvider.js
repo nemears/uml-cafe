@@ -121,17 +121,18 @@ class ResizeCompartmentableShapeHandler {
 ResizeCompartmentableShapeHandler.$inject = ['diagramEmitter', 'umlWebClient', 'diagramContext', 'umlRenderer', 'eventBus']; 
 
 function adjustCompartmentsAndEdges(shape, umlRenderer) {
-    let yPos = shape.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
+    let yPos = shape.y;
+    if (shape.children.length - shape.compartments.length === 1) {
+        yPos += CLASSIFIER_SHAPE_GAP_HEIGHT;
+    } 
     for (const child of shape.children) {
         if (child.elementType === 'compartment') {
             continue;
-        } else if (child.elementType !== 'nameLabel') {
-            throw Error('TODO handle compartmentableShape resize for uml di elementType ' + child.elementType);
         }
         child.x = shape.x;
         child.y = yPos;
         child.width = shape.width;
-        yPos += CLASSIFIER_SHAPE_GAP_HEIGHT + LABEL_HEIGHT; // TODO test
+        yPos += 15; // TODO test
     } 
     // compartments
     yPos = shape.y + CLASS_SHAPE_HEADER_HEIGHT;

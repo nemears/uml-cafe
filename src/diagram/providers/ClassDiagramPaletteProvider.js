@@ -318,12 +318,10 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
     const compartmentID = randomID();
     const nameLabelID = randomID();
 
-    
-
     // get height and width
     let classifierShapeHeight = CLASS_SHAPE_HEADER_HEIGHT;
     let classifierShapeWidth = 100;
-    if (modelElement.attributes) {
+    if (modelElement.attributes && modelElement.attributes.size() != 0) {
         for (const property of modelElement.attributes.unsafe()) {
             classifierShapeHeight += PROPERTY_GAP;
             const dimensions = getTextDimensions(getTypedElementText(property), umlRenderer);
@@ -357,13 +355,35 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
         createModelElement: createModelElement,
         elementType: 'classifierShape',
     });
+
+    let keywordLabel;
+    if (modelElement.elementType() !== 'class') {
+        // create keyword label
+        if (modelElement.elementType() === 'stereotype') {
+            throw Error('TODO stereotype shapes on class diagrams! contact dev');
+        } else {
+            keywordLabel = elementFactory.createLabel({
+                width: classifierShapeWidth,
+                height: LABEL_HEIGHT,
+                x: 0,
+                y: 0,
+                labelTarget: shape,
+                text: '«' + modelElement.elementType() + '»',
+                parent: shape,
+                id: randomID(),
+                modelElement: modelElement,
+                inselectable: true,
+                elementType: 'keywordLabel',
+            });
+        }
+    }
     
     // create name label
     const nameLabel = elementFactory.createLabel({
         width: classifierShapeWidth, // TODO change to defaults??
         height: LABEL_HEIGHT,
         x: 0,
-        y: CLASSIFIER_SHAPE_GAP_HEIGHT,
+        y: keywordLabel ? 15 : CLASSIFIER_SHAPE_GAP_HEIGHT,
         labelTarget: shape,
         text: modelElement.name,
         parent: shape,
@@ -397,5 +417,10 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
         }
     }
 
-    return [shape, nameLabel, ...properties];
+    const elsChanged = [shape, nameLabel, ...properties];
+    if (keywordLabel) {
+        elsChanged.push(keywordLabel);
+    }
+
+    return elsChanged;
 }

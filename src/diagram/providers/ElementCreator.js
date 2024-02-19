@@ -1,4 +1,4 @@
-import { createClassifierShape, createComparment, createDiagramEdge, createDiagramLabel, createDiagramShape, createNameLabel, createTypedElementLabel, deleteUmlDiagramElement } from '../api/diagramInterchange';
+import { createClassifierShape, createComparment, createDiagramEdge, createDiagramLabel, createDiagramShape, createKeywordLabel, createNameLabel, createTypedElementLabel, deleteUmlDiagramElement } from '../api/diagramInterchange';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { CLASSIFIER_SHAPE_GAP_HEIGHT } from './UmlCompartmentableShapeProvider';
 /**
@@ -123,6 +123,17 @@ class ElementCreationHandler {
                         canvas.addShape(element);
                     }
                     createTypedElementLabel(element, umlWebClient, diagramContext);
+                    break;
+                case 'keywordLabel':
+                    if (element.parent) {
+                        element.x = element.x + context.x;
+                        element.y = element.y + context.y;
+                        canvas.addShape(element, element.parent);
+                    } else {
+                        assignPosition(element);
+                        canvas.addShape(element);
+                    }
+                    createKeywordLabel(element, umlWebClient, diagramContext);
                     break;
                 default:
                     throw Error('invalid uml di elementType given to ElementCreationHandler!');

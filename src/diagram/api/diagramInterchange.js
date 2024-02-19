@@ -210,13 +210,26 @@ export async function getUmlDiagramElement(id, umlClient) {
             const ret = new TypedElementLabel();
             ret.id = id;
             for await (const typedElementLabelSlot of umlDiagramElement.slots) {
-                if (typedElementLabelSlot .definingFeature.id() === BOUNDS_ID) {
+                if (typedElementLabelSlot.definingFeature.id() === BOUNDS_ID) {
                     await filloutBounds(typedElementLabelSlot , ret);
                 } else if (typedElementLabelSlot.definingFeature.id() === TEXT_ID) {
                     ret.text = (await typedElementLabelSlot.values.front()).value;
                 } else if (await getDiagramElementFeatures(typedElementLabelSlot, ret, umlClient)) {
                     continue;
                 } 
+            }
+            return ret;
+        } else if (classifierID === KEYWORD_LABEL_ID) {
+            const ret = new KeywordLabel();
+            ret.id = id;
+            for await (const keywordLabelSlot of umlDiagramElement.slots) {
+                if(keywordLabelSlot.definingFeature.id() === BOUNDS_ID) {
+                    await filloutBounds(keywordLabelSlot, ret);
+                } else if (keywordLabelSlot.definingFeature.id() === TEXT_ID) {
+                    ret.text = (await keywordLabelSlot.values.front()).value;
+                } else if (await getDiagramElementFeatures(keywordLabelSlot, ret, umlClient)) {
+                    continue;
+                }
             }
             return ret;
         }

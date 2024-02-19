@@ -112,9 +112,28 @@ class CreatePropertyHandler {
 }
 
 export default class Property extends RuleProvider {
-    constructor(eventBus, commandStack) {
+    constructor(eventBus, commandStack, graphicsFactory, canvas) {
         super(eventBus)
         commandStack.registerHandler('propertyLabel.create', CreatePropertyHandler);
+        eventBus.on('server.update', (event) => {
+            if (event.serverElement.elementType() === 'typedElementLabel' && event.serverElement.modelElement.elementType() === 'property') {
+                const serverLabel = event.serverElement,
+                localLabel = event.localElement;
+                const doLater = async () => {
+                    const textSplit = localLabel.text.split(' : '); 
+                    if (serverLabel.modelElement.name != textSplit[0]) {
+                        // update name
+                        localLabel.text = serverLabel.modelElement.name + ' : ' + textSplit[1];
+                    }
+                    if ((await serverLabel.modelElement.type.get()).name != textSplit[1]) {
+                        localLabel.text = serverLabel.modelElement.name + ' : ' + (await serverLabel.modelElement.type.get()).name;
+                    }
+                }
+                doLater();
+                // update
+                graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
+            }
+        });
     }
 
     init() {
@@ -140,4 +159,4 @@ export default class Property extends RuleProvider {
     } 
 }
 
-Property.$inject = ['eventBus', 'commandStack'];
+Property.$inject = ['eventBus', 'commandStack', 'graphicsFactory', 'canvas'];
