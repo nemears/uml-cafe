@@ -10,15 +10,11 @@ import { removeDiagramElement } from "./ClassDiagramContextPadProvider";
 import parse from "uml-client/lib/parse";
 
 export default class UmlContextMenu {
-    constructor(eventBus, diagramEmitter, umlWebClient, modeling, modelElementMap, elementRegistry, canvas, diagramContext, directEditing, create, elementFactory, commandStack) {    
+    constructor(eventBus, diagramEmitter, umlWebClient, modelElementMap, directEditing, create, elementFactory, commandStack, canvas) {    
         this._eventBus = eventBus;
         this._diagramEmitter = diagramEmitter;
         this._umlWebClient = umlWebClient;
-        this._modeling = modeling;
         this._modelElementMap = modelElementMap;
-        this._elementRegistry = elementRegistry;
-        this._canvas = canvas;
-        this._diagramContext = diagramContext;
         this._directEditing = directEditing;
         this._create = create;
         this._elementFactory = elementFactory;
@@ -47,11 +43,7 @@ export default class UmlContextMenu {
     async show(x, y, element) {
         const umlWebClient = this._umlWebClient, 
         diagramEmitter = this._diagramEmitter, 
-        modeling = this._modeling, 
         modelElementMap = this._modelElementMap, 
-        elementRegistry = this._elementRegistry, 
-        canvas = this._canvas, 
-        diagramContext = this._diagramContext, 
         directEditing = this._directEditing, 
         create = this._create, 
         elementFactory = this._elementFactory,
@@ -134,11 +126,16 @@ export default class UmlContextMenu {
                     label: 'Show All',
                     disabled: umlWebClient.readonly,
                     onClick: async () => {
+                        const context = {
+                            clazzShape: element,
+                            properties: []
+                        };
                         for await (const property of element.modelElement.attributes) {
                             if (!modelElementMap.get(property.id)) {
-                                createProperty(property, element, modelElementMap, modeling, umlWebClient, diagramContext);
+                                context.properties.push(property);
                             }
                         }
+                        commandStack.execute('propertyLabel.create', context);
                     }
                 });
                 for await (const property of element.modelElement.attributes) {
@@ -154,7 +151,11 @@ export default class UmlContextMenu {
                     };
                     if (!modelElementMap.get(property.id)) {
                         propertyOption.onClick = () => {
-                            createProperty(property, element, modelElementMap, modeling, umlWebClient, diagramContext);
+                            const context = {
+                                clazzShape: element,
+                                properties: [property],
+                            };
+                            commandStack.execute('propertyLabel.create', context);
                         }
                     } else {
                         propertyOption.disabled = true;
@@ -231,8 +232,7 @@ export default class UmlContextMenu {
         diagramEmitter.fire('contextmenu', menu);
     }
 }
-
-UmlContextMenu.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modeling', 'modelElementMap', 'elementRegistry', 'canvas', 'diagramContext', 'directEditing', 'create', 'elementFactory', 'commandStack'];
+UmlContextMenu.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modelElementMap', 'directEditing', 'create', 'elementFactory', 'commandStack', 'canvas'];
 
 class DeleteModelElementHandler {
     constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext) {

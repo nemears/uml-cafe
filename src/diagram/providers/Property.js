@@ -1,82 +1,120 @@
 import { nullID, randomID } from "uml-client/lib/element";
-import { createDiagramShape } from "../api/diagramInterchange";
+import { createDiagramShape, createTypedElementLabel } from "../api/diagramInterchange";
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
+import { getTextDimensions, getTypedElementText, LABEL_HEIGHT, PROPERTY_GAP } from './ClassDiagramPaletteProvider';
+import { CLASSIFIER_SHAPE_GAP_HEIGHT } from "./UmlCompartmentableShapeProvider";
+import { adjustShape } from "./UmlShapeProvider";
 
 export const PROPERTY_COMPARTMENT_HEIGHT = 15;
 
-export async function createProperty(property, clazzShape, modelElementMap, modeling, umlWebClient, diagramContext) {
-    if (property.association.id() !== nullID()) {
-        if (property.type.id() === nullID()) {
-            console.warn('bad state, cannot create property, it has an association but no type, that is invalid to be displayed');
-            return;
-        }
+export async function createProperty(property, clazzShape, umlWebClient, umlRenderer, elementFactory, canvas, diagramContext) {
+    const compartment = clazzShape.compartments[0];
+    if (!compartment) {
+        throw Error('Cannot find compartment to put property in bad state!');
+    }
+    let yPos = compartment.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
+    for (const _child of compartment.children) {
+        yPos += PROPERTY_GAP;
+    }
+    const text = getTypedElementText(property);
+    const dimensions = getTextDimensions(text, umlRenderer);
+    const propertyLabel = elementFactory.createLabel({
+        id: randomID(),
+        y: yPos,
+        x: compartment.x + 5,
+        width: Math.round(dimensions.width) + 15,
+        height: LABEL_HEIGHT,
+        modelElement: property,
+        elementType: 'typedElementLabel',
+        labelTarget: compartment,
+        parent: compartment,
+        text: text,
+    });
+    createTypedElementLabel(propertyLabel, umlWebClient, diagramContext);
+    if (compartment.y + compartment.height < yPos + PROPERTY_GAP) {
+        compartment.height = compartment.y + 2 * compartment.height - yPos + 2 * CLASSIFIER_SHAPE_GAP_HEIGHT;
+        clazzShape.height = compartment.height + CLASS_SHAPE_HEADER_HEIGHT;
+    }
+    if (propertyLabel.width + 15 > compartment.width) {
+        compartment.width = propertyLabel.width + 15;
+        clazzShape.width = propertyLabel.width + 15;
+    }
+    
+    const doLater = async () => {
+        adjustShape(clazzShape, await umlWebClient.get(clazzShape.id), umlWebClient);
+    };
+    doLater();
 
-        if (!modelElementMap.get(property.type.id())) {
-            // TODO create the type, draw the association
-            console.warn('TODO, creating and showing associations and types not implemented yet');
-            // TODO maybe just make it a regular property don't show association and class
-            // TODO or give user an option to choose
-        }
-    } else {
-        // just draw it as a property shape within the owned class
-        const lastShape = clazzShape.children.slice(-1)[0];
-        const propertyShapePosition = {
-            x: clazzShape.x + 8,
-            width: clazzShape.width - 16,
-            height: PROPERTY_COMPARTMENT_HEIGHT
+    canvas.addShape(propertyLabel, compartment);
+
+    return propertyLabel;
+}
+
+class CreatePropertyHandler {
+    constructor(umlWebClient, umlRenderer, elementFactory, canvas, diagramContext, eventBus, diagramEmitter) {
+        this.umlWebClient = umlWebClient;
+        this.umlRenderer = umlRenderer;
+        this.elementFactory = elementFactory;
+        this.canvas = canvas;
+        this.diagramContext = diagramContext;
+        this.eventBus = eventBus;
+        this.diagramEmitter = diagramEmitter;
+    }
+
+    execute(context) {
+        const clazzShape = context.clazzShape;
+        context.oldBounds = {
+            x: clazzShape.x,
+            y: clazzShape.y,
+            width: clazzShape.width,
+            height: clazzShape.height
         };
-        if (lastShape) {
-            propertyShapePosition.y = lastShape.y + lastShape.height + 5;
-        } else {
-            propertyShapePosition.y = clazzShape.y + CLASS_SHAPE_HEADER_HEIGHT;
-        }
 
-        // load type and multiplicty before so it can be loaded instantly for renderer
-        if (property.type.has()) {
-            await property.type.get();
-        }
+        this.diagramEmitter.fire('command', {name: 'resize.compartmentableShape.uml', context: context});
 
-        if (property.lowerValue.has()) {
-            await property.lowerValue.get();
+        const compartment = clazzShape.compartments[0];
+        if (!compartment) {
+            throw Error('could not find compartment in classifier');
         }
+        const elsChanged = [clazzShape, ...clazzShape.children, ...compartment.children];
+        for (const property of context.properties) {
+            elsChanged.push(createProperty(property, clazzShape, this.umlWebClient, this.umlRenderer, this.elementFactory, this.canvas, this.diagramContext));
+        }
+        this.eventBus.fire('compartmentableShape.resize', {
+            shape: clazzShape,
+            newBounds: clazzShape,
+        });
+        return elsChanged;
+    }
 
-        if (property.upperValue.has()) {
-            await property.upperValue.get();
+    revert(context) {
+        this.diagramEmitter.fire('command', {undo: {}});
+        const compartment = context.clazzShape.compartments[0];
+        if (!compartment) {
+            throw Error('could not find compartment in classifier');
         }
-
-        // adjust parent class shape to fit it
-        let totalHeight = CLASS_SHAPE_HEADER_HEIGHT + PROPERTY_COMPARTMENT_HEIGHT;
-        for (const child of clazzShape.children) {
-            totalHeight += 5 + child.height;
+        const elsToRemove = [];
+        for (const child of compartment.children) {
+            if (context.properties.includes(child.modelElement)) {
+                elsToRemove.push(child);
+            }
         }
-        if (totalHeight > clazzShape.height) {
-            modeling.resizeShape(
-                clazzShape,
-                {
-                    x: clazzShape.x,
-                    y: clazzShape.y,
-                    width: clazzShape.width,
-                    height: totalHeight,
-                }
-            );
+        for (const el of elsToRemove) {
+            this.canvas.removeShape(el);
         }
-
-        const propertyShape = modeling.createShape(
-            {
-                id: randomID(),
-                modelElement: property,
-            },
-            propertyShapePosition,
-            clazzShape
-        );
-        await createDiagramShape(propertyShape, umlWebClient, diagramContext);
+        this.eventBus.fire('compartmentableShape.resize', {
+            shape: context.clazzShape,
+            newBounds: context.oldBounds,
+        });
+        return [context.clazzShape, ...context.clazzShape.children, ...compartment.children];
     }
 }
 
 export default class Property extends RuleProvider {
-    constructor(eventBus) {
+    constructor(eventBus, commandStack) {
         super(eventBus)
+        commandStack.registerHandler('propertyLabel.create', CreatePropertyHandler);
     }
 
     init() {
@@ -102,4 +140,4 @@ export default class Property extends RuleProvider {
     } 
 }
 
-Property.$inject = ['eventBus'];
+Property.$inject = ['eventBus', 'commandStack'];

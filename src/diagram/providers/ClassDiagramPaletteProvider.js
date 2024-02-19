@@ -291,32 +291,34 @@ export default class ClassDiagramPaletteProvider {
 ClassDiagramPaletteProvider.$inject = ['create', 'elementFactory', 'lassoTool', 'palette', 'umlWebClient', 'globalConnect', 'eventBus', 'umlRenderer'];
 
 export function getTextDimensions(text, umlRenderer) {
-        return umlRenderer.textUtil.getDimensions(text, {
-            align: 'left-middle',
-            padding: {
-                left: 5,
-            },
-            box: {
-                width: 1000, // TODO infinite because we are basing our width of these lengths
-                height: LABEL_HEIGHT,
-                x: 0,
-                y: 0,
-            }
-        }); 
+    return umlRenderer.textUtil.getDimensions(text, {
+        align: 'left-middle',
+        padding: {
+            left: 5,
+        },
+        box: {
+            width: 1000, // TODO infinite because we are basing our width of these lengths
+            height: LABEL_HEIGHT,
+            x: 0,
+            y: 0,
+        }
+    }); 
+}
+
+export function getTypedElementText(typedElement) {
+    let label = typedElement.name;
+    if (typedElement.type.has()) {
+        label += ' : ' + typedElement.type.unsafe().name;
     }
+    return label;
+}
 
 export function createClassDiagramClassifierShape(elementFactory, umlRenderer, modelElement, createModelElement) {
     const shapeID = randomID();
     const compartmentID = randomID();
     const nameLabelID = randomID();
 
-    const getTypedElementText = (typedElement) => {
-        let label = typedElement.name;
-        if (typedElement.type.has()) {
-            label += ' : ' + typedElement.type.unsafe().name;
-        }
-        return label;
-    }
+    
 
     // get height and width
     let classifierShapeHeight = CLASS_SHAPE_HEADER_HEIGHT;
