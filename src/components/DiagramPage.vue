@@ -299,6 +299,34 @@ export default {
                         });
                         canvas.addShape(label, labelTarget);
                         return label;
+                    } else if (umlDiagramElement.elementType() === 'associationEndLabel') {
+                        const labelTarget = elementRegistry.get(umlDiagramElement.owningElement);
+                        const label = elementFactory.createLabel({
+                            id: umlDiagramElement.id,
+                            text: umlDiagramElement.text,
+                            modelElement: umlDiagramElement.modelElement,
+                            x: umlDiagramElement.bounds.x,
+                            y: umlDiagramElement.bounds.y,
+                            width: umlDiagramElement.bounds.width,
+                            height: umlDiagramElement.bounds.height,
+                            elementType: 'associationEndLabel',
+                        });
+                        canvas.addShape(label, labelTarget);
+                        return label;
+                    } else if (umlDiagramElement.elementType() === 'multiplicityLabel') {
+                        const labelTarget = elementRegistry.get(umlDiagramElement.owningElement);
+                        const label = elementFactory.createLabel({
+                            id: umlDiagramElement.id,
+                            text: umlDiagramElement.text,
+                            modelElement: umlDiagramElement.modelElement,
+                            x: umlDiagramElement.bounds.x,
+                            y: umlDiagramElement.bounds.y,
+                            width: umlDiagramElement.bounds.width,
+                            height: umlDiagramElement.bounds.height,
+                            elementType: 'multiplicityLabel', 
+                        });
+                        canvas.addShape(label, labelTarget);
+                        return label;
                     } else {
                         throw Error('unhandled uml di type on diagram loading!');
                     }
@@ -335,7 +363,11 @@ export default {
                     if (!packagedEl.isSubClassOf('instanceSpecification')) {
                         continue;
                     }
+<<<<<<< HEAD
                     if (!packagedEl.classifiers.contains(LABEL_ID) && !packagedEl.classifiers.contains(NAME_LABEL_ID) && !packagedEl.classifiers.contains(TYPED_ELEMENT_LABEL_ID) && !packagedEl.classifiers.contains(KEYWORD_LABEL_ID)) {
+=======
+                    if (!packagedEl.classifiers.contains(LABEL_ID) && !packagedEl.classifiers.contains(NAME_LABEL_ID) && !packagedEl.classifiers.contains(TYPED_ELEMENT_LABEL_ID) && !packagedEl.classifiers.contains(KEYWORD_LABEL_ID) && !packagedEl.classifiers.contains(ASSOCIATION_END_LABEL_ID) && !packagedEl.classifiers.contains(MULTIPLICITY_LABEL_ID)) {
+>>>>>>> 4676bbe (added keywordLabels to classifierShapes)
                         continue;
                     }
 

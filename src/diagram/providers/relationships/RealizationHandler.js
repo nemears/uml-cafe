@@ -9,28 +9,40 @@ export default class RealizationHandler extends RuleProvider {
 
         eventBus.on('connect.end', 1100, (event) => {
             if (event.context.start.connectType === 'realization' || event.connectType === 'realization') {
-                event.connectionID = randomID();
-                event.modelElementID = randomID();
-                event.context.type = 'realization';
-                commandStack.execute('edgeCreate', event);
+                commandStack.execute('edge.connect', {
+                    connectionData: {
+                        id: randomID(),
+                        modelElement: {
+                            id: randomID(),
+                            elementType() {
+                                'realization'
+                            }
+                        },
+                        createModelElement: true,
+                        source: event.context.start,
+                        target: event.hover,
+                        children: [],
+                    },
+                    connectType: 'realization',
+                    children: [],
+                });
                 return false; // stop propogation
             }
         });
-        eventBus.on('edgeCreate', (context) => {
-            const createRealization = async () => {
-                const realization = context.context.connection.modelElement;
-                const client = await umlWebClient.get(context.context.start.modelElement.id);
+        eventBus.on('edge.connect.create', (context) => {
+            if (context.connectType === 'realization') {
+                const client = context.connection.source.modelElement,
+                supplier = context.connection.target.modelElement;
+                const realization = umlWebClient.post('realization', {id:context.connection.modelElement.id});
+                context.connection.modelElement = realization;
                 realization.clients.add(client);
-                realization.suppliers.add(context.hover.modelElement.id);
+                realization.suppliers.add(supplier);
                 diagramContext.context.packagedElements.add(realization);
                 umlWebClient.put(realization);
                 umlWebClient.put(client);
                 umlWebClient.put(diagramContext.context);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(client));
-                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));
-            }
-            if (context.context.type === 'realization') {
-                createRealization();
+                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context)); 
             }
         });
         eventBus.on('edgeCreateUndo', (context) => {

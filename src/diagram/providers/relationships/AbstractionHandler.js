@@ -9,28 +9,40 @@ export default class AbstractionHandler extends RuleProvider {
 
         eventBus.on('connect.end', 1100, (event) => {
             if (event.context.start.connectType === 'abstraction' || event.connectType === 'abstraction') {
-                event.connectionID = randomID();
-                event.modelElementID = randomID();
-                event.context.type = 'abstraction';
-                commandStack.execute('edgeCreate', event);
+                commandStack.execute('edge.connect', {
+                    connectionData: {
+                        id: randomID(),
+                        modelElement: {
+                            id: randomID(),
+                            elementType() {
+                                'abstraction'
+                            }
+                        },
+                        createModelElement: true,
+                        source: event.context.start,
+                        target: event.hover,
+                        children: [],
+                    },
+                    connectType: 'abstraction',
+                    children: [],
+                });
                 return false; // stop propogation
             }
         });
-        eventBus.on('edgeCreate', (context) => {
-            const createAbstraction = async () => {
-                const abstraction = context.context.connection.modelElement;
-                const client = await umlWebClient.get(context.context.start.modelElement.id);
+        eventBus.on('edge.connect.create', (context) => {
+            if (context.connectType === 'abstraction') {
+                const client = context.connection.source.modelElement,
+                supplier = context.connection.target.modelElement;
+                const abstraction = umlWebClient.post('abstraction', {id:context.connection.modelElement.id});
+                context.connection.modelElement = abstraction;
                 abstraction.clients.add(client);
-                abstraction.suppliers.add(context.hover.modelElement.id);
+                abstraction.suppliers.add(supplier);
                 diagramContext.context.packagedElements.add(abstraction);
                 umlWebClient.put(abstraction);
                 umlWebClient.put(client);
                 umlWebClient.put(diagramContext.context);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(client));
-                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));
-            }
-            if (context.context.type === 'abstraction') {
-                createAbstraction();
+                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));            
             }
         });
         eventBus.on('edgeCreateUndo', (context) => {

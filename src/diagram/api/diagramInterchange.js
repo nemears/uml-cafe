@@ -63,6 +63,18 @@ export class TypedElementLabel extends Label {
     }
 }
 
+export class AssociationEndLabel extends Label {
+    elementType() {
+        return 'associationEndLabel';
+    }
+}
+
+export class MultiplicityLabel extends Label {
+    elementType() {
+        return 'multiplicityLabel';
+    }
+}
+
 export class Compartment extends DiagramElement {
     // maybe TODO
     elementType() {
@@ -95,6 +107,22 @@ export const COMPARTMENTABLE_SHAPE_ID = 'z1DL0UzKw39EJh&SA5llseAEYgyd';
 export const CLASSIFIER_SHAPE_ID = 'Z6TrdLUX1PnxDxERdehoiwuo4Thd';
 export const COMPARTMENTS_ID = '94EL1DpEJq&sqIIyUkljNkGiLErL';
 export const TYPED_ELEMENT_LABEL_ID = 'kY&kIIA_XPbHZrs73YN&uDcSAhuh';
+export const ASSOCIATION_END_LABEL_ID = 'aaOkfblFlFn7QjVstTUgbCoNqyl8';
+export const MULTIPLICITY_LABEL_ID = '5pVpZ7MJzq5mysPkikGPT9kcvE10';
+
+async function fillOutLabel(label, umlDiagramElement, id, umlClient) {
+    label.id = id;
+    for await (const associationEndLabelSlot of umlDiagramElement.slots) {
+        if (associationEndLabelSlot.definingFeature.id() === BOUNDS_ID) {
+            await filloutBounds(associationEndLabelSlot, label);
+        } else if (associationEndLabelSlot.definingFeature.id() === TEXT_ID) {
+            label.text = (await associationEndLabelSlot.values.front()).value;
+        } else if (await getDiagramElementFeatures(associationEndLabelSlot, label, umlClient)) {
+            continue;
+        }
+    }
+    return label;
+}
 
 export async function getUmlDiagramElement(id, umlClient) {
     // get the element with the client
@@ -155,17 +183,7 @@ export async function getUmlDiagramElement(id, umlClient) {
         } else if (classifierID === LABEL_ID) {
             // UmlLabel
             const ret = new Label();
-            ret.id = id;
-            for await (const labelSlot of umlDiagramElement.slots) {
-                if (labelSlot.definingFeature.id() === BOUNDS_ID) {
-                    await filloutBounds(labelSlot, ret);
-                } else if (labelSlot.definingFeature.id() === TEXT_ID) {
-                    ret.text = (await labelSlot.values.front()).value;
-                } else if (await getDiagramElementFeatures(labelSlot, ret, umlClient)) {
-                    continue;
-                } 
-            }
-
+            await fillOutLabel(ret, umlDiagramElement, id, umlClient);
             return ret;
         } else if (classifierID === COMPARTMENT_ID) {
             const ret = new Compartment();
@@ -193,46 +211,26 @@ export async function getUmlDiagramElement(id, umlClient) {
             }
             return ret;
         } else if (classifierID === NAME_LABEL_ID) {
-            // NameLabel
             const ret = new NameLabel();
-            ret.id = id;
-            for await (const nameLabelSlot of umlDiagramElement.slots) {
-                if (nameLabelSlot.definingFeature.id() === BOUNDS_ID) {
-                    await filloutBounds(nameLabelSlot, ret);
-                } else if (nameLabelSlot.definingFeature.id() === TEXT_ID) {
-                    ret.text = (await nameLabelSlot.values.front()).value;
-                } else if (await getDiagramElementFeatures(nameLabelSlot, ret, umlClient)) {
-                    continue;
-                } 
-            }
+            await fillOutLabel(ret, umlDiagramElement, id, umlClient);
             return ret;
         } else if (classifierID === TYPED_ELEMENT_LABEL_ID) {
             const ret = new TypedElementLabel();
-            ret.id = id;
-            for await (const typedElementLabelSlot of umlDiagramElement.slots) {
-                if (typedElementLabelSlot.definingFeature.id() === BOUNDS_ID) {
-                    await filloutBounds(typedElementLabelSlot , ret);
-                } else if (typedElementLabelSlot.definingFeature.id() === TEXT_ID) {
-                    ret.text = (await typedElementLabelSlot.values.front()).value;
-                } else if (await getDiagramElementFeatures(typedElementLabelSlot, ret, umlClient)) {
-                    continue;
-                } 
-            }
+            await fillOutLabel(ret, umlDiagramElement, id, umlClient);
             return ret;
         } else if (classifierID === KEYWORD_LABEL_ID) {
             const ret = new KeywordLabel();
-            ret.id = id;
-            for await (const keywordLabelSlot of umlDiagramElement.slots) {
-                if(keywordLabelSlot.definingFeature.id() === BOUNDS_ID) {
-                    await filloutBounds(keywordLabelSlot, ret);
-                } else if (keywordLabelSlot.definingFeature.id() === TEXT_ID) {
-                    ret.text = (await keywordLabelSlot.values.front()).value;
-                } else if (await getDiagramElementFeatures(keywordLabelSlot, ret, umlClient)) {
-                    continue;
-                }
-            }
+            await fillOutLabel(ret, umlDiagramElement, id, umlClient);
             return ret;
-        }
+        } else if (classifierID === ASSOCIATION_END_LABEL_ID) {
+            const ret = new AssociationEndLabel();
+            await fillOutLabel(ret, umlDiagramElement, id, umlClient);
+            return ret;
+        } else if (classifierID === MULTIPLICITY_LABEL_ID) {
+            const ret = new MultiplicityLabel();
+            await fillOutLabel(ret, umlDiagramElement, id, umlClient);
+            return ret;
+        } 
     }
     return undefined;
 }
@@ -540,10 +538,9 @@ export async function createDiagramShape(shape, umlWebClient, diagramContext) {
     return ret;
 }
 
-export async function createDiagramLabel(label, umlWebClient, diagramContext) {
-   // set up shape
+async function createLabelOfType(label, typeID, umlWebClient, diagramContext) {
     const labelInstance = umlWebClient.post('instanceSpecification', { id : label.id });
-    labelInstance.classifiers.add(LABEL_ID);
+    labelInstance.classifiers.add(typeID);
     diagramContext.diagram.packagedElements.add(labelInstance); 
 
     await createDiagramLabelFeatures(label, labelInstance, umlWebClient, diagramContext);
@@ -551,49 +548,29 @@ export async function createDiagramLabel(label, umlWebClient, diagramContext) {
     umlWebClient.put(labelInstance);
     umlWebClient.put(diagramContext.diagram); 
 
-    const ret = new Label();
-    ret.bounds.x = label.x;
-    ret.bounds.y = label.y;
-    ret.bounds.width = label.width;
-    ret.bounds.height = label.height;
-    ret.id = label.id;
-    ret.text = label.text;
-    return ret;
-}
-
-export async function createNameLabel(label, umlWebClient, diagramContext) {
-    // set up shape
-    const labelInstance = umlWebClient.post('instanceSpecification', { id : label.id });
-    labelInstance.classifiers.add(NAME_LABEL_ID);
-    diagramContext.diagram.packagedElements.add(labelInstance); 
-
-    await createDiagramLabelFeatures(label, labelInstance, umlWebClient, diagramContext);
-
-    umlWebClient.put(labelInstance);
-    umlWebClient.put(diagramContext.diagram);
-
-    const ret = new NameLabel();
-    ret.bounds.x = label.x;
-    ret.bounds.y = label.y;
-    ret.bounds.width = label.width;
-    ret.bounds.height = label.height;
-    ret.id = label.id;
-    ret.text = label.text;
-    return ret;
-}
-
-export async function createKeywordLabel(label, umlWebClient, diagramContext) {
-    // set up shape
-    const labelInstance = umlWebClient.post('instanceSpecification', { id : label.id });
-    labelInstance.classifiers.add(KEYWORD_LABEL_ID);
-    diagramContext.diagram.packagedElements.add(labelInstance); 
-
-    await createDiagramLabelFeatures(label, labelInstance, umlWebClient, diagramContext);
-
-    umlWebClient.put(labelInstance);
-    umlWebClient.put(diagramContext.diagram);
-
-    const ret = new KeywordLabel();
+    let ret;
+    switch (typeID) {
+        case LABEL_ID:
+            ret = new Label();
+            break;
+        case NAME_LABEL_ID:
+            ret = new NameLabel();
+            break;
+        case TYPED_ELEMENT_LABEL_ID:
+            ret = new TypedElementLabel();
+            break;
+        case KEYWORD_LABEL_ID:
+            ret = new KeywordLabel();
+            break;
+        case ASSOCIATION_END_LABEL_ID:
+            ret = new AssociationEndLabel();
+            break;
+        case MULTIPLICITY_LABEL_ID:
+            ret = new MultiplicityLabel();
+            break;
+        default:
+            throw Error('cannot determine which type of label to create by ID!');
+    }
     ret.bounds.x = label.x;
     ret.bounds.y = label.y;
     ret.bounds.width = label.width;
@@ -602,24 +579,28 @@ export async function createKeywordLabel(label, umlWebClient, diagramContext) {
     ret.text = label.text;
     return ret; 
 }
+
+export async function createDiagramLabel(label, umlWebClient, diagramContext) {
+    return await createLabelOfType(label, LABEL_ID, umlWebClient, diagramContext);
+}
+
+export async function createNameLabel(label, umlWebClient, diagramContext) {
+    return await createLabelOfType(label, NAME_LABEL_ID, umlWebClient, diagramContext);
+}
+
+export async function createKeywordLabel(label, umlWebClient, diagramContext) {
+    return await createLabelOfType(label, KEYWORD_LABEL_ID, umlWebClient, diagramContext);
+}
 export async function createTypedElementLabel(label, umlWebClient, diagramContext) {
-    const labelInstance = umlWebClient.post('instanceSpecification', { id: label.id });
-    labelInstance.classifiers.add(TYPED_ELEMENT_LABEL_ID);
-    diagramContext.diagram.packagedElements.add(labelInstance);
+    return await createLabelOfType(label, TYPED_ELEMENT_LABEL_ID, umlWebClient, diagramContext);
+}
 
-    await createDiagramLabelFeatures(label, labelInstance, umlWebClient, diagramContext);
+export async function createAssociationEndLabel(label, umlWebClient, diagramContext) {
+    return await createLabelOfType(label, ASSOCIATION_END_LABEL_ID, umlWebClient, diagramContext);
+}
 
-    umlWebClient.put(labelInstance);
-    umlWebClient.put(diagramContext.diagram);
-
-    const ret = new TypedElementLabel();
-    ret.bounds.x = label.x;
-    ret.bounds.y = label.y;
-    ret.bounds.width = label.width;
-    ret.bounds.height = label.height;
-    ret.id = label.id;
-    ret.text - label.text;
-    return ret;
+export async function createMultiplicityLabel(label, umlWebClient, diagramContext) {
+    return await createLabelOfType(label, MULTIPLICITY_LABEL_ID, umlWebClient, diagramContext);
 }
 
 export async function createComparment(compartment, umlWebClient, diagramContext) {

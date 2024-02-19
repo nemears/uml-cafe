@@ -9,28 +9,40 @@ export default class DependencyHandler extends RuleProvider {
 
         eventBus.on('connect.end', 1100, (event) => {
             if (event.context.start.connectType === 'dependency' || event.connectType === 'dependency') {
-                event.connectionID = randomID();
-                event.modelElementID = randomID();
-                event.context.type = 'dependency';
-                commandStack.execute('edgeCreate', event);
+                commandStack.execute('edge.connect', {
+                    connectionData: {
+                        id: randomID(),
+                        modelElement: {
+                            id: randomID(),
+                            elementType() {
+                                'dependency'
+                            }
+                        },
+                        createModelElement: true,
+                        source: event.context.start,
+                        target: event.hover,
+                        children: [],
+                    },
+                    connectType: 'dependency',
+                    children: [],
+                });
                 return false; // stop propogation
             }
         });
-        eventBus.on('edgeCreate', (context) => {
-            const createDependency = async () => {
-                const dependency = context.context.connection.modelElement;
-                const client = await umlWebClient.get(context.context.start.modelElement.id);
+        eventBus.on('edge.connect.create', (context) => {
+            if (context.connectType === 'dependency') {
+                const client = context.connection.source.modelElement,
+                supplier = context.connection.target.modelElement;
+                const dependency = umlWebClient.post('dependency', {id:context.connection.modelElement.id});
+                context.connection.modelElement = dependency;
                 dependency.clients.add(client);
-                dependency.suppliers.add(context.hover.modelElement.id);
+                dependency.suppliers.add(supplier);
                 diagramContext.context.packagedElements.add(dependency);
                 umlWebClient.put(dependency);
                 umlWebClient.put(client);
                 umlWebClient.put(diagramContext.context);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(client));
-                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));
-            }
-            if (context.context.type === 'dependency') {
-                createDependency();
+                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));            
             }
         });
         eventBus.on('edgeCreateUndo', (context) => {
