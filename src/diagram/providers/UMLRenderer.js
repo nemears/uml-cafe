@@ -193,7 +193,7 @@ export default class UMLRenderer extends BaseRenderer {
             svgAppend(group, line);
             svgAppend(gfx, group);
             return group;
-        } else if (element.modelElement.isSubClassOf('dependency')) {
+        } else if (element.modelElement.elementType() === 'dependency' || element.modelElement.elementType() === 'abstraction' || element.modelElement.elementType() === 'usage' || element.modelElement.elementType() === 'realization') {
             const group = svgCreate('g');
             const line = createLine(element.waypoints, assign({}, this.ANCHOR_STYLE, attrs || {}));
             const arrow = createArrow(element.waypoints.slice(-2));
@@ -278,7 +278,7 @@ export default class UMLRenderer extends BaseRenderer {
                 });
                 svgAppend(group, text);
             }
-        } else if (element.elementType === 'keywordLabel') {
+        } else if (element.elementType === 'keywordLabel' || element.elementType === 'associationEndLabel') {
             const rect = createRectangle();
             svgAttr(rect, assign({}, this.LABEL_STYLE), attrs || {});
             if (!element.text) {
@@ -318,7 +318,7 @@ export default class UMLRenderer extends BaseRenderer {
                 });
                 svgAppend(group, text);
             }
-        }
+        } 
 
         /**if (!element.modelElement) {
             if (element.parent && element.parent.modelElement && element.parent.modelElement.isSubClassOf('property')) {

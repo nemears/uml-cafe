@@ -3,6 +3,7 @@ import ClassDiagramPaletteProvider from './ClassDiagramPaletteProvider';
 import ClassDiagramRuleProvider from './ClassDiagramRuleProvider';
 import ConnectionDocking from 'diagram-js/lib/layout/CroppingConnectionDocking.js'
 import DragFromTree from './DragFromTree';
+import EdgeConnect from './EdgeConnect';
 import EdgeCreator from './EdgeCreator';
 import ElementCreator from './ElementCreator';
 import UMLRenderer from './UMLRenderer';
@@ -43,6 +44,7 @@ export default {
         'classDiagramPaletteProvider',
         'dragFromTree',
         'classDiagramRuleProvider',
+        'edgeConnect',
         'edgeCreator',
         'elementCreator',
         'umlRenderer',
@@ -80,6 +82,7 @@ export default {
     classDiagramPaletteProvider: [ 'type', ClassDiagramPaletteProvider ],
     classDiagramRuleProvider: [ 'type', ClassDiagramRuleProvider ],
     dragFromTree: ['type', DragFromTree],
+    edgeConnect: ['type', EdgeConnect],
     edgeCreator: ['type', EdgeCreator],
     elementCreator: ['type', ElementCreator],
     umlRenderer: ['type', UMLRenderer],

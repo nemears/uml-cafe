@@ -8,30 +8,42 @@ export default class GeneralizationHandler extends RuleProvider {
         super(eventBus);
         eventBus.on('connect.end', (event) => {
             if (event.context.start.connectType === 'generalization' || event.connectType === 'generalization') {
-                event.connectionID = randomID();
-                event.modelElementID = randomID();
-                event.context.type = 'generalization';
-                commandStack.execute('edgeCreate', event);
+                commandStack.execute('edge.connect', {
+                    connectionData: {
+                        id: randomID(),
+                        modelElement: {
+                            id: randomID(),
+                            elementType() {
+                                'generalization'
+                            }
+                        },
+                        createModelElement: true,
+                        source: event.context.start,
+                        target: event.hover,
+                        children: [],
+                    },
+                    connectType: 'generalization',
+                    children: [],
+                });
                 return false; // stop propogation
             }
         });
-        eventBus.on('edgeCreate', (context) => {
-            const fillOutGeneralization = async () => {
-                const specific = await umlWebClient.get(context.context.start.modelElement.id);
-                const generalization = context.context.connection.modelElement;
+        eventBus.on('edge.connect.create', (context) => {
+            if (context.connectType === 'generalization') {
+                const specific = context.connection.source.modelElement,
+                general = context.connection.target.modelElement;
+                const generalization = umlWebClient.post('generalization', {id: context.connection.modelElement.id});
+                context.connection.modelElement = generalization;
                 specific.generalizations.add(generalization);
-                generalization.general.set(context.hover.modelElement.id);
+                generalization.general.set(general);
                 umlWebClient.put(generalization);
                 umlWebClient.put(specific);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(specific));         
-            };
-            if (context.context.type === 'generalization') {
-                fillOutGeneralization();
             }
         });
         eventBus.on('edgeCreateUndo', (context) => {
             const deleteModelElement = async () => {
-                const owner = await context.context.connection.modelElement.specific.get();
+                const owner = context.connection.source.modelElement;
                 await umlWebClient.deleteElement(context.context.connection.modelElement);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
             }

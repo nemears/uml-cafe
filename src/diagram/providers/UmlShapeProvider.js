@@ -34,7 +34,7 @@ class MoveShapeHandler {
         this.umlWebClient.put(this.diagramContext.diagram);
     }
 
-    async moveElementChildrenAndEdges(element, context, direction) {
+    moveElementChildrenAndEdges(element, context, direction) {
         if (element.waypoints) {
             element.waypoints = connectRectangles(element.source, element.target, getMid(element.source), getMid(element.target));
             this.graphicsFactory.update('connection', element, this.canvas.getGraphics(element));
@@ -42,11 +42,15 @@ class MoveShapeHandler {
             element.x += direction * context.delta.x;
             element.y += direction * context.delta.y;
             this.graphicsFactory.update('shape', element, this.canvas.getGraphics(element));
-            for (const connection of element.incoming) {
-                this.moveElementChildrenAndEdges(connection, context, direction);
+            if (element.incoming) {
+                for (const connection of element.incoming) {
+                    this.moveElementChildrenAndEdges(connection, context, direction);
+                }
             }
-            for (const connection of element.outgoing) {
-                this.moveElementChildrenAndEdges(connection, context, direction);
+            if (element.outgoing) {
+                for (const connection of element.outgoing) {
+                    this.moveElementChildrenAndEdges(connection, context, direction);
+                }
             }
         }
         if (element.children) {
@@ -253,6 +257,12 @@ export default class UmlShapeProvider {
                 event.shape = shape.parent;
             }
         });
+        eventBus.on('connect.end', 1200, (event) => {
+            checkIfInselectableAndChange(event.context, 'start');
+            checkIfInselectableAndChange(event, 'hover');
+            checkIfInselectableAndChange(event.context, 'target');
+            checkIfInselectableAndChange(event.context, 'source');
+        });
     }
 }
 
@@ -298,4 +308,11 @@ async function adjustListOfEdges(listOfEdges, umlWebClient) {
 export async function adjustAttachedEdges(shape, umlWebClient) {
     await adjustListOfEdges(shape.incoming, umlWebClient);
     await adjustListOfEdges(shape.outgoing, umlWebClient); 
+}
+
+function checkIfInselectableAndChange(context, property) {
+    if (context[property] && context[property].inselectable) {
+        context[property].parent.connectType = context[property].connectType;
+        context[property] = context[property].parent;
+    }
 }

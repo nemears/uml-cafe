@@ -16,7 +16,20 @@ export default class UmlCompartmentProvider {
                 event.shape = shape.parent;
             }
         });
+        eventBus.on('connect.end', 1200, (event) => {
+            checkIfCompartmentAndChangeToParent(event.context, 'start');
+            checkIfCompartmentAndChangeToParent(event, 'hover');
+            checkIfCompartmentAndChangeToParent(event.context, 'target');
+            checkIfCompartmentAndChangeToParent(event.context, 'source');
+        });
     }
 }
 
 UmlCompartmentProvider.$inject = ['eventBus'];
+
+function checkIfCompartmentAndChangeToParent(context, property) {
+    if (context[property] && context[property].elementType === 'compartment') {
+        context[property].parent.connectType = context[property].connectType; // important
+        context[property] = context[property].parent;
+    }
+}

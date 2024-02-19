@@ -1,12 +1,12 @@
 import { makeUMLWaypoints } from './relationships/relationshipUtil';
 
 class AdjustWaypointsHandler {
-    constructor(graphicsFactory, canvas, umlWebClient, diagramEmitter, elementRegistry) {
-        this.graphicsFactory = graphicsFactory;
+    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, eventBus) {
         this.canvas = canvas;
         this.umlWebClient = umlWebClient;
         this.diagramEmitter = diagramEmitter;
         this.elementRegistry = elementRegistry;
+        this.eventBus = eventBus;
     }
     execute(context) {
         context.connection = this.elementRegistry.get(context.connection.id);
@@ -22,8 +22,8 @@ class AdjustWaypointsHandler {
             originalWaypoints: context.originalWaypoints,
         }});
         context.connection.waypoints = context.newWaypoints;
-        this.graphicsFactory.update(context.connection, 'connection', this.canvas.getGraphics(context.connection));
         adjustEdgeWaypoints(context.connection, this.umlWebClient);
+        this.eventBus.fire('edge.move.end', context);
         return context.connection;
     }
     revert(context) {
@@ -31,13 +31,13 @@ class AdjustWaypointsHandler {
             // TODO
         }});
         context.connection.waypoints = context.originalWaypoints;
-        this.graphicsFactory.update(context.connection, 'connection', this.canvas.getGraphics(context.connection));
         adjustEdgeWaypoints(context.connection, this.umlWebClient);
+        this.eventBus.fire('edge.move.end', context);
         return context.connection;
     }
 }
 
-AdjustWaypointsHandler.$inject= ['graphicsFactory', 'canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry'];
+AdjustWaypointsHandler.$inject= ['canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry', 'eventBus'];
 
 export default class UmlEdgeProvider {
     constructor(eventBus, umlWebClient, diagramContext, elementRegistry, elementFactory, canvas, graphicsFactory, commandStack) {

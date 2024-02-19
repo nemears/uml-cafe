@@ -9,28 +9,40 @@ export default class UsageHandler extends RuleProvider {
 
         eventBus.on('connect.end', 1100, (event) => {
             if (event.context.start.connectType === 'usage' || event.connectType === 'usage') {
-                event.connectionID = randomID();
-                event.modelElementID = randomID();
-                event.context.type = 'usage';
-                commandStack.execute('edgeCreate', event);
+                commandStack.execute('edge.connect', {
+                    connectionData: {
+                        id: randomID(),
+                        modelElement: {
+                            id: randomID(),
+                            elementType() {
+                                'usage'
+                            }
+                        },
+                        createModelElement: true,
+                        source: event.context.start,
+                        target: event.hover,
+                        children: [],
+                    },
+                    connectType: 'usage',
+                    children: [],
+                });
                 return false; // stop propogation
             }
         });
-        eventBus.on('edgeCreate', (context) => {
-            const createUsage = async () => {
-                const usage = context.context.connection.modelElement;
-                const client = await umlWebClient.get(context.context.start.modelElement.id);
+        eventBus.on('edge.connect.create', (context) => {
+            if (context.connectType === 'usage') {
+                const client = context.connection.source.modelElement,
+                supplier = context.connection.target.modelElement;
+                const usage = umlWebClient.post('usage', {id:context.connection.modelElement.id});
+                context.connection.modelElement = usage;
                 usage.clients.add(client);
-                usage.suppliers.add(context.hover.modelElement.id);
+                usage.suppliers.add(supplier);
                 diagramContext.context.packagedElements.add(usage);
                 umlWebClient.put(usage);
                 umlWebClient.put(client);
                 umlWebClient.put(diagramContext.context);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(client));
-                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));
-            }
-            if (context.context.type === 'usage') {
-                createUsage();
+                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));            
             }
         });
         eventBus.on('edgeCreateUndo', (context) => {
