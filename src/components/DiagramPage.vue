@@ -2,9 +2,10 @@
 import { Editor } from '../diagram/editor';
 const EventEmitter = require('events');
 import { createElementUpdate } from '../umlUtil.js';
-import { getUmlDiagramElement, deleteUmlDiagramElement , CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID , TYPED_ELEMENT_LABEL_ID } from '../diagram/api/diagramInterchange';
+import { getUmlDiagramElement, deleteUmlDiagramElement, updateLabel, CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID , TYPED_ELEMENT_LABEL_ID , KEYWORD_LABEL_ID } from '../diagram/api/diagramInterchange';
 import { toRaw } from 'vue';
-import { CLASS_SHAPE_HEADER_HEIGHT } from '../diagram/providers/ClassHandler'; 
+import { CLASS_SHAPE_HEADER_HEIGHT } from '../diagram/providers/ClassHandler';
+import { getTypedElementText, getTextDimensions } from '../diagram/providers/ClassDiagramPaletteProvider';
 export default {
     data() {
         return {
@@ -230,6 +231,13 @@ export default {
                     } else if (umlDiagramElement.elementType() === 'nameLabel') {
                         const umlNameLabel = umlDiagramElement;
                         const labelTarget = elementRegistry.get(umlNameLabel.owningElement);
+
+                        // update name 
+                        let updatedName = false;
+                        if (umlNameLabel.text != umlNameLabel.modelElement.name) {
+                            umlNameLabel.text = umlNameLabel.modelElement;
+                            updatedName = true;
+                        }
                         const label = elementFactory.createLabel({
                             id: umlNameLabel.id,
                             text: umlNameLabel.text,
@@ -243,10 +251,22 @@ export default {
                             inselectable: true, // TODO determine this elsewhere
                         });
                         canvas.addShape(label, labelTarget);
+                        if (updatedName) {
+                            await updateLabel(label, this.$umlWebClient);
+                        }
+
                         return label;
                     } else if (umlDiagramElement.elementType() === 'typedElementLabel') {
                         const umlTypedElementLabel = umlDiagramElement;
                         const labelTarget = elementRegistry.get(umlTypedElementLabel.owningElement);
+
+                        // update text
+                        await umlTypedElementLabel.modelElement.type.get();
+                        let newText = getTypedElementText(umlTypedElementLabel.modelElement);
+                        if (newText != umlTypedElementLabel.text) {
+                            umlTypedElementLabel.text = newText;
+                            umlTypedElementLabel.bounds.width = Math.round(getTextDimensions(newText, this.diagram.get('umlRenderer')).width) + 15;
+                        }
                         const label = elementFactory.createLabel({
                             id: umlTypedElementLabel.id,
                             text: umlTypedElementLabel.text,
@@ -257,6 +277,24 @@ export default {
                             height: umlTypedElementLabel.bounds.height,
                             labelTarget: labelTarget,
                             elementType: 'typedElementLabel',
+                        });
+                        if (newText) {
+                            await updateLabel(label, this.$umlWebClient);
+                        }
+                        canvas.addShape(label, labelTarget);
+                        return label;
+                    } else if (umlDiagramElement.elementType() === 'keywordLabel') {
+                        const labelTarget = elementRegistry.get(umlDiagramElement.owningElement);
+                        const label = elementFactory.createLabel({
+                            id: umlDiagramElement.id,
+                            text: umlDiagramElement.text,
+                            modelElement: umlDiagramElement.modelElement,
+                            x: umlDiagramElement.bounds.x,
+                            y: umlDiagramElement.bounds.y,
+                            width: umlDiagramElement.bounds.width,
+                            height: umlDiagramElement.bounds.height,
+                            elementType: 'keywordLabel',
+                            inselectable: true, // TODO determine this elsewhere
                         });
                         canvas.addShape(label, labelTarget);
                         return label;
@@ -296,7 +334,7 @@ export default {
                     if (!packagedEl.isSubClassOf('instanceSpecification')) {
                         continue;
                     }
-                    if (!packagedEl.classifiers.contains(LABEL_ID) && !packagedEl.classifiers.contains(NAME_LABEL_ID) && !packagedEl.classifiers.contains(TYPED_ELEMENT_LABEL_ID)) {
+                    if (!packagedEl.classifiers.contains(LABEL_ID) && !packagedEl.classifiers.contains(NAME_LABEL_ID) && !packagedEl.classifiers.contains(TYPED_ELEMENT_LABEL_ID) && !packagedEl.classifiers.contains(KEYWORD_LABEL_ID)) {
                         continue;
                     }
 

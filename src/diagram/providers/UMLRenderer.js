@@ -266,6 +266,9 @@ export default class UMLRenderer extends BaseRenderer {
             } else {
                 const text = cropText(element.text, element, {
                     align: 'center-middle',
+                    style: {
+                        fontWeight: 'Bold',
+                    },
                     box: {
                         width: element.width - 5,
                         height: element.height,
@@ -275,6 +278,23 @@ export default class UMLRenderer extends BaseRenderer {
                 });
                 svgAppend(group, text);
             }
+        } else if (element.elementType === 'keywordLabel') {
+            const rect = createRectangle();
+            svgAttr(rect, assign({}, this.LABEL_STYLE), attrs || {});
+            if (!element.text) {
+                console.warn('no text provided to label assuming empty, please add text = "" to your label to supress this warning');
+            } else {
+                const text = cropText(element.text, element, {
+                    align: 'center-middle',
+                    box: {
+                        width: element.width - 5,
+                        height: element.height,
+                        x: 0,
+                        y: 0,
+                    }
+                });
+                svgAppend(group, text);
+            } 
         } else if (element.elementType === 'classifierShape') {
             const rect = createRectangle();
             svgAttr(rect, assign({}, this.CLASS_STYLE), attrs || {});
