@@ -7,11 +7,24 @@ import { adjustAttachedEdges, adjustShape } from './UmlShapeProvider';
 export const CLASSIFIER_SHAPE_GAP_HEIGHT = 5;
 
 class ResizeCompartmentableShapeHandler {
-    constructor(diagramEmitter, umlWebClient, diagramContext, umlRenderer) {
+    constructor(diagramEmitter, umlWebClient, diagramContext, umlRenderer, eventBus) {
         this.diagramEmitter = diagramEmitter;
         this.umlWebClient = umlWebClient;
         this.diagramContext = diagramContext,
         this.umlRenderer = umlRenderer;
+        eventBus.on('compartmentableShape.resize', (context) => {
+            const shape = context.shape,
+            newBounds = context.newBounds;
+            shape.x = newBounds.x;
+            shape.y = newBounds.y;
+            shape.width = newBounds.width;
+            shape.height = newBounds.height;
+            
+            adjustCompartmentsAndEdges(shape, this.umlRenderer);
+
+            this.resize(context);
+        });
+        this.eventBus = eventBus;
     }
 
     async resize(context) {
@@ -84,14 +97,9 @@ class ResizeCompartmentableShapeHandler {
             newBounds: newBounds,
             oldBounds: context.oldBounds,
         }});
-        shape.x = newBounds.x;
-        shape.y = newBounds.y;
-        shape.width = newBounds.width;
-        shape.height = newBounds.height;
-        
-        adjustCompartmentsAndEdges(shape, this.umlRenderer);
 
-        this.resize(context);
+        this.eventBus.fire('compartmentableShape.resize', context);
+        
         return this.allChildren(context.shape);
     }
     revert(context) {
@@ -110,7 +118,7 @@ class ResizeCompartmentableShapeHandler {
     }
 }
 
-ResizeCompartmentableShapeHandler.$inject = ['diagramEmitter', 'umlWebClient', 'diagramContext', 'umlRenderer']; 
+ResizeCompartmentableShapeHandler.$inject = ['diagramEmitter', 'umlWebClient', 'diagramContext', 'umlRenderer', 'eventBus']; 
 
 function adjustCompartmentsAndEdges(shape, umlRenderer) {
     let yPos = shape.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
@@ -189,7 +197,7 @@ export default class UmlCompartmentableShapeProvider {
                     }
                 }
                 event.context.minBounds = {
-                    width: 0,
+                    width: 50,
                     height: totalHeight,
                 }
             }
