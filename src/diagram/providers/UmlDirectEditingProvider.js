@@ -1,6 +1,7 @@
 import { createElementUpdate } from '../../umlUtil';
 import { updateLabel } from '../api/diagramInterchange';
-import { getTypedElementText } from './ClassDiagramPaletteProvider';
+import { getTextDimensions, getTypedElementText } from './ClassDiagramPaletteProvider';
+import { placeEdgeLabel } from './EdgeConnect';
 
 function revertLabelChange(context, diagramEmitter, umlWebClient) {
     const oldBounds = context.oldBounds;
@@ -145,6 +146,99 @@ class UpdateTypedElementLabelHandler {
 
 UpdateTypedElementLabelHandler.$inject = ['diagramEmitter', 'umlWebClient'];
 
+class UpdateAssociationEndLabelHandler {
+    constructor(diagramEmitter, umlWebClient, umlRenderer) {
+        this._diagramEmitter = diagramEmitter;
+        this._umlWebClient = umlWebClient;
+        this._umlRenderer = umlRenderer;
+    }
+    execute(context) {
+        const diagramEmitter = this._diagramEmitter,
+        umlWebClient = this._umlWebClient,
+        umlRenderer = this._umlRenderer;
+
+        // take care of proxy comand
+        if (context.proxy) {
+            delete context.proxy;
+            return context.element;
+        }
+        
+        // fire command for app
+        const element = context.element,
+        newName = context.newName,
+        bounds = context.bounds;
+
+        bounds.width = Math.round(getTextDimensions(newName, umlRenderer).width) + 15;
+
+        context.oldBounds = {
+            x: element.x,
+            y: element.y,
+            width: element.width,
+            height: element.height,
+        };
+        context.oldText = element.text;
+        diagramEmitter.fire('command', {name: 'associationEndLabel.update', context: {
+            element: {
+                                id: element.id,
+                            },
+            bounds: bounds,
+            newName: newName,
+            oldBounds: context.oldBounds,
+            oldText: context.oldText,
+        }});
+
+        // update modelElement
+        element.modelElement.name = newName;
+        umlWebClient.put(element.modelElement);
+        diagramEmitter.fire('elementUpdate', createElementUpdate(element.modelElement));
+
+        // update label
+        element.text = newName;
+        element.x = bounds.x;
+        element.y = bounds.y;
+        element.width = bounds.width;
+        element.height = bounds.height;
+
+        switch (element.placement) {
+            case 'source': {
+                const ogNumSourceLabels = element.parent.numSourceLabels;
+                element.parent.numSourceLabels = element.placementIndex;
+                placeEdgeLabel(element, element.parent);
+                element.parent.numSourceLabels = ogNumSourceLabels;
+                break;
+            }
+            case 'center': {
+                const ogNumCenterLabels = element.parent.numCenterLabels;
+                element.parent.numCenterLabels = element.placementIndex;
+                placeEdgeLabel(element, element.parent);
+                element.parent.numCenterLabels = ogNumCenterLabels;
+                break;
+            }
+            case 'target': {
+                const ogNumTargetLabels = element.parent.numTargetLabels;
+                element.parent.numTargetLabels = element.placementIndex;
+                placeEdgeLabel(element, element.parent);
+                element.parent.numTargetLabels = ogNumTargetLabels;
+                break;
+            }
+            default:
+                throw Error('bad placement: ' + element.placement + ' during direct editing of associationEndLabel');
+        }
+       
+        // update to server
+        updateLabel(element, umlWebClient);
+
+        // return element to commandStack
+        return element;
+    }
+    revert(context) {
+        revertLabelChange(context, this._diagramEmitter, this._umlWebClient);
+        return context.element;
+    }
+}
+
+UpdateAssociationEndLabelHandler.$inject = ['diagramEmitter', 'umlWebClient', 'umlRenderer'];
+
 export default class UmlDirecteEditingProvider{
     constructor(directEditing, umlRenderer, commandStack, canvas) {
         directEditing.registerProvider(this);
@@ -153,6 +247,7 @@ export default class UmlDirecteEditingProvider{
         this.canvas = canvas;
         commandStack.registerHandler('nameLabel.update', UpdateNameLabelHandler);
         commandStack.registerHandler('typedElementLabel.update', UpdateTypedElementLabelHandler);
+        commandStack.registerHandler('associationEndLabel.update', UpdateAssociationEndLabelHandler);
     }
     activate(element) {
         if (element.elementType === 'nameLabel') {
@@ -213,6 +308,25 @@ export default class UmlDirecteEditingProvider{
             };
 
             return ret;
+        } else if (element.elementType === 'associationEndLabel') {
+            const ret = {
+                text: element.modelElement.name,
+            }; 
+            const viewbox = this.canvas.viewbox();
+            ret.bounds = {
+                x: element.x - viewbox.x,
+                y: element.y - viewbox.y,
+                height: element.height,
+                width: element.width + 50,
+            };
+            ret.style = {
+                backgroundColor: this.umlRenderer.EDIT_STYLE.fill,
+                fontSize: this.umlRenderer.textStyle.fontSize + 'px',
+                fontFamily: this.umlRenderer.textStyle.fontFamily,
+                fontWeight: this.umlRenderer.textStyle.fontWeight,
+            };
+
+            return ret; 
         } else {
             throw Error('TODO handle direct editing for elementType ' + element.elementType);
         }
@@ -226,6 +340,12 @@ export default class UmlDirecteEditingProvider{
             });
         } else if (element.elementType === 'typedElementLabel') {
             this.commandStack.execute('typedElementLabel.update', {
+                element: element,
+                newName: newName,
+                bounds: bounds,
+            });
+        } else if (element.elementType === 'associationEndLabel') {
+            this.commandStack.execute('associationEndLabel.update', {
                 element: element,
                 newName: newName,
                 bounds: bounds,

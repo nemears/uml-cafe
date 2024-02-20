@@ -132,7 +132,7 @@ function placeFistLabel(child, waypoint, orientation) {
         case 'left':
             // place above
             child.x = waypoint.x - child.width - 5;
-            child.y = waypoint.y - child.width - 5;
+            child.y = waypoint.y - child.height - 5;
             break;
         case 'bottom':
             // place to left
@@ -169,7 +169,7 @@ function placeSecondLabel(child, waypoint, orientation) {
         case 'top':
             // place to right
             child.x = waypoint.x + 5;
-            child.y = waypoint.y + child.width + 5;
+            child.y = waypoint.y + child.height+ 5;
             break;
         default:
             throw Error('invalid orientation given to label for placement ' + orientation);
@@ -197,6 +197,7 @@ export function placeEdgeLabel(child, connection) {
                         } else {
                             throw Error('TODO handle more than 2 source labels!');
                         }
+                        child.placementIndex = connection.numSourceLabels;
                         connection.numSourceLabels += 1;
                         break;
                     }
@@ -260,6 +261,7 @@ export function placeEdgeLabel(child, connection) {
                         } else {
                             throw Error('TODO more than two center placement labels for edge! contact dev');
                         }
+                        child.placementIndex = connection.numCenterLabels;
                         connection.numCenterLabels += 1;
                         break;
                     }
@@ -274,6 +276,7 @@ export function placeEdgeLabel(child, connection) {
                         } else {
                             throw Error('TODO handle more than 2 target labels!');
                         }
+                        child.placementIndex = connection.numTargetLabels;
                         connection.numTargetLabels += 1;   
                         break;
                     }
