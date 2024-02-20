@@ -363,11 +363,7 @@ export default {
                     if (!packagedEl.isSubClassOf('instanceSpecification')) {
                         continue;
                     }
-<<<<<<< HEAD
-                    if (!packagedEl.classifiers.contains(LABEL_ID) && !packagedEl.classifiers.contains(NAME_LABEL_ID) && !packagedEl.classifiers.contains(TYPED_ELEMENT_LABEL_ID) && !packagedEl.classifiers.contains(KEYWORD_LABEL_ID)) {
-=======
                     if (!packagedEl.classifiers.contains(LABEL_ID) && !packagedEl.classifiers.contains(NAME_LABEL_ID) && !packagedEl.classifiers.contains(TYPED_ELEMENT_LABEL_ID) && !packagedEl.classifiers.contains(KEYWORD_LABEL_ID) && !packagedEl.classifiers.contains(ASSOCIATION_END_LABEL_ID) && !packagedEl.classifiers.contains(MULTIPLICITY_LABEL_ID)) {
->>>>>>> 4676bbe (added keywordLabels to classifierShapes)
                         continue;
                     }
 
