@@ -5,11 +5,13 @@ import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { getTextDimensions } from '../ClassDiagramPaletteProvider';
 import { adjustShape } from '../UmlShapeProvider';
 import { placeEdgeLabel } from '../EdgeConnect';
+import { createNameLabel, deleteUmlDiagramElement, updateLabel } from '../../api/diagramInterchange';
+import { createAssociationNameLabel } from '../RelationshipEdgeCreator';
 
 export const OWNED_END_RADIUS = 5;
 
 export default class Association extends RuleProvider {
-    constructor(eventBus, umlWebClient, umlRenderer, canvas, graphicsFactory, commandStack, diagramContext, elementFactory, diagramEmitter) {
+    constructor(eventBus, umlWebClient, umlRenderer, canvas, graphicsFactory, commandStack, diagramContext, elementFactory, diagramEmitter, elementRegistry) {
         super(eventBus);
         eventBus.on('connect.end', 1100, (event) => {
             // check if it can connect
@@ -242,10 +244,43 @@ export default class Association extends RuleProvider {
         });
 
         eventBus.on('server.update', 900, (event) => {
-            if (event.serverElement.modelElement.elementType() === 'association' && 
+            if (event.serverElement.modelElement && event.serverElement.modelElement.elementType() === 'association' && 
                 event.serverElement.elementType() === 'edge') {
-                    for (const child of event.localElement.children) {
-                        graphicsFactory.update('shape', child, canvas.getGraphics(child));
+                    // check if name has changed
+                    const edge = elementRegistry.get(event.serverElement.id);
+                    const association = edge.modelElement;
+                    if (association.name === '') {
+                        // check to make sure that there is no name label for us
+                        for (const label of edge.labels) {
+                            if (label.elementType === 'nameLabel' && label.modelElement.id === association.id) {
+                                canvas.removeShape(label);
+                                deleteUmlDiagramElement(label.id, umlWebClient);
+                                edge.labels.splice(edge.labels.indexOf(label),1);
+                                edge.children.splice(edge.children.indexOf(label), 1);
+                                edge.numCenterLabels -= 1;
+                            }
+                        }
+                    } else {
+                        let nameLabel;
+                        for (const label of edge.labels) {
+                            if (label.elementType === 'nameLabel' && label.modelElement.id === association.id) {
+                                nameLabel = label;
+                                break;
+                            }
+                        }
+
+                        if (!nameLabel) {
+                            // make one
+                            nameLabel = createAssociationNameLabel(edge, elementFactory, umlRenderer);
+                            placeEdgeLabel(nameLabel, edge);
+                            canvas.addShape(nameLabel, edge);
+                            createNameLabel(nameLabel, umlWebClient, diagramContext);
+                        } else if (nameLabel.text !== association.name) {
+                            nameLabel.text = association.name;
+                            nameLabel.width = Math.round(getTextDimensions(association.name, umlRenderer).width) + 15;
+                            updateLabel(nameLabel, umlWebClient);
+                            graphicsFactory.update('shape', nameLabel, canvas.getGraphics(nameLabel));
+                        }
                     }
                 }
         });
@@ -301,7 +336,7 @@ function canConnect(context) {
     return true;
 }
 
-Association.$inject = ['eventBus', 'umlWebClient', 'umlRenderer', 'canvas', 'graphicsFactory', 'commandStack', 'diagramContext', 'elementFactory', 'diagramEmitter'];
+Association.$inject = ['eventBus', 'umlWebClient', 'umlRenderer', 'canvas', 'graphicsFactory', 'commandStack', 'diagramContext', 'elementFactory', 'diagramEmitter', 'elementRegistry'];
 
 export function createAssociationEndLabel(association, property, umlRenderer, elementFactory, canvas) {
     let labelName = property.name;

@@ -291,6 +291,12 @@ async function getDiagramElementFeatures(slot, diagramElement, umlClient) {
     } else if (slot.definingFeature.id() === 'rnm_zSDRk_kdPiWTfx6QZRkgUvFe') {
         // ownedElements
         for await (const ownedElementValue of slot.values) {
+            if (ownedElementValue.elementType() !== 'instanceValue') {
+                throw Error('invalid value type for ownedElement Slot value, must be an instanceValue!');
+            }
+            if (!ownedElementValue.instance.has()) {
+                throw Error('ownedElement value has no corresponding instance!');
+            }
             diagramElement.ownedElements.push(ownedElementValue.instance.id());
         }
         return true;
@@ -404,6 +410,7 @@ export async function createDiagramElementFeatures(shape, umlWebClient, shapeIns
             const ownedElementValue = umlWebClient.post('instanceValue');
             ownedElementValue.instance.set(ownedElement.id);
             ownedElementsSlot.values.add(ownedElementValue);
+            umlWebClient.put(ownedElementValue);
         }
         shapeInstance.slots.add(ownedElementsSlot);
     }
@@ -416,12 +423,11 @@ export async function createDiagramElementFeatures(shape, umlWebClient, shapeIns
         umlWebClient.put(owningElementOwnedElementsValue);
     }
     if (shape.children.length > 0) {
-        umlWebClient.put(ownedElementsSlot);
         for (const ownedElementValue of ownedElementValues) {
             umlWebClient.put(ownedElementValue);
         } 
+        umlWebClient.put(ownedElementsSlot);
     }
-    umlWebClient.put(diagramContext.diagram);
 }
 
 async function createDiagramShapeFeatures(shape, shapeInstance, umlWebClient, diagramContext) {
@@ -622,7 +628,7 @@ export async function createCompartmentableShape(shape, umlWebClient, diagramCon
     compartmentableShapeInstance.classifiers.add(COMPARTMENTABLE_SHAPE_ID);
     diagramContext.diagram.packagedElements.add(compartmentableShapeInstance);
 
-    await createCompartmentableShapeFeatures(shape, compartmentableShapeInstance, umlWebClient, diagramContext);
+    await createDiagramShapeFeatures(shape, compartmentableShapeInstance, umlWebClient, diagramContext);
 
     umlWebClient.put(compartmentableShapeInstance);
     umlWebClient.put(diagramContext.diagram);

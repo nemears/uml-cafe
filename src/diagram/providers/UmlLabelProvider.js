@@ -1,7 +1,11 @@
-export default class UmlLabelProvider {
+import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
+
+export default class UmlLabelProvider extends RuleProvider {
     constructor(eventBus, elementRegistry, elementFactory, canvas, graphicsFactory) {
+        super(eventBus);
         eventBus.on('server.create', (event) => {
-            if (event.serverElement.elementType() === 'label') {
+            const elementType = event.serverElement.elementType();
+            if (elementType  === 'label' || elementType === 'nameLabel' || elementType === 'keywordLabel' || elementType === 'typedElementLabel' || elementType === 'associationEndLabel' || elementType === 'multiplicityLabel') {
                 const umlLabel = event.serverElement;
                 console.log('creating label');
                 console.log(umlLabel);
@@ -20,6 +24,32 @@ export default class UmlLabelProvider {
                         }
                     }
                 }
+                let placement, inselectable; // TODO store these attributes in server with new types
+                switch (elementType) {
+                    case 'nameLabel':
+                    case 'keywordLabel':
+                        if (!owner.waypoints) {
+                            inselectable = true;
+                        } else {
+                            placement = 'center'
+                        }
+                        break;
+                    case 'associationEndLabel':
+                    case 'multiplicityLabel':
+                        if (owner.waypoints) {
+                            // determine alignment
+                            if (owner.modelElement.elementType() === 'association') {
+                                if (umlLabel.modelElement.type.id() === owner.source.modelElement.id) {
+                                    placement = 'source'
+                                } else if (umlLabel.modelElement.type.id() === owner.target.modelElement.id) {
+                                    placement = 'target';
+                                }
+                            }
+                        }
+                        break;
+                     default:
+                        throw Error('unhanded label type from server ' + elementType);
+                }
                 const label = elementFactory.createLabel({
                     x: umlLabel.bounds.x,
                     y: umlLabel.bounds.y,
@@ -28,7 +58,10 @@ export default class UmlLabelProvider {
                     id: umlLabel.id,
                     modelElement: umlLabel.modelElement,
                     text: umlLabel.text,
-                    labelTarget: labelTarget
+                    labelTarget: labelTarget,
+                    elementType: elementType,
+                    placement: placement,
+                    inselectable: inselectable,
                 });
                 canvas.addShape(label, owner);
             }
@@ -50,7 +83,16 @@ export default class UmlLabelProvider {
                 // update
                 graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
             }
-        })
+        });
+    }
+
+    init() {
+        this.addRule('shape.resize', (context) => {
+            if (context.shape.elementType === 'nameLabel' || context.shape.elementType === 'keyWordLabel') {
+                return false;
+            }
+            return true;
+        });         
     }
 }
 
