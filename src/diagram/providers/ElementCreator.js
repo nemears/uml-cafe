@@ -1,6 +1,6 @@
-import { createClassifierShape, createComparment, createDiagramEdge, createDiagramLabel, createDiagramShape, createKeywordLabel, createNameLabel, createTypedElementLabel, deleteUmlDiagramElement } from '../api/diagramInterchange';
+import { createAssociationEndLabel, createClassifierShape, createComparment, createDiagramEdge, createDiagramLabel, createDiagramShape, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel, deleteUmlDiagramElement } from '../api/diagramInterchange';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
-import { CLASSIFIER_SHAPE_GAP_HEIGHT } from './UmlCompartmentableShapeProvider';
+import { placeEdgeLabel } from './EdgeConnect';
 /**
  * context for this commandHandler looks like this
  * {
@@ -53,6 +53,21 @@ class ElementCreationHandler {
             shape.y = context.y - shape.height / 2;
         }
         diagramEmitter.fire('command', {name: 'elementCreation', context: context});
+        const placeLabel = (element) => {
+            if (element.parent) {
+                // place within paren
+                if (element.parent.waypoints) {
+                    placeEdgeLabel(element, element.parent);
+                } else {
+                    element.x = element.x + context.x;
+                    element.y = element.y + context.y;
+                }
+                canvas.addShape(element, element.parent);
+            } else {
+                assignPosition(element);
+                canvas.addShape(element);
+            }
+        };
         for (const element of context.elements) {
             switch (element.elementType) {
                 case 'shape':
@@ -64,23 +79,14 @@ class ElementCreationHandler {
                     }
                     canvas.addShape(element);
                     // TODO children
-                    createDiagramShape(element, umlWebClient, diagramContext);
                     break;
                 case 'edge':
                     canvas.addConnection(element);
-                    createDiagramEdge(element, umlWebClient, diagramContext);
                     // TODO children
                     break;
                 case 'label':
-                    if (element.parent) {
-                        // TODO place within parent
-                        throw Error('TODO');
-                    } else {
-                        assignPosition(element);
-                    }
-                    canvas.addShape(element);
+                    placeLabel(element);
                     // TODO children?
-                    createDiagramLabel(element, umlWebClient, diagramContext);
                     break;
                 case 'classifierShape':
                     if (element.parent) {
@@ -90,50 +96,18 @@ class ElementCreationHandler {
                         assignPosition(element);
                     }
                     canvas.addShape(element);
-                    // TODO children?
-                    createClassifierShape(element, umlWebClient, diagramContext);
                     for (const compartment of element.compartments) {
                         compartment.x = element.x;
                         compartment.y = element.y + CLASS_SHAPE_HEADER_HEIGHT;
                         canvas.addShape(compartment, element);
-                        createComparment(compartment, umlWebClient, diagramContext);
-                        // TODO children?
                     }
                     break;
                 case 'nameLabel':
-                    if (element.parent) {
-                        // place within parent
-                        element.x = element.x + context.x;
-                        element.y = element.y + context.y;
-                        canvas.addShape(element, element.parent);
-                    } else {
-                        assignPosition(element);
-                        canvas.addShape(element);
-                    }
-                    // TODO children?
-                    createNameLabel(element, umlWebClient, diagramContext);
-                    break;
                 case 'typedElementLabel':
-                    if (element.parent) {
-                        element.x = element.x + context.x;
-                        element.y = element.y + context.y;
-                        canvas.addShape(element, element.parent);
-                    } else {
-                        assignPosition(element);
-                        canvas.addShape(element);
-                    }
-                    createTypedElementLabel(element, umlWebClient, diagramContext);
-                    break;
                 case 'keywordLabel':
-                    if (element.parent) {
-                        element.x = element.x + context.x;
-                        element.y = element.y + context.y;
-                        canvas.addShape(element, element.parent);
-                    } else {
-                        assignPosition(element);
-                        canvas.addShape(element);
-                    }
-                    createKeywordLabel(element, umlWebClient, diagramContext);
+                case 'associationEndLabel':
+                case 'multiplicityLabel':
+                    placeLabel(element); 
                     break;
                 default:
                     throw Error('invalid uml di elementType given to ElementCreationHandler!');
@@ -147,6 +121,45 @@ class ElementCreationHandler {
                 });
             }
         }
+        const doLater = async () => {
+            for (const element of context.elements) {
+                switch (element.elementType) {
+                    case 'shape':
+                        await createDiagramShape(element, umlWebClient, diagramContext);
+                        break;
+                    case 'edge':
+                        await createDiagramEdge(element, umlWebClient, diagramContext);
+                        break;
+                    case 'label':
+                        createDiagramLabel(element, umlWebClient, diagramContext);
+                        break;
+                    case 'classifierShape':
+                        await createClassifierShape(element, umlWebClient, diagramContext);
+                        for (const compartment of element.compartments) {
+                            await createComparment(compartment, umlWebClient, diagramContext);
+                        }
+                        break;
+                    case 'nameLabel':
+                        await createNameLabel(element, umlWebClient, diagramContext);
+                        break;
+                    case 'typedElementLabel':
+                        await createTypedElementLabel(element, umlWebClient, diagramContext);
+                        break;
+                    case 'keywordLabel':
+                        await createKeywordLabel(element, umlWebClient, diagramContext);
+                        break;
+                    case 'associationEndLabel':
+                        await createAssociationEndLabel(element, umlWebClient, diagramContext);
+                        break;
+                    case 'multiplicityLabel':
+                        await createMultiplicityLabel(element, umlWebClient, diagramContext);
+                        break;
+                    default:
+                        throw Error('invalid uml di elementType given to ElementCreationHandler!');
+                }    
+            }
+        }
+        doLater();
         return context.elements;
     }
     revert(context) {

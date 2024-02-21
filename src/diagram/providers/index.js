@@ -1,116 +1,116 @@
+import AbstractionHandler from './relationships/AbstractionHandler';
+import Association from './relationships/Association';
 import ClassDiagramContextPadProvider from './ClassDiagramContextPadProvider';
 import ClassDiagramPaletteProvider from './ClassDiagramPaletteProvider';
 import ClassDiagramRuleProvider from './ClassDiagramRuleProvider';
-import ConnectionDocking from 'diagram-js/lib/layout/CroppingConnectionDocking.js'
-import DragFromTree from './DragFromTree';
-import EdgeConnect from './EdgeConnect';
-import EdgeCreator from './EdgeCreator';
-import ElementCreator from './ElementCreator';
-import UMLRenderer from './UMLRenderer';
-import GeneralizationHandler from './relationships/GeneralizationHandler';
-import Association from './relationships/Association';
-import UmlLayouter from './UmlLayouter';
-import DoubleClickSpecification from './DoubleClickSpecification';
-import ElementUpdate from './ElementUpdate';
-import ModelElementMap from './ModelElementMap';
-import UmlContextMenu from './UmlContextMenu';
-import DirectEditing from 'diagram-js-direct-editing/lib/DirectEditing';
-import EditOnCreate from './EditOnCreate';
-import Property from './Property';
 import ClassHandler from './ClassHandler';
 import CommentHandler from './CommentHandler';
-import UmlCompartmentableShapeProvider from './UmlCompartmentableShapeProvider';
-import UmlCompartmentProvider from './UmlCompartmentProvider';
-import UmlShapeProvider from './UmlShapeProvider';
-import UmlEdgeProvider from './UmlEdgeProvider';
-import UmlLabelProvider from './UmlLabelProvider';
-import UmlDirectEditingProvider from './UmlDirectEditingProvider';
-import UserSelection from './UserSelection';
-import DependencyHandler from './relationships/DependencyHandler';
-import AbstractionHandler from './relationships/AbstractionHandler';
-import RealizationHandler from './relationships/RealizationHandler';
-import UsageHandler from './relationships/UsageHandler';
-import PrimitiveTypeHandler from './PrimitiveTypeHandler';
+import ConnectionDocking from 'diagram-js/lib/layout/CroppingConnectionDocking.js'
 import DataTypeHandler from './DataTypeHandler';
+import DragFromTree from './DragFromTree';
+import DependencyHandler from './relationships/DependencyHandler';
+import DirectEditing from 'diagram-js-direct-editing/lib/DirectEditing';
+import DoubleClickSpecification from './DoubleClickSpecification';
+import EdgeConnect from './EdgeConnect';
+import EditOnCreate from './EditOnCreate';
+import ElementCreator from './ElementCreator';
+import ElementUpdate from './ElementUpdate';
 import EnumerationHandler from './EnumerationHandler';
+import GeneralizationHandler from './relationships/GeneralizationHandler';
 import InterfaceHandler from './InterfaceHandler';
+import ModelElementMap from './ModelElementMap';
+import PrimitiveTypeHandler from './PrimitiveTypeHandler';
+import Property from './Property';
+import RelationshipEdgeCreator from './RelationshipEdgeCreator';
+import RealizationHandler from './relationships/RealizationHandler';
 import SignalHandler from './SignalHandler';
+import UmlCompartmentProvider from './UmlCompartmentProvider';
+import UmlCompartmentableShapeProvider from './UmlCompartmentableShapeProvider';
+import UmlContextMenu from './UmlContextMenu';
+import UmlDirectEditingProvider from './UmlDirectEditingProvider';
+import UmlEdgeProvider from './UmlEdgeProvider';
+import UmlLayouter from './UmlLayouter';
+import UMLRenderer from './UMLRenderer';
+import UmlShapeProvider from './UmlShapeProvider';
+import UmlLabelProvider from './UmlLabelProvider';
+import UsageHandler from './relationships/UsageHandler';
+import UserSelection from './UserSelection';
 
 export default {
     __init__: [
-        'generalizationHandler',
+        'abstractionHandler',
         'association',
         'classDiagramContextPadProvider',
         'classDiagramPaletteProvider',
-        'dragFromTree',
         'classDiagramRuleProvider',
-        'edgeConnect',
-        'edgeCreator',
-        'elementCreator',
-        'umlRenderer',
-        'layouter',
-        'connectionDocking',
-        'doubleClickSpecification',
-        'elementUpdate',
-        'modelElementMap',
-        'umlContextMenu',
-        'directEditing',
-        'editOnCreate',
-        'property',
         'classHandler',
         'commentHandler',
+        'connectionDocking',
+        'dataTypeHandler',
+        'dependencyHandler',
+        'directEditing',
+        'doubleClickSpecification',
+        'dragFromTree',
+        'edgeConnect',
+        'editOnCreate',
+        'elementCreator',
+        'elementUpdate',
+        'enumerationHandler',
+        'generalizationHandler',
+        'interfaceHandler',
+        'layouter',
+        'modelElementMap',
+        'primitiveTypeHandler',
+        'property',
+        'relationshipEdgeCreator',
+        'realizationHandler',
+        'signalHandler',
+        'umlRenderer',
         'umlCompartmentableShapeProvider',
         'umlCompartmentProvider',
+        'umlContextMenu',
         'umlShapeProvider',
         'umlEdgeProvider',
         'umlLabelProvider',
         'umlDirectEditingProvider',
         'userSelection',
-        'dependencyHandler',
-        'abstractionHandler',
-        'realizationHandler',
         'usageHandler',
-        'primitiveTypeHandler',
-        'dataTypeHandler',
-        'enumerationHandler',
-        'interfaceHandler',
-        'signalHandler',
     ],
-    generalizationHandler: ['type', GeneralizationHandler],
+    abstractionHandler: ['type', AbstractionHandler],
     association: ['type', Association],
     classDiagramContextPadProvider: [ 'type', ClassDiagramContextPadProvider ],
     classDiagramPaletteProvider: [ 'type', ClassDiagramPaletteProvider ],
     classDiagramRuleProvider: [ 'type', ClassDiagramRuleProvider ],
-    dragFromTree: ['type', DragFromTree],
-    edgeConnect: ['type', EdgeConnect],
-    edgeCreator: ['type', EdgeCreator],
-    elementCreator: ['type', ElementCreator],
-    umlRenderer: ['type', UMLRenderer],
-    layouter: ['type', UmlLayouter],
-    connectionDocking: ['type', ConnectionDocking],
-    doubleClickSpecification: ['type', DoubleClickSpecification],
-    elementUpdate: ['type', ElementUpdate],
-    modelElementMap: ['type', ModelElementMap],
-    umlContextMenu: ['type', UmlContextMenu],
-    directEditing: ['type', DirectEditing],
-    editOnCreate: ['type', EditOnCreate],
-    property: ['type', Property],
     classHandler: ['type', ClassHandler],
     commentHandler: ['type', CommentHandler],
+    connectionDocking: ['type', ConnectionDocking],
+    dataTypeHandler: ['type', DataTypeHandler],
+    dependencyHandler: ['type', DependencyHandler],
+    directEditing: ['type', DirectEditing],
+    doubleClickSpecification: ['type', DoubleClickSpecification],
+    dragFromTree: ['type', DragFromTree],
+    editOnCreate: ['type', EditOnCreate],
+    edgeConnect: ['type', EdgeConnect],
+    elementCreator: ['type', ElementCreator],
+    elementUpdate: ['type', ElementUpdate],
+    enumerationHandler: ['type', EnumerationHandler],
+    generalizationHandler: ['type', GeneralizationHandler],
+    interfaceHandler: ['type', InterfaceHandler],
+    layouter: ['type', UmlLayouter],
+    modelElementMap: ['type', ModelElementMap],
+    umlContextMenu: ['type', UmlContextMenu],
+    primitiveTypeHandler: ['type', PrimitiveTypeHandler],
+    property: ['type', Property],
+    relationshipEdgeCreator: ['type', RelationshipEdgeCreator],
+    realizationHandler: ['type', RealizationHandler],
+    signalHandler: ['type', SignalHandler],
     umlCompartmentableShapeProvider: ['type', UmlCompartmentableShapeProvider],
     umlCompartmentProvider: ['type', UmlCompartmentProvider],
-    umlShapeProvider: ['type', UmlShapeProvider],
+    umlDirectEditingProvider: ['type', UmlDirectEditingProvider],
     umlEdgeProvider: ['type', UmlEdgeProvider],
     umlLabelProvider: ['type', UmlLabelProvider],
-    umlDirectEditingProvider: ['type', UmlDirectEditingProvider],
+    umlRenderer: ['type', UMLRenderer],
+    umlShapeProvider: ['type', UmlShapeProvider],
     userSelection: ['type', UserSelection],
-    dependencyHandler: ['type', DependencyHandler],
-    abstractionHandler: ['type', AbstractionHandler],
-    realizationHandler: ['type', RealizationHandler],
     usageHandler: ['type', UsageHandler],
-    primitiveTypeHandler: ['type', PrimitiveTypeHandler],
-    dataTypeHandler: ['type', DataTypeHandler],
-    enumerationHandler: ['type', EnumerationHandler],
-    interfaceHandler: ['type', InterfaceHandler],
-    signalHandler: ['type', SignalHandler]
 };

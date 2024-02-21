@@ -179,110 +179,110 @@ function placeSecondLabel(child, waypoint, orientation) {
 export function placeEdgeLabel(child, connection) {
     if (child.elementType === 'label' || child.elementType === 'nameLabel' || child.elementType === 'typedElementLabel' || child.elementType === 'keywordLabel' || child.elementType === 'associationEndLabel' || child.elementType === 'multiplicityLabel') {
                 child.labelTarget = connection;
-                child.parent = connection;
-                if (!child.width || !child.height) {
-                    throw Error('Must fill out height and width of edge child before calling edge.connect!');
+        child.parent = connection;
+        if (!child.width || !child.height) {
+            throw Error('Must fill out height and width of edge child before calling edge.connect!');
+        }
+        
+        switch (child.placement) {
+            case 'source': {
+                let sourceWaypointPosition = connection.waypoints[0];
+                let sourceShapeMidPosition = getMid(connection.source);
+                let sourceOrientation = getOrientation(sourceWaypointPosition, sourceShapeMidPosition);
+                if (connection.numSourceLabels == 0) {
+                    placeFistLabel(child, sourceWaypointPosition, sourceOrientation);
+                } else if (connection.numSourceLabels == 1) {
+                    // place below
+                    placeSecondLabel(child, sourceWaypointPosition, sourceOrientation);
+                } else {
+                    throw Error('TODO handle more than 2 source labels!');
                 }
-                
-                switch (child.placement) {
-                    case 'source': {
-                        let sourceWaypointPosition = connection.waypoints[0];
-                        let sourceShapeMidPosition = getMid(connection.source);
-                        let sourceOrientation = getOrientation(sourceWaypointPosition, sourceShapeMidPosition);
-                        if (connection.numSourceLabels == 0) {
-                            placeFistLabel(child, sourceWaypointPosition, sourceOrientation);
-                        } else if (connection.numSourceLabels == 1) {
+                child.placementIndex = connection.numSourceLabels;
+                connection.numSourceLabels += 1;
+                break;
+            }
+            case 'center': {
+                let centerPoint;
+                let orientation;
+                if (connection.waypoints.length % 2 == 0) {
+                    // even number of waypoints
+                    let centerPoint1 = connection.waypoints[connection.waypoints.length / 2 - 1];
+                    let centerPoint2 = connection.waypoints[connection.waypoints.length / 2];
+                    centerPoint = {
+                        x: (centerPoint1.x + centerPoint2.x) / 2,
+                        y: (centerPoint1.y + centerPoint2.y) / 2,
+                    };
+                    if (Math.abs(centerPoint2.x - centerPoint1.x) / 2 > Math.abs(centerPoint2.y - centerPoint1.y) / 2) {
+                        orientation = 'horizontal';
+                    } else {
+                        orientation = 'vertical';
+                    }
+                } else {
+                    const middleIndex = Math.floor(connection.waypoints.length / 2); 
+                    centerPoint = connection.waypoints[middleIndex];
+                    let centerPoint1 = connection.waypoints[middleIndex - 1];
+                    let centerPoint2 = connection.waypoints[middleIndex + 1];
+                    if (Math.abs(centerPoint2.x - centerPoint1.x) / 2 > Math.abs(centerPoint2.y - centerPoint1.y) / 2) {
+                        orientation = 'horizontal';
+                    } else {
+                        orientation = 'vertical';
+                    }
+                }
+                if (connection.numCenterLabels == 0) {
+                    switch (orientation) {
+                        case 'horizontal':
+                            // place above
+                            child.x = centerPoint.x - child.width / 2;
+                            child.y = centerPoint.y - child.height + 5;
+                            break;
+                        case 'vertical':
+                            // place to left
+                            child.x = centerPoint.x - child.width - 5;
+                            child.y = centerPoint.y - child.height / 2;
+                            break;
+                        default:
+                            throw Error('invalid orientation given to center placement label ' + orientation);
+                    }
+                } else if (connection.numCenterLabels == 1) {
+                    switch (orientation) {
+                        case 'horizontal':
                             // place below
-                            placeSecondLabel(child, sourceWaypointPosition, sourceOrientation);
-                        } else {
-                            throw Error('TODO handle more than 2 source labels!');
-                        }
-                        child.placementIndex = connection.numSourceLabels;
-                        connection.numSourceLabels += 1;
-                        break;
+                            child.x = centerPoint.x - child.width / 2;
+                            child.y = centerPoint.y - 5;
+                            break;
+                        case 'vertical':
+                            // place to right
+                            child.x = centerPoint.x + 5;
+                            child.y = centerPoint.y + child.height / 2;
+                            break;
+                        default:
+                            throw Error('invalid orientation fiven to center placement label ' + orientation);
                     }
-                    case 'center': {
-                        let centerPoint;
-                        let orientation;
-                        if (connection.waypoints.length % 2 == 0) {
-                            // even number of waypoints
-                            let centerPoint1 = connection.waypoints[connection.waypoints.length / 2 - 1];
-                            let centerPoint2 = connection.waypoints[connection.waypoints.length / 2];
-                            centerPoint = {
-                                x: (centerPoint1.x + centerPoint1.y) / 2,
-                                y: (centerPoint1.y + centerPoint2.y) / 2,
-                            };
-                            if (Math.abs(centerPoint2.x - centerPoint1.x) / 2 > Math.abs(centerPoint2.y - centerPoint1.y) / 2) {
-                                orientation = 'horizontal';
-                            } else {
-                                orientation = 'vertical';
-                            }
-                        } else {
-                            const middleIndex = Math.floor(connection.waypoints.length / 2); 
-                            centerPoint = connection.waypoints[middleIndex];
-                            let centerPoint1 = connection.waypoints[middleIndex - 1];
-                            let centerPoint2 = connection.waypoints[middleIndex + 1];
-                            if (Math.abs(centerPoint2.x - centerPoint1.x) / 2 > Math.abs(centerPoint2.y - centerPoint1.y) / 2) {
-                                orientation = 'horizontal';
-                            } else {
-                                orientation = 'vertical';
-                            }
-                        }
-                        if (connection.numCenterLabels == 0) {
-                            switch (orientation) {
-                                case 'horizontal':
-                                    // place above
-                                    child.x = centerPoint.x - child.width / 2;
-                                    child.y = centerPoint.y + child.height + 5;
-                                    break;
-                                case 'vertical':
-                                    // place to left
-                                    child.x = centerPoint.x - child.width - 5;
-                                    child.y = centerPoint.y + child.height / 2;
-                                    break;
-                                default:
-                                    throw Error('invalid orientation given to center placement label ' + orientation);
-                            }
-                        } else if (connection.numCenterLabels == 1) {
-                            switch (orientation) {
-                                case 'horizontal':
-                                    // place below
-                                    child.x = centerPoint.x - child.width / 2;
-                                    child.y = centerPoint.y - 5;
-                                    break;
-                                case 'vertical':
-                                    // place to right
-                                    child.x = centerPoint.x + 5;
-                                    child.y = centerPoint.y + child.height / 2;
-                                    break;
-                                default:
-                                    throw Error('invalid orientation fiven to center placement label ' + orientation);
-                            }
-                        } else {
-                            throw Error('TODO more than two center placement labels for edge! contact dev');
-                        }
-                        child.placementIndex = connection.numCenterLabels;
-                        connection.numCenterLabels += 1;
-                        break;
-                    }
-                    case 'target': {
-                        const targetWaypoint = connection.waypoints.slice(-1)[0];
-                        const middleOfTargetShape = getMid(connection.target);
-                        const targetOrientation = getOrientation(targetWaypoint, middleOfTargetShape);
-                        if (connection.numTargetLabels == 0) {
-                            placeFistLabel(child, targetWaypoint, targetOrientation);
-                        } else if (connection.numTargetLabels == 1) {
-                            placeSecondLabel(child, targetWaypoint, targetOrientation);
-                        } else {
-                            throw Error('TODO handle more than 2 target labels!');
-                        }
-                        child.placementIndex = connection.numTargetLabels;
-                        connection.numTargetLabels += 1;   
-                        break;
-                    }
-                    default:
-                        throw Error('Invalid placement ' + child.placement + ' given to EdgeConnect');
+                } else {
+                    throw Error('TODO more than two center placement labels for edge! contact dev');
                 }
+                child.placementIndex = connection.numCenterLabels;
+                connection.numCenterLabels += 1;
+                break;
+            }
+            case 'target': {
+                const targetWaypoint = connection.waypoints.slice(-1)[0];
+                const middleOfTargetShape = getMid(connection.target);
+                const targetOrientation = getOrientation(targetWaypoint, middleOfTargetShape);
+                if (connection.numTargetLabels == 0) {
+                    placeFistLabel(child, targetWaypoint, targetOrientation);
+                } else if (connection.numTargetLabels == 1) {
+                    placeSecondLabel(child, targetWaypoint, targetOrientation);
+                } else {
+                    throw Error('TODO handle more than 2 target labels!');
+                }
+                child.placementIndex = connection.numTargetLabels;
+                connection.numTargetLabels += 1;   
+                break;
+            }
+            default:
+                throw Error('Invalid placement ' + child.placement + ' given to EdgeConnect');
+        }
     } else {
         throw Error('todo');
     }

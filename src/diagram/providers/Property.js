@@ -1,5 +1,5 @@
 import { nullID, randomID } from "uml-client/lib/element";
-import { createDiagramShape, createTypedElementLabel } from "../api/diagramInterchange";
+import { createDiagramShape, createTypedElementLabel, updateLabel } from "../api/diagramInterchange";
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { getTextDimensions, getTypedElementText, LABEL_HEIGHT, PROPERTY_GAP } from './ClassDiagramPaletteProvider';
@@ -112,7 +112,7 @@ class CreatePropertyHandler {
 }
 
 export default class Property extends RuleProvider {
-    constructor(eventBus, commandStack, graphicsFactory, canvas) {
+    constructor(eventBus, commandStack, graphicsFactory, canvas, umlWebClient) {
         super(eventBus)
         commandStack.registerHandler('propertyLabel.create', CreatePropertyHandler);
         eventBus.on('server.update', (event) => {
@@ -132,6 +132,7 @@ export default class Property extends RuleProvider {
                 doLater();
                 // update
                 graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
+                updateLabel(localLabel, umlWebClient);
             }
         });
     }
@@ -154,9 +155,8 @@ export default class Property extends RuleProvider {
             if (context.shape.modelElement && context.shape.modelElement.elementType() === 'property') {
                 return false;
             }
-            return true;
         });
     } 
 }
 
-Property.$inject = ['eventBus', 'commandStack', 'graphicsFactory', 'canvas'];
+Property.$inject = ['eventBus', 'commandStack', 'graphicsFactory', 'canvas', 'umlWebClient'];

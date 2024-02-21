@@ -35,6 +35,7 @@ class MoveShapeHandler {
     }
 
     moveElementChildrenAndEdges(element, context, direction) {
+        context.elementsMoved.push(element);
         if (element.waypoints) {
             element.waypoints = connectRectangles(element.source, element.target, getMid(element.source), getMid(element.target));
             this.graphicsFactory.update('connection', element, this.canvas.getGraphics(element));
@@ -77,6 +78,7 @@ class MoveShapeHandler {
                 y: context.delta.y,
             }
         }});
+        context.elementsMoved = [];
         for (const shape of context.shapes) {
             if (shape.ignore) {
                 delete shape.ignore
@@ -86,7 +88,7 @@ class MoveShapeHandler {
             this.doLater(shape);
             this.eventBus.fire('uml.shape.move', { shape: shape});
         }
-        return context.shapes;
+        return context.elementsMoved;
     }
     revert(context) {
         this.diagramEmitter.fire('command', {undo: {
@@ -203,7 +205,8 @@ export default class UmlShapeProvider {
             }
         });
         eventBus.on('server.create', (event) => {
-            if (event.serverElement.elementType() === 'shape') {
+            const elementType = event.serverElement.elementType();
+            if (elementType === 'shape' || elementType === 'compartmentableShape' || elementType === 'classifierShape') {
                 const umlShape = event.serverElement;
                 const owner = elementRegistry.get(umlShape.owningElement);
                 const shape = elementFactory.createShape({
@@ -214,12 +217,14 @@ export default class UmlShapeProvider {
                     update: true,
                     id: umlShape.id,
                     modelElement: umlShape.modelElement,
+                    elementType: elementType,
                 });
                 canvas.addShape(shape, owner);
             }
         });
         eventBus.on('server.update', (event) => {
-            if (event.serverElement.elementType() === 'shape') {
+            const elementType = event.serverElement.elementType();
+            if (elementType === 'shape' || elementType === 'compartmentableShape' || elementType === 'classifierShape') {
                 const umlShape = event.serverElement;
                 const localShape = event.localElement;
                 localShape.x = umlShape.bounds.x;

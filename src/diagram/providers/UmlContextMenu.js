@@ -5,12 +5,12 @@ import { getMid } from "diagram-js/lib/layout/LayoutUtil";
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { randomID } from "../umlUtil";
 import { createCommentClick } from "../../umlUtil";
-import { createProperty } from "./Property";
 import { removeDiagramElement } from "./ClassDiagramContextPadProvider";
+import { getTextDimensions } from './ClassDiagramPaletteProvider';
 import parse from "uml-client/lib/parse";
 
 export default class UmlContextMenu {
-    constructor(eventBus, diagramEmitter, umlWebClient, modelElementMap, directEditing, create, elementFactory, commandStack, canvas) {    
+    constructor(eventBus, diagramEmitter, umlWebClient, modelElementMap, directEditing, create, elementFactory, commandStack, canvas, relationshipEdgeCreator) {    
         this._eventBus = eventBus;
         this._diagramEmitter = diagramEmitter;
         this._umlWebClient = umlWebClient;
@@ -19,6 +19,7 @@ export default class UmlContextMenu {
         this._create = create;
         this._elementFactory = elementFactory;
         this._commandStack = commandStack;
+        this._relationshipEdgeCreator = relationshipEdgeCreator;
 
         commandStack.registerHandler('deleteModelElement', DeleteModelElementHandler);
         commandStack.registerHandler('edgeCreation', EdgeCreationHandler);
@@ -47,7 +48,8 @@ export default class UmlContextMenu {
         directEditing = this._directEditing, 
         create = this._create, 
         elementFactory = this._elementFactory,
-        commandStack = this._commandStack;
+        commandStack = this._commandStack,
+        relationshipEdgeCreator = this._relationshipEdgeCreator;
         const menu = {
             x: x,
             y: y,
@@ -207,7 +209,9 @@ export default class UmlContextMenu {
                         }),
                         disabled: umlWebClient.readonly || modelElementMap.get(association.id) !== undefined,
                         onClick: () => {
-                            drawAssociation(element, association, commandStack);
+                            relationshipEdgeCreator.create({
+                                elements: [association]
+                            });
                         }
                     });
                 }
@@ -232,7 +236,7 @@ export default class UmlContextMenu {
         diagramEmitter.fire('contextmenu', menu);
     }
 }
-UmlContextMenu.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modelElementMap', 'directEditing', 'create', 'elementFactory', 'commandStack', 'canvas'];
+UmlContextMenu.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modelElementMap', 'directEditing', 'create', 'elementFactory', 'commandStack', 'canvas', 'relationshipEdgeCreator'];
 
 class DeleteModelElementHandler {
     constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext) {
@@ -262,8 +266,6 @@ class DeleteModelElementHandler {
         diagramEmitter = this._diagramEmitter;
         if (context.proxy) {
             delete context.proxy;
-            context.element = elementRegistry.get(context.element.id); // TODO this may have to change to elementFactory
-            context.parent = elementRegistry.get(context.parent.id);
             return context.element;
         }
         context.rawData = context.element.modelElement.emit();
@@ -442,13 +444,68 @@ async function drawDependency(element, dependency, commandStack) {
     });
 }
 
-async function drawAssociation(element, association, commandStack) {
+async function drawAssociation(element, association, commandStack, elementRegistry, elementFactory, umlRenderer) {
     let targetID;
     for await(const end of association.memberEnds) {
         if (end.type.id() !== element.modelElement.id) {
             targetID = end.type.id();     
         }
     }
+
+    const elements = [];
+
+    const target = elementRegistry.get(targetID);
+
+    const associationEdge = elementFactory.createConnection({
+        id: randomID(),
+        source: element,
+        target: target,
+        waypoints: connectRectangles(element, target, getMid(element), getMid(target)),
+        modelElement: association,
+        elementType: 'edge',
+        children: [],
+    });
+    elements.push(associationEdge);
+    
+    if (association.name !== '') {
+        const textDimensions = getTextDimensions(association.name, umlRenderer);
+        elements.push(elementFactory.createLabel({
+            id: randomID(),
+            text: association.name,
+            width: Math.round(textDimensions.width) + 15,
+            height: 24,
+            placement: 'center',
+            elementType: 'nameLabel',
+        }));
+    }
+    
+    for await (const end of association.memberEnds) {
+        const createEndLabels = (end, placement) => {
+            if (end.name !== '') {
+                const textDimensions = getTextDimensions(end.name, umlRenderer);
+                elements.push(elementFactory.createLabel({
+                    id: randomID(),
+                    rext: end.name,
+                    width: Math.round(textDimensions.width) + 15,
+                    height: 24,
+                    placement: placement,
+                    elementType: 'associationEndLabel',
+                }));
+            }
+            if (end.lowerValue.has() && end.upperValue.has()) {
+                // TODO
+            } 
+        };
+        if (end.type.id() === element.modelElement.id) {
+            createEndLabels(end, 'source');
+        } else if (end.type.id() === targetID) {
+            createEndLabels(end, 'target');
+        }
+    }
+
+    commandStack.execute('elementCreation', {
+        elements: elements
+    });
     commandStack.execute('edgeCreation', {
         targetID: targetID,
         source: element,
