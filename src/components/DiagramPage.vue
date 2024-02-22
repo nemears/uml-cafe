@@ -599,6 +599,7 @@ export default {
 
                 for (const edge of edges) {
                     await drawDiagramElementAndChildren(edge);
+                }
 
                 for (const label of labels) {
                     await drawDiagramElementAndChildren(label);

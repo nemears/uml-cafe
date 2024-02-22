@@ -704,6 +704,27 @@ export default {
                         @deselect="propogateDeselect"
                         ></SingletonData>
 	</ElementType>
+    <ElementType :element-type="'Feature'" theme="theme" v-if="featureData !== undefined">
+        <InputData  :label="'isStatic'" 
+                    :input-type="'checkbox'"
+                    :initial-data="featureData.isStatic"
+                    :umlid="umlID"
+                    :type="'isStatic'" 
+                    :theme="theme"
+                    @element-update="propogateElementUpdate"
+                    ></InputData>
+        <SingletonData :label="'Featuring Classifier'"
+                    :initial-data="featureData.featuringClassifier"
+                    :uml-i-d="umlID"
+                    :singleton-data="{ setName: 'featuringClassifier', type: 'classifier' }"
+                    :selected-elements="selectedElements"
+                    :theme="theme"
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
+                    ></SingletonData>        
+    </ElementType>
 	<ElementType :element-type="'Property'" :theme="theme" v-if="propertyData !== undefined">
         <EnumerationData    :label="'Aggregation'"
                             :initial-value="propertyData.aggregation"
