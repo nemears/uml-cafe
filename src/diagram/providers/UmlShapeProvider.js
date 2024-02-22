@@ -275,6 +275,12 @@ UmlShapeProvider.$inject = ['eventBus', 'elementRegistry', 'elementFactory', 'ca
 
 export async function adjustShape(shape, shapeInstance, umlWebClient) {
     let boundsInstance = undefined;
+    if (!shapeInstance) {
+        throw Error('cannot handle undefined shapeInstance');
+    }
+    if (shapeInstance.elementType() !== 'instanceSpecification') {
+        throw Error('cannot handle shapeInstance that is not an instanceSpecification!');
+    }
     for await (let slot of shapeInstance.slots) {
         if (slot.definingFeature.id() === BOUNDS_ID) {
             boundsInstance = await (await slot.values.front()).instance.get();

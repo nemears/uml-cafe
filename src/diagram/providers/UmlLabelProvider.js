@@ -5,29 +5,30 @@ export default class UmlLabelProvider extends RuleProvider {
         super(eventBus);
         eventBus.on('server.create', (event) => {
             const elementType = event.serverElement.elementType();
-            if (elementType  === 'label' || elementType === 'nameLabel' || elementType === 'keywordLabel' || elementType === 'typedElementLabel' || elementType === 'associationEndLabel' || elementType === 'multiplicityLabel') {
+            if (isLabel(elementType)) {
                 const umlLabel = event.serverElement;
                 console.log('creating label');
                 console.log(umlLabel);
                 const owner = elementRegistry.get(umlLabel.owningElement);
-                let labelTarget;
+                let labelTarget = owner;
 
                 // determine our target
-                if (owner.modelElement.id === umlLabel.modelElement.id) {
-                    // owner is our target
-                    labelTarget = owner;
-                } else {
-                    // look at children of owner
-                    for (const child of owner.children) {
-                        if (child.modelElement.id === umlLabel.modelElement.id) {
-                            labelTarget = child;
-                        }
-                    }
-                }
+                //if (owner.modelElement.id === umlLabel.modelElement.id) {
+                //    // owner is our target
+                //    labelTarget = owner;
+                //} else {
+                //    // look at children of owner
+                //    for (const child of owner.children) {
+                //        if (child.modelElement.id === umlLabel.modelElement.id) {
+                //            labelTarget = child;
+                //        }
+                //    }
+                //}
                 let placement, inselectable; // TODO store these attributes in server with new types
                 switch (elementType) {
                     case 'nameLabel':
                     case 'keywordLabel':
+                    case 'typedElementLabel':
                         if (!owner.waypoints) {
                             inselectable = true;
                         } else {
@@ -67,8 +68,49 @@ export default class UmlLabelProvider extends RuleProvider {
             }
         });
 
+//        eventBus.on('server.create', (context) => {
+//            const umlLabel = context.serverElement,
+//            elementType = umlLabel.elementType();
+//            if (isLabel(elementType)) {
+//                const owner = elementRegistry.get(umlLabel.owningElement);
+//                let inselectable, placement;
+//                if (owner.elementType === 'edge') {
+//                    if (owner.modelElement.elementType() === 'association') {
+//                        // handle placement
+//                        if (elementType === 'associationEndLabel' || elementType === 'multiplicityLabel') {
+//                            // source or target
+//                            if (owner.source.modelElement.id === umlLabel.modelElement.type.id()) {
+//                                placement = 'source';
+//                            } else if (owner.target.modelElement.id === umlLabel.modelElement.type.id()) {
+//                                placement = 'target';
+//                            }
+//                        } else {
+//                            // center
+//                            placement = 'center';
+//                        }
+//                    } 
+//                } else if (elementType === 'nameLabel' || elementType === 'keywordLabel') {
+//                    inselectable = true;
+//                }
+//                const label = elementFactory.createLabel({
+//                    id: umlLabel.id,
+//                    x: umlLabel.bounds.x,
+//                    y: umlLabel.bounds.y,
+//                    width: umlLabel.bounds.width,
+//                    height: umlLabel.bounds.height,
+//                    labelTarget: owner,
+//                    parent: owner,
+//                    modelElement: umlLabel.modelElement,
+//                    inselectable: inselectable,
+//                    placement: placement,
+//                    elementType: elementType,
+//                });
+//                canvas.addShape(label, owner);
+//            }
+//        });
+
         eventBus.on('server.update', (event) => {
-            if (event.serverElement.elementType() === 'label') {
+            if (isLabel(event.serverElement.elementType())) {
                 const serverLabel = event.serverElement;
                 const localLabel = event.localElement;
                 console.log('updating label');
@@ -97,3 +139,12 @@ export default class UmlLabelProvider extends RuleProvider {
 }
 
 UmlLabelProvider.$inject = ['eventBus', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory'];
+
+export function isLabel(elementType) {
+    return  elementType === 'label' || 
+            elementType === 'nameLabel' || 
+            elementType === 'typedElementLabel' || 
+            elementType === 'keywordLabel' || 
+            elementType === 'associationEndLabel' || 
+            elementType === 'multiplicityLabel';    
+}

@@ -30,6 +30,7 @@ export default class UmlCompartmentProvider {
                 const umlCompartment = context.serverElement;
                 const owner = elementRegistry.get(umlCompartment.owningElement);
                 const compartment = elementFactory.createShape({
+                    id: umlCompartment.id,
                     y: owner.y + CLASS_SHAPE_HEADER_HEIGHT,
                     x: owner.x,
                     width: owner.width,
