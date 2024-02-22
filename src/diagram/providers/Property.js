@@ -1,5 +1,5 @@
 import { nullID, randomID } from "uml-client/lib/element";
-import { createDiagramShape, createTypedElementLabel, updateLabel } from "../api/diagramInterchange";
+import { createDiagramShape, createTypedElementLabel, updateLabel, OWNED_ELEMENTS_SLOT_ID } from "../api/diagramInterchange";
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { getTextDimensions, getTypedElementText, LABEL_HEIGHT, PROPERTY_GAP } from './ClassDiagramPaletteProvider';
@@ -31,7 +31,6 @@ export async function createProperty(property, clazzShape, umlWebClient, umlRend
         parent: compartment,
         text: text,
     });
-    createTypedElementLabel(propertyLabel, umlWebClient, diagramContext);
     if (compartment.y + compartment.height < yPos + PROPERTY_GAP) {
         compartment.height = compartment.y + 2 * compartment.height - yPos + 2 * CLASSIFIER_SHAPE_GAP_HEIGHT;
         clazzShape.height = compartment.height + CLASS_SHAPE_HEADER_HEIGHT;
@@ -41,10 +40,7 @@ export async function createProperty(property, clazzShape, umlWebClient, umlRend
         clazzShape.width = propertyLabel.width + 15;
     }
     
-    const doLater = async () => {
-        adjustShape(clazzShape, await umlWebClient.get(clazzShape.id), umlWebClient);
-    };
-    doLater();
+    
 
     canvas.addShape(propertyLabel, compartment);
 
@@ -81,10 +77,48 @@ class CreatePropertyHandler {
         for (const property of context.properties) {
             elsChanged.push(createProperty(property, clazzShape, this.umlWebClient, this.umlRenderer, this.elementFactory, this.canvas, this.diagramContext));
         }
-        this.eventBus.fire('compartmentableShape.resize', {
-            shape: clazzShape,
-            newBounds: clazzShape,
-        });
+
+        const doLater = async () => {
+
+            // first adjust shape
+            await adjustShape(clazzShape, await this.umlWebClient.get(clazzShape.id), this.umlWebClient);
+            
+            // adjust compartment, basically just adjusting UmlDiagramElement features
+            const compartmentInstance = await this.umlWebClient.get(compartment.id);
+            let ownedElementsSlot;
+            for await (const compartmentSlot of compartmentInstance.slots) {
+                if (compartmentSlot.definingFeature.id() === OWNED_ELEMENTS_SLOT_ID) {
+                    ownedElementsSlot = compartmentSlot;
+                }
+            }
+            if (!ownedElementsSlot) {
+                // create it
+                ownedElementsSlot = this.umlWebClient.post('slot');
+                ownedElementsSlot.definingFeature.set(OWNED_ELEMENTS_SLOT_ID);
+                this.umlWebClient.put(ownedElementsSlot);
+            }
+
+            for (const property of context.properties) {
+                const propertyLabel = compartment.labels[compartment.labels.findIndex(el => el.modelElement.id === property.id)];
+                //const labelInstanceValue = this.umlWebClient.post('instanceValue');
+                //labelInstanceValue.instance.set(propertyLabel.id);
+                //ownedElementsSlot.values.add(labelInstanceValue);
+                //this.umlWebClient.put(ownedElementsSlot);
+                //this.umlWebClient.put(labelInstanceValue);
+
+                // finally add typedElementLabel
+                await createTypedElementLabel(propertyLabel, this.umlWebClient, this.diagramContext);
+            }
+
+            this.umlWebClient.put(compartmentInstance);
+            this.eventBus.fire('compartmentableShape.resize', {
+                shape: clazzShape,
+                newBounds: clazzShape,
+            });
+        };
+        doLater();
+
+        
         return elsChanged;
     }
 
@@ -124,15 +158,16 @@ export default class Property extends RuleProvider {
                     if (serverLabel.modelElement.name != textSplit[0]) {
                         // update name
                         localLabel.text = serverLabel.modelElement.name + ' : ' + textSplit[1];
+                        updateLabel(localLabel, umlWebClient);
+                        graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
                     }
-                    if ((await serverLabel.modelElement.type.get()).name != textSplit[1]) {
+                    if (serverLabel.modelElement.type.has() && (await serverLabel.modelElement.type.get()).name != textSplit[1]) {
                         localLabel.text = serverLabel.modelElement.name + ' : ' + (await serverLabel.modelElement.type.get()).name;
+                        updateLabel(localLabel, umlWebClient);
+                        graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
                     }
                 }
                 doLater();
-                // update
-                graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
-                updateLabel(localLabel, umlWebClient);
             }
         });
     }
