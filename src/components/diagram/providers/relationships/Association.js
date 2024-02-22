@@ -87,7 +87,7 @@ export default class Association extends RuleProvider {
                 umlWebClient.put(memberEnd);
                 umlWebClient.put(ownedEnd);
                 umlWebClient.put(context.context.start.modelElement);
-                context.umlWebClient.put(context.diagramContext.context);
+                umlWebClient.put(diagramContext.context);
 
                 const propertyLabel = createAssociationEndLabel(context.context.connection, memberEnd, umlRenderer, elementFactory, canvas);
                 createDiagramLabel(propertyLabel, umlWebClient, diagramContext);
@@ -148,7 +148,9 @@ export default class Association extends RuleProvider {
                 await umlWebClient.deleteElement(context.context.connection.modelElement);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(...elsToDeleteOwners));
             }
-            deleteMembers();
+            if (context.context.type === 'association') {
+                deleteMembers();
+            }
         });
 
         // handle all global connects

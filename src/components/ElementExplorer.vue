@@ -3,6 +3,7 @@ import packageImage from './icons/package.svg';
 import getImage from '../GetUmlImage.vue';
 import classDiagramImage from './icons/class_diagram.svg';
 import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createClassDiagram, mapColor } from '../umlUtil.js'
+import { randomID } from 'uml-client/lib/element';
 
 export default {
     name: "ElementExplorer",
@@ -11,6 +12,8 @@ export default {
         "depth",
         "selectedElements",
         "treeGraph",
+        "commandStack",
+        "undoStack",
     ],
     inject: [
         'elementUpdate',
@@ -26,6 +29,7 @@ export default {
         'select',
         'deselect',
         'updateTree',
+        'command',
     ],
     mounted() {
         this.populateDisplayInfo();
@@ -97,9 +101,74 @@ export default {
                     this.currentUsers.splice(this.currentUsers.indexOf(mapColor(newUserDeselcted.color)), 1);
                 }
             }
+        },
+        async commandStack(newCommandStack) {
+            // redo
+            const newCommand = newCommandStack[0];
+            if (newCommand && newCommand.element === this.umlID && newCommand.redo) {
+                const commandName = newCommand.name;
+                if (commandName === 'elementExplorerCreate') {
+                    const context = newCommand.context,
+                    createElID = context.createElID,
+                    type = context.type,
+                    set = context.set,
+                    parentID = context.parentID;
+                    this.createElementAndAddToSet(createElID, type, set, await this.$umlWebClient.get(parentID));
+                } else if (commandName === 'diagramCreate') {
+                    const diagramID = newCommand.context.diagramID;
+                    this.createNewClassDiagram(await this.$umlWebClient.get(this.umlID), diagramID);
+                }
+            }
+        },
+        async undoStack(newUndoStack) {
+            const undoCommand = newUndoStack[0];
+            if (undoCommand && undoCommand.element === this.umlID) {
+                // our scope
+                if (undoCommand.name === 'elementExplorerCreate') {
+                    const createdElID = undoCommand.context.createElID;
+                    await this.deleteElement(await this.$umlWebClient.get(createdElID));
+                } else if (undoCommand.name === 'diagramCreate') {
+                    const diagramID = undoCommand.context.diagramID;
+                    await this.deleteElement(await this.$umlWebClient.get(diagramID));
+                }
+            }
         }
     },
     methods: {
+        async createElementAndAddToSet(id, type, set, parent) {
+            const createdEl = await this.$umlWebClient.post(type, {id:id});
+            parent.sets[set].add(createdEl);
+            this.$umlWebClient.put(createdEl);
+            this.$umlWebClient.put(parent);
+            this.children.push(createdEl.id);
+            this.expanded = true;
+            this.$emit('elementUpdate', createElementUpdate(parent));
+            this.$emit('updateTree', {
+                id: this.umlID,
+                children: this.children,
+                expanded: true,
+            });
+            return createdEl;
+        },
+        async deleteElement(el) {
+            const owner = await el.owner.get();
+            this.$emit('elementUpdate', deleteElementElementUpdate(el));
+            await this.$umlWebClient.deleteElement(el);
+            this.$umlWebClient.put(owner);
+            this.$emit('elementUpdate', createElementUpdate(owner));
+        },
+        async createNewClassDiagram(el, diagramID) {
+            const diagramPackage = await createClassDiagram(diagramID, el, this.$umlWebClient);
+            this.expanded = true;
+            this.children.push(diagramPackage.id);
+            this.$emit('updateTree', {
+                id: this.umlID,
+                children: this.children,
+                expanded: true,
+            });
+            this.$emit('diagram', diagramPackage);
+            return diagramPackage;
+        },
         async populateDisplayInfo() {
             const treeNode = this.treeGraph.get(this.umlID);
             this.expanded = treeNode.expanded;
@@ -157,35 +226,35 @@ export default {
                     label: 'Create Class Diagram',
                     disabled: this.$umlWebClient.readonly,
                     onClick: async () => {
-                        const diagramPackage = await createClassDiagram(el, this.$umlWebClient);
-                        await this.$umlWebClient.get(diagramPackage.id);
-                        this.expanded = true;
-                        this.children.push(diagramPackage.id);
-                        this.$emit('updateTree', {
-                            id: this.umlID,
-                            children: this.children,
-                            expanded: true,
+                        const diagramID = randomID()
+                        this.$emit('command', {
+                            name: 'diagramCreate',
+                            element: this.umlID,
+                            redo: false,
+                            context: {
+                                diagramID: diagramID,
+                                parentID: this.umlID,
+                            }
                         });
-                        this.$emit('diagram', diagramPackage);
+                        this.createNewClassDiagram(el, diagramID);
                     }
-                })
+                });
             }
 
             const createAndAddToSet = async (type, set) => {
-                const createdEl= await this.$umlWebClient.post(type);
-                el.sets[set].add(createdEl);
-                this.$umlWebClient.put(createdEl);
-                this.$umlWebClient.put(el);
-                el = await this.$umlWebClient.get(el.id);
-                this.children.push(createdEl.id);
-                this.expanded = true;
-                this.$emit('elementUpdate', createElementUpdate(el));
-                this.$emit('updateTree', {
-                    id: this.umlID,
-                    children: this.children,
-                    expanded: true,
+                const createdEl = await this.createElementAndAddToSet(randomID(), type, set, el);
+                this.$emit('command', {
+                    name: 'elementExplorerCreate',
+                    element: this.umlID,
+                    redo: false,
+                    context: {
+                        createElID: createdEl.id,
+                        parentID: this.umlID,
+                        set: set,
+                        type: type,
+                    }
                 });
-            }; 
+            };
 
             // create elements
             const createOption = {
@@ -302,11 +371,7 @@ export default {
                 label: 'Delete',
                 disabled: this.$umlWebClient.readonly,
                 onClick: async () => {
-                    const owner = await el.owner.get();
-                    this.$emit('elementUpdate', deleteElementElementUpdate(el));
-                    await this.$umlWebClient.deleteElement(el);
-                    this.$umlWebClient.put(owner);
-                    this.$emit('elementUpdate', createElementUpdate(owner));
+                    this.deleteElement(el);
                 }
             });
 
@@ -453,6 +518,9 @@ export default {
         },
         propogateUpdateTree(event) {
             this.$emit('updateTree', event);
+        },
+        propogateCommand(event) {
+            this.$emit('command', event);
         }
     }
 }
@@ -493,6 +561,8 @@ export default {
                     :depth="depth + 1"
                     :selected-elements="selectedElements"
                     :tree-graph="treeGraph"
+                    :command-stack="commandStack"
+                    :undo-stack="undoStack"
                     :key="child"
                     @specification="propogateSpecification" 
                     @element-update="propogateElementUpdate"
@@ -500,7 +570,8 @@ export default {
                     @draginfo="propogateDraginfo"
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
-                    @update-tree="propogateUpdateTree"></ElementExplorer>
+                    @update-tree="propogateUpdateTree"
+                    @command="propogateCommand"></ElementExplorer>
         </div>
     </div>
 </template>

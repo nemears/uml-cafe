@@ -12,6 +12,7 @@ import UmlLayouter from './UmlLayouter';
 import DoubleClickSpecification from './DoubleClickSpecification';
 import ElementUpdate from './ElementUpdate';
 import ModelElementMap from './ModelElementMap';
+import ProxyCommands from './ProxyCommands';
 import UmlContextMenu from './UmlContextMenu';
 import NameEditProvider from './NameEditProvider';
 import DirectEditing from 'diagram-js-direct-editing/lib/DirectEditing';
@@ -40,6 +41,7 @@ export default {
     'doubleClickSpecification',
     'elementUpdate',
     'modelElementMap',
+    'proxyCommands',
     'umlContextMenu',
     'nameEditProvider',
     'directEditing',
@@ -66,6 +68,7 @@ export default {
   doubleClickSpecification: ['type', DoubleClickSpecification],
   elementUpdate: ['type', ElementUpdate],
   modelElementMap: ['type', ModelElementMap],
+  proxyCommands: ['type', ProxyCommands],
   umlContextMenu: ['type', UmlContextMenu],
   nameEditProvider: ['type', NameEditProvider],
   directEditing: ['type', DirectEditing],

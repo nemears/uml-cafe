@@ -3,6 +3,7 @@ import { Editor } from './diagram/editor';
 const EventEmitter = require('events');
 import { createElementUpdate } from '../umlUtil.js';
 import { getUmlDiagramElement, deleteUmlDiagramElement } from './diagram/api/diagramInterchange';
+import { toRaw } from 'vue';
 export default {
     data() {
         return {
@@ -13,7 +14,7 @@ export default {
             loading: true,
         };
     },
-    props: ['umlID', 'commandStack'],
+    props: ['umlID', 'commandStack', 'undoStack'],
     emits: ['specification', 'elementUpdate', 'command'],
     inject: ['draginfo', 'elementUpdate', 'userSelected', 'userDeselected'],
     watch : {
@@ -36,6 +37,14 @@ export default {
         },
         userDeselected(newUserDeselected) {
             this.emitter.emit('user.deselected', newUserDeselected);
+        },
+        commandStack(newCommandStack) {
+            const newCommand = newCommandStack[0];
+            newCommand.context.proxy = true;
+            this.emitter.emit('externalCommand', newCommand);
+        },
+        undoStack(newUndoStack) {
+            // TODO
         }
     },
     async mounted() {
@@ -242,7 +251,6 @@ export default {
                     }
                 }
             }
-            
 
             const diagramPage = this;
             // handle emits from diagram to update rest of app
@@ -261,14 +269,29 @@ export default {
                 diagramPage.$contextmenu(event);
             });
             scopedEmitter.on('command', (event) => {
-                event.diagram = diagramPage.umlID;
+                if (!event.element) {
+                    event.element = diagramPage.umlID;
+                }
                 diagramPage.$emit('command', event);
             });
 
-            for (let command of this.commandStack.toReversed()) {  // linter says bad but vue likes it
+            const executeCommand = (command) => {
                 command.context.proxy = true;
-                commandStack.execute(command.name, JSON.parse(JSON.stringify(command.context)));
+                if (command.element === this.umlID) {
+                    commandStack.execute(command.name, toRaw(command.context));
+                } else {
+                    commandStack.execute('proxy', command);
+                }
             }
+
+            for (let command of this.commandStack.toReversed()) {
+                executeCommand(command);
+            }
+            for (let command of this.undoStack) {
+                executeCommand(command);
+                command.context.proxy = true;
+            }
+            this.undoStack.toReversed().forEach( () => commandStack.undo());
             this.emitter = Object.freeze(scopedEmitter);
             this.loading = false;
         }

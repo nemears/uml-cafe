@@ -41,6 +41,7 @@ export default {
 			userSelected: undefined,
 			userDeselected: undefined,
             commandStack: [],
+            undoStack: [],
 		}
 	},
 	provide() {
@@ -98,6 +99,8 @@ export default {
 		}
 
 		this.users = userList;
+
+        document.addEventListener('keypress', this.keypress);
 
 		this.getHeadFromServer();
 
@@ -160,6 +163,13 @@ export default {
         }, 180000);
 	},
 	methods: {
+        keypress(event) {
+            if (event.key == 'z' && event.ctrlKey) { // ctrl-z
+                this.undo();
+            } else if (event.key == 'y' && event.ctrlKey) {
+                this.redo();
+            }
+        },
 		async getHeadFromServer() {
 			this.isFetching = true;
 			if (this.$umlWebClient.initialized) {
@@ -272,6 +282,7 @@ export default {
             this.elementUpdate = newElementUpdate;
         },
 		diagram(diagramClass) {
+            document.removeEventListener('keydown', this.keypress);
 			if (this.tabs.find(tab => tab.id === diagramClass.id)) { // no duplicates
 				this.specificationTab = diagramClass.id;
 				this.focus(this.specificationTab);
@@ -331,6 +342,9 @@ export default {
                 if (tab.id === id) {
                     tab.isActive = true;
 					this.editorType = tab.type;
+                    if (this.editorType === 'diagram') {
+                        document.addEventListener('keydown', this.keypress);
+                    }
                 }
                 else {
                     tab.isActive = false;
@@ -566,11 +580,32 @@ export default {
         command(event) {
             if (event.undo) {
                 // TODO do some handling
-                this.commandStack.shift();
+                this.undo();
             } else {
                 this.commandStack.unshift(event);
+                this.undoStack = [];
+                if (event.element !== this.specificationTab) {
+                    this.commandStack = [...this.commandStack]; // trigger watchers
+                }
             }
         },
+        undo() {
+            if (this.commandStack.length > 0) {
+                const undoneCommand = this.commandStack.shift();
+                this.undoStack.unshift(undoneCommand);
+                if (undoneCommand !== this.specificationTab) {
+                    this.undoStack = [...this.undoStack]; // trigger watchers
+                }
+            }
+        },
+        redo() {
+            if (this.undoStack.length > 0) {
+                const redoCommand = this.undoStack.shift();
+                redoCommand.redo = true;
+                this.commandStack.unshift(redoCommand);
+                this.commandStack = [...this.commandStack];
+            }
+        }
 	}
 }
 </script>
@@ -613,13 +648,16 @@ export default {
 					:depth="0"
                     :selected-elements="selectedElements"
                     :tree-graph="treeGraph"
+                    :command-stack="commandStack"
+                    :undo-stack="undoStack"
 					@specification="specification" 
 					@element-update="elementUpdateHandler" 
 					@diagram="diagram"
 					@draginfo="dragInfo"
                     @select="select"
                     @deselect="deselect"
-                    @update-tree="updateTree"></ElementExplorer>
+                    @update-tree="updateTree"
+                    @command="command"></ElementExplorer>
 			</div>
 			<div class="editor">
 				<WelcomePage v-if="editorType=='Welcome'"></WelcomePage>
@@ -634,6 +672,7 @@ export default {
 				<DiagramPage v-if="editorType=='Diagram'" 
 						:uml-i-d="specificationTab" 
                         :command-stack="commandStack"
+                        :undo-stack="undoStack"
 						@specification="specification"
 						@element-update="elementUpdateHandler"
                         @command="command"

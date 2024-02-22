@@ -22,15 +22,18 @@ class EdgeCreatorHandler {
         canvas = this._canvas,
         diagramEmitter = this._diagramEmitter,
         graphicsFactory = this._graphicsFactory;
+        const proxyStart = context.context.start;
+        const start = elementRegistry.get(context.context.id);
+        if (start) {
+            context.context.start = start;
+        }
         if (context.proxy) {
             delete context.proxy;
             context.hover = elementRegistry.get(context.hover.id);
-            const connectType = context.context.start.connectType;
-            context.context.start = elementRegistry.get(context.context.start.id);
-            context.context.start.connectType = connectType;
-            const connectionProxy = context.context.connection;
+            context.context.start.connectType = proxyStart.connectType;
             context.context.connection = elementRegistry.get(context.connectionID);
-            if (!context.context.connection) {
+            const connectionProxy = context.context.connection;
+            if (!context.context.connection && start) {
                 connectionProxy.source = elementRegistry.get(connectionProxy.source);
                 connectionProxy.target = elementRegistry.get(connectionProxy.target);
                 connectionProxy.modelElement = umlWebClient.getLocal(connectionProxy.modelElement);
@@ -81,6 +84,10 @@ class EdgeCreatorHandler {
         return context.context.connection;
     }
     revert(context) {
+        if (context.proxy) {
+            delete context.proxy;
+            return;
+        }
         const diagramEmitter = this._diagramEmitter,
         eventBus = this._eventBus,
         canvas = this._canvas, 

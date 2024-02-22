@@ -73,8 +73,8 @@ export async function assignTabLabel(newElement) {
     }
 }
 
-export async function createClassDiagram(owner, umlWebClient) {
-    const diagramPackage = await umlWebClient.post('package');
+export async function createClassDiagram(diagramID, owner, umlWebClient) {
+    const diagramPackage = await umlWebClient.post('package', {id:diagramID});
     owner.packagedElements.add(diagramPackage);
     diagramPackage.name = owner.name;
     const diagramStereotypeInstance = await umlWebClient.post('instanceSpecification');

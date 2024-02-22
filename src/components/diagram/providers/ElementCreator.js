@@ -1,20 +1,26 @@
 import { createDiagramShape, deleteUmlDiagramElement } from "../api/diagramInterchange";
 
 class ElementCreationHandler {
-    constructor(eventBus, umlWebClient, diagramContext, canvas, elementRegistry, diagramEmitter) {
+    constructor(eventBus, umlWebClient, diagramContext, canvas, elementRegistry, diagramEmitter, elementFactory) {
         this.eventBus = eventBus;
         this.umlWebClient = umlWebClient;
         this.diagramContext = diagramContext;
         this.canvas = canvas;
-        this.elementRegistry = elementRegistry;
+        this._elementRegistry = elementRegistry;
         this.diagramEmitter = diagramEmitter;
+        this._elementFactory = elementFactory;
     }
     execute(event) {
+        const elementFactory = this._elementFactory,
+        elementRegistry = this._elementRegistry;
         if (event.proxy) {
             delete event.proxy;
             const elements = [];
             for (const element of event.elements) {
-                const realElement = this.elementRegistry.get(element.id);
+                let realElement = elementRegistry.get(element.id);
+                if (!realElement) {
+                    realElement = elementFactory.createShape(element);
+                }
                 if (element.newUMLElement) {
                     realElement.newUMLElement = true;
                 }
@@ -25,7 +31,17 @@ class ElementCreationHandler {
         }
         const elements = [];
         for (const element of event.context.elements) {
-            elements.push({id: element.id, newUMLElement: element.newUMLElement});
+            elements.push(
+                {
+                    id: element.id, 
+                    newUMLElement: element.newUMLElement,
+                    x: element.x,
+                    y: element.y,
+                    width: element.width,
+                    height: element.height,
+                    modelElement: element.modelElement,
+                }
+            );
         }
         this.diagramEmitter.fire('command', {name: 'elementCreation', context: {
             elements: elements,
@@ -50,6 +66,10 @@ class ElementCreationHandler {
         return event.context.elements;
     }
     revert(event) {
+        if (event.proxy) {
+            delete event.proxy;
+            return;
+        }
         this.diagramEmitter.fire('command', {undo: {
             // TODO
         }});
@@ -69,7 +89,7 @@ class ElementCreationHandler {
     }
 }
 
-ElementCreationHandler.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'canvas', 'elementRegistry', 'diagramEmitter'];
+ElementCreationHandler.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'canvas', 'elementRegistry', 'diagramEmitter', 'elementFactory'];
 
 export default class ElementCreator {
     constructor(eventBus, commandStack) {
