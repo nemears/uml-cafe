@@ -314,6 +314,13 @@ export default {
             } else {
                 this.signalData = undefined;
             }
+            if (el.isSubClassOf('feature')) {
+                this.featureData = {};
+                this.featureData.isStatic = el.isStatic;
+                await reloadSingleton(this.featureData, el.featuringClassifier, 'featuringClassifier');
+            } else {
+                this.featureData = undefined;
+            }
 
             this.isFetching = false;
         },
@@ -1072,6 +1079,25 @@ export default {
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     ></SetData>
+    </ElementType>
+    <ElementType :element-type="'Feature'" v-if="featureData !== undefined">
+        <InputData  :label="'isStatic'" 
+                    :input-type="'checkbox'"
+                    :initial-data="featureData.isStatic"
+                    :umlid="umlID"
+                    :type="'isStatic'" 
+                    @element-update="propogateElementUpdate"
+                    ></InputData>
+        <SingletonData :label="'Featuring Classifier'"
+                    :initial-data="featureData.featuringClassifier"
+                    :uml-i-d="umlID"
+                    :singleton-data="{ setName: 'featuringClassifier', type: 'classifier' }"
+                    :selected-elements="selectedElements"
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
+                    ></SingletonData>        
     </ElementType>
     </div> 
 </div>
