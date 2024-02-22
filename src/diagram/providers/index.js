@@ -21,6 +21,7 @@ import InterfaceHandler from './InterfaceHandler';
 import ModelElementMap from './ModelElementMap';
 import PrimitiveTypeHandler from './PrimitiveTypeHandler';
 import Property from './Property';
+import ProxyCommands from './ProxyCommands'
 import RelationshipEdgeCreator from './RelationshipEdgeCreator';
 import RealizationHandler from './relationships/RealizationHandler';
 import SignalHandler from './SignalHandler';
@@ -62,6 +63,7 @@ export default {
         'modelElementMap',
         'primitiveTypeHandler',
         'property',
+        'proxyCommands',
         'relationshipEdgeCreator',
         'realizationHandler',
         'signalHandler',
@@ -101,6 +103,7 @@ export default {
     umlContextMenu: ['type', UmlContextMenu],
     primitiveTypeHandler: ['type', PrimitiveTypeHandler],
     property: ['type', Property],
+    proxyCommands: ['type', ProxyCommands],
     relationshipEdgeCreator: ['type', RelationshipEdgeCreator],
     realizationHandler: ['type', RealizationHandler],
     signalHandler: ['type', SignalHandler],
