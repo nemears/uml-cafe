@@ -206,7 +206,7 @@ export default class UmlShapeProvider {
         });
         eventBus.on('server.create', (event) => {
             const elementType = event.serverElement.elementType();
-            if (elementType === 'shape' || elementType === 'compartmentableShape' || elementType === 'classifierShape') {
+            if (elementType === 'shape') {
                 const umlShape = event.serverElement;
                 const owner = elementRegistry.get(umlShape.owningElement);
                 const shape = elementFactory.createShape({
@@ -224,7 +224,7 @@ export default class UmlShapeProvider {
         });
         eventBus.on('server.update', (event) => {
             const elementType = event.serverElement.elementType();
-            if (elementType === 'shape' || elementType === 'compartmentableShape' || elementType === 'classifierShape') {
+            if (elementType === 'shape') {
                 const umlShape = event.serverElement;
                 const localShape = event.localElement;
                 localShape.x = umlShape.bounds.x;
