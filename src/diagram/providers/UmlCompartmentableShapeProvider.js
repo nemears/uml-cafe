@@ -7,7 +7,7 @@ import { adjustAttachedEdges, adjustShape } from './UmlShapeProvider';
 export const CLASSIFIER_SHAPE_GAP_HEIGHT = 5;
 
 class ResizeCompartmentableShapeHandler {
-    constructor(diagramEmitter, umlWebClient, diagramContext, umlRenderer, eventBus) {
+    constructor(diagramEmitter, umlWebClient, diagramContext, umlRenderer, eventBus, graphicsFactory, canvas) {
         this.diagramEmitter = diagramEmitter;
         this.umlWebClient = umlWebClient;
         this.diagramContext = diagramContext,
@@ -21,8 +21,15 @@ class ResizeCompartmentableShapeHandler {
             shape.height = newBounds.height;
             
             adjustCompartmentsAndEdges(shape, this.umlRenderer);
-
-            this.resize(context);
+            if (!context.update) {
+                this.resize(context);
+            } else {
+                graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
+                // update compartments
+                for (const compartment of shape.compartments) {
+                    graphicsFactory.update('shape', compartment, canvas.getGraphics(compartment));
+                }
+            }
         });
         this.eventBus = eventBus;
     }
@@ -118,7 +125,7 @@ class ResizeCompartmentableShapeHandler {
     }
 }
 
-ResizeCompartmentableShapeHandler.$inject = ['diagramEmitter', 'umlWebClient', 'diagramContext', 'umlRenderer', 'eventBus']; 
+ResizeCompartmentableShapeHandler.$inject = ['diagramEmitter', 'umlWebClient', 'diagramContext', 'umlRenderer', 'eventBus', 'graphicsFactory', 'canvas']; 
 
 function adjustCompartmentsAndEdges(shape, umlRenderer) {
     let yPos = shape.y;
@@ -179,7 +186,7 @@ function adjustCompartmentsAndEdges(shape, umlRenderer) {
 }
 
 export default class UmlCompartmentableShapeProvider {
-    constructor(eventBus, commandStack) {
+    constructor(eventBus, commandStack, elementRegistry, elementFactory, canvas) {
         commandStack.registerHandler('resize.compartmentableShape.uml', ResizeCompartmentableShapeHandler);
         eventBus.on('resize.start', (event) => {
             const shape = event.shape;
@@ -211,7 +218,42 @@ export default class UmlCompartmentableShapeProvider {
                 event.context.canExecute = false;
             }
         });
+
+        eventBus.on('server.create', (event) => {
+            const elementType = event.serverElement.elementType();
+            if (elementType === 'compartmentableShape' || elementType === 'classifierShape') {
+                const umlShape = event.serverElement;
+                const owner = elementRegistry.get(umlShape.owningElement);
+                const shape = elementFactory.createShape({
+                    x: umlShape.bounds.x,
+                    y: umlShape.bounds.y,
+                    width: umlShape.bounds.width,
+                    height: umlShape.bounds.height,
+                    update: true,
+                    id: umlShape.id,
+                    modelElement: umlShape.modelElement,
+                    elementType: elementType,
+                    compartments: [],
+                });
+                canvas.addShape(shape, owner);
+            }
+        });
+
+        eventBus.on('server.update', (event) => {
+            const elementType = event.serverElement.elementType();
+            if (elementType === 'compartmentableShape' || elementType === 'classifierShape') {
+                const umlShape = event.serverElement;
+                const localShape = event.localElement;
+                if (localShape.x != umlShape.bounds.x || localShape.y != umlShape.bounds.y || localShape.width != umlShape.bounds.width || localShape.height != umlShape.bounds.height){
+                    eventBus.fire('compartmentableShape.resize', {
+                        shape: localShape,
+                        newBounds: umlShape.bounds,
+                        update: true,
+                    });
+                }
+            }
+        });
     }
 }
 
-UmlCompartmentableShapeProvider.$inject = ['eventBus', 'commandStack'];
+UmlCompartmentableShapeProvider.$inject = ['eventBus', 'commandStack', 'elementRegistry', 'elementFactory', 'canvas'];

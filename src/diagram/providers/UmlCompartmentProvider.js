@@ -38,6 +38,7 @@ export default class UmlCompartmentProvider {
                     inselectable: true,
                     elementType: context.serverElement.elementType(),
                 });
+                owner.compartments.push(compartment);
                 canvas.addShape(compartment, owner);
             }
         });
