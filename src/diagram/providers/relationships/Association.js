@@ -209,7 +209,9 @@ export default class Association extends RuleProvider {
                 await umlWebClient.deleteElement(context.context.connection.modelElement);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(...elsToDeleteOwners));
             }
-            deleteMembers();
+            if (context.context.type === 'association') {
+                deleteMembers();
+            }
         });
 
         // handle all global connects
