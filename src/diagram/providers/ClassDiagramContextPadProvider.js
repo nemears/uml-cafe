@@ -1,5 +1,4 @@
-import { createDiagramEdge, createDiagramShape, deleteUmlDiagramElement } from '../api/diagramInterchange';
-import { deleteModelElement } from './UmlContextMenu';
+import { createAssociationEndLabel, createClassifierShape, createComparment, createCompartmentableShape, createDiagramEdge, createDiagramLabel, createDiagramShape, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel, deleteUmlDiagramElement } from '../api/diagramInterchange';
 import { createCommentClick } from '../../umlUtil';
 import { pick } from 'min-dash';
 
@@ -247,35 +246,55 @@ export default class ClassDiagramContextPadProvider {
 ClassDiagramContextPadProvider.$inject = ['connect', 'contextPad', 'create', 'umlWebClient', 'diagramEmitter', 'elementFactory', 'umlContextMenu', 'commandStack'];
 
 class RemoveDiagramElementHandler {
-    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext, elementFactory) {
+    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext, elementFactory, eventBus) {
         this._canvas = canvas;
         this._umlWebClient = umlWebClient;
         this._diagramEmitter = diagramEmitter;
         this._elementRegistry = elementRegistry;
         this._diagramContext = diagramContext;
         this._elementFactory = elementFactory;
+        this._eventBus = eventBus;
     }
-    async removeElement(diagramElement) {
+    async removeElement(diagramElement, context) {
         const canvas = this._canvas,
-        umlWebClient = this._umlWebClient;
+        umlWebClient = this._umlWebClient,
+        eventBus = this._eventBus;    
+        context.elementContext[diagramElement.id] = {
+            children: [...diagramElement.children],
+        };
         if (diagramElement.waypoints) {
             for (const child of [...diagramElement.children]) {
-                await this.removeElement(child);
+                await this.removeElement(child, context);
             }
             await deleteUmlDiagramElement(diagramElement.id, umlWebClient);
             canvas.removeConnection(diagramElement);
+            eventBus.fire('uml.remove', {
+                element: diagramElement,
+            });
         } else {
             for (const child of [...diagramElement.children]) {
-                await this.removeElement(child);
+                await this.removeElement(child, context);
             }
+            context.elementContext[diagramElement.id].incoming = [...diagramElement.incoming];
             for (const edge of [...diagramElement.incoming]) {
-                await this.removeElement(edge);
+                await this.removeElement(edge, context);
             }
+            context.elementContext[diagramElement.id].outgoing = [...diagramElement.outgoing];
             for (const edge of [...diagramElement.outgoing]) {
-                await this.removeElement(edge);
+                await this.removeElement(edge, context);
             }
+            //if (diagramElement.compartments) {
+            //    for (const compartment of [...diagramElement.compartments]) {
+            //        await this.removeElement(compartment, context);
+            //    }
+            //}
             await deleteUmlDiagramElement(diagramElement.id, umlWebClient);
+            const parent = diagramElement.parent;
             canvas.removeShape(diagramElement);
+            eventBus.fire('uml.remove', {
+                element: diagramElement,
+                parent: parent,
+            });
         }
     }
     execute(context) {
@@ -326,32 +345,108 @@ class RemoveDiagramElementHandler {
                 id: context.parent.id
             }
         }});
-        this.removeElement(context.element);
+        context.elementContext = {};
+        context.elementContext[context.parent.id] = {
+            children: context.parent.children, // TODO incoming outgoing
+        };
+        this.removeElement(context.element, context);
         return context.element;
     }
+
+    addElement(element, parent, context) {
+        const canvas = this._canvas;
+        const elementContext = context.elementContext[element.id];
+        if (element.waypoints) {
+            canvas.addConnection(element, parent);
+            for (const child of elementContext.children) {
+                this.addElement(child, element, context);
+            }
+        } else {
+            canvas.addShape(element, parent);
+            for (const child of elementContext.children) {
+                this.addElement(child, element, context);
+            }
+            for (const edge of elementContext.incoming) {
+                this.addElement(edge, element, context);
+            }
+            for (const edge of elementContext.outgoing) {
+                this.addElement(edge, element, context);
+            }
+        }
+    }
+
+    async updateToServer(element, context) {
+        const umlWebClient = this._umlWebClient,
+        diagramContext = this._diagramContext,
+        eventBus = this._eventBus;
+        switch (element.elementType) {
+            case 'shape':
+                await createDiagramShape(element, umlWebClient, diagramContext);
+                break;
+            case 'compartmentableShape':
+                await createCompartmentableShape(element, umlWebClient, diagramContext);
+                break;
+            case 'classifierShape':
+                await createClassifierShape(element, umlWebClient, diagramContext);
+                break;
+            case 'compartment':
+                await createComparment(element, umlWebClient, diagramContext);
+                break;
+            case 'edge':
+                await createDiagramEdge(element, umlWebClient, diagramContext);
+                break;
+            case 'label':
+                await createDiagramLabel(element, umlWebClient, diagramContext);
+                break;
+            case 'nameLabel':
+                await createNameLabel(element, umlWebClient, diagramContext);
+                break;
+            case 'keywordLabel':
+                await createKeywordLabel(element, umlWebClient, diagramContext);
+                break;
+            case 'typedElementLabel':
+                await createTypedElementLabel(element, umlWebClient, diagramContext);
+                break;
+            case 'associationEndLabel':
+                await createAssociationEndLabel(element, umlWebClient, diagramContext);
+                break;
+            case 'multiplicityLabel':
+                await createMultiplicityLabel(element, umlWebClient, diagramContext);
+                break;
+            default:
+                throw Error('unhandled uml di element type: ' + element.elementType);
+        }
+        eventBus.fire('uml.remove.undo', {
+            element: element,
+            parentContext: context.elementContext[element.parent.id],
+        });
+        for (const child of element.children) {
+            await this.updateToServer(child, context);
+        }
+        if (!element.waypoints) {
+            for (const edge of element.incoming) {
+                await this.updateToServer(edge, context);
+            }
+            for (const edge of element.outgoing) {
+                await this.updateToServer(edge, context);
+            }
+        }
+    }
+
     revert(context) {
-        const diagramEmitter = this._diagramEmitter,
-        canvas = this._canvas,
-        umlWebClient = this._umlWebClient,
-        diagramContext = this._diagramContext;
+        const diagramEmitter = this._diagramEmitter;
         diagramEmitter.fire('command', {undo: {
             // TODO
         }});
 
-        // TODO
-        if (context.element.waypoints) {
-            canvas.addConnection(context.element, context.parent);
-            createDiagramEdge(context.element, umlWebClient, diagramContext);
-        } else {
-            canvas.addShape(context.element, context.parent);
-            createDiagramShape(context.element, umlWebClient, diagramContext);
-        }
+        this.addElement(context.element, context.parent, context);
+        this.updateToServer(context.element, context);
 
         return context.element;
     }
 }
 
-RemoveDiagramElementHandler.$inject = ['canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry', 'diagramContext', 'elementFactory'];
+RemoveDiagramElementHandler.$inject = ['canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry', 'diagramContext', 'elementFactory', 'eventBus'];
 
 export function removeDiagramElement(diagramElement, commandStack) {
     commandStack.execute('removeDiagramElement', {

@@ -170,6 +170,37 @@ export default class Property extends RuleProvider {
                 doLater();
             }
         });
+        eventBus.on('uml.remove', (context) => {
+            if (context.element.modelElement && context.element.modelElement.elementType() === 'property') {
+                if (context.parent.elementType === 'compartment') {
+                    // TODO readjust compartment children
+                    let yPos = context.parent.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
+                    for (const child of context.parent.children) {
+                        if (child.id === context.element) {
+                            throw Error("Bad state child must not be in parent's children!");
+                        }
+                        child.y = yPos;
+                        yPos += PROPERTY_GAP;
+                        graphicsFactory.update('shape', child, canvas.getGraphics(child));
+                    }
+                }
+            }
+        });
+        eventBus.on('uml.remove.undo', (context) => {
+            const element = context.element,
+            parentContext = context.parentContext;
+            if (element.parent.elementType === 'compartment') {
+                // update compartment contents
+                let yPos = element.parent.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
+                let adjust = false;
+                for (const child of parentContext.children) {
+                    // adjust shape by shifting
+                    child.y = yPos;
+                    graphicsFactory.update('shape', child, canvas.getGraphics(child));
+                    yPos += PROPERTY_GAP;
+                }
+            }
+        });
     }
 
     init() {
@@ -178,13 +209,11 @@ export default class Property extends RuleProvider {
             const shapes = context.shapes;
             for (const shape of shapes) {
                 if (shape.modelElement && shape.modelElement.elementType() === 'property') {
-                    if (shape.labelTarget) {
-                        return true;
+                    if (shape.labelTarget && shape.labelTarget.elementType === 'compartment') {
+                        return false;
                     }
-                    return false;
                 }
             }
-            return true;
         });
         this.addRule('shape.resize', (context) => {
             if (context.shape.modelElement && context.shape.modelElement.elementType() === 'property') {
