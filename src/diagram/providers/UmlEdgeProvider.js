@@ -48,16 +48,16 @@ export default class UmlEdgeProvider {
         });
     
         eventBus.on('connectionSegment.move.move', (event) => {
-            const connectionSegmentMove = async () => {
-                await adjustEdgeWaypoints(event.connection, umlWebClient);
-                umlWebClient.put(diagramContext.diagram);
-            };
-            if (umlWebClient.client.otherClients.size > 0) {
-                connectionSegmentMove();
-            } else {
+            //const connectionSegmentMove = async () => {
+            //    await adjustEdgeWaypoints(event.connection, umlWebClient);
+            //    umlWebClient.put(diagramContext.diagram);
+            //};
+            //if (umlWebClient.client.otherClients.size > 0) {
+            //    connectionSegmentMove();
+            //} else {
                 event.context.connection.waypoints = event.context.newWaypoints;
                 graphicsFactory.update(event.context.connection, 'connection', canvas.getGraphics(event.context.connection));
-            }
+            //}
         });
     
         eventBus.on('bendpoint.move.end', 1100, (event) => {
@@ -97,6 +97,9 @@ export default class UmlEdgeProvider {
                         source: source,
                         modelElement: umlEdge.modelElement,
                         children: [],
+                        numSourceLabels: 0,
+                        numCenterLabels: 0,
+                        numTargetLabels: 0,
                     });
                     const owner = elementRegistry.get(umlEdge.owningElement);
                     canvas.addConnection(connection, owner);
