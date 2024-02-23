@@ -1,6 +1,7 @@
 import { createAssociationEndLabel, createClassifierShape, createComparment, createCompartmentableShape, createDiagramEdge, createDiagramLabel, createDiagramShape, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel, deleteUmlDiagramElement } from '../api/diagramInterchange';
 import { createCommentClick } from '../../umlUtil';
 import { pick } from 'min-dash';
+import { deleteModelElement } from './UmlContextMenu';
 
 /**
  * A example context pad provider.
@@ -254,6 +255,14 @@ class RemoveDiagramElementHandler {
         this._diagramContext = diagramContext;
         this._elementFactory = elementFactory;
         this._eventBus = eventBus;
+
+        eventBus.on('removeElement', (context) => {
+            this.removeElement(context.element, context);
+        });
+        eventBus.on('removeElement.undo', (context) => {
+            this.addElement(context.element, context.parent, context);
+            this.updateToServer(context.element, context);
+        });
     }
     async removeElement(diagramElement, context) {
         const canvas = this._canvas,
@@ -262,6 +271,9 @@ class RemoveDiagramElementHandler {
         context.elementContext[diagramElement.id] = {
             children: [...diagramElement.children],
         };
+        if (diagramElement.modelElement) {
+            context.elementContext[diagramElement.id].modelElementID = diagramElement.modelElement.id;
+        }
         if (diagramElement.waypoints) {
             for (const child of [...diagramElement.children]) {
                 await this.removeElement(child, context);
@@ -301,7 +313,8 @@ class RemoveDiagramElementHandler {
         const diagramEmitter = this._diagramEmitter,
         elementRegistry = this._elementRegistry,
         elementFactory = this._elementFactory,
-        umlWebClient = this._umlWebClient;
+        umlWebClient = this._umlWebClient,
+        eventBus = this._eventBus;
         const elementProxy = context.element;
         context.element = elementRegistry.get(context.element.id); // TODO ??? elementFactory?
         if (!context.element) {
@@ -349,7 +362,7 @@ class RemoveDiagramElementHandler {
         context.elementContext[context.parent.id] = {
             children: context.parent.children, // TODO incoming outgoing
         };
-        this.removeElement(context.element, context);
+        eventBus.fire('removeElement', context);
         return context.element;
     }
 
@@ -379,6 +392,11 @@ class RemoveDiagramElementHandler {
         const umlWebClient = this._umlWebClient,
         diagramContext = this._diagramContext,
         eventBus = this._eventBus;
+        const elementContext = context.elementContext[element.id];
+        if (elementContext.modelElementID) {
+            element.modelElement = await umlWebClient.get(elementContext.modelElementID);
+            await element.modelElement.owner.get();
+        }
         switch (element.elementType) {
             case 'shape':
                 await createDiagramShape(element, umlWebClient, diagramContext);
@@ -434,13 +452,14 @@ class RemoveDiagramElementHandler {
     }
 
     revert(context) {
-        const diagramEmitter = this._diagramEmitter;
+        const diagramEmitter = this._diagramEmitter,
+        eventBus = this._eventBus;
+
         diagramEmitter.fire('command', {undo: {
             // TODO
         }});
 
-        this.addElement(context.element, context.parent, context);
-        this.updateToServer(context.element, context);
+        eventBus.fire('removeElement.undo', context);
 
         return context.element;
     }
