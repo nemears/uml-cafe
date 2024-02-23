@@ -124,6 +124,14 @@ export default class UmlEdgeProvider {
                 graphicsFactory.update('connection', localEdge, canvas.getGraphics(localEdge));
             }
         });
+
+        eventBus.on('server.delete', (event) => {
+            const element = event.element,
+            elementType = element.elementType;
+            if (elementType === 'edge') {
+                canvas.removeShape(element);
+            }
+        });
     }
 }
 

@@ -42,6 +42,14 @@ export default class UmlCompartmentProvider {
                 canvas.addShape(compartment, owner);
             }
         });
+
+        eventBus.on('server.delete', (event) => {
+            const element = event.element,
+            elementType = element.elementType;
+            if (elementType === 'compartment') {
+                canvas.removeShape(element);
+            }
+        });
     }
 }
 

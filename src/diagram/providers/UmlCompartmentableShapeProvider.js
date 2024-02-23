@@ -253,6 +253,14 @@ export default class UmlCompartmentableShapeProvider {
                 }
             }
         });
+        
+        eventBus.on('server.delete', (event) => {
+            const element = event.element,
+            elementType = element.elementType;
+            if (elementType === 'compartmentableShape' || elementType === 'classifierShape') {
+                canvas.removeShape(element);
+            }
+        });
     }
 }
 
