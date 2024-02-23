@@ -239,12 +239,13 @@ export default class UmlContextMenu {
 UmlContextMenu.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modelElementMap', 'directEditing', 'create', 'elementFactory', 'commandStack', 'canvas', 'relationshipEdgeCreator'];
 
 class DeleteModelElementHandler {
-    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext) {
+    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext, eventBus) {
         this._canvas = canvas;
         this._umlWebClient = umlWebClient;
         this._diagramEmitter = diagramEmitter;
         this._elementRegistry = elementRegistry;
         this._diagramContext = diagramContext;
+        this._eventBus = eventBus;
     }
     async doLater(context) {
         const umlWebClient = this._umlWebClient,
@@ -261,15 +262,31 @@ class DeleteModelElementHandler {
         }
     }
     execute(context) {
-        const canvas = this._canvas,
-        elementRegistry = this._elementRegistry,
-        diagramEmitter = this._diagramEmitter;
+        const diagramEmitter = this._diagramEmitter,
+        eventBus = this._eventBus;
         if (context.proxy) {
             delete context.proxy;
             return context.element;
         }
-        context.rawData = context.element.modelElement.emit();
         context.parent = context.element.parent;
+        
+        const element = context.element;
+        const elementsToRemove = [];
+        const rawData = {};
+        const owner = element.modelElement.owner.unsafe(); // should be good
+        rawData[owner.id] = owner.emit();
+        const queue = [element];
+        while (queue.length > 0) {
+            const front = queue.shift();
+            if (front.modelElement) {
+                rawData[front.modelElement.id] = front.modelElement.emit();
+            }
+            elementsToRemove.unshift(front);
+            for (const child of front.children) {
+                queue.push(child);
+            }
+        }
+        context.rawData = rawData;
         diagramEmitter.fire('command', {name: 'deleteModelElement', context: {
             element: {
                 id: context.element.id
@@ -277,56 +294,54 @@ class DeleteModelElementHandler {
             parent: {
                 id: context.parent.id
             },
-            rawData: context.rawData
+            rawData: rawData
         }});
-        const element = context.element;
-        const elementsToRemove = [];
-        const queue = [element];
-        while (queue.length > 0) {
-            const front = queue.shift();
-            elementsToRemove.unshift(front);
-            for (const child of front.children) {
-                queue.push(child);
-            }
-        }
-
         // remove all elements
-        for (const elementToRemove of elementsToRemove) {
-            if (elementToRemove.waypoints) {
-                canvas.removeConnection(elementToRemove);
-            } else {
-                canvas.removeShape(elementToRemove);
-            }
-        }
+        //for (const elementToRemove of elementsToRemove) {
+        //    if (elementToRemove.waypoints) {
+        //        canvas.removeConnection(elementToRemove);
+        //    } else {
+        //        canvas.removeShape(elementToRemove);
+        //    }
+        //}
         context.elementsToRemove = elementsToRemove;
+        context.elementContext = {};
+        context.elementContext[context.parent.id] = {
+            children: context.parent.children, // TODO incoming outgoing
+        };
+        eventBus.fire('removeElement', context);
         this.doLater(context);
     }
     revert(context) {
         const umlWebClient = this._umlWebClient,
-        canvas = this._canvas,
         diagramEmitter = this._diagramEmitter,
-        diagramContext = this._diagramContext;
+        eventBus = this._eventBus;
         diagramEmitter.fire('command', {undo: {
             // TODO
         }});
         // TODO this probably needs to be a lot more complicated
-        const remadeElement = parse(context.rawData);
-        umlWebClient.client._graph.set(remadeElement.id, remadeElement);
-        remadeElement.manager = umlWebClient.client;
-        umlWebClient.put(remadeElement);
-        context.element.modelElement = remadeElement;
-        if (context.element.waypoints) {
-            canvas.addConnection(context.element, context.parent);
-            createDiagramEdge(context.element, umlWebClient, diagramContext);
-        } else {
-            canvas.addShape(context.element, context.parent);
-            createDiagramShape(context.element, umlWebClient, diagramContext);
+        const elementsToUpdate = [];
+        for (const rawData of Object.values(context.rawData)) {
+            const remadeElement = parse(rawData);
+            umlWebClient.client._graph.set(remadeElement.id, remadeElement);
+            remadeElement.manager = umlWebClient.client;
+            umlWebClient.put(remadeElement);
+            elementsToUpdate.push(remadeElement);
         }
+        diagramEmitter.fire('elementUpdate', createElementUpdate(...elementsToUpdate));
+        eventBus.fire('removeElement.undo', context);
+        //if (context.element.waypoints) {
+        //    canvas.addConnection(context.element, context.parent);
+        //    createDiagramEdge(context.element, umlWebClient, diagramContext);
+        //} else {
+        //    canvas.addShape(context.element, context.parent);
+        //    createDiagramShape(context.element, umlWebClient, diagramContext);
+        //}
         return context.element;
     }
 }
 
-DeleteModelElementHandler.$inject = ['canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry', 'diagramContext'];
+DeleteModelElementHandler.$inject = ['canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry', 'diagramContext', 'eventBus'];
 
 class EdgeCreationHandler {
     constructor(modelElementMap, elementRegistry, diagramEmitter, elementFactory, canvas, umlWebClient, diagramContext) {

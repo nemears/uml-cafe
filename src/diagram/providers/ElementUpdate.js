@@ -111,10 +111,12 @@ async function updateDiagramElement(newElement, modelElementMap, elementRegistry
         for (const shapeID of diagramElementIDs) {
             const diagramElement = elementRegistry.get(shapeID);
             const serverElement = await getUmlDiagramElement(shapeID, umlWebClient);
-            eventBus.fire('server.update', {
-                localElement: diagramElement,
-                serverElement: serverElement,
-            });
+            if (diagramElement && serverElement) { // workaround / not optimal
+                eventBus.fire('server.update', {
+                    localElement: diagramElement,
+                    serverElement: serverElement,
+                });
+            }
         }
     }
 }
