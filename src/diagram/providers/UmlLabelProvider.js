@@ -1,7 +1,8 @@
+import { updateLabel } from '../api/diagramInterchange';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 
 export default class UmlLabelProvider extends RuleProvider {
-    constructor(eventBus, elementRegistry, elementFactory, canvas, graphicsFactory) {
+    constructor(eventBus, elementRegistry, elementFactory, canvas, graphicsFactory, umlWebClient) {
         super(eventBus);
         eventBus.on('server.create', (event) => {
             const elementType = event.serverElement.elementType();
@@ -110,9 +111,11 @@ export default class UmlLabelProvider extends RuleProvider {
 //        });
 
         eventBus.on('server.update', (event) => {
-            if (isLabel(event.serverElement.elementType())) {
-                const serverLabel = event.serverElement;
-                const localLabel = event.localElement;
+            const serverLabel = event.serverElement,
+            localLabel = event.localElement,
+            elementType = serverLabel.elementType();
+            
+            if (isLabel(elementType)) {
                 console.log('updating label');
                 console.log(serverLabel);
                 localLabel.x = serverLabel.bounds.x;
@@ -121,9 +124,21 @@ export default class UmlLabelProvider extends RuleProvider {
                 localLabel.height = serverLabel.bounds.height;
                 localLabel.text = serverLabel.text;
                 localLabel.modelElement = serverLabel.modelElement;
-
-                // update
+            }
+            if (elementType === 'nameLabel' && localLabel.text !== localLabel.modelElement.name) {
+                localLabel.text = localLabel.modelElement.name;
+                updateLabel(localLabel, umlWebClient);
+            }
+            if (isLabel(elementType)) {
                 graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
+            }
+        });
+
+        eventBus.on('server.delete', (event) => {
+            const element = event.element,
+            elementType = element.elementType;
+            if (isLabel(elementType)) {
+                canvas.removeShape(element);
             }
         });
     }
@@ -133,12 +148,11 @@ export default class UmlLabelProvider extends RuleProvider {
             if (context.shape.elementType === 'nameLabel' || context.shape.elementType === 'keyWordLabel') {
                 return false;
             }
-            return true;
         });         
     }
 }
 
-UmlLabelProvider.$inject = ['eventBus', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory'];
+UmlLabelProvider.$inject = ['eventBus', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory', 'umlWebClient'];
 
 export function isLabel(elementType) {
     return  elementType === 'label' || 
