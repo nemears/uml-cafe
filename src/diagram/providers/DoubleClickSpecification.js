@@ -1,7 +1,9 @@
 export default class DoubleClickSpecification {
     constructor(eventBus, diagramEmitter) {
         eventBus.on('element.dblclick', (event) => {
-            diagramEmitter.fire('specification', event.element.modelElement);
+            if (event.element.modelElement) {
+                diagramEmitter.fire('specification', event.element.modelElement);
+            }
         });
     }
 }
