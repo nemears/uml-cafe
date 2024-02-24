@@ -1,7 +1,7 @@
 <script>
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
-import { createElementUpdate, mapColor } from '../../umlUtil.js';
+import { createElementUpdate, mapColor, getPanelClass } from '../../umlUtil.js';
 export default {
     props: [
         'label', 
@@ -35,8 +35,22 @@ export default {
             dragCounter: 0,
             recentDragInfo: undefined,
             selected: false,
+            hover: false,
             currentUsers: [],
         }
+    },
+    computed: {
+        panelClass() {
+            const result = getPanelClass(this.selected, this.hover, this.currentUsers, this.$umlWebClient); 
+            switch (result) {
+                case 'elementExplorerPanel':
+                    return 'singletonElement';
+                case 'elementExplorerPanelLight':
+                    return 'singletonElementLight';
+                default:
+                    return result;
+            }
+        },
     },
     mounted() {
         if (this.initialData !== undefined) {
@@ -124,6 +138,7 @@ export default {
             this.img = data.img;
             this.valID = data.id;
             this.valLabel = data.label;
+            this.currentUsers = data.currentUsers;
         },
         async specification() {
             if (this.valID === undefined) {
@@ -266,6 +281,16 @@ export default {
                 }
             }
         },
+        mouseEnter() {
+            if (!this.hover) {
+                this.hover = true;
+            }
+        },
+        mouseLeave() {
+            if (this.hover) {
+                this.hover = false;
+            }
+        }
     },
     components: { CreationPopUp }
 }
@@ -277,7 +302,7 @@ export default {
         </div>
         <div class="singletonElement" 
             :class="[
-                selected ? 'selectedSingletonElement' : currentUsers.length > 0 ? currentUsers[0] : 'singletonElement', 
+                panelClass, 
                 drag ? badDrag ? 'singletonBadDrag' : 'singletonGoodDrag' : 'singletonElement'
             ]"
             @click.exact="select('none')"
@@ -288,6 +313,8 @@ export default {
             @dragleave="dragleave"
             @drop="drop"
             @dragover.prevent
+            @mouseenter="mouseEnter"
+            @mouseleave="mouseLeave"
             @contextmenu="onContextMenu($event)">
             <img v-bind:src="img" v-if="img !== undefined" />
             <div>
@@ -321,38 +348,56 @@ export default {
     display: flex;
     padding-left: 5px;
 }
-.singletonElement:hover {
+.singletonElementLight {
     background-color: var(--open-uml-selection-dark-2);
-}
-.selectedSingletonElement {
-    background-color: var(--uml-cafe-selected);
-}
-.selectedSingletonElement:hover {
-    background-color: var(--uml-cafe-selected-hover);
 }
 .redUserPanel {
     background-color: var(--uml-cafe-red-user);
 }
+.redUserPanelLight {
+    background-color: var(--uml-cafe-red-user-light);
+}
 .blueUserPanel {
     background-color: var(--uml-cafe-blue-user);
+}
+.blueUserPanelLight {
+    background-color: var(--uml-cafe-blue-user-light);
 }
 .greenUserPanel {
     background-color: var(--uml-cafe-green-user);
 }
+.greenUserPanelLight {
+    background-color: var(--uml-cafe-green-user-light);
+}
 .yellowUserPanel {
     background-color: var(--uml-cafe-yellow-user);
+}
+.yellowUserPanelLight {
+    background-color: var(--uml-cafe-yellow-user-light);
 }
 .magentaUserPanel {
     background-color: var(--uml-cafe-magenta-user);
 }
+.magentaUserPanelLight {
+    background-color: var(--uml-cafe-magenta-user-light);
+}
 .orangeUserPanel {
     background-color: var(--uml-cafe-orange-user);
+}
+.orangeUserPanelLight {
+    background-color: var(--uml-cafe-orange-user-light);
 }
 .cyanUserPanel {
     background-color: var(--uml-cafe-cyan-user);
 }
+.cyanUserPanelLight {
+    background-color: var(--uml-cafe-cyan-user-light);
+}
 .limeUserPanel {
     background-color: var(--uml-cafe-lime-user);
+}
+.limeUserPanelLight {
+    background-color: var(--uml-cafe-lime-user-light);
 }
 .singletonBadDrag {
     border: 1px solid;

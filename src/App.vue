@@ -54,13 +54,8 @@ export default {
 		}
 	},
 	mounted() {
-		// add ourselves as a user
-		const userList = [];
-		userList.push({
-			id: this.$umlWebClient.id,
-			color: 'var(--uml-cafe-selected)', // user is always blue
-			selectedElements: [],
-		});
+		// set up users and their colors
+        const userList = [];
 		const colorMap = new Map();
 		colorMap.set('Red', 'var(--uml-cafe-red-user)');
 		colorMap.set('Blue', 'var(--uml-cafe-blue-user)');
@@ -70,6 +65,14 @@ export default {
 		colorMap.set('Orange', 'var(--uml-cafe-orange-user)');
 		colorMap.set('Cyan', 'var(--uml-cafe-cyan-user)');
 		colorMap.set('Lime', 'var(--uml-cafe-lime-user)');
+		
+        // add ourselves as a user
+        userList.push({
+			id: this.$umlWebClient.id,
+			color: colorMap.get(this.$umlWebClient.color),
+			selectedElements: [],
+            user: this.$umlWebClient.user,
+		});
 
 		// add other users as well
 		this.$umlWebClient.otherClients.forEach((client, id) => {
@@ -77,6 +80,7 @@ export default {
 				id: id,
 				color: colorMap.get(client.color),
 				selectedElements: Array.from(client.selectedElements), //hopefully ?
+                user: client.user,
 			});
 		});
 
@@ -664,6 +668,7 @@ export default {
 				<SpecificationPage v-if="editorType=='Specification'" 
 						:uml-i-d="specificationTab" 
                         :selected-elements="selectedElements"
+                        :users="users"
 						@specification="specification" 
 						@element-update="elementUpdateHandler"
                         @select="select"

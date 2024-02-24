@@ -33,14 +33,22 @@
   --uml-cafe-selected: #2350d9;
   --uml-cafe-selected-hover: #809bed;
   --uml-cafe-selected-error: #d10000;
+  --uml-cafe-blue-user: #2350d9;
+  --uml-cafe-blue-user-light: #809bed;
   --uml-cafe-red-user : #f73725;
-  --uml-cafe-blue-user: #9925f7;
-  --uml-cafe-green-user: #25f741;
-  --uml-cafe-yellow-user: #f7f025;
+  --uml-cafe-red-user-light: #fa6c5f;
+  --uml-cafe-green-user: #32c757;
+  --uml-cafe-green-user-light: #63f287;
+  --uml-cafe-yellow-user: #dbd80d;
+  --uml-cafe-yellow-user-light: #e6e345;
   --uml-cafe-magenta-user: #f425f7;
-  --uml-cafe-cyan-user: #25f7f4;
-  --uml-cafe-orange-user: #f7a725;
-  --uml-cafe-lime-user: #b8f725;
+  --uml-cafe-magenta-user-light: #fb7cfc;
+  --uml-cafe-cyan-user: #02e8e5;
+  --uml-cafe-cyan-user-light: #9bebe9;
+  --uml-cafe-orange-user: #f59b0a;
+  --uml-cafe-orange-user-light: #f5c069;
+  --uml-cafe-lime-user: #aff213;
+  --uml-cafe-lime-user-light: #cee890;
 }
 
 /* semantic color variables for this project */
