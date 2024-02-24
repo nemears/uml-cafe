@@ -1,10 +1,11 @@
 import { createElementUpdate } from '../../../umlUtil';
 import { randomID } from 'uml-client/lib/element';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
+import { getTextDimensions } from '../ClassDiagramPaletteProvider';
 
 export default class RealizationHandler extends RuleProvider {
     
-    constructor(eventBus, commandStack, umlWebClient, diagramEmitter, diagramContext) {
+    constructor(eventBus, commandStack, umlWebClient, diagramEmitter, diagramContext, umlRenderer, elementFactory) {
         super(eventBus);
 
         eventBus.on('connect.end', 1100, (event) => {
@@ -30,6 +31,20 @@ export default class RealizationHandler extends RuleProvider {
             }
         });
         eventBus.on('edge.connect.create', (context) => {
+            function createRealizationKeywordLabel(realization, placement) {
+                const textString = '«' + realization.elementType() + '»';
+                return elementFactory.createLabel({
+                    id: randomID(),
+                    width: Math.round(getTextDimensions(textString, umlRenderer).width) + 10,
+                    height: 24,
+                    modelElement: realization,
+                    labelTarget: context.connection,
+                    parent: context.connection,
+                    elementType: 'keywordLabel',
+                    text: textString,
+                    placement: placement,
+                });
+            }
             if (context.connectType === 'realization') {
                 const client = context.connection.source.modelElement,
                 supplier = context.connection.target.modelElement;
@@ -41,6 +56,7 @@ export default class RealizationHandler extends RuleProvider {
                 umlWebClient.put(realization);
                 umlWebClient.put(client);
                 umlWebClient.put(diagramContext.context);
+                context.children.push(createRealizationKeywordLabel(realization, 'center'));
                 diagramEmitter.fire('elementUpdate', createElementUpdate(client));
                 diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context)); 
             }
@@ -78,7 +94,7 @@ export default class RealizationHandler extends RuleProvider {
     }
 }
 
-RealizationHandler.$inject = ['eventBus', 'commandStack', 'umlWebClient', 'diagramEmitter', 'diagramContext'];
+RealizationHandler.$inject = ['eventBus', 'commandStack', 'umlWebClient', 'diagramEmitter', 'diagramContext', 'umlRenderer', 'elementFactory'];
 
 function canConnect(context) {
     const ret = canConnectHelper(context);
