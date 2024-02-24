@@ -2,7 +2,7 @@
 import packageImage from '../assets/icons/general/package.svg';
 import getImage from '../GetUmlImage.vue';
 import classDiagramImage from '../assets/icons/general/class_diagram.svg';
-import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createClassDiagram, mapColor } from '../umlUtil.js'
+import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createClassDiagram, mapColor, getPanelClass } from '../umlUtil.js'
 import { randomID } from 'uml-client/lib/element';
 
 export default {
@@ -48,6 +48,7 @@ export default {
             expandSymbol: '+',
             selected: false,
             currentUsers: [],
+            hover: false,
         };
     },
     components: [
@@ -62,6 +63,9 @@ export default {
         },
         umlName() {
             return this.name;
+        },
+        panelClass() {
+            return getPanelClass(this.selected, this.hover, this.currentUsers, this.$umlWebClient);
         }
     },
     watch: {
@@ -533,7 +537,17 @@ export default {
         },
         propogateCommand(event) {
             this.$emit('command', event);
-        }
+        },
+        mouseEnter() {
+            if (!this.hover) {
+                this.hover = true;
+            }
+        },
+        mouseLeave() {
+            if (this.hover) {
+                this.hover = false;
+            }
+        },
     }
 }
 </script>
@@ -541,7 +555,7 @@ export default {
     <div class="elementExplorerBlock" v-if="!isFetching" :class="{notFirstBlock: depth !== 0}" draggable="false">
         <div draggable="true"
              class="elementExplorerPanel"
-             :class="selected ? 'selectedElementExplorerPanel' : currentUsers.length > 0 ? currentUsers[0] : 'elementExplorerPanel'"
+             :class="panelClass"
              @click.exact="select('none')"
              @click.ctrl="select('ctrl')"
              @click.shift="select('shift')"
@@ -549,6 +563,8 @@ export default {
              @dragstart.exact="startDrag('none', $event)"
              @dragstart.ctrl="startDrag('ctrl', $event)"
              @dragstart.shift="startDrag('shift', $event)"
+             @mouseenter="mouseEnter"
+             @mouseleave="mouseLeave"
              @contextmenu="onContextMenu($event)">
             <div :style="indent"></div>
             <div v-if="children.length > 0 && !diagram" @click.stop="childrenToggle" class="expandSymbol">
@@ -596,45 +612,63 @@ export default {
 .notFirstBlock {
     width:100%;
 }
-.elementExplorerPanel, .selectedElementExplorerPanel{
+.elementExplorerPanel {
     vertical-align: middle;
     min-width: 300px;
     display: inline-flex;
     width: 100%;
     font-size: 15px;
 }
-.elementExplorerPanel:hover {
+.elementExplorerPanelLight {
     background-color: var(--vt-c-dark-soft);
-}
-.selectedElementExplorerPanel {
-    background-color: var(--uml-cafe-selected);
-}
-.selectedElementExplorerPanel:hover {
-    background-color: var(--uml-cafe-selected-hover);
 }
 .redUserPanel {
     background-color: var(--uml-cafe-red-user);
 }
+.redUserPanelLight {
+    background-color: var(--uml-cafe-red-user-light);
+}
 .blueUserPanel {
     background-color: var(--uml-cafe-blue-user);
+}
+.blueUserPanelLight {
+    background-color: var(--uml-cafe-blue-user-light);
 }
 .greenUserPanel {
     background-color: var(--uml-cafe-green-user);
 }
+.greenUserPanelLight {
+    background-color: var(--uml-cafe-green-user-light);
+}
 .yellowUserPanel {
     background-color: var(--uml-cafe-yellow-user);
+}
+.yellowUserPanelLight {
+    background-color: var(--uml-cafe-yellow-user-light);
 }
 .magentaUserPanel {
     background-color: var(--uml-cafe-magenta-user);
 }
+.magentaUserPanelLight {
+    background-color: var(--uml-cafe-magenta-user-light);
+}
 .orangeUserPanel {
     background-color: var(--uml-cafe-orange-user);
+}
+.orangeUserPanelLight {
+    background-color: var(--uml-cafe-orange-user-light);
 }
 .cyanUserPanel {
     background-color: var(--uml-cafe-cyan-user);
 }
+.cyanUserPanelLight {
+    background-color: var(--uml-cafe-cyan-user-light);
+}
 .limeUserPanel {
     background-color: var(--uml-cafe-lime-user);
+}
+.limeUserPanelLight {
+    background-color: var(--uml-cafe-lime-user-light);
 }
 .expandSymbol {
     padding-left: 5px;
