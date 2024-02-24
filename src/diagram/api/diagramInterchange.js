@@ -274,6 +274,7 @@ async function getDiagramElementFeatures(slot, diagramElement, umlClient) {
                 const modelElementValue = await modelElementSlot.values.front();
                 const modelElementID = modelElementValue.value;
                 const modelElement = await umlClient.get(modelElementID);
+                await modelElement.owner.get();
                 diagramElement.modelElement = modelElement;
                 return true;
             }
@@ -319,9 +320,11 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
                     // bounds get and delete instance
                     await umlWebClient.deleteElement(await (await shapeSlot.values.front()).instance.get());
                 } else if (shapeSlot.definingFeature.id() === OWNED_ELEMENTS_SLOT_ID) {
-                    // delete owned elements
+                    // delete owned elements if not already deleted
                     for await (const ownedElementValue of shapeSlot.values) {
-                        await deleteUmlDiagramElement(ownedElementValue.instance.id(), umlWebClient);
+                        if (ownedElementValue.instance.has()) {
+                            await deleteUmlDiagramElement(ownedElementValue.instance.id(), umlWebClient);
+                        }
                     }
                 }
             }
