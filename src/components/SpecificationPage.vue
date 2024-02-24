@@ -7,7 +7,11 @@ import InputData from './specComponents/InputData.vue';
 import EnumerationData from './specComponents/EnumerationData.vue';
 import { assignTabLabel } from '../umlUtil';
 export default {
-    props: ['umlID', 'selectedElements'],
+    props: [
+        'umlID', 
+        'selectedElements',
+        'users',
+    ],
     emits: [
         'specification', 
         'elementUpdate',
@@ -67,7 +71,8 @@ export default {
                     elementTypeData[singletonName] = {
                         img: getImage(singletonValue),
                         label: singletonValue.name !== undefined ? singletonValue.name : '',
-                        id: singletonValue.id
+                        id: singletonValue.id,
+                        currentUsers: this.users.filter(user => user.selectedElements.includes(singletonValue.id)),
                     }
                 } else {
                     elementTypeData[singletonName] = undefined;
@@ -83,7 +88,8 @@ export default {
                         label: await assignTabLabel(element),
                         id: element.id,
                         selected: this.selectedElements.includes(element.id),
-                        currentUsers: [],
+                        currentUsers: this.users.filter(user => user.selectedElements.includes(element.id)),
+                        hover: false,
                     });
                 }
                 return elementTypeData;

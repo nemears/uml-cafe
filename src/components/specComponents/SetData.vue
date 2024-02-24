@@ -1,7 +1,7 @@
 <script>
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
-import { createElementUpdate, assignTabLabel, mapColor} from '../../umlUtil.js';
+import { createElementUpdate, assignTabLabel, mapColor, getPanelClass } from '../../umlUtil.js';
 export default {
     props: [
         'label', 
@@ -27,6 +27,7 @@ export default {
             badDrag: false,
             recentDragInfo: undefined,
             dragCounter: 0,
+            dummy: false,
         };
     },
     mounted() {
@@ -55,7 +56,8 @@ export default {
                                     label: element.name !== undefined ? element.name : '',
                                     img: getImage(element),
                                     selected: false,
-                                    currentUsers: []
+                                    currentUsers: [],
+                                    hover: false,
                                 });
                             }
                         }
@@ -92,23 +94,46 @@ export default {
                 }
             }
         }, userSelected(newUserSelected) {
+            let reRender = false;
             for (const elData of this.data) {
                 if (elData.id === newUserSelected.id) {
-                    elData.currentUsers.push(mapColor(newUserSelected.color))
+                    elData.currentUsers.push(mapColor(newUserSelected.color));
+                    reRender = true;
                 }
             }
+            if (reRender) {
+                this.dummy = !this.dummy; 
+            }
         }, userDeselected(newUserDeselcted) {
+            let reRender = false;
             for (const elData of this.data) {
                 for (const deselectedEl of newUserDeselcted.elements) {
                     if (elData.id === deselectedEl && elData.currentUsers.includes(mapColor(newUserDeselcted.color))) {
                         elData.currentUsers.splice(elData.currentUsers.indexOf(mapColor(newUserDeselcted.color)), 1);
+                        reRender = true;
                         break;
                     }
                 }
             }
+            if (reRender) {
+                this.dummy = !this.dummy;
+            }
         }
     },
     methods: {
+        getPanelClassHelper(result) {
+            switch (result) {
+                case 'elementExplorerPanel':
+                    return 'setElement';
+                case 'elementExplorerPanelLight':
+                    return 'setElementLight';
+                default:
+                    return result;
+            }
+        },
+        panelClass(elementData) {
+            return this.getPanelClassHelper(getPanelClass(elementData.selected, elementData.hover, elementData.currentUsers, this.$umlWebClient));
+        },
         async specification(id) {
             this.$emit('specification', await this.$umlWebClient.get(id));
         },
@@ -229,7 +254,17 @@ export default {
                     modifier: modifier,
                 });
             }
-        }
+        },
+        mouseEnter(elementData) {
+            if (!elementData.hover) {
+                elementData.hover = true;
+            }
+        },
+        mouseLeave(elementData) {
+            if (elementData.hover) {
+                elementData.hover = false;
+            }
+        },
     },
     components: { CreationPopUp }
 }
@@ -245,13 +280,15 @@ export default {
              @drop="drop($event)"
              @dragover.prevent>
             <div    class="setElement" 
-                    :class="el.selected ? 'selectedSetElement' : el.currentUsers.length > 0 ? el.currentUsers[0] : 'setElement'"
                     v-for="el in data" 
                     :key="el.id" 
+                    :class="panelClass(el)"
                     @click.exact="select(el, 'none')"
                     @click.ctrl="select(el, 'ctrl')"
                     @click.shift="select(el, 'shift')"
                     @dblclick="specification(el.id)"
+                    @mouseenter="mouseEnter(el)"
+                    @mouseleave="mouseLeave(el)"
                     @contextmenu="elementContextMenu($event, el)">
                 <img v-if="el.img !== undefined" :src="el.img"/>
                 <div>
@@ -298,41 +335,56 @@ export default {
 .setElement {
     background-color: var(--open-uml-selection-dark-1);
 }
-.setElement:hover {
+.setElementLight {
     background-color: var(--open-uml-selection-dark-2);
-}
-.selectedSetElement {
-    background-color: var(--uml-cafe-selected);
-}
-.selectedSetElement:hover {
-    background-color: var(--uml-cafe-selected-hover);
-}
-.selectedSetElement {
-    background-color: var(--uml-cafe-selected);
 }
 .redUserPanel {
     background-color: var(--uml-cafe-red-user);
 }
+.redUserPanelLight {
+    background-color: var(--uml-cafe-red-user-light);
+}
 .blueUserPanel {
     background-color: var(--uml-cafe-blue-user);
+}
+.blueUserPanelLight {
+    background-color: var(--uml-cafe-blue-user-light);
 }
 .greenUserPanel {
     background-color: var(--uml-cafe-green-user);
 }
+.greenUserPanelLight {
+    background-color: var(--uml-cafe-green-user-light);
+}
 .yellowUserPanel {
     background-color: var(--uml-cafe-yellow-user);
+}
+.yellowUserPanelLight {
+    background-color: var(--uml-cafe-yellow-user-light);
 }
 .magentaUserPanel {
     background-color: var(--uml-cafe-magenta-user);
 }
+.magentaUserPanelLight {
+    background-color: var(--uml-cafe-magenta-user-light);
+}
 .orangeUserPanel {
     background-color: var(--uml-cafe-orange-user);
+}
+.orangeUserPanelLight {
+    background-color: var(--uml-cafe-orange-user-light);
 }
 .cyanUserPanel {
     background-color: var(--uml-cafe-cyan-user);
 }
+.cyanUserPanelLight {
+    background-color: var(--uml-cafe-cyan-user-light);
+}
 .limeUserPanel {
     background-color: var(--uml-cafe-lime-user);
+}
+.limeUserPanelLight {
+    background-color: var(--uml-cafe-lime-user-light);
 }
 .createButton {
     margin-left: auto;
