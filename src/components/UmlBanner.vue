@@ -118,6 +118,11 @@ export default {
                     this.user = this.$umlWebClient.user;
                     this.loginEnabled = false;
                     this.$emit("newModelLoaded");
+                    sessionStorage.setItem('user', this.$umlWebClient.user);
+                    const setPasswordHash = async() => {
+                        sessionStorage.setItem('passwordHash', Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)))).map(b => b.toString(16).padStart(2, '0')).join(''));
+                    };
+                    setPasswordHash();
                 }
             });
         },
@@ -279,7 +284,29 @@ export default {
         },
         propogateDiagram(diagram) {
             this.$emit('diagram', diagram);
-        }
+        },
+        getUserBubbleStyle(user) {
+            const ret = {
+                border: 'solid ' + user.color,
+                'background-color': user.color.slice(0, -5) + 'user-light'
+            };
+            if (user.id === this.$umlWebClient.id) {
+                ret.height = '35px';
+                ret['min-width'] = '35px';
+            }
+            return ret; 
+        },
+        getUserLabel(user) {
+            if (user.user && user.user !== '0') {
+                if (user.id === this.$umlWebClient.id) {
+                    return user.user;
+                } else {
+                    return Array.from(user.user)[0];
+                }
+            } else {
+                return '';
+            }
+        },
     },
     computed: {
         gapStyle() {
@@ -306,7 +333,9 @@ export default {
             </div>
         </div>
         <div class="bannerItems">
-            <div class="userCircle" v-for="user in users" :key="user.id" :style="{'background-color': user.color}"></div>
+            <div class="userCircle" v-for="user in users" :key="user.id" :style="getUserBubbleStyle(user)">
+                {{ getUserLabel(user) }}
+            </div>
             <CreateDiagramButton @elementUpdate="propogateElementUpdate" @diagram="propogateDiagram"></CreateDiagramButton>
             <div :style="gapStyle"></div>
             <button type="button" class="logInButton" @click="toggleLogin">Log In</button>

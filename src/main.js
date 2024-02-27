@@ -25,12 +25,16 @@ if (location.pathname != "/") {
     projectName = projectUrlSplit[2];
 
     // check for stashed user and passwordHash
-    const user = sessionStorage.getItem('user');
-    sessionStorage.removeItem('user');
-    const passwordHash = sessionStorage.getItem('passwordHash');
-    sessionStorage.removeItem('passwordHash');
+    let user = sessionStorage.getItem('user');
+    let passwordHash = sessionStorage.getItem('passwordHash');
+    if (user === 'null' || user === 'undefined') {
+        user = undefined;
+    }
+    if (passwordHash === 'null' || user === 'undefined') {
+        passwordHash = undefined;
+    }
 
-    const umlWebClient = new UmlWebClient({
+    let umlWebClient = new UmlWebClient({
         address: serverAddress,
         group: groupName,
         project: projectName,
@@ -39,6 +43,25 @@ if (location.pathname != "/") {
         create: groupName !== 'sessions',
     });
     umlWebClient.initialization.catch((err) => {
+        if (user) {
+            // try without a user
+            umlWebClient = new UmlWebClient({
+                address: serverAddress,
+                group: groupName,
+                project: projectName,
+            });
+            // do it again
+            umlWebClient.initialization.catch(err => {
+                // TODO throw error screen
+                throw Error(err);
+            }).then(() => {
+                const app = createApp(App);
+                app.config.globalProperties.$umlWebClient = umlWebClient;
+                app.config.unwrapInjectedRef = true;
+                app.mount('#app');
+                app.use(ContextMenu); 
+            });
+        }
         console.error(err);
         try {
             const errObj = JSON.parse(err);
@@ -50,6 +73,8 @@ if (location.pathname != "/") {
             
         }
     }).then(() => {
+        sessionStorage.setItem('user', user);
+        sessionStorage.setItem('passwordHash', passwordHash);
         const app = createApp(App);
         app.config.globalProperties.$umlWebClient = umlWebClient;
         app.config.unwrapInjectedRef = true;
