@@ -315,55 +315,63 @@ class RemoveDiagramElementHandler {
         elementFactory = this._elementFactory,
         umlWebClient = this._umlWebClient,
         eventBus = this._eventBus;
-        const elementProxy = context.element;
-        context.element = elementRegistry.get(context.element.id); // TODO ??? elementFactory?
-        if (!context.element) {
-            context.element = elementProxy;
-            const createElementShape = async () => {
-                elementProxy.modelElement = await umlWebClient.get(elementProxy.modelElement.id);
-                if (elementProxy.waypoints) {
-                    elementProxy.source = elementRegistry.get(elementProxy.source);
-                    elementProxy.target = elementRegistry.get(elementProxy.target);
-                    context.element = elementFactory.createConnection(elementProxy);
-                } else {
-                    context.element = elementFactory.createShape(pick(elementProxy, ['x','y','height','width', 'modelElement', 'inselectable', 'elementType']));
-                }
-            }
-            createElementShape();
-        }
-        context.parent = elementRegistry.get(context.parent.id);
         if (context.proxy) {
             delete context.proxy;
             return context.element;
         }
-        context.parent = context.element.parent;
-        const simpleElement = {
-            id: context.element.id
-        }
-        if (context.element.waypoints) {
-            simpleElement.waypoints = context.element.waypoints;
-            simpleElement.target = context.element.target.id;
-            simpleElement.source = context.element.source.id;
-            simpleElement.children = [];
-        } else {
-            simpleElement.x = context.element.x;
-            simpleElement.y = context.element.y;
-            simpleElement.width = context.element.width;
-            simpleElement.height = context.element.height;
-        }
-        simpleElement.modelElement = { id: context.element.modelElement.id };
-        diagramEmitter.fire('command', {name: 'removeDiagramElement', context: {
-            element: simpleElement,
-            parent: {
-                id: context.parent.id
+        const elementsProxy = [];
+        for (const elementContext of context.elements) {
+            const elementProxy = elementContext.element;
+            elementContext.element = elementRegistry.get(elementContext.element.id); // TODO ??? elementFactory?
+            if (!elementContext.element) {
+                elementContext.element = elementProxy;
+                const createElementShape = async () => {
+                    elementProxy.modelElement = await umlWebClient.get(elementProxy.modelElement.id);
+                    if (elementProxy.waypoints) {
+                        elementProxy.source = elementRegistry.get(elementProxy.source);
+                        elementProxy.target = elementRegistry.get(elementProxy.target);
+                        elementContext.element = elementFactory.createConnection(elementProxy);
+                    } else {
+                        elementContext.element = elementFactory.createShape(pick(elementProxy, ['x','y','height','width', 'modelElement', 'inselectable', 'elementType']));
+                    }
+                }
+                createElementShape();
             }
+            elementContext.parent = elementRegistry.get(elementContext.parent.id);
+            elementContext.parent = elementContext.element.parent;
+            const simpleElement = {
+                id: elementContext.element.id
+            }
+            if (elementContext.element.waypoints) {
+                simpleElement.waypoints = elementContext.element.waypoints;
+                simpleElement.target = elementContext.element.target.id;
+                simpleElement.source = elementContext.element.source.id;
+                simpleElement.children = [];
+            } else {
+                simpleElement.x = elementContext.element.x;
+                simpleElement.y = elementContext.element.y;
+                simpleElement.width = elementContext.element.width;
+                simpleElement.height = elementContext.element.height;
+            }
+            simpleElement.modelElement = { id: elementContext.element.modelElement.id };
+            elementsProxy.push( {
+                element: simpleElement,
+                parent: {
+                    id: elementContext.parent.id
+                }
+            });
+            elementContext.elementContext = {};
+            elementContext.elementContext[elementContext.parent.id] = {
+                children: elementContext.parent.children, // TODO incoming outgoing
+            };
+            eventBus.fire('removeElement', elementContext);
+        }
+
+        diagramEmitter.fire('command', {name: 'removeDiagramElement', context: {
+            elements: elementsProxy
         }});
-        context.elementContext = {};
-        context.elementContext[context.parent.id] = {
-            children: context.parent.children, // TODO incoming outgoing
-        };
-        eventBus.fire('removeElement', context);
-        return context.element;
+
+        return context.elements.map((elContext) => elContext.element);
     }
 
     addElement(element, parent, context) {
@@ -459,9 +467,10 @@ class RemoveDiagramElementHandler {
             // TODO
         }});
 
-        eventBus.fire('removeElement.undo', context);
-
-        return context.element;
+        for (const elementContext of context.elements) {
+            eventBus.fire('removeElement.undo', elementContext);
+        }
+        return context.elements.map((elContext) => elContext.element);
     }
 }
 
@@ -469,7 +478,11 @@ RemoveDiagramElementHandler.$inject = ['canvas', 'umlWebClient', 'diagramEmitter
 
 export function removeDiagramElement(diagramElement, commandStack) {
     commandStack.execute('removeDiagramElement', {
-        element: diagramElement,
-        parent: diagramElement.parent
+        elements: [
+            {
+                element: diagramElement,
+                parent: diagramElement.parent
+            }
+        ]
     });
 }
