@@ -246,7 +246,7 @@ export default {
                         // update name 
                         let updatedName = false;
                         if (umlNameLabel.text != umlNameLabel.modelElement.name) {
-                            umlNameLabel.text = umlNameLabel.modelElement;
+                            umlNameLabel.text = umlNameLabel.modelElement.name;
                             updatedName = true;
                         }
                         const label = elementFactory.createLabel({

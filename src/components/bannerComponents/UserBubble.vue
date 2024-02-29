@@ -103,8 +103,7 @@ export default {
     @mouseleave="mouseLeave"
     ref="bubble">
         {{ userLabel }}
-
-        <div v-if="longHover" class="infoPanel" :style="infoPanelStyle">
+        <div v-if="longHover" class="infoPanel">
             <div>
                 user : {{ fullUserName }}
             </div>
