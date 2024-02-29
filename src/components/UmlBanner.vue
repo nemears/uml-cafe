@@ -6,6 +6,7 @@ const packageJSON = require('../../package.json');
 import FreezeAndPopUp from './bannerComponents/FreezeAndPopUp.vue';
 import UserSelector from './bannerComponents/UserSelector.vue';
 import CreateDiagramButton from './bannerComponents/CreateDiagramButton.vue';
+import UserBubble from './bannerComponents/UserBubble.vue';
 export default {
     props: ['users'],
     data() {
@@ -34,13 +35,16 @@ export default {
             viewUsersInit: undefined,
         }
     },
+    emits: ["newModelLoaded", 'elementUpdate', 'diagram', 'userUpdate'],
     mounted() {
         // TODO check if we need to enable login on startup
-        this.$umlWebClient.initialization.catch((err) => {
+        this.$umlWebClient.initialization.catch(() => {
             this.toggleLogin();
         });
+        if (this.$umlWebClient.user && this.$umlWebClient.user !== '0') {
+            this.user = this.$umlWebClient.user;
+        }
     },
-    emits: ["newModelLoaded", 'elementUpdate', 'diagram'],
     methods: {
         optionToggle() {
             this.optionsEnabled = !this.optionsEnabled;
@@ -99,6 +103,7 @@ export default {
                 return;
             }
             let successfulLogin = true;
+            await this.$umlWebClient.close();
             this.$umlWebClient.login({
                 user: user, 
                 password: password,
@@ -118,6 +123,7 @@ export default {
                     this.user = this.$umlWebClient.user;
                     this.loginEnabled = false;
                     this.$emit("newModelLoaded");
+                    this.$emit('userUpdate');
                     sessionStorage.setItem('user', this.$umlWebClient.user);
                     const setPasswordHash = async() => {
                         sessionStorage.setItem('passwordHash', Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)))).map(b => b.toString(16).padStart(2, '0')).join(''));
@@ -157,6 +163,12 @@ export default {
                 return;
             }).then(() => {
                 this.user = this.$umlWebClient.user;
+                this.$emit('userUpdate');
+                sessionStorage.setItem('user', this.$umlWebClient.user);
+                const setPasswordHash = async() => {
+                    sessionStorage.setItem('passwordHash', Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)))).map(b => b.toString(16).padStart(2, '0')).join(''));
+                };
+                setPasswordHash();
                 this.toggleSignup();
             });
         },
@@ -285,28 +297,6 @@ export default {
         propogateDiagram(diagram) {
             this.$emit('diagram', diagram);
         },
-        getUserBubbleStyle(user) {
-            const ret = {
-                border: 'solid ' + user.color,
-                'background-color': user.color.slice(0, -5) + 'user-light'
-            };
-            if (user.id === this.$umlWebClient.id) {
-                ret.height = '35px';
-                ret['min-width'] = '35px';
-            }
-            return ret; 
-        },
-        getUserLabel(user) {
-            if (user.user && user.user !== '0') {
-                if (user.id === this.$umlWebClient.id) {
-                    return user.user;
-                } else {
-                    return Array.from(user.user)[0];
-                }
-            } else {
-                return '';
-            }
-        },
     },
     computed: {
         gapStyle() {
@@ -315,7 +305,7 @@ export default {
             }
         }
     },
-    components: { FreezeAndPopUp, UserSelector, CreateDiagramButton }
+    components: { FreezeAndPopUp, UserSelector, CreateDiagramButton, UserBubble }
 }
 </script>
 <template>
@@ -333,9 +323,7 @@ export default {
             </div>
         </div>
         <div class="bannerItems">
-            <div class="userCircle" v-for="user in users" :key="user.id" :style="getUserBubbleStyle(user)">
-                {{ getUserLabel(user) }}
-            </div>
+            <UserBubble v-for="user in users" :key="user.id" :user="user"/>
             <CreateDiagramButton @elementUpdate="propogateElementUpdate" @diagram="propogateDiagram"></CreateDiagramButton>
             <div :style="gapStyle"></div>
             <button type="button" class="logInButton" @click="toggleLogin">Log In</button>
@@ -609,13 +597,5 @@ hr {
 }
 .logInButton:hover {
     background-color: var(--vt-c-dark-soft);
-}
-.userCircle {
-    height: 25px;
-    width: 25px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-top: 10px;
-    margin: 5px;
 }
 </style>
