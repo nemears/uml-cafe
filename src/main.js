@@ -42,44 +42,38 @@ if (location.pathname != "/") {
         passwordHash: passwordHash,
         create: groupName !== 'sessions',
     });
-    umlWebClient.initialization.catch((err) => {
-        if (user) {
-            // try without a user
-            umlWebClient = new UmlWebClient({
-                address: serverAddress,
-                group: groupName,
-                project: projectName,
-            });
-            // do it again
-            umlWebClient.initialization.catch(err => {
-                // TODO throw error screen
-                throw Error(err);
-            }).then(() => {
-                const app = createApp(App);
-                app.config.globalProperties.$umlWebClient = umlWebClient;
-                app.config.unwrapInjectedRef = true;
-                app.mount('#app');
-                app.use(ContextMenu); 
-            });
-        }
-        console.error(err);
-        try {
-            const errObj = JSON.parse(err);
-            if (errObj.error.code && errObj.error.code == 1) {
-                // prompt login
-                console.log("todo prompt login based off of code")
-            }
-        } catch (parseErr) {
-            
-        }
-    }).then(() => {
-        sessionStorage.setItem('user', user);
-        sessionStorage.setItem('passwordHash', passwordHash);
+
+    const mountApp = () => {
         const app = createApp(App);
         app.config.globalProperties.$umlWebClient = umlWebClient;
         app.config.unwrapInjectedRef = true;
         app.mount('#app');
         app.use(ContextMenu);
+    }
+
+    umlWebClient.initialization.then(() => {
+        sessionStorage.setItem('user', user);
+        sessionStorage.setItem('passwordHash', passwordHash);
+        mountApp();
+    }).catch((err) => {
+        console.error(err);
+        const errObj = JSON.parse(err);
+        if (errObj.error.code && errObj.error.code == 1) {
+            if (user) {
+                // try again with anonymous user
+                umlWebClient = new UmlWebClient({
+                    address: serverAddress,
+                    group: groupName,
+                    project: projectName,
+                    create: groupName !== 'sessions',
+                });
+                umlWebClient.initialization.catch(() => {
+                    console.warn('must login before using application');
+                }).then(() => {
+                    mountApp();
+                });
+            }
+        }
     });
 } else {
     let beginningOfURL = document.URL;

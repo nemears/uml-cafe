@@ -54,35 +54,7 @@ export default {
 		}
 	},
 	mounted() {
-		// set up users and their colors
-        const userList = [];
-		const colorMap = new Map();
-		colorMap.set('Red', 'var(--uml-cafe-red-user)');
-		colorMap.set('Blue', 'var(--uml-cafe-blue-user)');
-		colorMap.set('Green', 'var(--uml-cafe-green-user)');
-		colorMap.set('Yellow', 'var(--uml-cafe-yellow-user)');
-		colorMap.set('Magenta', 'var(--uml-cafe-magenta-user)');
-		colorMap.set('Orange', 'var(--uml-cafe-orange-user)');
-		colorMap.set('Cyan', 'var(--uml-cafe-cyan-user)');
-		colorMap.set('Lime', 'var(--uml-cafe-lime-user)');
-		
-        // add ourselves as a user
-        userList.push({
-			id: this.$umlWebClient.id,
-			color: colorMap.get(this.$umlWebClient.color),
-			selectedElements: [],
-            user: this.$umlWebClient.user,
-		});
-
-		// add other users as well
-		this.$umlWebClient.otherClients.forEach((client, id) => {
-			userList.push({
-				id: id,
-				color: colorMap.get(client.color),
-				selectedElements: Array.from(client.selectedElements), //hopefully ?
-                user: client.user,
-			});
-		});
+		this.userUpdate();
 
 		this.$umlWebClient.onUpdate = async (element, oldElement) => {
             this.elementUpdate = {
@@ -97,12 +69,11 @@ export default {
 		this.$umlWebClient.onClient = (client) => {
 			this.users.push({
 				id: client.id,
-				color: colorMap.get(client.color),
+				color: this.getColor(client.color),
 				selectedElements: [],
+                user: client.user,
 			});
 		}
-
-		this.users = userList;
 
         document.addEventListener('keypress', this.keypress);
 
@@ -609,7 +580,53 @@ export default {
                 this.commandStack.unshift(redoCommand);
                 this.commandStack = [...this.commandStack];
             }
-        }
+        },
+        getColor(color) {
+            switch (color) {
+                case 'Red':
+                    return 'var(--uml-cafe-red-user)';
+                case 'Blue':
+                    return 'var(--uml-cafe-blue-user)';
+                case 'Green':
+                    return 'var(--uml-cafe-green-user)';
+                case 'Yellow':
+                    return 'var(--uml-cafe-yellow-user)';
+                case 'Orange':
+                    return 'var(--uml-cafe-orange-user)';
+                case 'Magenta':
+                    return 'var(--uml-cafe-magenta-user)';
+                case 'Lime':
+                    return 'var(--uml-cafe-lime-user)';
+                case 'Cyan':
+                    return 'var(--uml-cafe-cyan-user)';
+                default:
+                    throw Error('Bad color given to getColor!');
+            }
+        },
+        userUpdate() {
+            // set up users and their colors
+            const userList = [];
+            
+            // add ourselves as a user
+            userList.push({
+                id: this.$umlWebClient.id,
+                color: this.getColor(this.$umlWebClient.color),
+                selectedElements: [],
+                user: this.$umlWebClient.user,
+            });
+
+            // add other users as well
+            this.$umlWebClient.otherClients.forEach((client, id) => {
+                userList.push({
+                    id: id,
+                    color: this.getColor(client.color),
+                    selectedElements: Array.from(client.selectedElements), //hopefully ?
+                    user: client.user,
+                });
+            });
+
+            this.users = userList;
+        },
 	}
 }
 </script>
@@ -617,7 +634,8 @@ export default {
 	<div style="display: flex;flex-direction: column;height:100vh;overflow: hidden;">
 		<UmlBanner 
 			:users="users"
-			@new-model-loaded="getHeadFromServer" 
+			@new-model-loaded="getHeadFromServer"
+            @user-update="userUpdate"
 			@diagram="diagram" 
 			@element-update="elementUpdateHandler"></UmlBanner>
 		<div class="collapseAndTabPanel">
