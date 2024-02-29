@@ -1,6 +1,7 @@
 import AbstractionHandler from './relationships/AbstractionHandler';
 import Association from './relationships/Association';
 import ClassDiagramContextPadProvider from './ClassDiagramContextPadProvider';
+import ClassDiagramKeyBindings from './ClassDiagramKeyBindings';
 import ClassDiagramPaletteProvider from './ClassDiagramPaletteProvider';
 import ClassDiagramRuleProvider from './ClassDiagramRuleProvider';
 import ClassHandler from './ClassHandler';
@@ -42,6 +43,7 @@ export default {
         'abstractionHandler',
         'association',
         'classDiagramContextPadProvider',
+        'classDiagramKeyBindings',
         'classDiagramPaletteProvider',
         'classDiagramRuleProvider',
         'classHandler',
@@ -81,6 +83,7 @@ export default {
     abstractionHandler: ['type', AbstractionHandler],
     association: ['type', Association],
     classDiagramContextPadProvider: [ 'type', ClassDiagramContextPadProvider ],
+    classDiagramKeyBindings: ['type', ClassDiagramKeyBindings],
     classDiagramPaletteProvider: [ 'type', ClassDiagramPaletteProvider ],
     classDiagramRuleProvider: [ 'type', ClassDiagramRuleProvider ],
     classHandler: ['type', ClassHandler],
