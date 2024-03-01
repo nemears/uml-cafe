@@ -560,6 +560,17 @@ export default {
                 this.commandStack.unshift(event);
                 this.undoStack = [];
                 if (event.element !== this.specificationTab) {
+                    // if (event.name === 'elementExplorerCreate' || event.name === 'diagramCreate') {
+                    //     const treeNode = this.treeGraph.get(event.element);
+                    //     let currNode = treeNode;
+                    //     while (currNode) {
+                    //         currNode.expanded = true;
+                    //         currNode = currNode.parent;
+                    //     }
+                    //     if (treeNode) {
+                    //         this.treeUpdate = treeNode;
+                    //     }
+                    // }
                     this.commandStack = [...this.commandStack]; // trigger watchers
                 }
             }
@@ -569,6 +580,17 @@ export default {
                 const undoneCommand = this.commandStack.shift();
                 this.undoStack.unshift(undoneCommand);
                 if (undoneCommand !== this.specificationTab) {
+                    // if (undoneCommand.name === 'elementExplorerCreate' || undoneCommand.name === 'diagramCreate') {
+                    //     const treeNode = this.treeGraph.get(event.context.element);
+                    //     let currNode = treeNode;
+                    //     while (currNode) {
+                    //         currNode.expanded;
+                    //         currNode = currNode.parent;
+                    //     }
+                    //     if (treeNode) {
+                    //         this.treeUpdate = treeNode;
+                    //     }
+                    // }
                     this.undoStack = [...this.undoStack]; // trigger watchers
                 }
             }
@@ -634,10 +656,13 @@ export default {
 	<div style="display: flex;flex-direction: column;height:100vh;overflow: hidden;">
 		<UmlBanner 
 			:users="users"
+            :command-stack="commandStack"
+            :undo-stack="undoStack"
 			@new-model-loaded="getHeadFromServer"
             @user-update="userUpdate"
 			@diagram="diagram" 
-			@element-update="elementUpdateHandler"></UmlBanner>
+			@element-update="elementUpdateHandler"
+            @command="command"></UmlBanner>
 		<div class="collapseAndTabPanel">
 			<div class="elementExplorerHeaderExpanded" :class="elementExplorerHide ? 'elementExplorerHeaderCollapsed' : 'elementExplorerHeaderExpanded'">
 				<button 
