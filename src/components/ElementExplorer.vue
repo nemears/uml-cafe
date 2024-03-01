@@ -240,13 +240,13 @@ export default {
                                 parentID: this.umlID,
                             }
                         });
-                        this.createNewClassDiagram(el, diagramID);
+                        this.createNewClassDiagram(await this.$umlWebClient.get(this.umlID), diagramID);
                     }
                 });
             }
 
             const createAndAddToSet = async (type, set) => {
-                const createdEl = await this.createElementAndAddToSet(randomID(), type, set, el);
+                const createdEl = await this.createElementAndAddToSet(randomID(), type, set, await this.$umlWebClient.get(el.id));
                 this.$emit('command', {
                     name: 'elementExplorerCreate',
                     element: this.umlID,
@@ -466,6 +466,13 @@ export default {
                            this.children = this.children.filter(child => child !== childID); 
                         }
                     }
+
+                    this.$emit('updateTree', {
+                        id: this.umlID,
+                        children: this.children,
+                        expanded: this.expanded,
+                    });
+
                     const element = await this.$umlWebClient.get(this.umlID);
                     if (element && element.isSubClassOf('comment')) {
                         for (let elID of element.annotatedElements.ids()) {

@@ -8,7 +8,11 @@ import UserSelector from './bannerComponents/UserSelector.vue';
 import CreateDiagramButton from './bannerComponents/CreateDiagramButton.vue';
 import UserBubble from './bannerComponents/UserBubble.vue';
 export default {
-    props: ['users'],
+    props: [
+        'users',
+        'commandStack',
+        'undoStack',
+    ],
     data() {
         return {
             optionsEnabled: false,
@@ -35,7 +39,13 @@ export default {
             viewUsersInit: undefined,
         }
     },
-    emits: ["newModelLoaded", 'elementUpdate', 'diagram', 'userUpdate'],
+    emits: [
+        "newModelLoaded", 
+        'elementUpdate', 
+        'diagram', 
+        'userUpdate',
+        'command',
+    ],
     mounted() {
         // TODO check if we need to enable login on startup
         this.$umlWebClient.initialization.catch(() => {
@@ -297,6 +307,9 @@ export default {
         propogateDiagram(diagram) {
             this.$emit('diagram', diagram);
         },
+        propogateCommand(command) {
+            this.$emit('command', command);
+        }
     },
     computed: {
         gapStyle() {
@@ -324,7 +337,12 @@ export default {
         </div>
         <div class="bannerItems">
             <UserBubble v-for="user in users" :key="user.id" :user="user"/>
-            <CreateDiagramButton @elementUpdate="propogateElementUpdate" @diagram="propogateDiagram"></CreateDiagramButton>
+            <CreateDiagramButton 
+                :command-stack="commandStack" 
+                :undo-stack="undoStack" 
+                @elementUpdate="propogateElementUpdate" 
+                @diagram="propogateDiagram"
+                @command="propogateCommand"></CreateDiagramButton>
             <div :style="gapStyle"></div>
             <button type="button" class="logInButton" @click="toggleLogin">Log In</button>
             <div class="optionsContainer">

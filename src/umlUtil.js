@@ -75,10 +75,10 @@ export async function assignTabLabel(newElement) {
 }
 
 export async function createClassDiagram(diagramID, owner, umlWebClient) {
-    const diagramPackage = await umlWebClient.post('package', {id:diagramID});
+    const diagramPackage = umlWebClient.post('package', {id:diagramID});
     owner.packagedElements.add(diagramPackage);
     diagramPackage.name = owner.name;
-    const diagramStereotypeInstance = await umlWebClient.post('instanceSpecification');
+    const diagramStereotypeInstance = umlWebClient.post('instanceSpecification');
     diagramStereotypeInstance.classifiers.add(await umlWebClient.get('Diagram_nuc1IC2Cavgoa4zMBlVq'));
     // TODO slots
 
@@ -103,11 +103,10 @@ export async function createClassDiagram(diagramID, owner, umlWebClient) {
     diagramPackage.packagedElements.add(diagramInstance);
 
     diagramPackage.appliedStereotypes.add(diagramStereotypeInstance);
-    umlWebClient.put(owner);
-    umlWebClient.put(diagramPackage);
     umlWebClient.put(diagramStereotypeInstance);
     umlWebClient.put(diagramInstance);
-    await umlWebClient.get(diagramPackage.id);
+    umlWebClient.put(diagramPackage);
+    umlWebClient.put(owner);
     return diagramPackage;
 } 
 
