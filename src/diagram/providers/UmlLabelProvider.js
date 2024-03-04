@@ -1,4 +1,4 @@
-import { updateLabel } from '../api/diagramInterchange';
+import { isLabel, updateLabel } from '../api/diagramInterchange';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 
 export default class UmlLabelProvider extends RuleProvider {
@@ -153,12 +153,3 @@ export default class UmlLabelProvider extends RuleProvider {
 }
 
 UmlLabelProvider.$inject = ['eventBus', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory', 'umlWebClient'];
-
-export function isLabel(elementType) {
-    return  elementType === 'label' || 
-            elementType === 'nameLabel' || 
-            elementType === 'typedElementLabel' || 
-            elementType === 'keywordLabel' || 
-            elementType === 'associationEndLabel' || 
-            elementType === 'multiplicityLabel';    
-}

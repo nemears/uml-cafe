@@ -20,36 +20,36 @@ export default {
     mounted() {
         this.isMounted = true;
     },
-    watch: {
-        async commandStack(newCommandStack) {
-            // redo
-            const newCommand = newCommandStack[0],
-            commandName = newCommand.name;
-            if (newCommand && newCommand.element === this.buttonID && newCommand.redo) {
-                if (commandName === 'diagramCreate') {
-                    const head = await this.$umlWebClient.head();
-                    const diagramID = newCommand.context.diagramID;
-                    const diagramPackage = await createClassDiagram(diagramID, head, this.$umlWebClient);
-                    this.$emit('diagram', diagramPackage);
-                    this.$emit('elementUpdate', createElementUpdate(head));
-                }
-            }
-        },
-        async undoStack(newUndoStack) {
-            const undoCommand = newUndoStack[0];
-            if (undoCommand && undoCommand.element === this.buttonID) {
-                if (undoCommand.name === 'diagramCreate') {
-                    const diagramID = undoCommand.context.diagramID;
-                    const diagramPackage = await this.$umlWebClient.get(diagramID),
-                    owner = await diagramPackage.owner.get();
-                    this.$emit('elementUpdate', deleteElementElementUpdate(diagramPackage));
-                    await this.$umlWebClient.deleteElement(diagramPackage);
-                    this.$umlWebClient.put(owner);
-                    this.$emit('elementUpdate', createElementUpdate(owner));
-                }
-            }
-        }
-    },
+    // watch: {
+    //     async commandStack(newCommandStack) {
+    //         // redo
+    //         const newCommand = newCommandStack[0],
+    //         commandName = newCommand.name;
+    //         if (newCommand && newCommand.element === this.buttonID && newCommand.redo) {
+    //             if (commandName === 'diagramCreate') {
+    //                 const head = await this.$umlWebClient.head();
+    //                 const diagramID = newCommand.context.diagramID;
+    //                 const diagramPackage = await createClassDiagram(diagramID, head, this.$umlWebClient);
+    //                 this.$emit('diagram', diagramPackage);
+    //                 this.$emit('elementUpdate', createElementUpdate(head));
+    //             }
+    //         }
+    //     },
+    //     async undoStack(newUndoStack) {
+    //         const undoCommand = newUndoStack[0];
+    //         if (undoCommand && undoCommand.element === this.buttonID) {
+    //             if (undoCommand.name === 'diagramCreate') {
+    //                 const diagramID = undoCommand.context.diagramID;
+    //                 const diagramPackage = await this.$umlWebClient.get(diagramID),
+    //                 owner = await diagramPackage.owner.get();
+    //                 this.$emit('elementUpdate', deleteElementElementUpdate(diagramPackage));
+    //                 await this.$umlWebClient.deleteElement(diagramPackage);
+    //                 this.$umlWebClient.put(owner);
+    //                 this.$emit('elementUpdate', createElementUpdate(owner));
+    //             }
+    //         }
+    //     }
+    // },
     methods: {
         async createDiagram () {
             const head = await this.$umlWebClient.head();

@@ -306,6 +306,22 @@ async function getDiagramElementFeatures(slot, diagramElement, umlClient) {
     return false;
 }
 
+export function isLabel(elementType) {
+    return  elementType === 'label' || 
+            elementType === 'nameLabel' || 
+            elementType === 'typedElementLabel' || 
+            elementType === 'keywordLabel' || 
+            elementType === 'associationEndLabel' || 
+            elementType === 'multiplicityLabel';    
+}
+
+export function isShape(id) {
+    return  id === SHAPE_ID ||
+            id === COMPARTMENTABLE_SHAPE_ID ||
+            id === CLASSIFIER_SHAPE_ID ||
+            isLabel(id);
+}
+
 export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
     const diagramElementInstance = await umlWebClient.get(diagramElementID);
     if (!diagramElementInstance) {
@@ -313,7 +329,7 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
         return;
     }
     for (const classifierID of diagramElementInstance.classifiers.ids()) {
-        if (classifierID === SHAPE_ID || classifierID === LABEL_ID || classifierID === CLASSIFIER_SHAPE_ID || classifierID === NAME_LABEL_ID || classifierID === TYPED_ELEMENT_LABEL_ID) {
+        if (isShape(classifierID)) {
             // shape
             for await (const shapeSlot of diagramElementInstance.slots) {
                 if (shapeSlot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {

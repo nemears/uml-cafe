@@ -516,7 +516,11 @@ export default {
                 parent: treeNode.parent,
 				usersSelecting: treeNode.usersSelecting,
             };
-            for (const id of event.children) {
+            let it = event.children;
+            if (!Array.isArray(it)) {
+                it = Object.entries(it).map((child) => child.id);
+            }
+            for (const id of it) {
                 const oldChildNode = treeNode.children[id];
                 if (oldChildNode) {
                     oldChildNode.parent = newTreeNode;
@@ -560,17 +564,19 @@ export default {
                 this.commandStack.unshift(event);
                 this.undoStack = [];
                 if (event.element !== this.specificationTab) {
-                    // if (event.name === 'elementExplorerCreate' || event.name === 'diagramCreate') {
-                    //     const treeNode = this.treeGraph.get(event.element);
-                    //     let currNode = treeNode;
-                    //     while (currNode) {
-                    //         currNode.expanded = true;
-                    //         currNode = currNode.parent;
-                    //     }
-                    //     if (treeNode) {
-                    //         this.treeUpdate = treeNode;
-                    //     }
-                    // }
+                    if (event.name === 'elementExplorerCreate' || event.name === 'diagramCreate') {
+                        const treeNode = this.treeGraph.get(event.element);
+                        let currNode = treeNode;
+                        const stack = [];
+                        while (currNode) {
+                            currNode.expanded = true;
+                            stack.unshift(currNode);
+                            currNode = currNode.parent;
+                        }
+                        for (const stackCurrNode of stack) {
+                            this.updateTree(stackCurrNode);
+                        }
+                    }
                     this.commandStack = [...this.commandStack]; // trigger watchers
                 }
             }
@@ -580,17 +586,23 @@ export default {
                 const undoneCommand = this.commandStack.shift();
                 this.undoStack.unshift(undoneCommand);
                 if (undoneCommand !== this.specificationTab) {
-                    // if (undoneCommand.name === 'elementExplorerCreate' || undoneCommand.name === 'diagramCreate') {
-                    //     const treeNode = this.treeGraph.get(event.context.element);
-                    //     let currNode = treeNode;
-                    //     while (currNode) {
-                    //         currNode.expanded;
-                    //         currNode = currNode.parent;
-                    //     }
-                    //     if (treeNode) {
-                    //         this.treeUpdate = treeNode;
-                    //     }
-                    // }
+                    if (undoneCommand.name === 'elementExplorerCreate' || undoneCommand.name === 'diagramCreate') {
+                        // make sure the parent of the element is shown in the element explorer
+                        const treeNode = this.treeGraph.get(undoneCommand.context.element);
+                        let currNode = treeNode;
+                        if (currNode) {
+                            currNode = currNode.parent;
+                        }
+                        const stack = [];
+                        while (currNode) {
+                            currNode.expanded = true;
+                            stack.unshift(currNode);
+                            currNode = currNode.parent;
+                        }
+                        for (const stackCurrNode of stack) {
+                            this.updateTree(stackCurrNode);
+                        }
+                    }
                     this.undoStack = [...this.undoStack]; // trigger watchers
                 }
             }
