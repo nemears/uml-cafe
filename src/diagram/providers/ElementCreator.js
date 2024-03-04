@@ -170,7 +170,7 @@ class ElementCreationHandler {
         diagramEmitter.fire('command', {undo: {
                        // TODO
         }});
-        for (const element of context.elements) {
+        for (const element of context.elements.toReversed()) {
             eventBus.fire('diagramElementDeleted', {
                 element: element
             });
@@ -185,10 +185,14 @@ class ElementCreationHandler {
                     canvas.removeConnection(element);
                     deleteUmlDiagramElement(element);
                     break;
-                case 'label':
+                case 'nameLabel':
+                case 'typedElementLabel':
+                case 'keywordLabel':
+                case 'associationEndLabel':
+                case 'multiplicityLabel':
                     // TODO children?
                     canvas.removeShape(element);
-                    deleteUmlDiagramElement(element);
+                    deleteUmlDiagramElement(element.id, umlWebClient);
                     break;
                 case 'classifierShape':
                     // TODO remove children
