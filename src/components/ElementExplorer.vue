@@ -108,19 +108,21 @@ export default {
         },
         async commandStack(newCommandStack) {
             // redo
-            const newCommand = newCommandStack[0];
+            const newCommand = newCommandStack[0],
+            context = newCommand.context;
             if (newCommand && newCommand.element === this.umlID && newCommand.redo) {
                 const commandName = newCommand.name;
                 if (commandName === 'elementExplorerCreate') {
-                    const context = newCommand.context,
-                    createElID = context.createElID,
+                    const createElID = context.createElID,
                     type = context.type,
                     set = context.set,
                     parentID = context.parentID;
                     this.createElementAndAddToSet(createElID, type, set, await this.$umlWebClient.get(parentID));
                 } else if (commandName === 'diagramCreate') {
                     const diagramID = newCommand.context.diagramID;
-                    this.createNewClassDiagram(await this.$umlWebClient.get(this.umlID), diagramID);
+                    await this.createNewClassDiagram(await this.$umlWebClient.get(this.umlID), diagramID);
+                } else if (commandName === 'elementExplorerRename') {
+                    await this.rename(context.newName)
                 }
             }
         },
@@ -128,12 +130,16 @@ export default {
             const undoCommand = newUndoStack[0];
             if (undoCommand && undoCommand.element === this.umlID) {
                 // our scope
-                if (undoCommand.name === 'elementExplorerCreate') {
-                    const createdElID = undoCommand.context.createElID;
+                const commandName = undoCommand.name,
+                context = undoCommand.context;
+                if (commandName === 'elementExplorerCreate') {
+                    const createdElID = context.createElID;
                     await this.deleteElement(await this.$umlWebClient.get(createdElID));
-                } else if (undoCommand.name === 'diagramCreate') {
-                    const diagramID = undoCommand.context.diagramID;
+                } else if (commandName === 'diagramCreate') {
+                    const diagramID = context.diagramID;
                     await this.deleteElement(await this.$umlWebClient.get(diagramID));
+                } else if (commandName === 'elementExplorerRename') {
+                    await this.rename(context.oldName);
                 }
             }
         }
@@ -407,7 +413,22 @@ export default {
         },
         async stopRename() {
             this.editing = false;
-            this.name = this.$refs.nameDiv.innerText || this.$refs.nameDiv.textContent;
+            const name = this.$refs.nameDiv.innerText || this.$refs.nameDiv.textContent;
+            const el = await this.$umlWebClient.get(this.umlID);
+            const oldName = el.name;
+            await this.rename(name);
+            this.$emit('command', {
+                name: 'elementExplorerRename',
+                element: this.umlID,
+                redo: false,
+                context: {
+                    oldName: oldName,
+                    newName: el.name,
+                }
+            });
+        },
+        async rename(name) {
+            this.name = name;
             const el = await this.$umlWebClient.get(this.umlID);
             el.name = this.name;
             this.$umlWebClient.put(el);

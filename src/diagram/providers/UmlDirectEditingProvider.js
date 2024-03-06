@@ -47,15 +47,7 @@ class UpdateNameLabelHandler {
             height: element.height,
         };
         context.oldText = element.text;
-        diagramEmitter.fire('command', {name: 'nameLabel.update', context: {
-            element: {
-                                id: element.id,
-                            },
-            bounds: bounds,
-            newName: newName,
-            oldBounds: context.oldBounds,
-            oldText: context.oldText,
-        }});
+        diagramEmitter.fire('command', {name: 'nameLabel.update', context: context});
 
         // update modelElement
         element.modelElement.name = newName;
@@ -75,7 +67,12 @@ class UpdateNameLabelHandler {
         // return element to commandStack
         return element;
     }
+
     revert(context) {
+        if (context.proxy) {
+            delete context.proxy;
+            return;
+        }
         revertLabelChange(context, this._diagramEmitter, this._umlWebClient);
         return context.element;
     }

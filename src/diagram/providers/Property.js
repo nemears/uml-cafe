@@ -59,6 +59,10 @@ class CreatePropertyHandler {
     }
 
     execute(context) {
+        if (context.proxy) {
+            delete context.proxy;
+            return;
+        }
         const clazzShape = context.clazzShape;
         context.oldBounds = {
             x: clazzShape.x,
@@ -123,6 +127,10 @@ class CreatePropertyHandler {
     }
 
     revert(context) {
+        if (context.proxy) {
+            delete context.proxy;
+            return;
+        }
         this.diagramEmitter.fire('command', {undo: {}});
         const compartment = context.clazzShape.compartments[0];
         if (!compartment) {

@@ -18,51 +18,45 @@ import { placeEdgeLabel } from './EdgeConnect';
  * }
  **/
 class ElementCreationHandler {
-    constructor(eventBus, canvas, umlWebClient, diagramContext, diagramEmitter, elementRegistry) {
+    constructor(eventBus, canvas, umlWebClient, diagramContext, diagramEmitter) {
         this._eventBus = eventBus;
         this._canvas = canvas;
         this._umlWebClient = umlWebClient;
         this._diagramContext = diagramContext;
         this._diagramEmitter = diagramEmitter;
-        this._elementRegistry = elementRegistry;
     }
     execute(context) {
         const eventBus = this._eventBus,
         canvas = this._canvas,
         umlWebClient = this._umlWebClient,
         diagramContext = this._diagramContext,
-        diagramEmitter = this._diagramEmitter,
-        elementRegistry = this._elementRegistry;
+        diagramEmitter = this._diagramEmitter;
         if (context.proxy) {
             delete context.proxy;
-            const elements = [];
-            for (const element of elements) {
-                // replace with new elements?
-                const newElement = elementRegistry.get(element.id);
-                if (newElement) {
-                    elements.push(newElement);
-                } else {
-                    elements.push({id: element.id, elementType: element.elementType}); // TODO this is probs bad :/
-                }
-            }
-            context.elements = elements;
-            return context.elements; // TODO get valid element
+            return context.elements;
         }
         const assignPosition = (shape) => {
             shape.x = context.x - shape.width / 2;
             shape.y = context.y - shape.height / 2;
         }
-        diagramEmitter.fire('command', {name: 'elementCreation', context: context});
         const placeLabel = (element) => {
-            if (element.parent) {
-                // place within paren
-                if (element.parent.waypoints) {
-                    placeEdgeLabel(element, element.parent);
+            if (element.owningElement) {
+                // place within parent
+                if (element.owningElement.waypoints) {
+                    placeEdgeLabel(element, element.owningElement);
                 } else {
                     element.x = element.x + context.x;
                     element.y = element.y + context.y;
                 }
-                canvas.addShape(element, element.parent);
+
+                // update model element if relevant just in case
+                if (element.modelElement && 
+                    element.owningElement.modelElement && 
+                    element.owningElement.modelElement.id === element.modelElement.id)
+                {
+                    element.modelElement = element.owningElement.modelElement;
+                }
+                canvas.addShape(element, element.owningElement);
             } else {
                 assignPosition(element);
                 canvas.addShape(element);
@@ -121,6 +115,9 @@ class ElementCreationHandler {
                 });
             }
         }
+
+        diagramEmitter.fire('command', {name: 'elementCreation', context: context});
+
         const doLater = async () => {
             for (const element of context.elements) {
                 switch (element.elementType) {
@@ -163,6 +160,13 @@ class ElementCreationHandler {
         return context.elements;
     }
     revert(context) {
+
+        // TODO better more reproducible way to do this
+        if (context.proxy) {
+            delete context.proxy;
+            return;
+        }
+
         const diagramEmitter = this._diagramEmitter,
         eventBus = this._eventBus,
         canvas = this._canvas,
@@ -189,11 +193,14 @@ class ElementCreationHandler {
                 case 'typedElementLabel':
                 case 'keywordLabel':
                 case 'associationEndLabel':
-                case 'multiplicityLabel':
+                case 'multiplicityLabel': {
                     // TODO children?
                     canvas.removeShape(element);
                     deleteUmlDiagramElement(element.id, umlWebClient);
+                    element.x = element.x - context.x;
+                    element.y = element.y - context.y;
                     break;
+                }
                 case 'classifierShape':
                     // TODO remove children
                     for (const compartment of element.compartments) {

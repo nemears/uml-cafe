@@ -317,11 +317,12 @@ export default {
                 if (tab.id === id) {
                     tab.isActive = true;
 					this.editorType = tab.type;
-                    if (this.editorType === 'diagram') {
-                        document.addEventListener('keydown', this.keypress);
+                } else {
+                    if (tab.isActive) {
+                        if (tab.type === 'diagram') {
+                            document.addEventListener('keydown', this.keypress)
+                        }
                     }
-                }
-                else {
                     tab.isActive = false;
                 }
             }
@@ -516,9 +517,12 @@ export default {
                 parent: treeNode.parent,
 				usersSelecting: treeNode.usersSelecting,
             };
-            let it = event.children;
-            if (!Array.isArray(it)) {
-                it = Object.entries(it).map((child) => child.id);
+            let it = event.childOrder;
+            if (!it) {
+                it = event.children;
+            }
+            if (!it) {
+                throw Error('Bad state could not find valid children to iterate');
             }
             for (const id of it) {
                 const oldChildNode = treeNode.children[id];

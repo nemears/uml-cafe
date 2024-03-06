@@ -89,7 +89,7 @@ class ResizeCompartmentableShapeHandler {
             context.newBounds.height = context.minBounds.height;
         }
 
-        const newBounds = roundBounds(context.newBounds);
+        context.newBounds = roundBounds(context.newBounds);
         const shape = context.shape;
         context.oldBounds = {
             x: shape.x,
@@ -97,19 +97,16 @@ class ResizeCompartmentableShapeHandler {
             width: shape.width,
             height: shape.height,
         };
-        this.diagramEmitter.fire('command', {name: 'resize.compartmentableShape.uml', context: {
-            shape : {
-                id: shape.id,
-            },
-            newBounds: newBounds,
-            oldBounds: context.oldBounds,
-        }});
-
+        this.diagramEmitter.fire('command', {name: 'resize.compartmentableShape.uml', context: context});
         this.eventBus.fire('compartmentableShape.resize', context);
-        
         return this.allChildren(context.shape);
     }
+    
     revert(context) {
+        if (context.proxy) {
+            delete context.proxy;
+            return;
+        }
         this.diagramEmitter.fire('command', {undo: {}});
         const oldBounds = context.oldBounds,
         shape = context.shape;
