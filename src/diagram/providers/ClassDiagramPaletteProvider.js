@@ -369,7 +369,7 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
                 y: 0,
                 labelTarget: shape,
                 text: '«' + modelElement.elementType() + '»',
-                parent: shape,
+                owningElement: shape,
                 id: randomID(),
                 modelElement: modelElement,
                 inselectable: true,
@@ -386,7 +386,7 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
         y: keywordLabel ? 15 : CLASSIFIER_SHAPE_GAP_HEIGHT,
         labelTarget: shape,
         text: modelElement.name,
-        parent: shape,
+        owningElement: shape,
         id: nameLabelID,
         modelElement: modelElement,
         elementType: 'nameLabel',
@@ -409,7 +409,7 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
                 modelElement: property,
                 elementType: 'typedElementLabel',
                 labelTarget: compartment,
-                parent: compartment,
+                owningElement: compartment,
                 text: text,
             }); 
             properties.push(propertyLabel);

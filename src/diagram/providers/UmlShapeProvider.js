@@ -64,20 +64,9 @@ class MoveShapeHandler {
     execute(context) {
         if (context.proxy) {
             delete context.proxy;
-            const shapes = [];
-            for (const shape of context.shapes) {
-                shapes.push(this.elementRegistry.get(shape.id));
-            }
-            context.shapes = shapes;
             return context.shapes;
         }
-        this.diagramEmitter.fire('command', {name: 'move.shape.uml', context: {
-            shapes: context.shapes.map(shape => ({id: shape.id})),
-            delta: {
-                x: context.delta.x,
-                y: context.delta.y,
-            }
-        }});
+        this.diagramEmitter.fire('command', {name: 'move.shape.uml', context: context});
         context.elementsMoved = [];
         for (const shape of context.shapes) {
             if (shape.ignore) {
@@ -91,6 +80,10 @@ class MoveShapeHandler {
         return context.elementsMoved;
     }
     revert(context) {
+        if (context.proxy) {
+            delete context.proxy;
+            return context.shapes;
+        }
         this.diagramEmitter.fire('command', {undo: {
             // TODO
         }});
