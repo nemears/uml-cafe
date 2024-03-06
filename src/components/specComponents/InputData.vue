@@ -8,7 +8,7 @@ export default {
         }
     },
     emits: ['elementUpdate'],
-    mounted() {
+    created() {
         this.data = this.initialData;
     },
     watch: {
@@ -35,7 +35,7 @@ export default {
                 <b>{{ label }}</b>
             </label>
         </div>
-        <input name="dataField" :type="inputType" :value="data" :readonly="readOnly" @change="submitDataChange" ref="numberInput"/>
+        <input name="dataField" :type="inputType" :id="umlid" v-model="data" :readonly="readOnly" @change="submitDataChange" ref="numberInput"/>
     </div>
 </template>
 <style>
