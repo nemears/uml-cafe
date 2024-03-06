@@ -18,7 +18,7 @@ export default {
     },
     props: ['umlID', 'commandStack', 'undoStack'],
     emits: ['specification', 'elementUpdate', 'command'],
-    inject: ['draginfo', 'elementUpdate', 'userSelected', 'userDeselected'],
+    inject: ['draginfo', 'elementUpdate', 'userSelected', 'userDeselected', 'latestCommand', 'commandUndo'],
     watch : {
         draginfo(newDraginfo) {
             this.recentDraginfo = newDraginfo;
@@ -40,12 +40,18 @@ export default {
         userDeselected(newUserDeselected) {
             this.emitter.emit('user.deselected', newUserDeselected);
         },
-        commandStack(newCommandStack) {
-            const newCommand = newCommandStack[0];
+        latestCommand(newCommand) {
+            if (newCommand.redo === this.umlID) {
+                return;
+            }
+            if (newCommand.element === this.umlID) {
+                return;
+            }
+            
             newCommand.context.proxy = true;
             this.emitter.emit('externalCommand', newCommand);
         },
-        undoStack(newUndoStack) {
+        commandUndo(undoneCommand) {
             // TODO
         }
     },
