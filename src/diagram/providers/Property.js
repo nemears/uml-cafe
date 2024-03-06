@@ -8,7 +8,7 @@ import { adjustShape } from "./UmlShapeProvider";
 
 export const PROPERTY_COMPARTMENT_HEIGHT = 15;
 
-export async function createProperty(property, clazzShape, umlWebClient, umlRenderer, elementFactory, canvas, diagramContext) {
+export function createProperty(property, clazzShape, umlWebClient, umlRenderer, elementFactory, canvas, diagramContext) {
     const compartment = clazzShape.compartments[0];
     if (!compartment) {
         throw Error('Cannot find compartment to put property in bad state!');
@@ -39,8 +39,6 @@ export async function createProperty(property, clazzShape, umlWebClient, umlRend
         compartment.width = propertyLabel.width + 15;
         clazzShape.width = propertyLabel.width + 15;
     }
-    
-    
 
     canvas.addShape(propertyLabel, compartment);
 
@@ -71,14 +69,15 @@ class CreatePropertyHandler {
             height: clazzShape.height
         };
 
-        this.diagramEmitter.fire('command', {name: 'resize.compartmentableShape.uml', context: context});
+        this.diagramEmitter.fire('command', {name: 'propertyLabel.create', context: context});
 
         const compartment = clazzShape.compartments[0];
         if (!compartment) {
             throw Error('could not find compartment in classifier');
         }
         const elsChanged = [clazzShape, ...clazzShape.children, ...compartment.children];
-        for (const property of context.properties) {
+        for (let property of context.properties) {
+            property = this.umlWebClient.getLocal(property.id); // upate if it was deleted
             elsChanged.push(createProperty(property, clazzShape, this.umlWebClient, this.umlRenderer, this.elementFactory, this.canvas, this.diagramContext));
         }
 
@@ -104,11 +103,6 @@ class CreatePropertyHandler {
 
             for (const property of context.properties) {
                 const propertyLabel = compartment.labels[compartment.labels.findIndex(el => el.modelElement.id === property.id)];
-                //const labelInstanceValue = this.umlWebClient.post('instanceValue');
-                //labelInstanceValue.instance.set(propertyLabel.id);
-                //ownedElementsSlot.values.add(labelInstanceValue);
-                //this.umlWebClient.put(ownedElementsSlot);
-                //this.umlWebClient.put(labelInstanceValue);
 
                 // finally add typedElementLabel
                 await createTypedElementLabel(propertyLabel, this.umlWebClient, this.diagramContext);
@@ -143,6 +137,10 @@ class CreatePropertyHandler {
             }
         }
         for (const el of elsToRemove) {
+            const labelIndex = compartment.labels.findIndex(label => label.id === el.id);
+            if (labelIndex >= 0) {
+                compartment.labels.splice(labelIndex, 1);
+            }
             this.canvas.removeShape(el);
         }
         this.eventBus.fire('compartmentableShape.resize', {
