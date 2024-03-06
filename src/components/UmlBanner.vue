@@ -10,8 +10,6 @@ import UserBubble from './bannerComponents/UserBubble.vue';
 export default {
     props: [
         'users',
-        'commandStack',
-        'undoStack',
     ],
     data() {
         return {
@@ -86,7 +84,7 @@ export default {
                 }, "1 second");
             });
         },
-        async saveToFile(event) {
+        async saveToFile() {
             let fileContent = await this.$umlWebClient.dump();
             let myFile = new Blob([fileContent], { type: "text/plain" });
             window.URL = window.URL || window.webkitURL;
@@ -338,8 +336,6 @@ export default {
         <div class="bannerItems">
             <UserBubble v-for="user in users" :key="user.id" :user="user"/>
             <CreateDiagramButton 
-                :command-stack="commandStack" 
-                :undo-stack="undoStack" 
                 @elementUpdate="propogateElementUpdate" 
                 @diagram="propogateDiagram"
                 @command="propogateCommand"></CreateDiagramButton>

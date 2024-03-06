@@ -12,14 +12,14 @@ export default {
         "depth",
         "selectedElements",
         "treeGraph",
-        "commandStack",
-        "undoStack",
     ],
     inject: [
         'elementUpdate',
         'treeUpdate',
         'userSelected',
         'userDeselected',
+        'latestCommand',
+        'commandUndo',
     ],
     emits: [
         'specification',
@@ -106,10 +106,8 @@ export default {
                 }
             }
         },
-        async commandStack(newCommandStack) {
-            // redo
-            const newCommand = newCommandStack[0],
-            context = newCommand.context;
+        async latestCommand(newCommand) {
+            const context = newCommand.context;
             if (newCommand && newCommand.element === this.umlID && newCommand.redo) {
                 const commandName = newCommand.name;
                 if (commandName === 'elementExplorerCreate') {
@@ -126,8 +124,7 @@ export default {
                 }
             }
         },
-        async undoStack(newUndoStack) {
-            const undoCommand = newUndoStack[0];
+        async commandUndo(undoCommand) {
             if (undoCommand && undoCommand.element === this.umlID) {
                 // our scope
                 const commandName = undoCommand.name,
@@ -617,8 +614,6 @@ export default {
                     :depth="depth + 1"
                     :selected-elements="selectedElements"
                     :tree-graph="treeGraph"
-                    :command-stack="commandStack"
-                    :undo-stack="undoStack"
                     :key="child"
                     @specification="propogateSpecification" 
                     @element-update="propogateElementUpdate"

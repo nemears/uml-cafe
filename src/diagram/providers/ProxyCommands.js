@@ -1,15 +1,17 @@
 class ProxyCommandHandler {
-    constructor(diagramEmitter) {
+    constructor(diagramEmitter, diagramContext) {
         this._diagramEmitter = diagramEmitter;
+        this._diagramContext = diagramContext;
     }
 
     execute(command) {
-        const diagramEmitter = this._diagramEmitter;
+        const diagramEmitter = this._diagramEmitter,
+        diagramContext = this._diagramContext;
         if (command.context.proxy) {
             delete command.context.proxy;
             return;
         }
-        command.redo = true;
+        command.redo = diagramContext.diagram.id;
         diagramEmitter.fire('command', command);
     }
     revert(command) {
@@ -23,6 +25,8 @@ class ProxyCommandHandler {
         }});
     }
 }
+
+ProxyCommandHandler.$inject = ['diagramEmitter', 'diagramContext'];
 
 export default class ProxyCommands {
     constructor (diagramEmitter, commandStack, diagramContext) {

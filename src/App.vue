@@ -42,6 +42,8 @@ export default {
 			userDeselected: undefined,
             commandStack: [],
             undoStack: [],
+            latestCommand: undefined,
+            commandUndo: undefined,
 		}
 	},
 	provide() {
@@ -51,6 +53,8 @@ export default {
             treeUpdate: computed(() => this.treeUpdate),
 			userSelected: computed(() => this.userSelected),
 			userDeselected: computed(() => this.userDeselected),
+            latestCommand: computed(() => this.latestCommand),
+            commandUndo: computed(() => this.commandUndo)
 		}
 	},
 	mounted() {
@@ -568,7 +572,7 @@ export default {
                 this.commandStack.unshift(event);
                 this.undoStack = [];
                 if (event.element !== this.specificationTab) {
-                    if (event.name === 'elementExplorerCreate' || event.name === 'diagramCreate') {
+                    if (event.name === 'elementExplorerCreate' || event.name === 'diagramCreate' || event.name === 'elementExplorerRename') {
                         const treeNode = this.treeGraph.get(event.element);
                         let currNode = treeNode;
                         const stack = [];
@@ -581,8 +585,8 @@ export default {
                             this.updateTree(stackCurrNode);
                         }
                     }
-                    this.commandStack = [...this.commandStack]; // trigger watchers
                 }
+                this.latestCommand = event;
             }
         },
         undo() {
@@ -590,7 +594,7 @@ export default {
                 const undoneCommand = this.commandStack.shift();
                 this.undoStack.unshift(undoneCommand);
                 if (undoneCommand !== this.specificationTab) {
-                    if (undoneCommand.name === 'elementExplorerCreate' || undoneCommand.name === 'diagramCreate') {
+                    if (undoneCommand.name === 'elementExplorerCreate' || undoneCommand.name === 'diagramCreate' || undoneCommand.name === 'elementExplorerRename') {
                         // make sure the parent of the element is shown in the element explorer
                         const treeNode = this.treeGraph.get(undoneCommand.context.element);
                         let currNode = treeNode;
@@ -607,8 +611,8 @@ export default {
                             this.updateTree(stackCurrNode);
                         }
                     }
-                    this.undoStack = [...this.undoStack]; // trigger watchers
                 }
+                this.commandUndo = undoneCommand;
             }
         },
         redo() {
@@ -616,7 +620,7 @@ export default {
                 const redoCommand = this.undoStack.shift();
                 redoCommand.redo = true;
                 this.commandStack.unshift(redoCommand);
-                this.commandStack = [...this.commandStack];
+                this.latestCommand = redoCommand;
             }
         },
         getColor(color) {
@@ -672,8 +676,6 @@ export default {
 	<div style="display: flex;flex-direction: column;height:100vh;overflow: hidden;">
 		<UmlBanner 
 			:users="users"
-            :command-stack="commandStack"
-            :undo-stack="undoStack"
 			@new-model-loaded="getHeadFromServer"
             @user-update="userUpdate"
 			@diagram="diagram" 
@@ -711,8 +713,6 @@ export default {
 					:depth="0"
                     :selected-elements="selectedElements"
                     :tree-graph="treeGraph"
-                    :command-stack="commandStack"
-                    :undo-stack="undoStack"
 					@specification="specification" 
 					@element-update="elementUpdateHandler" 
 					@diagram="diagram"
