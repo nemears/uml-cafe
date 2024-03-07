@@ -15,13 +15,7 @@ export default class Association extends RuleProvider {
         super(eventBus);
         eventBus.on('connect.end', 1100, (event) => {
             // check if it can connect
-            if (
-                event.context.start.connectType === 'directedComposition' ||
-                event.context.start.connectType === 'composition' ||
-                event.context.start.connectType === 'directedAssociation' ||
-                event.context.start.connectType === 'association' ||
-                event.context.start.connectType === 'biDirectionalAssociation'
-            ) {
+            if (isAssociationConnectType(event.context.start.connectType)) {
                 commandStack.execute('edge.connect', {
                     connectionData: {
                         id: randomID(),
@@ -194,22 +188,27 @@ export default class Association extends RuleProvider {
                 diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, source, target));
             }
         });
-        eventBus.on('edgeCreateUndo', (context) => {
+        eventBus.on('edge.connect.undo', (context) => {
             const deleteMembers = async () => {
-                const elsToDeleteOwners = [await context.context.connection.modelElement.owner.get()];
-                for await (const memberEnd of context.context.connection.modelElement.memberEnds) {
+                const connection = context.connection;
+                const elsToDeleteOwners = [await connection.modelElement.owner.get()];
+                for await (const memberEnd of connection.modelElement.memberEnds) {
                     const memberEndOwner = await memberEnd.owner.get();
                     if (!elsToDeleteOwners.includes(memberEndOwner)) {
                         elsToDeleteOwners.push(memberEndOwner);
                     }
                 }
-                for await (const memberEnd of context.context.connection.modelElement.memberEnds) {
-                    await umlWebClient.deleteElement(memberEnd)
+                for await (const memberEnd of connection.modelElement.memberEnds) {
+                    const labelIndex = context.children.findIndex(child => child.modelElement.id === memberEnd.id);
+                    if (labelIndex >= 0) {
+                        context.children.splice(labelIndex, 1);
+                    }
+                    await umlWebClient.deleteElement(memberEnd);
                 }
-                await umlWebClient.deleteElement(context.context.connection.modelElement);
+                await umlWebClient.deleteElement(connection.modelElement);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(...elsToDeleteOwners));
             }
-            if (context.context.type === 'association') {
+            if (isAssociationConnectType(context.connectType)) {
                 deleteMembers();
             }
         });
@@ -428,4 +427,12 @@ async function checkConnectionEnds(connection, graphicsFactory, canvas, umlWebCl
         // update it to server
         if (umlWebClient) await adjustShape(label, await umlWebClient.get(label.id), umlWebClient);
     }
+}
+
+function isAssociationConnectType(connectType) {
+    return connectType === 'directedComposition' ||
+           connectType === 'composition' ||
+           connectType === 'directedAssociation' ||
+           connectType === 'association' ||
+           connectType === 'biDirectionalAssociation';
 }
