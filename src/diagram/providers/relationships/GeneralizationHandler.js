@@ -6,7 +6,7 @@ export default class GeneralizationHandler extends RuleProvider {
     
     constructor(eventBus, commandStack, umlWebClient, diagramEmitter) {
         super(eventBus);
-        eventBus.on('connect.end', (event) => {
+        eventBus.on('connect.end', 1100, (event) => {
             if (event.context.start.connectType === 'generalization' || event.connectType === 'generalization') {
                 commandStack.execute('edge.connect', {
                     connectionData: {
@@ -41,13 +41,14 @@ export default class GeneralizationHandler extends RuleProvider {
                 diagramEmitter.fire('elementUpdate', createElementUpdate(specific));         
             }
         });
-        eventBus.on('edgeCreateUndo', (context) => {
+        eventBus.on('edge.connect.undo', (context) => {
             const deleteModelElement = async () => {
-                const owner = context.connection.source.modelElement;
-                await umlWebClient.deleteElement(context.context.connection.modelElement);
+                const connection = context.connection;
+                const owner = connection.source.modelElement;
+                await umlWebClient.deleteElement(connection.modelElement);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
             }
-            if (context.context.type === 'generalization') {
+            if (context.connectType === 'generalization') {
                 deleteModelElement(); 
             }
         });

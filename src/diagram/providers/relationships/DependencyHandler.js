@@ -45,13 +45,14 @@ export default class DependencyHandler extends RuleProvider {
                 diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));            
             }
         });
-        eventBus.on('edgeCreateUndo', (context) => {
+        eventBus.on('edge.connect.undo', (context) => {
             const deleteModelElement = async () => {
-                const owner = await context.context.connection.modelElement.owner.get();
-                await umlWebClient.deleteElement(context.context.connection.modelElement);
+                const connection = context.connection;
+                const owner = await connection.modelElement.owner.get();
+                await umlWebClient.deleteElement(connection.modelElement);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
             }
-            if (context.context.type === 'dependency') {
+            if (context.connectType === 'dependency') {
                 deleteModelElement(); 
             }
         });

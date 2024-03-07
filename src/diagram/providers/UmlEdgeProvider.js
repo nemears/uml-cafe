@@ -9,24 +9,23 @@ class AdjustWaypointsHandler {
         this.eventBus = eventBus;
     }
     execute(context) {
-        context.connection = this.elementRegistry.get(context.connection.id);
         if (context.proxy) {
             delete context.proxy;
-            return context.connection;
+            return;
         }
-        this.diagramEmitter.fire('command', {name: 'move.edge.uml', context: {
-            connection: {
-                id: context.connection.id,
-            },
-            newWaypoints: context.connection.waypoints,
-            originalWaypoints: context.originalWaypoints,
-        }});
+        context.connection = this.elementRegistry.get(context.connection.id);
+        this.diagramEmitter.fire('command', {name: 'move.edge.uml', context: context});
         context.connection.waypoints = context.newWaypoints;
         adjustEdgeWaypoints(context.connection, this.umlWebClient);
         this.eventBus.fire('edge.move.end', context);
         return context.connection;
     }
     revert(context) {
+        if (context.proxy) {
+            delete context.proxy;
+            return;
+        }
+
         this.diagramEmitter.fire('command', {undo: {
             // TODO
         }});

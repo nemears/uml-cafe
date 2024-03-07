@@ -1,6 +1,6 @@
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { getMid } from "diagram-js/lib/layout/LayoutUtil";
-import { createAssociationEndLabel, createDiagramEdge, createDiagramLabel, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel } from "../api/diagramInterchange";
+import { createAssociationEndLabel, createDiagramEdge, createDiagramLabel, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel, deleteUmlDiagramElement } from "../api/diagramInterchange";
 
 class EdgeConnectHandler {
     constructor(diagramEmitter, elementFactory, canvas, eventBus, umlWebClient, diagramContext) {
@@ -101,9 +101,43 @@ class EdgeConnectHandler {
                     throw Error('Bad state! contact dev with stacktrace!');
             }
         }
+        const ret = [context.connection, ...context.children];
+        context.children = [];
+        context.connectionData.children = []; // weird 
+        return ret;
     }
+
     revert(context) {
-        throw Error('TODO! revert edgeConnectHandler!');
+        if (context.proxy) {
+            delete context.proxy;
+            return;
+        }
+
+        const canvas = this._canvas,
+        umlWebClient = this._umlWebClient,
+        eventBus = this._eventBus,
+        diagramEmitter = this._diagramEmitter;
+
+        diagramEmitter.fire('command', {undo: {
+                    // TODO
+        }});
+
+        for (const child of context.children) {
+            canvas.removeShape(child);
+            deleteUmlDiagramElement(child.id, umlWebClient);
+            const labelIndex = context.connection.labels.findIndex(label => label.id === child.id);
+            if (labelIndex >= 0) {
+                context.connection.labels.splice(labelIndex, 1);
+            }
+        }
+
+        // delete connection
+        canvas.removeConnection(context.connection);
+        deleteUmlDiagramElement(context.connection.id, umlWebClient);
+
+        if (context.connectionData.createModelElement) {
+            eventBus.fire('edge.connect.undo', context); // TODO
+        }
     }
 }
 
