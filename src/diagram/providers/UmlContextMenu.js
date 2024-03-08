@@ -312,6 +312,10 @@ class DeleteModelElementHandler {
         }});
     }
     revert(context) {
+        if (context.proxy) {
+            delete context.proxy;
+            return;
+        }
         const umlWebClient = this._umlWebClient,
         diagramEmitter = this._diagramEmitter,
         eventBus = this._eventBus;
@@ -413,6 +417,10 @@ class EdgeCreationHandler {
         return context.connections;
     }
     revert(context) {
+        if (context.proxy) {
+            delete context.proxy;
+            return;
+        }
         const canvas = this._canvas,
         umlWebClient = this._umlWebClient,
         diagramContext = this._diagramContext,
@@ -431,7 +439,7 @@ EdgeCreationHandler.$inject = ['modelElementMap', 'elementRegistry', 'diagramEmi
 
 export function deleteModelElement(element, commandStack) {
     commandStack.execute('deleteModelElement', {
-        element: element
+        elements: [{element: element}]
     });
     
 }

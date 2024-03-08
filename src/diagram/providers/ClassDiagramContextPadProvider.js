@@ -460,6 +460,11 @@ class RemoveDiagramElementHandler {
     }
 
     revert(context) {
+        if(context.proxy) {
+            delete context.proxy;
+            return;
+        }
+
         const diagramEmitter = this._diagramEmitter,
         eventBus = this._eventBus;
 
