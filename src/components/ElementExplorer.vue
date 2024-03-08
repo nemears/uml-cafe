@@ -4,6 +4,7 @@ import getImage from '../GetUmlImage.vue';
 import classDiagramImage from '../assets/icons/general/class_diagram.svg';
 import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createClassDiagram, mapColor, getPanelClass } from '../umlUtil.js'
 import { randomID } from 'uml-client/lib/element';
+import parse from 'uml-client/lib/parse';
 
 export default {
     name: "ElementExplorer",
@@ -121,6 +122,8 @@ export default {
                     await this.createNewClassDiagram(await this.$umlWebClient.get(this.umlID), diagramID);
                 } else if (commandName === 'elementExplorerRename') {
                     await this.rename(context.newName)
+                } else if (commandName === 'elementExplorerDelete') {
+                    await this.deleteElement(await this.$umlWebClient.get(context.elementDirectlyDeleted));
                 }
             }
         },
@@ -137,6 +140,19 @@ export default {
                     await this.deleteElement(await this.$umlWebClient.get(diagramID));
                 } else if (commandName === 'elementExplorerRename') {
                     await this.rename(context.oldName);
+                } else if (commandName === 'elementExplorerDelete') {
+                    for (const rawData of context.elementsData) {
+                        const remadeElement = parse(rawData);
+                        this.$umlWebClient._graph.set(remadeElement.id, remadeElement);
+                        remadeElement.manager = this.$umlWebClient;
+                        this.$emit('elementUpdate', createElementUpdate(remadeElement));
+                        this.$umlWebClient.put(remadeElement);
+                    }
+                    this.$emit('updateTree', {
+                        id: this.umlID,
+                        children: this.children,
+                        expanded: true,
+                    });
                 }
             }
         }
@@ -390,6 +406,29 @@ export default {
                 label: 'Delete',
                 disabled: this.$umlWebClient.readonly,
                 onClick: async () => {
+                    const el = await this.$umlWebClient.get(this.umlID);
+                    const owner = await el.owner.get();
+                    const queue = [el];
+                    const elementsData = [owner.emit()];
+                    while (queue.length > 0) {
+                        const front = queue.shift();
+                        elementsData.push(front.emit());
+                        for await (const ownedEl of front.ownedElements) {
+                            queue.push(ownedEl);
+                        }
+                    }
+                    if (!owner) {
+                        throw Error('Cannot delete root of model sorry!');
+                    }
+                    this.$emit('command', {
+                        name: 'elementExplorerDelete',
+                        element: owner.id,
+                        redo: false,
+                        context: {
+                            elementDirectlyDeleted: this.umlID,
+                            elementsData: elementsData,
+                        }
+                    });
                     this.deleteElement(el);
                 }
             });
