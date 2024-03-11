@@ -25,6 +25,7 @@ import Property from './Property';
 import ProxyCommands from './ProxyCommands'
 import RelationshipEdgeCreator from './RelationshipEdgeCreator';
 import RealizationHandler from './relationships/RealizationHandler';
+import RemoveDiagramElement from './RemoveDiagramElement';
 import SignalHandler from './SignalHandler';
 import UmlCompartmentProvider from './UmlCompartmentProvider';
 import UmlCompartmentableShapeProvider from './UmlCompartmentableShapeProvider';
@@ -68,6 +69,7 @@ export default {
         'proxyCommands',
         'relationshipEdgeCreator',
         'realizationHandler',
+        'removeDiagramElement',
         'signalHandler',
         'umlRenderer',
         'umlCompartmentableShapeProvider',
@@ -109,6 +111,7 @@ export default {
     proxyCommands: ['type', ProxyCommands],
     relationshipEdgeCreator: ['type', RelationshipEdgeCreator],
     realizationHandler: ['type', RealizationHandler],
+    removeDiagramElement: ['type', RemoveDiagramElement],
     signalHandler: ['type', SignalHandler],
     umlCompartmentableShapeProvider: ['type', UmlCompartmentableShapeProvider],
     umlCompartmentProvider: ['type', UmlCompartmentProvider],

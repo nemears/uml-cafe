@@ -10,7 +10,7 @@ export default class ClassHandler {
             if (element.modelElement.elementType() === 'class') {
                 const classID = element.modelElement.id;
                 let clazz = umlWebClient.post('class', {id:classID});
-                diagramContext.context.packagedElements.add(clazz);
+                clazz.owningPackage.set(diagramContext.context);
                 umlWebClient.put(clazz);
                 umlWebClient.put(diagramContext.context);
 

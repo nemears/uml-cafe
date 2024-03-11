@@ -617,7 +617,7 @@ export default {
         },
         redo() {
             if (this.undoStack.length > 0) {
-                const redoCommand = this.undoStack.shift();
+                const redoCommand = Object.assign({}, this.undoStack.shift()); // shallow copy to trigger change
                 redoCommand.redo = true;
                 this.commandStack.unshift(redoCommand);
                 this.latestCommand = redoCommand;

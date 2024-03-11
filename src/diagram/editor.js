@@ -81,6 +81,9 @@ export function Editor(options) {
     deselect(el) {
       this.client.deselect(el);
     }
+    parse(rawData) {
+      return this.client.parse(rawData);
+    }
   }
 
   class DiagramEmitter {
