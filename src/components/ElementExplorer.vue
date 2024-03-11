@@ -142,9 +142,8 @@ export default {
                     await this.rename(context.oldName);
                 } else if (commandName === 'elementExplorerDelete') {
                     for (const rawData of context.elementsData) {
-                        const remadeElement = parse(rawData);
-                        this.$umlWebClient._graph.set(remadeElement.id, remadeElement);
-                        remadeElement.manager = this.$umlWebClient;
+                        const parseData = this.$umlWebClient.parse(rawData);
+                        const remadeElement = parseData.newElement;
                         this.$emit('elementUpdate', createElementUpdate(remadeElement));
                         this.$umlWebClient.put(remadeElement);
                     }
@@ -205,6 +204,9 @@ export default {
             this.currentUsers = treeNode.usersSelecting.map(user => mapColor(user.color));
 
             let el = await this.$umlWebClient.get(this.umlID);
+            if (!el) {
+                throw Error("bad state, element in tree not in client!");
+            }
             this.elementType = el.elementType();
             if (el.appliedStereotypes.size() > 0) {
                 for await (let stereotypeInst of el.appliedStereotypes) {
