@@ -8,8 +8,6 @@ export default class UmlLabelProvider extends RuleProvider {
             const elementType = event.serverElement.elementType();
             if (isLabel(elementType)) {
                 const umlLabel = event.serverElement;
-                console.log('creating label');
-                console.log(umlLabel);
                 const owner = elementRegistry.get(umlLabel.owningElement);
                 let labelTarget = owner;
                 let placement, inselectable; // TODO store these attributes in server with new types

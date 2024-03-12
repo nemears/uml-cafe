@@ -64,7 +64,6 @@ class EdgeConnectHandler {
         if (context.connectionData.createModelElement) {
             eventBus.fire('edge.connect.create', context); // TODO
         }
-        createDiagramEdge(context.connection, umlWebClient, diagramContext);
         canvas.addConnection(context.connection);
 
         // place children
@@ -78,32 +77,39 @@ class EdgeConnectHandler {
             } else {
                 canvas.addShape(child);
             }
-            switch (child.elementType) {
-                case 'label':
-                    createDiagramLabel(child, umlWebClient, diagramContext);
-                    break;
-                case 'nameLabel':
-                    createNameLabel(child, umlWebClient, diagramContext);
-                    break;
-                case 'typedElementLabel':
-                    createTypedElementLabel(child, umlWebClient, diagramContext);
-                    break;
-                case 'keywordLabel':
-                    createKeywordLabel(child, umlWebClient, diagramContext);
-                    break;
-                case 'associationEndLabel':
-                    createAssociationEndLabel(child, umlWebClient, diagramContext);
-                    break;
-                case 'multiplicityLabel':
-                    createMultiplicityLabel(child, umlWebClient, diagramContext);
-                    break;
-                default:
-                    throw Error('Bad state! contact dev with stacktrace!');
-            }
         }
+
+        const doLater = async () => {
+            await createDiagramEdge(context.connection, umlWebClient, diagramContext);
+            for (const child of context.children) {
+                switch (child.elementType) {
+                    case 'label':
+                        await createDiagramLabel(child, umlWebClient, diagramContext);
+                        break;
+                    case 'nameLabel':
+                        await createNameLabel(child, umlWebClient, diagramContext);
+                        break;
+                    case 'typedElementLabel':
+                        await createTypedElementLabel(child, umlWebClient, diagramContext);
+                        break;
+                    case 'keywordLabel':
+                        await createKeywordLabel(child, umlWebClient, diagramContext);
+                        break;
+                    case 'associationEndLabel':
+                        await createAssociationEndLabel(child, umlWebClient, diagramContext);
+                        break;
+                    case 'multiplicityLabel':
+                        await createMultiplicityLabel(child, umlWebClient, diagramContext);
+                        break;
+                    default:
+                        throw Error('Bad state! contact dev with stacktrace!');
+                }
+            }
+            context.children = [];
+            context.connectionData.children = []; // weird 
+        };
+        doLater();
         const ret = [context.connection, ...context.children];
-        context.children = [];
-        context.connectionData.children = []; // weird 
         return ret;
     }
 
@@ -124,7 +130,6 @@ class EdgeConnectHandler {
 
         for (const child of context.children) {
             canvas.removeShape(child);
-            deleteUmlDiagramElement(child.id, umlWebClient);
             const labelIndex = context.connection.labels.findIndex(label => label.id === child.id);
             if (labelIndex >= 0) {
                 context.connection.labels.splice(labelIndex, 1);
@@ -133,11 +138,20 @@ class EdgeConnectHandler {
 
         // delete connection
         canvas.removeConnection(context.connection);
-        deleteUmlDiagramElement(context.connection.id, umlWebClient);
 
-        if (context.connectionData.createModelElement) {
-            eventBus.fire('edge.connect.undo', context); // TODO
-        }
+        const doLater = async () => {
+            for (const child of context.children) {
+                await deleteUmlDiagramElement(child.id, umlWebClient);
+            }
+    
+            // delete connection
+            await deleteUmlDiagramElement(context.connection.id, umlWebClient);
+
+            if (context.connectionData.createModelElement) {
+                eventBus.fire('edge.connect.undo', context); // TODO
+            }
+        };
+        doLater();
     }
 }
 

@@ -1,5 +1,5 @@
-import { nullID, randomID } from "uml-client/lib/element";
-import { createDiagramShape, createTypedElementLabel, updateLabel, OWNED_ELEMENTS_SLOT_ID, deleteUmlDiagramElement } from "../api/diagramInterchange";
+import { randomID } from "uml-client/lib/element";
+import { createTypedElementLabel, updateLabel, OWNED_ELEMENTS_SLOT_ID, deleteUmlDiagramElement } from "../api/diagramInterchange";
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { getTextDimensions, getTypedElementText, LABEL_HEIGHT, PROPERTY_GAP } from './ClassDiagramPaletteProvider';
