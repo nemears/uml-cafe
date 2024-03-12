@@ -23,6 +23,7 @@ export default {
             version: packageJSON.version,
             websiteImage: classSVG,
             loginEnabled: false,
+            rememberUserEnabled: false,
             logoutEnabled: false,
             signupEnabled: false,
             createProjectEnabled: false,
@@ -104,6 +105,9 @@ export default {
             this.loginEnabled = !this.loginEnabled;
             this.loginErrorMessage = undefined;
         },
+        toggleRememberUser() {
+            this.rememberUserEnabled = !this.rememberUserEnabled;
+        },
         async login() {
             var user, password;
             if (this.logoutEnabled) {
@@ -143,11 +147,16 @@ export default {
                     this.loginEnabled = false;
                     this.$emit("newModelLoaded");
                     this.$emit('userUpdate');
-                    sessionStorage.setItem('user', this.$umlWebClient.user);
-                    const setPasswordHash = async() => {
-                        sessionStorage.setItem('passwordHash', Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)))).map(b => b.toString(16).padStart(2, '0')).join(''));
-                    };
-                    setPasswordHash();
+                    if (this.rememberUserEnabled) {
+                        sessionStorage.setItem('user', this.$umlWebClient.user);
+                        const setPasswordHash = async() => {
+                            sessionStorage.setItem('passwordHash', Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)))).map(b => b.toString(16).padStart(2, '0')).join(''));
+                        };
+                        setPasswordHash();
+                    } else {
+                        sessionStorage.removeItem('user');
+                        sessionStorage.removeItem('passwordHash');
+                    }
                 }
             });
         },
@@ -401,6 +410,10 @@ export default {
             <label for="'logInPasswordInput'">password: </label>
             <input class="inputStyle" type="password" id="'logInPasswordInput'" name="'logInPasswordInput'" ref="logInPasswordInput">
             <br>
+            <label for="rememberUser">Remember Me</label>
+            <input style="margin-left:5px;" type="checkbox" v-model="this.rememberUserEnabled" id="rememberUser" @click="toggleRememberUser">
+            <br>
+            <br>
             <div style="vertical-align:middle;">
                 <div v-if="loginErrorMessage !== undefined" class="signUpError">
                     {{ loginErrorMessage }}
@@ -408,7 +421,7 @@ export default {
                 <input class="inputButton" type="button" value="Log In" @click="login">
             </div>
             <hr>
-            <input class="inputButton" type="button" value="Sign Up" @click="closeLoginAndGoToSignUp">
+            <input class="inputButton" style="margin-right:20px;" type="button" value="Sign Up" @click="closeLoginAndGoToSignUp">
             <input class="inputButton" type="button" value="Log Out" @click="toggleLogout">
         </form>
     </FreezeAndPopUp>
