@@ -1,5 +1,5 @@
 import { nullID, randomID } from "uml-client/lib/element";
-import { createDiagramShape, createTypedElementLabel, updateLabel, OWNED_ELEMENTS_SLOT_ID } from "../api/diagramInterchange";
+import { createDiagramShape, createTypedElementLabel, updateLabel, OWNED_ELEMENTS_SLOT_ID, deleteUmlDiagramElement } from "../api/diagramInterchange";
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { getTextDimensions, getTypedElementText, LABEL_HEIGHT, PROPERTY_GAP } from './ClassDiagramPaletteProvider';
@@ -142,6 +142,7 @@ class CreatePropertyHandler {
                 compartment.labels.splice(labelIndex, 1);
             }
             this.canvas.removeShape(el);
+            deleteUmlDiagramElement(el.id, this.umlWebClient); //async
         }
         this.eventBus.fire('compartmentableShape.resize', {
             shape: context.clazzShape,
