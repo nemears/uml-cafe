@@ -99,6 +99,7 @@ export default class UmlEdgeProvider {
                         numSourceLabels: 0,
                         numCenterLabels: 0,
                         numTargetLabels: 0,
+                        elementType: 'edge',
                     });
                     const owner = elementRegistry.get(umlEdge.owningElement);
                     canvas.addConnection(connection, owner);

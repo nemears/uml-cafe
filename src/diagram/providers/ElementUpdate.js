@@ -1,4 +1,3 @@
-import { randomID } from 'uml-client/lib/element';
 import { getUmlDiagramElement, deleteUmlDiagramElement } from '../api/diagramInterchange';
 
 export default class ElementUpdate {
