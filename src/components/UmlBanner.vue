@@ -23,6 +23,7 @@ export default {
             version: packageJSON.version,
             websiteImage: classSVG,
             loginEnabled: false,
+            logoutEnabled: false,
             signupEnabled: false,
             createProjectEnabled: false,
             projectSettingsEnabled: false,
@@ -104,8 +105,14 @@ export default {
             this.loginErrorMessage = undefined;
         },
         async login() {
-            const user = this.$refs.logInUserInput.value;
-            const password = this.$refs.logInPasswordInput.value;
+            var user, password;
+            if (this.logoutEnabled) {
+                user = '0';
+                password = '';
+            } else {
+                user = this.$refs.logInUserInput.value;
+                password = this.$refs.logInPasswordInput.value;
+            }
             if (user.length === 0) {
                 this.loginErrorMessage = 'Invalid username';
                 return;
@@ -128,6 +135,10 @@ export default {
                 successfulLogin = false;
             }).then(() => {
                 if (successfulLogin) {
+                    if (this.logoutEnabled) {
+                        this.$umlWebClient.user = undefined;
+                        this.logoutEnabled = !this.logoutEnabled;
+                    }
                     this.user = this.$umlWebClient.user;
                     this.loginEnabled = false;
                     this.$emit("newModelLoaded");
@@ -144,6 +155,14 @@ export default {
             this.optionsEnabled = false;
             this.signupEnabled = !this.signupEnabled;
             this.signUpErrorMessage = undefined
+        },
+        toggleLogout() {
+            this.optionsEnabled = false;
+            if (!this.logoutEnabled) {
+                this.logoutEnabled = true;
+                this.loginErrorMessage = undefined;
+                this.login();
+            }
         },
         signup() {
             const user = this.$refs.signUpUserInput.value;
@@ -366,6 +385,9 @@ export default {
         <div class="optionsOption" @click="toggleLogin">
             Log In
         </div>
+        <div class="optionsOption" @click="toggleLogout">
+            Log Out
+        </div>
         <div class="optionsOption" @click="toggleSignup">
             Sign Up
         </div>
@@ -387,6 +409,7 @@ export default {
             </div>
             <hr>
             <input class="inputButton" type="button" value="Sign Up" @click="closeLoginAndGoToSignUp">
+            <input class="inputButton" type="button" value="Log Out" @click="toggleLogout">
         </form>
     </FreezeAndPopUp>
     <FreezeAndPopUp :label="'Sign Up'" :toggle="toggleSignup" v-if="signupEnabled" @keydown.enter="signup">
