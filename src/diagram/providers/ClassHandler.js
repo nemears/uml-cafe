@@ -38,6 +38,7 @@ export default class ClassHandler {
                     diagramEmitter.fire('elementUpdate', deleteElementElementUpdate(modelElement));
                     await umlWebClient.deleteElement(modelElement);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
+                    umlWebClient.put(owner);
                 }
                 doLater(element);
                 canvas.removeShape(element);

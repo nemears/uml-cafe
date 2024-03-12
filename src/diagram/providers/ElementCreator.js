@@ -182,12 +182,10 @@ class ElementCreationHandler {
                 case 'shape':
                     // TODO children
                     canvas.removeShape(element);
-                    deleteUmlDiagramElement(element);
                     break;
                 case 'edge':
                     // TODO children
                     canvas.removeConnection(element);
-                    deleteUmlDiagramElement(element);
                     break;
                 case 'nameLabel':
                 case 'typedElementLabel':
@@ -196,7 +194,6 @@ class ElementCreationHandler {
                 case 'multiplicityLabel': {
                     // TODO children?
                     canvas.removeShape(element);
-                    deleteUmlDiagramElement(element.id, umlWebClient);
                     element.x = element.x - context.x;
                     element.y = element.y - context.y;
                     break;
@@ -206,20 +203,35 @@ class ElementCreationHandler {
                     for (const compartment of element.compartments) {
                         // TODO remove children
                         canvas.removeShape(compartment);
-                        deleteUmlDiagramElement(compartment.id, umlWebClient);
                     }
                     canvas.removeShape(element);
-                    deleteUmlDiagramElement(element.id, umlWebClient); // async doing later
-                    if (element.createModelElement) {
-                        eventBus.fire('elementDeleted', {
-                            element: element
-                        });
-                    }
                     break;
                 default:
                     throw Error('invalid uml di elementType given to ElementCreationHandler!');
             }
         }
+        const doLater = async () => {
+            for (const element of context.elements.toReversed()) {
+                switch (element.elementType) {
+                    case 'classifierShape':
+                    case 'compartmentableShape':
+                        for (const compartment of element.compartments) {
+                            await deleteUmlDiagramElement(compartment.id, umlWebClient);
+                        }
+                        await deleteUmlDiagramElement(element.id, umlWebClient);
+                        if (element.createModelElement) {
+                            eventBus.fire('elementDeleted', {
+                                element: element
+                            });
+                        }
+                        break;
+                    default:
+                        await deleteUmlDiagramElement(element.id, umlWebClient);
+                        break;
+                }
+            }
+        };
+        doLater();
         return context.elements;
     }
 }

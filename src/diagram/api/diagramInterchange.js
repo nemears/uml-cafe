@@ -336,12 +336,19 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
                     // bounds get and delete instance
                     await umlWebClient.deleteElement(await (await shapeSlot.values.front()).instance.get());
                 } else if (shapeSlot.definingFeature.id() === OWNED_ELEMENTS_SLOT_ID) {
-                    // delete owned elements if not already deleted
-                    for await (const ownedElementValue of shapeSlot.values) {
-                        if (ownedElementValue.instance.has()) {
-                            await deleteUmlDiagramElement(ownedElementValue.instance.id(), umlWebClient);
-                        }
-                    }
+                    // TODO eventually i want to be able to uncomment this and cleanup automatically but 
+                    // .has() is not completely deterministic with the api currently when it is there will be
+                    // an easy way to ensure this
+                    
+
+                    // CLEANUP ALL CHILDREN OR MODEL WILL GET CLUTTERED AND LARGE
+                    
+                    // // delete owned elements if not already deleted
+                    // for await (const ownedElementValue of shapeSlot.values) {
+                    //     if (ownedElementValue.instance.has()) {
+                    //         await deleteUmlDiagramElement(ownedElementValue.instance.id(), umlWebClient);
+                    //     }
+                    // }
                 }
             }
             
