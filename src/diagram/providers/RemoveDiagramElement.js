@@ -1,5 +1,8 @@
 import { createElementUpdate, deleteElementElementUpdate } from "../../umlUtil";
-import { createAssociationEndLabel, createClassifierShape, createComparment, createCompartmentableShape, createDiagramEdge, createDiagramLabel, createDiagramShape, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel, deleteUmlDiagramElement } from "../api/diagramInterchange";
+import { createAssociationEndLabel, createClassifierShape, createComparment,
+         createCompartmentableShape, createDiagramEdge, createDiagramLabel, createDiagramShape,
+         createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel,
+         deleteUmlDiagramElement } from "../api/diagramInterchange";
 
 export default class RemoveDiagramElement {
     constructor(commandStack) {
