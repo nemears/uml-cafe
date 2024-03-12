@@ -1,7 +1,7 @@
 <script>
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
-import { createElementUpdate, mapColor, getPanelClass } from '../../umlUtil.js';
+import { createElementUpdate, mapColor, mapClientColor, getPanelClass } from '../../umlUtil.js';
 export default {
     props: [
         'label', 
@@ -64,10 +64,21 @@ export default {
             }
         },
         elementUpdate(newElementUpdate) {
+            const me = this;
             for (const update of newElementUpdate.updatedElements) {
                 const newElement = update.newElement;
                 if (newElement) {
                     if (newElement.id === this.umlID) {
+                        const asyncSetData = async () => {
+                            const el = await newElement.sets[me.singletonData.setName].get();
+                            const currentUsers = this.getCurrentUsers(el);
+                            me.setData({
+                                img: getImage(el),
+                                id: el.id,
+                                label: el.name !== undefined ? el.name : '',
+                                currentUsers: currentUsers,
+                            });
+                        };
                         if (this.valID) {
                             if (newElement.sets[this.singletonData.setName].id() !== this.valID) {
                                 if (!newElement.sets[this.singletonData.setName].has()) {
@@ -77,16 +88,12 @@ export default {
                                         label: undefined,
                                     });
                                 } else {
-                                    const asyncSetData = async () => {
-                                        const el = await newElement.sets[this.singletonData.setName].get();
-                                        this.setData({
-                                            img: getImage(el),
-                                            id: el.id,
-                                            label: el.name !== undefined ? el.name : '' 
-                                        });
-                                    };
                                     asyncSetData();
                                 }
+                            }
+                        } else {
+                            if (newElement.sets[this.singletonData.setName].has()) {
+                                asyncSetData();
                             }
                         }
                     }
@@ -138,7 +145,18 @@ export default {
             this.img = data.img;
             this.valID = data.id;
             this.valLabel = data.label;
-            this.currentUsers = data.currentUsers;
+
+            // TODO some better handling for this, so that it is always lit up, rn has some weird states
+            if (this.valID && !this.currentUsers) {
+                this.currentUsers = this.getCurrentUsers({id:this.valID});
+            } else {
+                this.currentUsers = data.currentUsers;
+            }
+        },
+        getCurrentUsers(el) {
+            return Array.from(this.$umlWebClient.otherClients.values())
+                .filter((other_client) => other_client.selectedElements.has(el.id))
+                .map(other_client => mapClientColor(other_client.color));
         },
         async specification() {
             if (this.valID === undefined) {
@@ -190,8 +208,10 @@ export default {
             this.setData({
                 img: getImage(el),
                 id: el.id,
-                label: el.name !== undefined ? el.name : '' 
+                label: el.name !== undefined ? el.name : '' ,
+                currentUsers: [] // does this need to be calculated
             });
+            this.selected = true;
         },
         createElement() {
             this.creationPopUp = true;
@@ -233,7 +253,7 @@ export default {
                     label: 'Remove',
                     onClick: async () => {
                         const el = await this.$umlWebClient.get(this.umlID);
-                        el.sets[this.singletonData.setName].set(null);
+                        el.sets[this.singletonData.setName].set(undefined);
                         this.$umlWebClient.put(el);
                         this.$umlWebClient.put(await this.$umlWebClient.get(this.valID));
                         this.$emit('elementUpdate', createElementUpdate(el));

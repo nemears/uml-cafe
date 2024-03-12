@@ -124,6 +124,29 @@ export function mapColor(color) {
     return undefined;
 }
 
+export function mapClientColor(color) {
+    switch (color) {
+        case 'Blue':
+            return 'blueUserPanel';
+        case 'Green':
+            return 'greenUserPanel';
+        case 'Red':
+            return 'redUserPanel';
+        case 'Yellow':
+            return 'yellowUserPanel';
+        case 'Orange':
+            return 'orangeUserPanel';
+        case 'Cyan':
+            return 'cyanUserPanel';
+        case 'Magenta':
+            return 'magentaUserPanel';
+        case 'Lime':
+            return 'limeUserPanel';
+        default:
+            throw Error('Bad user color!');
+    }
+}
+
 export function getPanelClass(selected, hover, currentUsers, umlWebClient) {
     if (!selected) {
         if (currentUsers.length > 0) {
@@ -136,47 +159,9 @@ export function getPanelClass(selected, hover, currentUsers, umlWebClient) {
         }
     } else {
         if (hover) {
-            switch (umlWebClient.color) {
-                case 'Blue':
-                    return 'blueUserPanelLight';
-                case 'Green':
-                    return 'greenUserPanelLight';
-                case 'Red':
-                    return 'redUserPanelLight';
-                case 'Yellow':
-                    return 'yellowUserPanelLight';
-                case 'Orange':
-                    return 'orangeUserPanelLight';
-                case 'Cyan':
-                    return 'cyanUserPanelLight';
-                case 'Magenta':
-                    return 'magentaUserPanelLight';
-                case 'Lime':
-                    return 'limeUserPanelLight';
-                default:
-                    throw Error('Bad user color!');
-            }
+            return mapClientColor(umlWebClient.color) + 'Light';
         } else {
-            switch (umlWebClient.color) {
-                case 'Blue':
-                    return 'blueUserPanel';
-                case 'Green':
-                    return 'greenUserPanel';
-                case 'Red':
-                    return 'redUserPanel';
-                case 'Yellow':
-                    return 'yellowUserPanel';
-                case 'Orange':
-                    return 'orangeUserPanel';
-                case 'Cyan':
-                    return 'cyanUserPanel';
-                case 'Magenta':
-                    return 'magentaUserPanel';
-                case 'Lime':
-                    return 'limeUserPanel';
-                default:
-                    throw Error('Bad user color!'); 
-            } 
+            return mapClientColor(umlWebClient.color);
         }
     }
 }
