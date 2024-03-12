@@ -1,5 +1,4 @@
 import { createCommentClick } from '../../umlUtil';
-import { deleteModelElement } from './UmlContextMenu';
 
 /**
  * A example context pad provider.

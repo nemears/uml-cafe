@@ -17,6 +17,7 @@ function revertLabelChange(context, diagramEmitter, umlWebClient) {
     element.text = oldText;
     element.modelElement.name = oldText;
     diagramEmitter.fire('elementUpdate', createElementUpdate(element.modelElement));
+    umlWebClient.put(element.modelElement);
 
     updateLabel(element, umlWebClient);
 }

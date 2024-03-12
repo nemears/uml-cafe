@@ -1,8 +1,8 @@
-import { isLabel, updateLabel } from '../api/diagramInterchange';
+import { isLabel } from '../api/diagramInterchange';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 
 export default class UmlLabelProvider extends RuleProvider {
-    constructor(eventBus, elementRegistry, elementFactory, canvas, graphicsFactory, umlWebClient) {
+    constructor(eventBus, elementRegistry, elementFactory, canvas, graphicsFactory) {
         super(eventBus);
         eventBus.on('server.create', (event) => {
             const elementType = event.serverElement.elementType();
@@ -12,19 +12,6 @@ export default class UmlLabelProvider extends RuleProvider {
                 console.log(umlLabel);
                 const owner = elementRegistry.get(umlLabel.owningElement);
                 let labelTarget = owner;
-
-                // determine our target
-                //if (owner.modelElement.id === umlLabel.modelElement.id) {
-                //    // owner is our target
-                //    labelTarget = owner;
-                //} else {
-                //    // look at children of owner
-                //    for (const child of owner.children) {
-                //        if (child.modelElement.id === umlLabel.modelElement.id) {
-                //            labelTarget = child;
-                //        }
-                //    }
-                //}
                 let placement, inselectable; // TODO store these attributes in server with new types
                 switch (elementType) {
                     case 'nameLabel':
@@ -69,67 +56,18 @@ export default class UmlLabelProvider extends RuleProvider {
             }
         });
 
-//        eventBus.on('server.create', (context) => {
-//            const umlLabel = context.serverElement,
-//            elementType = umlLabel.elementType();
-//            if (isLabel(elementType)) {
-//                const owner = elementRegistry.get(umlLabel.owningElement);
-//                let inselectable, placement;
-//                if (owner.elementType === 'edge') {
-//                    if (owner.modelElement.elementType() === 'association') {
-//                        // handle placement
-//                        if (elementType === 'associationEndLabel' || elementType === 'multiplicityLabel') {
-//                            // source or target
-//                            if (owner.source.modelElement.id === umlLabel.modelElement.type.id()) {
-//                                placement = 'source';
-//                            } else if (owner.target.modelElement.id === umlLabel.modelElement.type.id()) {
-//                                placement = 'target';
-//                            }
-//                        } else {
-//                            // center
-//                            placement = 'center';
-//                        }
-//                    } 
-//                } else if (elementType === 'nameLabel' || elementType === 'keywordLabel') {
-//                    inselectable = true;
-//                }
-//                const label = elementFactory.createLabel({
-//                    id: umlLabel.id,
-//                    x: umlLabel.bounds.x,
-//                    y: umlLabel.bounds.y,
-//                    width: umlLabel.bounds.width,
-//                    height: umlLabel.bounds.height,
-//                    labelTarget: owner,
-//                    parent: owner,
-//                    modelElement: umlLabel.modelElement,
-//                    inselectable: inselectable,
-//                    placement: placement,
-//                    elementType: elementType,
-//                });
-//                canvas.addShape(label, owner);
-//            }
-//        });
-
         eventBus.on('server.update', (event) => {
             const serverLabel = event.serverElement,
             localLabel = event.localElement,
             elementType = serverLabel.elementType();
             
             if (isLabel(elementType)) {
-                console.log('updating label');
-                console.log(serverLabel);
                 localLabel.x = serverLabel.bounds.x;
                 localLabel.y = serverLabel.bounds.y;
                 localLabel.width = serverLabel.bounds.width;
                 localLabel.height = serverLabel.bounds.height;
                 localLabel.text = serverLabel.text;
                 localLabel.modelElement = serverLabel.modelElement;
-            }
-            if (elementType === 'nameLabel' && localLabel.text !== localLabel.modelElement.name) {
-                localLabel.text = localLabel.modelElement.name;
-                updateLabel(localLabel, umlWebClient);
-            }
-            if (isLabel(elementType)) {
                 graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
             }
         });
