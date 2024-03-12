@@ -41,7 +41,7 @@ export default {
             }
         },
         fullUserName() {
-            if (this.user && this.user.user !== '0') {
+            if (this.user && this.user.user !== '0' && this.user.user) {
                 return this.user.user;
             } else {
                 return 'anonymous';
