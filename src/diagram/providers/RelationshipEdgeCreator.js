@@ -116,6 +116,8 @@ export default class RelationshipEdgeCreator {
     }
 }
 
+RelationshipEdgeCreator.$inject = ['commandStack', 'elementRegistry', 'elementFactory', 'umlRenderer', 'modelElementMap']; 
+
 export function createAssociationNameLabel(associationEdge, elementFactory, umlRenderer) {
     const association = associationEdge.modelElement;
     const textDimensions = getTextDimensions(association.name, umlRenderer);
