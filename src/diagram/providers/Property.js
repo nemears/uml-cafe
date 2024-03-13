@@ -152,6 +152,8 @@ class CreatePropertyHandler {
     }
 }
 
+CreatePropertyHandler.$inject = ['umlWebClient', 'umlRenderer', 'elementFactory', 'canvas', 'diagramContext', 'eventBus', 'diagramEmitter'];
+
 export default class Property extends RuleProvider {
     constructor(eventBus, commandStack, graphicsFactory, canvas, umlWebClient) {
         super(eventBus)
