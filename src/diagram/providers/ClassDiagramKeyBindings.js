@@ -29,3 +29,5 @@ export default class ClassDiagramKeyBindings {
         })
     }
 }
+
+ClassDiagramKeyBindings.$inject = ['keyboard', 'commandStack', 'selection']
