@@ -155,6 +155,8 @@ class EdgeConnectHandler {
     }
 }
 
+EdgeConnectHandler.$inject = ['diagramEmitter', 'elementFactory', 'canvas', 'eventBus', 'umlWebClient', 'diagramContext']; 
+
 function getOrientation(waypoint, middleOfShape) {
     if (waypoint.x > middleOfShape.x) {
         // to right
@@ -342,3 +344,5 @@ export default class EdgeConnect {
         commandStack.registerHandler('edge.connect', EdgeConnectHandler);
     }
 }
+
+EdgeConnect.$inject = ['commandStack'];
