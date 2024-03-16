@@ -52,9 +52,9 @@ export default {
     ],
     mounted() {
         // TODO check if we need to enable login on startup
-        this.$umlWebClient.initialization.catch(() => {
-            this.toggleLogin();
-        });
+        if (!this.$umlWebClient.initialized) {
+            this.toggleLogin()
+        }
         if (this.$umlWebClient.user && this.$umlWebClient.user !== '0') {
             this.user = this.$umlWebClient.user;
         }
@@ -128,7 +128,9 @@ export default {
                 return;
             }
             let successfulLogin = true;
-            await this.$umlWebClient.close();
+            if (this.$umlWebClient.initialized) {
+                await this.$umlWebClient.close();
+            }
             this.$umlWebClient.login({
                 user: user, 
                 password: password,
