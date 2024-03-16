@@ -58,6 +58,9 @@ export default {
 		}
 	},
 	mounted() {
+        if (!this.$umlWebClient.initialized) {
+            return;
+        }
 		this.userUpdate();
 
 		this.$umlWebClient.onUpdate = async (element, oldElement) => {
