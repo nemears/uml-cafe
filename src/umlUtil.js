@@ -165,3 +165,28 @@ export function getPanelClass(selected, hover, currentUsers, umlWebClient) {
         }
     }
 }
+
+export function getProjectLoginObject(wholeProjectName, serverAddress) {
+    const projectNameSplit = wholeProjectName.split('/');
+    const groupName = projectNameSplit[projectNameSplit.length - 2];
+    const projectName = projectNameSplit[projectNameSplit.length - 1];
+
+    // check for stashed user and passwordHash
+    let user = sessionStorage.getItem('user');
+    let passwordHash = sessionStorage.getItem('passwordHash');
+    if (user === 'null' || user === 'undefined') {
+        user = undefined;
+    }
+    if (passwordHash === 'null' || user === 'undefined') {
+        passwordHash = undefined;
+    }
+
+    return {
+        address: serverAddress,
+        group: groupName,
+        project: projectName,
+        user: user,
+        passwordHash: passwordHash,
+        create: groupName !== 'sessions',
+    }
+}

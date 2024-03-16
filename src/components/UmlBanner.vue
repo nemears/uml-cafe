@@ -7,6 +7,7 @@ import FreezeAndPopUp from './bannerComponents/FreezeAndPopUp.vue';
 import UserSelector from './bannerComponents/UserSelector.vue';
 import CreateDiagramButton from './bannerComponents/CreateDiagramButton.vue';
 import UserBubble from './bannerComponents/UserBubble.vue';
+import { getProjectLoginObject } from '../umlUtil';
 export default {
     props: [
         'users',
@@ -37,6 +38,9 @@ export default {
             viewUsers: [],
             editUsersInit: undefined,
             viewUsersInit: undefined,
+            projectExplorerEnabled: false,
+            recentProjects: undefined,
+            userProjects: undefined,
         }
     },
     emits: [
@@ -56,10 +60,12 @@ export default {
         }
     },
     methods: {
+
         optionToggle() {
             this.optionsEnabled = !this.optionsEnabled;
             this.loginEnabled = false;
             this.signupEnabled = false;
+            this.projectExplorerEnabled = false;
         },
         loadFromFile() {
             this.$refs.loadFromFileFileInput.click();
@@ -209,9 +215,36 @@ export default {
             });
         },
         toggleCreateProject() {
+            this.projectExplorerEnabled = false;
             this.createProjectEnabled = !this.createProjectEnabled;
             this.optionsEnabled = false;
             this.createProjectWarningMessage = undefined;
+        },
+        async toggleProjectExplorer() {
+            this.projectExplorerEnabled = !this.projectExplorerEnabled;
+            this.optionsEnabled = false;
+            if (this.projectExplorerEnabled) {
+                const userInfo = await this.$umlWebClient.userInfo();
+                this.recentProjects = userInfo.recentProjects;
+                this.userProjects = userInfo.userProjects;
+                if (userInfo.recentProjects.length == 0) {
+                    this.recentProjects = undefined;
+                }
+                if (userInfo.userProjects.length == 0) {
+                    this.userProjects = undefined;
+                }
+            }
+        },
+        async openProject(projectName) {
+            await this.$umlWebClient.close();
+            let beginningOfURL = document.URL;
+            if (beginningOfURL.slice(-1) === '/') {
+                beginningOfURL = beginningOfURL.slice(0, beginningOfURL.length - 1);
+            }
+            const beginningOfUrlSplit = beginningOfURL.split('/');
+            beginningOfURL = beginningOfUrlSplit[0];
+            const projectLoginObject = getProjectLoginObject(projectName, this.$umlWebClient.address)
+            window.location.replace(beginningOfURL + '/' + projectLoginObject.group+ '/' + projectLoginObject.project);
         },
         getVisibility() {
             let projectVisibility = this.$refs.visibilitySelect.options[this.$refs.visibilitySelect.selectedIndex].text;
@@ -378,12 +411,8 @@ export default {
         </div>
     </div>
     <div class="dropdown" v-if="optionsEnabled">
-        <div class="optionsOption" @click="loadFromFile">
-            <input ref="loadFromFileFileInput" type="file" style="position: absolute; top: -100px;" @change="loadFromFileInput" >
-            Load from file
-        </div>
-        <div class="optionsOption" @click="saveToFile">
-            Save to file
+        <div class="optionsOption" @click="toggleProjectExplorer">
+            Browse Projects
         </div>
         <div class="optionsOption" @click="toggleCreateProject">
             Create Project
@@ -393,6 +422,13 @@ export default {
         </div>
         <div class="optionsOption" @click="toggleLogin">
             Log In
+        </div>
+        <div class="optionsOption" @click="loadFromFile">
+            <input ref="loadFromFileFileInput" type="file" style="position: absolute; top: -1000px;" @change="loadFromFileInput" >
+                Load from file
+        </div>
+        <div class="optionsOption" @click="saveToFile">
+            Save to file
         </div>
         <div class="optionsOption" @click="toggleLogout">
             Log Out
@@ -540,6 +576,36 @@ export default {
                 </div>
             </div>
         </form>
+    </FreezeAndPopUp>
+    <FreezeAndPopUp :label="'Project Explorer'" v-if="projectExplorerEnabled" :toggle="toggleProjectExplorer">
+        Browse your recent projects, as well as the projects that you own. Double click on a project to open it.
+        <hr/>
+        <h3>Recent Projects:</h3>
+        <div 
+            v-if="recentProjects" 
+            v-for="recentProject in recentProjects" 
+            :key="recentProject" 
+            class="inputStyle" 
+            @dblclick="openProject(recentProject)">
+            {{ recentProject }}
+        </div>
+        <div v-if="!recentProjects" class="inputStyle"></div>
+        <br/>
+        <h3>Your Projects:</h3>
+        <div 
+            v-if="userProjects" 
+            v-for="userProject in userProjects" 
+            :key="userProject" 
+            class="inputStyle"
+            @dblclick="openProject(userProject)">
+            {{ userProject }}
+        </div>
+        <div v-if="!userProjects" class="inputStyle"></div>
+        <br/>
+        <button class="inputButton" @click="toggleCreateProject">
+            Create Project
+        </button>
+
     </FreezeAndPopUp>
 </template>
 <style>
