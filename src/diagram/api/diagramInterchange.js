@@ -95,6 +95,34 @@ export class ClassifierShape extends CompartmentableShape {
     }
 }
 
+/**
+ * enum NavigabilityNotationKind
+ * always
+ * oneway
+ * never
+ **/
+
+export class DiagramWithAssociation extends Diagram {
+    isAssociationDotShown = false; // TODO implement
+    navigabilityNotation = 'oneway'; // TODO implement
+    nonNavigabilityNotation = 'never'; // TODO implement
+    elementType() {
+        return 'diagramWithAssociation';
+    }
+}
+
+export class StructureDiagram extends DiagramWithAssociation {
+    elementType() {
+        return 'structureDiagram';
+    }
+}
+
+export class ClassDiagram extends StructureDiagram {
+    elementType() {
+        return 'classDiagram';
+    }
+}
+
 export const BOUNDS_ID = 'KbKmDNU19SWMJwggKTQ9FrzAzozO';
 const TEXT_ID = 'GJKibcaKH82QYL&Sm3&rX5Mlc8ps';
 export const LABEL_ID = 'urWpoxZVhva76RnwyRAhLgduprmm';
@@ -109,7 +137,8 @@ export const COMPARTMENTS_ID = '94EL1DpEJq&sqIIyUkljNkGiLErL';
 export const TYPED_ELEMENT_LABEL_ID = 'kY&kIIA_XPbHZrs73YN&uDcSAhuh';
 export const ASSOCIATION_END_LABEL_ID = 'aaOkfblFlFn7QjVstTUgbCoNqyl8';
 export const MULTIPLICITY_LABEL_ID = '5pVpZ7MJzq5mysPkikGPT9kcvE10';
-export const OWNED_ELEMENTS_SLOT_ID = 'rnm_zSDRk_kdPiWTfx6QZRkgUvFe'; 
+export const OWNED_ELEMENTS_SLOT_ID = 'rnm_zSDRk_kdPiWTfx6QZRkgUvFe';
+export const CLASS_DIAGRAM_ID = 'OlOjWJGfJyejrDUQ&zPwT68unIFd';
 
 async function fillOutLabel(label, umlDiagramElement, id, umlClient) {
     label.id = id;
@@ -734,6 +763,21 @@ export async function createDiagramEdge(relationship, umlWebClient, diagramConte
     umlWebClient.put(edgeInstance);
     
     return edgeInstance;
+}
+
+async function createClassDiagram(diagram, umlWebClient, diagramContext) {
+    const diagramInstance = umlWebClient.post('instanceSpecification', {id: diagram.id});
+    diagramInstance.classifiers.add(CLASS_DIAGRAM_ID);
+
+    // TODO diagram
+    // TODO Diagram with associations
+
+    await createDiagramElementFeatures(diagram, umlWebClient,  diagramInstance, diagramContext);
+
+    umlWebClient.put(diagramInstance);
+    const ret = new ClassDiagram();
+
+    return ret;
 }
 
 export async function updateLabel(label, umlWebClient) {
