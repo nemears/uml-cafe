@@ -422,9 +422,6 @@ export default {
         <div class="optionsOption" @click="toggleProjectSettings">
             Project Settings
         </div>
-        <div class="optionsOption" @click="toggleLogin">
-            Log In
-        </div>
         <div class="optionsOption" @click="loadFromFile">
             <input ref="loadFromFileFileInput" type="file" style="position: absolute; top: -1000px;" @change="loadFromFileInput" >
                 Load from file
@@ -432,6 +429,9 @@ export default {
         <div class="optionsOption" @click="saveToFile">
             Save to file
         </div>
+        <div class="optionsOption" @click="toggleLogin">
+            Log In
+        </div> 
         <div class="optionsOption" @click="toggleLogout">
             Log Out
         </div>
