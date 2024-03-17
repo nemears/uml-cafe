@@ -20,7 +20,7 @@ class ResizeCompartmentableShapeHandler {
             shape.width = newBounds.width;
             shape.height = newBounds.height;
             
-            adjustCompartmentsAndEdges(shape, this.umlRenderer);
+            adjustCompartmentsAndEdges(shape, context.oldBounds, this.umlRenderer);
             if (!context.update) {
                 this.resize(context);
             } else {
@@ -115,7 +115,7 @@ class ResizeCompartmentableShapeHandler {
         shape.width = oldBounds.width;
         shape.height = oldBounds.height;
        
-        adjustCompartmentsAndEdges(shape, this.umlRenderer);
+        adjustCompartmentsAndEdges(shape, context.newBounds, this.umlRenderer);
 
         this.resize(context);
         return this.allChildren(context.shape);
@@ -124,30 +124,27 @@ class ResizeCompartmentableShapeHandler {
 
 ResizeCompartmentableShapeHandler.$inject = ['diagramEmitter', 'umlWebClient', 'diagramContext', 'umlRenderer', 'eventBus', 'graphicsFactory', 'canvas']; 
 
-function adjustCompartmentsAndEdges(shape, umlRenderer) {
-    let yPos = shape.y;
-    if (shape.children.length - shape.compartments.length === 1) {
-        yPos += CLASSIFIER_SHAPE_GAP_HEIGHT;
-    } 
+function adjustCompartmentsAndEdges(shape, oldBounds, umlRenderer) {
+    // these are all in the "header" of the shape kind of (above the first compartment) (only in class diagrams)
     for (const child of shape.children) {
         if (child.elementType === 'compartment') {
             continue;
         }
         child.x = shape.x;
-        child.y = yPos;
+        const dy = oldBounds.y - child.y;
+        child.y = shape.y - dy;
         child.width = shape.width;
-        yPos += 15; // TODO test
     } 
     // compartments
-    yPos = shape.y + CLASS_SHAPE_HEADER_HEIGHT;
     let index = 0;
     for (const compartment of shape.compartments) {
         compartment.width = shape.width;
         compartment.x = shape.x;
-        compartment.y = yPos;
+        const dy = oldBounds.y - compartment.y;
+        compartment.y = shape.y - dy;
         if (index == shape.compartments.length - 1) {
             // last element make height the rest of the shape
-            compartment.height = shape.height + shape.y - yPos;
+            compartment.height = shape.height + shape.y - compartment.y;
         } else {
             throw Error("TODO multiple compartments");
             // TODO adjust height based on children, change yPos

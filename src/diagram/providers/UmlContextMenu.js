@@ -4,7 +4,6 @@ import { getMid } from "diagram-js/lib/layout/LayoutUtil";
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { randomID } from "../umlUtil";
 import { createCommentClick } from "../../umlUtil";
-import { removeDiagramElement } from "./ClassDiagramContextPadProvider";
 import { getTextDimensions } from './ClassDiagramPaletteProvider';
 
 export default class UmlContextMenu {
@@ -62,10 +61,9 @@ export default class UmlContextMenu {
             menu.items.push({
                 label: 'Rename',
                 onClick: () => {
-                    if (element.elementType === 'classifierShape') {
-                        // find nameLabel
+                    const findNameLabel = (elThatOwnsNameLabel) => {
                         let nameLabel;
-                        for (const child of element.children) {
+                        for (const child of elThatOwnsNameLabel.children) {
                             if (child.elementType === 'nameLabel') {
                                 nameLabel = child;
                                 break;
@@ -74,6 +72,14 @@ export default class UmlContextMenu {
                         if (!nameLabel) {
                             throw Error('could not find name label in children of classifierShape!');
                         }
+                        return nameLabel;
+                    };
+                    if (element.elementType === 'classifierShape') {
+                        // find nameLabel
+                        let nameLabel = findNameLabel(element);
+                        directEditing.activate(nameLabel);
+                    } else if (element.elementType === 'keywordLabel') {
+                        const nameLabel = findNameLabel(element.labelTarget);
                         directEditing.activate(nameLabel);
                     } else {
                         directEditing.activate(element);

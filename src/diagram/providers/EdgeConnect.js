@@ -259,8 +259,8 @@ export function placeEdgeLabel(child, connection) {
                     let centerPoint1 = connection.waypoints[connection.waypoints.length / 2 - 1];
                     let centerPoint2 = connection.waypoints[connection.waypoints.length / 2];
                     centerPoint = {
-                        x: (centerPoint1.x + centerPoint2.x) / 2,
-                        y: (centerPoint1.y + centerPoint2.y) / 2,
+                        x: Math.round((centerPoint1.x + centerPoint2.x) / 2),
+                        y: Math.round((centerPoint1.y + centerPoint2.y) / 2),
                     };
                     if (Math.abs(centerPoint2.x - centerPoint1.x) / 2 > Math.abs(centerPoint2.y - centerPoint1.y) / 2) {
                         orientation = 'horizontal';
