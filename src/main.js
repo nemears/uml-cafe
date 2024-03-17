@@ -37,20 +37,20 @@ if (location.pathname != "/") {
         console.error(err);
         const errObj = JSON.parse(err);
         if (errObj.error.code && errObj.error.code == 1) {
-            if (loginObject.user) {
-                // try again with anonymous user
-                umlWebClient = new UmlWebClient({
-                    address: serverAddress,
-                    group: groupName,
-                    project: projectName,
-                    create: groupName !== 'sessions',
-                });
-                umlWebClient.initialization.catch(() => {
-                    console.warn('must login before using application');
-                }).then(() => {
-                    mountApp();
-                });
-            }
+            // try again with anonymous user
+            umlWebClient = new UmlWebClient({
+                address: serverAddress,
+                group: groupName,
+                project: projectName,
+                create: groupName !== 'sessions',
+            });
+            umlWebClient.initialization.catch(() => {
+                console.warn('must login before using application');
+            }).then(() => {
+                mountApp();
+            });
+        } else {
+            mountApp();
         }
     });
 } else {
