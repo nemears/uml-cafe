@@ -32,7 +32,15 @@ export class Edge extends DiagramElement {
 }
 
 export class Diagram extends Shape {
+    // DI
     name =  '';
+    documentation = '';
+    resolution = ''
+    // UML DI
+    isFrame = true;
+    isIso = true;
+    isInheritedLighter = false;
+    heading = undefined;
     elementType() {
         return 'diagram';
     }
@@ -139,6 +147,15 @@ export const ASSOCIATION_END_LABEL_ID = 'aaOkfblFlFn7QjVstTUgbCoNqyl8';
 export const MULTIPLICITY_LABEL_ID = '5pVpZ7MJzq5mysPkikGPT9kcvE10';
 export const OWNED_ELEMENTS_SLOT_ID = 'rnm_zSDRk_kdPiWTfx6QZRkgUvFe';
 export const CLASS_DIAGRAM_ID = 'OlOjWJGfJyejrDUQ&zPwT68unIFd';
+export const DIAGRAM_NAME_SLOT_ID = 'CN7vzxOOpQJkGS964DTMuDWQkLlz';
+export const DIAGRAM_DOCUMENTATION_SLOT_ID = '6CjufML0&O3S4cmtN2cL44BYr8HL';
+export const DIAGRAM_RESOLUTION_SLOT_ID = '4Tize6jbCmObf93emecyjJFvRjo3';
+export const DIAGRAM_IS_FRAME_SLOT_ID = '7mT9JY5EGA4TDqjv0R0Ncd9x5OyU';
+export const DIAGRAM_IS_INHERITED_LIGHTER_SLOT_ID = '4phpVkyDwulQSgJPc6gX7mIVhSbE';
+export const DIAGRAM_IS_ISO_SLOT_ID = '&DNyiZYBunaQcQexHq7OfqrZrEuU';
+export const DIAGRAM_HEADING_SLOT_ID = 'jHSNDVVMy40lH6TTEOeTtGBnrZGv';
+
+// functions
 
 async function fillOutLabel(label, umlDiagramElement, id, umlClient) {
     label.id = id;
@@ -260,7 +277,28 @@ export async function getUmlDiagramElement(id, umlClient) {
             const ret = new MultiplicityLabel();
             await fillOutLabel(ret, umlDiagramElement, id, umlClient);
             return ret;
-        } 
+        } else if (classifierID === CLASS_DIAGRAM_ID) {
+            const ret = new ClassDiagram();
+            ret.id = id;
+            for await (const classDiagramSlot of umlDiagramElement.slots) {
+                if (classDiagramSlot.definingFeature.id() === DIAGRAM_NAME_SLOT_ID) {
+                    await fillOutStringSlot(classDiagramSlot, ret, 'name');
+                } else if (classDiagramSlot.definingFeature.id() === DIAGRAM_DOCUMENTATION_SLOT_ID) {
+                    await fillOutStringSlot(classDiagramSlot, ret, 'documentation');
+                } else if (classDiagramSlot.definingFeature.id() === DIAGRAM_RESOLUTION_SLOT_ID) {
+                    await fillOutStringSlot(classDiagramSlot, ret, 'resolution');
+                } else if (classDiagramSlot.definingFeature.id() === DIAGRAM_IS_FRAME_SLOT_ID) {
+                    await fillOutStringSlot(classDiagramSlot, ret, 'isFrame');
+                } else if (classDiagramSlot.definingFeature.id() === DIAGRAM_IS_ISO_SLOT_ID) {
+                    await fillOutStringSlot(classDiagramSlot, ret, 'isIso');
+                } else if (classDiagramSlot.definingFeature.id() === DIAGRAM_IS_INHERITED_LIGHTER_SLOT_ID) {
+                    await fillOutStringSlot(classDiagramSlot, ret, 'isInheritedLighter');
+                } else if (await getDiagramElementFeatures(classDiagramSlot, ret, umlClient)) {
+                    continue;
+                }
+            }
+            return ret;
+        }
     }
     return undefined;
 }
@@ -333,6 +371,12 @@ async function getDiagramElementFeatures(slot, diagramElement, umlClient) {
         return true;
     }
     return false;
+}
+
+async function fillOutStringSlot(slot, diObject, memberName) {
+    if (slot.values.size() > 0) {
+        diObject[memberName] = (await slot.values.front()).value;
+    }
 }
 
 export function isLabel(elementType) {
@@ -461,12 +505,16 @@ export async function createDiagramElementFeatures(shape, umlWebClient, shapeIns
     }
     ownedElementsSlot = umlWebClient.post('slot');
     ownedElementsSlot.definingFeature.set(OWNED_ELEMENTS_SLOT_ID);
-    if (shape.children.length > 0) {
-        for (const ownedElement of shape.children) {
-            const ownedElementValue = umlWebClient.post('instanceValue');
-            ownedElementValue.instance.set(ownedElement.id);
-            ownedElementsSlot.values.add(ownedElementValue);
-            umlWebClient.put(ownedElementValue);
+    if (shape.children)  {
+        if (shape.children.length > 0) {
+            for (const ownedElement of shape.children) {
+                const ownedElementValue = umlWebClient.post('instanceValue');
+                ownedElementValue.instance.set(ownedElement.id);
+                ownedElementsSlot.values.add(ownedElementValue);
+                umlWebClient.put(ownedElementValue);
+            }
+        } else {
+            console.warn("Please add children array to your UmlDiagramElements before creating them!");
         }
     }
     shapeInstance.slots.add(ownedElementsSlot);
@@ -579,6 +627,38 @@ async function createCompartmentableShapeFeatures(shape, shapeInstance, umlWebCl
     umlWebClient.put(compartmentSlot);
 
     await createDiagramShapeFeatures(shape, shapeInstance, umlWebClient, diagramContext);
+}
+
+function createStringSlot(slotDefiningFeatureID, value, owningInstance, umlWebClient) {
+    const slot = umlWebClient.post('slot');
+    const slotValue = umlWebClient.post('literalString');
+    slot.definingFeature.set(slotDefiningFeatureID);
+    slotValue.value = value ? value : '';
+    slot.values.add(slotValue);
+    owningInstance.slots.add(slot);
+    umlWebClient.put(slot);
+    umlWebClient.put(slotValue);
+}
+
+function createBooleanSlot(slotDefiningFeatureID, value, owningInstance, umlWebClient) {
+    const slot = umlWebClient.post('slot');
+    const slotValue = umlWebClient.post('literalBool');
+    slot.definingFeature.set(slotDefiningFeatureID);
+    slotValue.value = value ? true : false;
+    slot.values.add(slotValue);
+    owningInstance.slots.add(slot);
+    umlWebClient.put(slot);
+    umlWebClient.put(slotValue);
+}
+
+function createDiagramFeatures(diagram, diagramInstance, umlWebClient) {
+    createStringSlot(DIAGRAM_NAME_SLOT_ID, diagram.name, diagramInstance, umlWebClient);
+    createStringSlot(DIAGRAM_DOCUMENTATION_SLOT_ID, diagram.documentation, diagramInstance, umlWebClient);
+    createStringSlot(DIAGRAM_RESOLUTION_SLOT_ID, diagram.resolution, diagramInstance, umlWebClient);
+    createBooleanSlot(DIAGRAM_IS_FRAME_SLOT_ID, diagram.isFrame === undefined ? true : diagram.isFrame, diagramInstance, umlWebClient);
+    createBooleanSlot(DIAGRAM_IS_INHERITED_LIGHTER_SLOT_ID, diagram.isInheritedLighter, diagramInstance, umlWebClient);
+    createBooleanSlot(DIAGRAM_IS_ISO_SLOT_ID, diagram.isIso === undefined ? true : diagram.isIso, diagramInstance, umlWebClient);
+    // TODO heading
 }
 
 export async function createDiagramShape(shape, umlWebClient, diagramContext) {
@@ -765,18 +845,34 @@ export async function createDiagramEdge(relationship, umlWebClient, diagramConte
     return edgeInstance;
 }
 
-async function createClassDiagram(diagram, umlWebClient, diagramContext) {
+export async function createClassDiagram(diagram, umlWebClient, diagramContext) {
     const diagramInstance = umlWebClient.post('instanceSpecification', {id: diagram.id});
     diagramInstance.classifiers.add(CLASS_DIAGRAM_ID);
 
-    // TODO diagram
+    createDiagramFeatures(diagram, diagramInstance, umlWebClient);
+
     // TODO Diagram with associations
 
     await createDiagramElementFeatures(diagram, umlWebClient,  diagramInstance, diagramContext);
 
+    diagramContext.diagram.packagedElements.add(diagramInstance);
     umlWebClient.put(diagramInstance);
+    umlWebClient.put(diagramContext.diagram);
+    
     const ret = new ClassDiagram();
-
+    if (diagram.name) {
+        ret.name = diagram.name;
+    }
+    if (diagram.documentation) {
+        ret.documentation = diagram.documentation;
+    }
+    if (diagram.resolution) {
+        ret.resolution = diagram.resolution;
+    }
+    ret.isFrame = diagram.isFrame === undefined ? true : diagram.isFrame;
+    ret.isIso = diagram.isIso === undefined ? true : diagram.isIso;
+    ret.isInheritedLighter = diagram.isInheritedLighter ? true : false;
+    // TODO heading
     return ret;
 }
 

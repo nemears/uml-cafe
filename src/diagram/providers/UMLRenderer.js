@@ -61,6 +61,7 @@ export default class UMLRenderer extends BaseRenderer {
         this.OWNED_ATTRIBUTE_STYLE = { fill: 'var(--vt-c-black)' };
         this.COMPARTMENT_STYLE = { fill: 'none', strokewidth: 2, stroke: 'var(--vt-c-black)' };
         this.EDIT_STYLE = { fill: 'var(--uml-cafe-selected)' }; // TODO change based on user
+        this.DIAGRAM_STYLE = {fill: 'none', strokeWidth: 2, stroke: 'var(--vt-c-black)'};
         this.textStyle = {
             fontFamily: 'Arial, sans-serif',
             fontSize: 12,
@@ -318,7 +319,10 @@ export default class UMLRenderer extends BaseRenderer {
                 });
                 svgAppend(group, text);
             }
-        } 
+        } else if (element.elementType === 'classDiagram') {
+            const rect = createRectangle();
+            svgAttr(rect, this.DIAGRAM_STYLE);
+        }
 
         /**if (!element.modelElement) {
             if (element.parent && element.parent.modelElement && element.parent.modelElement.isSubClassOf('property')) {

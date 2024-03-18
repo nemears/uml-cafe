@@ -1,5 +1,5 @@
 <script>
-import { createElementUpdate, createClassDiagram } from '../../umlUtil.js';
+import { createElementUpdate, createUmlClassDiagram } from '../../umlUtil.js';
 import { randomID } from 'uml-client/lib/element';
 export default {
     emits: [
@@ -20,7 +20,7 @@ export default {
         async createDiagram () {
             const head = await this.$umlWebClient.head();
             const diagramID = randomID();
-            const diagramPackage = await createClassDiagram(diagramID, head, this.$umlWebClient);
+            const diagramPackage = await createUmlClassDiagram(diagramID, head, this.$umlWebClient);
             this.$emit('command', {
                 name: 'diagramCreate',
                 element: head.id,

@@ -59,7 +59,7 @@ class ElementCreationHandler {
                 canvas.addShape(element, element.owningElement);
             } else {
                 assignPosition(element);
-                canvas.addShape(element);
+                canvas.addShape(element, context.target);
             }
         };
         for (const element of context.elements) {
@@ -71,7 +71,7 @@ class ElementCreationHandler {
                     } else {
                         assignPosition(element);
                     }
-                    canvas.addShape(element);
+                    canvas.addShape(element, context.target);
                     // TODO children
                     break;
                 case 'edge':
@@ -89,7 +89,7 @@ class ElementCreationHandler {
                     } else {
                         assignPosition(element);
                     }
-                    canvas.addShape(element);
+                    canvas.addShape(element, context.target);
                     for (const compartment of element.compartments) {
                         compartment.x = element.x;
                         compartment.y = element.y + CLASS_SHAPE_HEADER_HEIGHT;
