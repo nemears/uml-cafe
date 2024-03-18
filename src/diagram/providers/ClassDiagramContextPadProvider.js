@@ -98,6 +98,9 @@ export default class ClassDiagramContextPadProvider {
         if (!element.modelElement) {
             return {};
         }
+        if (element.elementType === 'classDiagram') {
+            return {};
+        }
 
         const ret = {
             'remove': {

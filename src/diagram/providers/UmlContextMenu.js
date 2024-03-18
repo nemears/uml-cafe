@@ -2,7 +2,7 @@ import { createDiagramEdge, deleteUmlDiagramElement } from "../api/diagramInterc
 import { h } from "vue";
 import { getMid } from "diagram-js/lib/layout/LayoutUtil";
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
-import { randomID } from "../umlUtil";
+import { randomID } from "uml-client/lib/element";
 import { createCommentClick } from "../../umlUtil";
 import { getTextDimensions } from './ClassDiagramPaletteProvider';
 

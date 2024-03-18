@@ -1,5 +1,5 @@
-import { randomID } from "./diagram/umlUtil";
-import { createDiagramElementFeatures } from "./diagram/api/diagramInterchange";
+import { randomID } from "uml-client/lib/element";
+import { createClassDiagram } from "./diagram/api/diagramInterchange";
 export function createElementUpdate() {
     const ret = {
         updatedElements: []
@@ -74,7 +74,7 @@ export async function assignTabLabel(newElement) {
     }
 }
 
-export async function createClassDiagram(diagramID, owner, umlWebClient) {
+export async function createUmlClassDiagram(diagramID, owner, umlWebClient) {
     const diagramPackage = umlWebClient.post('package', {id:diagramID});
     owner.packagedElements.add(diagramPackage);
     diagramPackage.name = owner.name;
@@ -82,31 +82,20 @@ export async function createClassDiagram(diagramID, owner, umlWebClient) {
     diagramStereotypeInstance.classifiers.add(await umlWebClient.get('Diagram_nuc1IC2Cavgoa4zMBlVq'));
     // TODO slots
 
-    // setup diagram instance
-    const diagramContext = {
-        diagram : diagramPackage
-    }
-    const diagramInstance = await umlWebClient.post('instanceSpecification');
-    await createDiagramElementFeatures(
-        {
-            id: diagramInstance.id,
-            modelElement: {
-                id: owner.id
-            },
-            children: []
-        },
-        umlWebClient,
-        diagramInstance,
-        diagramContext
-    );
-    diagramInstance.classifiers.add(await umlWebClient.get('U3CQzJden20cL0mG0nQN_HuWfisB'));
-    diagramPackage.packagedElements.add(diagramInstance);
-
     diagramPackage.appliedStereotypes.add(diagramStereotypeInstance);
     umlWebClient.put(diagramStereotypeInstance);
-    umlWebClient.put(diagramInstance);
-    umlWebClient.put(diagramPackage);
-    umlWebClient.put(owner);
+
+    // setup diagram instance
+    const diagramContext = {
+        diagram : diagramPackage,
+        context: owner,
+    };
+    const proxyDiagramObject = {
+        id: randomID(),
+        modelElement: owner,
+        children: [],
+    };
+    await createClassDiagram(proxyDiagramObject, umlWebClient, diagramContext);
     return diagramPackage;
 } 
 

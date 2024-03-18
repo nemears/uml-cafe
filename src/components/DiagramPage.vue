@@ -2,10 +2,11 @@
 import { Editor } from '../diagram/editor';
 const EventEmitter = require('events');
 import { createElementUpdate } from '../umlUtil.js';
-import { getUmlDiagramElement, deleteUmlDiagramElement, updateLabel, CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID , TYPED_ELEMENT_LABEL_ID , KEYWORD_LABEL_ID, ASSOCIATION_END_LABEL_ID, MULTIPLICITY_LABEL_ID } from '../diagram/api/diagramInterchange';
+import { getUmlDiagramElement, deleteUmlDiagramElement, updateLabel, CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID , TYPED_ELEMENT_LABEL_ID , KEYWORD_LABEL_ID, ASSOCIATION_END_LABEL_ID, MULTIPLICITY_LABEL_ID, CLASS_DIAGRAM_ID } from '../diagram/api/diagramInterchange';
 import { toRaw } from 'vue';
 import { CLASS_SHAPE_HEADER_HEIGHT } from '../diagram/providers/ClassHandler';
 import { getTypedElementText, getTextDimensions } from '../diagram/providers/ClassDiagramPaletteProvider';
+import { randomID } from 'uml-client/lib/element.js';
 export default {
     data() {
         return {
@@ -51,9 +52,6 @@ export default {
             newCommand.context.proxy = true;
             this.emitter.emit('externalCommand', newCommand);
         },
-        commandUndo(undoneCommand) {
-            // TODO
-        }
     },
     async mounted() {
         this.reloadDiagram();        
@@ -77,12 +75,16 @@ export default {
             for await (const packagedElement of diagramPackage.packagedElements) {
                 if (packagedElement.isSubClassOf('instanceSpecification')) {
                     for (const classifierID of packagedElement.classifiers.ids()) {
-                        if (classifierID === 'U3CQzJden20cL0mG0nQN_HuWfisB') {
+                        if (classifierID === CLASS_DIAGRAM_ID) {
                             diagramInstance = packagedElement;
-                        }
+                        } // TODO other diagrams
                     }
                 }
             }
+            if (!diagramInstance) {
+                throw Error("could not find a diagram to open in Diagram Package of id " + this.umlID);
+            }
+            const umlDiagram = await getUmlDiagramElement(diagramInstance.id, this.$umlWebClient);
             this.diagram = new Editor({
                 container: this.$refs.diagram,
                 umlWebClient: this.$umlWebClient,
@@ -98,11 +100,43 @@ export default {
             this.diagram.get('keyboard').bind(document);
 
             // add root
-            var root = elementFactory.createRoot({
-                id: diagramInstance.id
+            const root = elementFactory.createRoot({
+                id: randomID(), // doesn't matter
             });
 
             canvas.setRootElement(root);
+
+            // TODO / In Progress
+            // Diagram Frame shape
+            let diagramFrame = undefined;
+            if (umlDiagram.isFrame) {
+                // create frame
+
+                // TODO determine size
+                
+                // move viewbox to show heading
+                const oldViewbox = canvas.viewbox();
+                canvas.viewbox({
+                    x: -125,
+                    y: -25,
+                    width: oldViewbox.width,
+                    height: oldViewbox.height,
+                });
+
+                const divRect = this.$refs.diagram.getBoundingClientRect();
+
+                diagramFrame = elementFactory.createShape({
+                    x: 0,
+                    y: 0,
+                    width: divRect.width -175,
+                    height: divRect.height - 50,
+                    id: umlDiagram.id,
+                    elementType: umlDiagram.elementType(),
+                    modelElement: umlDiagram.modelElement,
+                });
+                canvas.addShape(diagramFrame);
+            }
+
 
             // set up diagram from model
             {
@@ -218,7 +252,7 @@ export default {
                             numSourceLabels: 0,
                             numCenterLabels: 0,
                         });
-                        canvas.addConnection(relationship, root);
+                        canvas.addConnection(relationship, diagramFrame ? diagramFrame : root);
                         return relationship;
                     } else if (umlDiagramElement.elementType() === 'label') {
                         const umlLabel = umlDiagramElement;

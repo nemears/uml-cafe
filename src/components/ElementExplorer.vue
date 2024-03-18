@@ -2,9 +2,8 @@
 import packageImage from '../assets/icons/general/package.svg';
 import getImage from '../GetUmlImage.vue';
 import classDiagramImage from '../assets/icons/general/class_diagram.svg';
-import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createClassDiagram, mapColor, getPanelClass } from '../umlUtil.js'
+import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createUmlClassDiagram, mapColor, getPanelClass } from '../umlUtil.js'
 import { randomID } from 'uml-client/lib/element';
-import parse from 'uml-client/lib/parse';
 
 export default {
     name: "ElementExplorer",
@@ -180,7 +179,7 @@ export default {
             this.$emit('elementUpdate', createElementUpdate(owner));
         },
         async createNewClassDiagram(el, diagramID) {
-            const diagramPackage = await createClassDiagram(diagramID, el, this.$umlWebClient);
+            const diagramPackage = await createUmlClassDiagram(diagramID, el, this.$umlWebClient);
             this.expanded = true;
             this.children.push(diagramPackage.id);
             this.$emit('updateTree', {
