@@ -295,6 +295,15 @@ export async function getUmlDiagramElement(id, umlClient) {
                     await fillOutStringSlot(classDiagramSlot, ret, 'isInheritedLighter');
                 } else if (await getDiagramElementFeatures(classDiagramSlot, ret, umlClient)) {
                     continue;
+                } else if (classDiagramSlot.definingFeature.id() === DIAGRAM_HEADING_SLOT_ID) {
+                    const headingValue = await classDiagramSlot.values.front();
+                    if (!headingValue) {
+                        continue;
+                    }
+                    if (!headingValue.instance.has()) {
+                        throw Error("bad heading state, cannot find heading instance!");
+                    }
+                    ret.heading =  headingValue.instance.id();
                 }
             }
             return ret;
@@ -386,6 +395,10 @@ export function isLabel(elementType) {
             elementType === 'keywordLabel' || 
             elementType === 'associationEndLabel' || 
             elementType === 'multiplicityLabel';    
+}
+
+export function isDiagram(elementType) {
+    return elementType === 'classDiagram'; // TODO
 }
 
 export function isShape(id) {
@@ -482,6 +495,10 @@ export async function createDiagramElementFeatures(shape, umlWebClient, shapeIns
     let ownedElementValues = [];
     if (shape.parent) {
         owningElementInstance = await umlWebClient.get(shape.parent.id);
+        if (!owningElementInstance) {
+            // owner is root, sub it with diagram (weird diagram-js frame behavior edge case)
+            owningElementInstance = await umlWebClient.get(diagramContext.umlDiagram.id);
+        }
         owningElementSlot = umlWebClient.post('slot');
         owningElementValue = umlWebClient.post('instanceValue');
         owningElementSlot.definingFeature.set('3&io9rgm9t1Vu9l8EEwU3QBNblgX');
@@ -658,7 +675,16 @@ function createDiagramFeatures(diagram, diagramInstance, umlWebClient) {
     createBooleanSlot(DIAGRAM_IS_FRAME_SLOT_ID, diagram.isFrame === undefined ? true : diagram.isFrame, diagramInstance, umlWebClient);
     createBooleanSlot(DIAGRAM_IS_INHERITED_LIGHTER_SLOT_ID, diagram.isInheritedLighter, diagramInstance, umlWebClient);
     createBooleanSlot(DIAGRAM_IS_ISO_SLOT_ID, diagram.isIso === undefined ? true : diagram.isIso, diagramInstance, umlWebClient);
-    // TODO heading
+    const headingSlot = umlWebClient.post('slot');
+    headingSlot.definingFeature.set(DIAGRAM_HEADING_SLOT_ID);
+    diagramInstance.slots.add(headingSlot);
+    if (diagram.heading) {
+        const headingValue = umlWebClient.post('instanceValue');
+        headingSlot.values.add(headingValue);
+        headingValue.instance.set(diagram.heading.id);
+        umlWebClient.put(headingValue);
+    }
+    umlWebClient.put(headingSlot);
 }
 
 export async function createDiagramShape(shape, umlWebClient, diagramContext) {
@@ -858,8 +884,9 @@ export async function createClassDiagram(diagram, umlWebClient, diagramContext) 
     diagramContext.diagram.packagedElements.add(diagramInstance);
     umlWebClient.put(diagramInstance);
     umlWebClient.put(diagramContext.diagram);
-    
+
     const ret = new ClassDiagram();
+    ret.id = diagram.id;
     if (diagram.name) {
         ret.name = diagram.name;
     }
@@ -872,8 +899,32 @@ export async function createClassDiagram(diagram, umlWebClient, diagramContext) 
     ret.isFrame = diagram.isFrame === undefined ? true : diagram.isFrame;
     ret.isIso = diagram.isIso === undefined ? true : diagram.isIso;
     ret.isInheritedLighter = diagram.isInheritedLighter ? true : false;
-    // TODO heading
+    if (diagram.heading) {
+        ret.heading = diagram.heading.id;
+    }
     return ret;
+}
+
+export async function updateClassDiagram(classDiagram, umlWebClient) {
+    const diagramInstance = await umlWebClient.get(classDiagram.id);
+    for await (const diagramSlot of diagramInstance.slots) {
+        if (classDiagram.heading && diagramSlot.definingFeature.id() === DIAGRAM_HEADING_SLOT_ID) {
+            let headingValue = await diagramSlot.values.front();
+            if (!headingValue) {
+                headingValue = umlWebClient.post('instanceValue');
+                diagramSlot.values.add(headingValue);
+                umlWebClient.put(diagramSlot);
+            }
+            headingValue.instance.set(classDiagram.heading.id);
+            umlWebClient.put(headingValue);
+        } else if (classDiagram.name && diagramSlot.definingFeature.id() === DIAGRAM_NAME_SLOT_ID) {
+            const headingValue = await diagramSlot.values.front();
+            headingValue.value = classDiagram.name;
+            umlWebClient.put(headingValue);
+        }
+        // TODO others
+    }
+    umlWebClient.put(diagramInstance);
 }
 
 export async function updateLabel(label, umlWebClient) {

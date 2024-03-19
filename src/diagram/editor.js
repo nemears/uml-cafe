@@ -51,6 +51,7 @@ export function Editor(options) {
     emitter,
     context,
     diagramElement,
+    umlDiagram,
     additionalModules = []
   } = options;
 
@@ -99,6 +100,7 @@ export function Editor(options) {
   class DiagramContext {
     context = context;
     diagram = diagramElement;
+    umlDiagram = umlDiagram;
   }
 
   const umlClientModule = {
