@@ -330,6 +330,9 @@ export default class UmlDirecteEditingProvider{
         }
     }
     update(element, newName, activeContextText, bounds) {
+        const viewbox = this.canvas.viewbox();
+        bounds.x += viewbox.x;
+        bounds.y += viewbox.y;
         if (element.elementType === 'nameLabel') {
             this.commandStack.execute('nameLabel.update', {
                 element: element,

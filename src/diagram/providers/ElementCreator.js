@@ -33,7 +33,7 @@ class ElementCreationHandler {
         diagramEmitter = this._diagramEmitter;
         if (context.proxy) {
             delete context.proxy;
-            return context.elements;
+            return;
         }
         const assignPosition = (shape) => {
             shape.x = context.x - shape.width / 2;

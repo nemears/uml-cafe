@@ -62,6 +62,7 @@ export default class UMLRenderer extends BaseRenderer {
         this.COMPARTMENT_STYLE = { fill: 'none', strokewidth: 2, stroke: 'var(--vt-c-black)' };
         this.EDIT_STYLE = { fill: 'var(--uml-cafe-selected)' }; // TODO change based on user
         this.DIAGRAM_STYLE = {fill: 'none', strokeWidth: 2, stroke: 'var(--vt-c-black)'};
+        this.DIAGRAM_HEADING_STYLE = { fill: 'none', strokeWidth: 2, stroke: 'var(--vt-c-black)'};
         this.textStyle = {
             fontFamily: 'Arial, sans-serif',
             fontSize: 12,
@@ -322,6 +323,39 @@ export default class UMLRenderer extends BaseRenderer {
         } else if (element.elementType === 'classDiagram') {
             const rect = createRectangle();
             svgAttr(rect, this.DIAGRAM_STYLE);
+        } else if (element.elementType === 'label' && element.headedDiagram) {
+            const rect = createRectangle();
+            svgAttr(rect, this.DIAGRAM_HEADING_STYLE);
+            const kindText = this.textUtil.layoutText(element.diagramKind, {
+                align: 'left-middle',
+                padding: {
+                    left: 5,
+                },
+                style: {
+                    fontWeight: 'Bold',
+                },
+                box: {
+                    width: element.width - 5,
+                    height: element.height,
+                    x: 0,
+                    y: 0,
+                }
+            });
+            svgAppend(group, kindText.element);
+
+            const nameText = cropText(element.diagramName, element, {
+                align: 'left-middle',
+                padding: {
+                    left: 10 + Math.round(kindText.dimensions.width),
+                },
+                box: {
+                    width: element.width - 5,
+                    height: element.height,
+                    x: 0,
+                    y: 0,
+                }
+            });
+            svgAppend(group, nameText);
         }
 
         /**if (!element.modelElement) {

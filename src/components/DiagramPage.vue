@@ -6,7 +6,7 @@ import { getUmlDiagramElement, deleteUmlDiagramElement } from '../diagram/api/di
 import { CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID , TYPED_ELEMENT_LABEL_ID } from './diagram/api/diagramInterchange/ids';
 import { toRaw } from 'vue';
 import { CLASS_SHAPE_HEADER_HEIGHT } from '../diagram/providers/ClassHandler';
-import { getTypedElementText, getTextDimensions } from '../diagram/providers/ClassDiagramPaletteProvider';
+import { getTypedElementText, getTextDimensions, LABEL_HEIGHT } from '../diagram/providers/ClassDiagramPaletteProvider';
 import { randomID } from 'uml-client/lib/element.js';
 export default {
     data() {
@@ -92,17 +92,20 @@ export default {
                 emitter: scopedEmitter,
                 context: await diagramPackage.owningPackage.get(),
                 diagramElement: diagramPackage,
+                umlDiagram: umlDiagram,
             });
             const canvas = this.diagram.get('canvas');
             const elementFactory = this.diagram.get('elementFactory');
             const elementRegistry = this.diagram.get('elementRegistry');
             const commandStack = this.diagram.get('commandStack');
+            const umlRenderer = this.diagram.get('umlRenderer');
+            const diagramContext = this.diagram.get('diagramContext');
             
             this.diagram.get('keyboard').bind(document);
 
             // add root
             const root = elementFactory.createRoot({
-                id: randomID(), // doesn't matter
+                id: randomID()
             });
 
             canvas.setRootElement(root);
@@ -118,14 +121,14 @@ export default {
                 // move viewbox to show heading
                 const oldViewbox = canvas.viewbox();
                 canvas.viewbox({
-                    x: -125,
+                    x: -139,
                     y: -25,
                     width: oldViewbox.width,
                     height: oldViewbox.height,
                 });
 
+                // create diagram Frame
                 const divRect = this.$refs.diagram.getBoundingClientRect();
-
                 diagramFrame = elementFactory.createShape({
                     x: 0,
                     y: 0,
@@ -134,8 +137,62 @@ export default {
                     id: umlDiagram.id,
                     elementType: umlDiagram.elementType(),
                     modelElement: umlDiagram.modelElement,
+                    isFrame: true,
+                    name: umlDiagram.name,
+                    documentation: umlDiagram.name,
                 });
                 canvas.addShape(diagramFrame);
+
+                // add heading
+                const width = 5 + umlRenderer.textUtil.getDimensions(umlDiagram.modelElement.elementType(), {
+                        align: 'left-middle',
+                        padding: {
+                            left: 5,
+                        },
+                        style: {
+                            fontWeight: 'Bold',
+                        },
+                        box: {
+                            width: 1000,
+                            height: LABEL_HEIGHT,
+                            x: 0,
+                            y: 0,
+                        }
+                    }).width + 5 + umlRenderer.textUtil.getDimensions(umlDiagram.name, {
+                        align: 'left-middle',
+                        padding: {
+                            left: 5,
+                        },
+                        box: {
+                            width: 1000,
+                            height: LABEL_HEIGHT,
+                            x: 0,
+                            y: 0,
+                        }
+                    }).width + 10;
+                
+                const diagramHeading = elementFactory.createLabel({
+                    id: randomID(),
+                    elementType: 'label',
+                    modelElement: umlDiagram.modelElement,
+                    parent: diagramFrame,
+                    labelTarget: diagramFrame,
+                    headedDiagram: diagramFrame,
+                    diagramKind: umlDiagram.modelElement.elementType(),
+                    diagramName: umlDiagram.name,
+                    x: 0,
+                    y: 0,
+                    width: width,
+                    height: 25,
+                    inselectable: true,
+                });
+                diagramFrame.heading = diagramHeading;
+
+                if (!umlDiagram.heading) {
+                    await createDiagramLabel(diagramHeading, this.$umlWebClient, diagramContext);
+                    await updateClassDiagram(diagramFrame, this.$umlWebClient);
+                }
+                canvas.addShape(diagramHeading, diagramFrame);
             }
 
 
@@ -190,6 +247,9 @@ export default {
                         let parent = elementRegistry.get(umlClassifierShape.owningElement);
                         if (!parent) {
                             parent = await drawDiagramElement(await getUmlDiagramElement(umlClassifierShape.owningElement, this.$umlWebClient));
+                        }
+                        if (parent.id === diagramContext.umlDiagram.id) {
+                            parent = canvas.findRoot(parent);
                         }
                         // todo compartments
                         const compartments = [];

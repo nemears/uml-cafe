@@ -1,5 +1,6 @@
 import { randomID } from "uml-client/lib/element";
-import { createClassDiagram } from "./diagram/api/diagramInterchange";
+import { createClassDiagram, createDiagramLabel } from "./diagram/api/diagramInterchange";
+import { LABEL_HEIGHT } from "./diagram/providers/ClassDiagramPaletteProvider";
 export function createElementUpdate() {
     const ret = {
         updatedElements: []
@@ -89,13 +90,17 @@ export async function createUmlClassDiagram(diagramID, owner, umlWebClient) {
     const diagramContext = {
         diagram : diagramPackage,
         context: owner,
+        umlDiagram: {
+            id: randomID(),
+        }
     };
     const proxyDiagramObject = {
-        id: randomID(),
+        id: diagramContext.umlDiagram.id,
         modelElement: owner,
+        name: owner.name,
         children: [],
     };
-    await createClassDiagram(proxyDiagramObject, umlWebClient, diagramContext);
+    const umlDiagram = await createClassDiagram(proxyDiagramObject, umlWebClient, diagramContext);
     return diagramPackage;
 } 
 

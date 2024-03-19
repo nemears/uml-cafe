@@ -30,6 +30,7 @@ import SignalHandler from './SignalHandler';
 import UmlCompartmentProvider from './UmlCompartmentProvider';
 import UmlCompartmentableShapeProvider from './UmlCompartmentableShapeProvider';
 import UmlContextMenu from './UmlContextMenu';
+import UmlDiagramProvider from './UmlDiagramProvider';
 import UmlDirectEditingProvider from './UmlDirectEditingProvider';
 import UmlEdgeProvider from './UmlEdgeProvider';
 import UmlLayouter from './UmlLayouter';
@@ -75,10 +76,11 @@ export default {
         'umlCompartmentableShapeProvider',
         'umlCompartmentProvider',
         'umlContextMenu',
+        'umlDiagramProvider',
+        'umlDirectEditingProvider',
         'umlShapeProvider',
         'umlEdgeProvider',
         'umlLabelProvider',
-        'umlDirectEditingProvider',
         'userSelection',
         'usageHandler',
     ],
@@ -115,6 +117,7 @@ export default {
     signalHandler: ['type', SignalHandler],
     umlCompartmentableShapeProvider: ['type', UmlCompartmentableShapeProvider],
     umlCompartmentProvider: ['type', UmlCompartmentProvider],
+    umlDiagramProvider: ['type', UmlDiagramProvider],
     umlDirectEditingProvider: ['type', UmlDirectEditingProvider],
     umlEdgeProvider: ['type', UmlEdgeProvider],
     umlLabelProvider: ['type', UmlLabelProvider],
