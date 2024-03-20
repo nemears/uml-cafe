@@ -1,6 +1,6 @@
 import { getMid, roundBounds } from 'diagram-js/lib/layout/LayoutUtil';
 import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout';
-import { getTextDimensions, LABEL_HEIGHT, PROPERTY_GAP } from './ClassDiagramPaletteProvider';
+import { getTextDimensions, PROPERTY_GAP } from './ClassDiagramPaletteProvider';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { adjustAttachedEdges, adjustShape } from './UmlShapeProvider';
 
@@ -77,8 +77,7 @@ class ResizeCompartmentableShapeHandler {
     execute(context) {
         if (context.proxy) {
             delete context.proxy;
-            // TODO
-            return context.shape;
+            return;
         }
 
         // enforce minBounds
