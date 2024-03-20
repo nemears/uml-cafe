@@ -64,7 +64,7 @@ class MoveShapeHandler {
     execute(context) {
         if (context.proxy) {
             delete context.proxy;
-            return context.shapes;
+            return;
         }
         this.diagramEmitter.fire('command', {name: 'move.shape.uml', context: context});
         context.elementsMoved = [];
@@ -147,8 +147,8 @@ class ResizeShapeHandler {
     execute(context) {
         if (context.proxy) {
             delete context.proxy;
-            context.shape = this.elementRegistry.get(context.shape.id);
-            return context.shape;
+            // context.shape = this.elementRegistry.get(context.shape.id);
+            return;
         }
         const newBounds = roundBounds(context.newBounds);
         const shape = context.shape;
@@ -158,13 +158,7 @@ class ResizeShapeHandler {
             width: shape.width,
             height: shape.height,
         };
-        this.diagramEmitter.fire('command', {name: 'resize.shape.uml', context: {
-            shape : {
-                id: shape.id,
-            },
-            newBounds: newBounds,
-            oldBounds: context.oldBounds,
-        }});
+        this.diagramEmitter.fire('command', {name: 'resize.shape.uml', context: context});
         this.assignBounds(context, newBounds);
         this.resize(context);
         return shape;

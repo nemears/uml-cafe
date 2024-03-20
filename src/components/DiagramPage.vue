@@ -169,9 +169,14 @@ export default {
                             y: 0,
                         }
                     }).width + 10;
-                
+                let headingID = undefined;
+                if (!umlDiagram.heading) {
+                    headingID = randomID();
+                } else {
+                    headingID = umlDiagram.heading;
+                }
                 const diagramHeading = elementFactory.createLabel({
-                    id: randomID(),
+                    id: headingID,
                     elementType: 'label',
                     modelElement: umlDiagram.modelElement,
                     parent: diagramFrame,
