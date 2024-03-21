@@ -11,16 +11,6 @@ export default class UmlDiagramProvider extends RuleProvider {
         this._graphicsFactory = graphicsFactory;
         this._umlWebClient = umlWebClient;
         eventBus.on('shape.added', (context) => {
-            // const element = context.element;
-            // if (element.parent.id === diagramContext.umlDiagram.id) {
-            //     if (!this.root) {
-            //         this.root = canvas.findRoot(element);
-            //     }
-            //     element.parent.children.splice(element.parent.children.indexOf(element), 1);
-            //     element.parent = this.root;
-            //     this.root.children.push(element);
-
-            // }
             this.checkAndMoveShape(context.element);
         });
         eventBus.on('uml.shape.move', (context) => {
@@ -31,6 +21,12 @@ export default class UmlDiagramProvider extends RuleProvider {
         });
         eventBus.on('server.update', 900, (context) => {
             this.checkAndMoveShape(context.localElement);
+        });
+        eventBus.on('edge.move', (context) => {
+            this.checkAndMoveEdgeWaypoints(context.edge);
+        });
+        eventBus.on('connection.added', (context) => {
+            this.checkAndMoveEdgeWaypoints(context.element);
         });
     }
     init() {
@@ -43,13 +39,35 @@ export default class UmlDiagramProvider extends RuleProvider {
                 }
             }
         });
+        this.addRule('elements.move', 1000, (context) => {
+            const diagramContext = this._diagramContext;
+            if (context.target && context.target.id === diagramContext.umlDiagram.id) {
+                return false;
+            }
+            if (context.target && context.target.headedDiagram) {
+                return false;
+            }
+        })
+    }
+
+    async doLater(changedFrame, changedHeading) {
+        const umlWebClient = this._umlWebClient,
+        graphicsFactory = this._graphicsFactory,
+        canvas = this._canvas;
+        if (changedHeading) {
+            await updateLabel(this.diagramFrame.heading, umlWebClient);
+        }
+        if (changedFrame) {
+            graphicsFactory.update('shape', this.diagramFrame, canvas.getGraphics(this.diagramFrame));
+        }
+        if (changedHeading) {
+            graphicsFactory.update('shape', this.diagramFrame.heading, canvas.getGraphics(this.diagramFrame.heading));
+        }
     }
 
     checkAndMoveShape(element) {
         const canvas = this._canvas,
-        diagramContext = this._diagramContext,
-        graphicsFactory = this._graphicsFactory,
-        umlWebClient = this._umlWebClient;
+        diagramContext = this._diagramContext;
         if (!this.root) {
             this.root = canvas.findRoot(element);
         }
@@ -84,20 +102,39 @@ export default class UmlDiagramProvider extends RuleProvider {
                 this.diagramFrame.height = element.y - this.diagramFrame.y + element.height + 25;
                 changedFrame = true;
             }
-
-            const doLater = async () => {
-                if (changedHeading) {
-                    await updateLabel(this.diagramFrame.heading, umlWebClient);
-                }
-                if (changedFrame) {
-                    graphicsFactory.update('shape', this.diagramFrame, canvas.getGraphics(this.diagramFrame));
-                }
-                if (changedHeading) {
-                    graphicsFactory.update('shape', this.diagramFrame.heading, canvas.getGraphics(this.diagramFrame.heading));
-                }
-            };
-            doLater();
+            this.doLater(changedFrame, changedHeading);
         }
+    }
+    checkAndMoveEdgeWaypoints(edge) {
+        let changedFrame = false;
+        let changedHeading = false;
+        for (const point of edge.waypoints) {
+            if (point.x < this.diagramFrame.x + 25) {
+                const dx = this.diagramFrame.x - point.x + 25;
+                this.diagramFrame.x = point.x - 25;
+                this.diagramFrame.width += dx;
+                this.diagramFrame.heading.x = this.diagramFrame.x;
+                changedFrame = true;
+                changedHeading = true;
+            }
+            if (point.y < this.diagramFrame.y + 25) {
+                const dy = this.diagramFrame.y - point.y + 35;
+                this.diagramFrame.y = point.y - 35;
+                this.diagramFrame.height += dy;
+                this.diagramFrame.heading.y = this.diagramFrame.y;
+                changedFrame = true;
+                changedHeading = true;
+            }
+            if (point.x > this.diagramFrame.x + this.diagramFrame.width + 25) {
+                this.diagramFrame.width = point.x + 25;
+                changedFrame = true;
+            }
+            if (point.x > this.diagramFrame.y + this.diagramFrame.height + 25) {
+                this.diagramFrame.height = point.y + 25;
+                changedFrame = true;
+            }
+        }
+        this.doLater(changedFrame, changedHeading);
     }
 }
 
