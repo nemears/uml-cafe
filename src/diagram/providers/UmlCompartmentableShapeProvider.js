@@ -179,7 +179,8 @@ function adjustCompartmentsAndEdges(shape, oldBounds, umlRenderer) {
 }
 
 export default class UmlCompartmentableShapeProvider {
-    constructor(eventBus, commandStack, elementRegistry, elementFactory, canvas) {
+    constructor(eventBus, commandStack, elementRegistry, elementFactory, canvas, diagramContext) {
+        let root = undefined;
         commandStack.registerHandler('resize.compartmentableShape.uml', ResizeCompartmentableShapeHandler);
         eventBus.on('resize.start', (event) => {
             const shape = event.shape;
@@ -216,7 +217,16 @@ export default class UmlCompartmentableShapeProvider {
             const elementType = event.serverElement.elementType();
             if (elementType === 'compartmentableShape' || elementType === 'classifierShape') {
                 const umlShape = event.serverElement;
-                const owner = elementRegistry.get(umlShape.owningElement);
+                let owner = elementRegistry.get(umlShape.owningElement);
+
+                // if owner is diagram, just add it to root instead (difference between omg DI and diagram-js)
+                if (owner.id === diagramContext.umlDiagram.id) {
+                    if (!root) {
+                        root = canvas.findRoot(owner);
+                    }
+                    owner = root;
+                }
+
                 const shape = elementFactory.createShape({
                     x: umlShape.bounds.x,
                     y: umlShape.bounds.y,
@@ -242,6 +252,12 @@ export default class UmlCompartmentableShapeProvider {
                         shape: localShape,
                         newBounds: umlShape.bounds,
                         update: true,
+                        oldBounds: {
+                            x: localShape.x,
+                            y: localShape.y,
+                            width: localShape.width,
+                            height: localShape.height,
+                        }
                     });
                 }
             }
@@ -257,4 +273,4 @@ export default class UmlCompartmentableShapeProvider {
     }
 }
 
-UmlCompartmentableShapeProvider.$inject = ['eventBus', 'commandStack', 'elementRegistry', 'elementFactory', 'canvas'];
+UmlCompartmentableShapeProvider.$inject = ['eventBus', 'commandStack', 'elementRegistry', 'elementFactory', 'canvas', 'diagramContext'];
