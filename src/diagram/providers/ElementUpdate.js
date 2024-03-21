@@ -2,7 +2,7 @@ import { getUmlDiagramElement, deleteUmlDiagramElement } from '../api/diagramInt
 
 export default class ElementUpdate {
 
-    constructor(diagramEmitter, umlWebClient, elementRegistry, modelElementMap, eventBus) {
+    constructor(diagramEmitter, umlWebClient, elementRegistry, modelElementMap, eventBus, diagramContext) {
         const eventQueue = [];
         diagramEmitter.on('elementUpdate', (event) => {
             const handleUpdate = async () => {
@@ -44,8 +44,11 @@ export default class ElementUpdate {
                                             localElement: localElement,
                                             serverElement: serverElement,
                                         });
+                                        eventBus.fire('elements.changed', {
+                                            elements: [localElement],
+                                        });
                                     } else {
-                                        console.warn('got update from server but element ' + oldElement.id + ' was not already being tracked! Sending signal to create instead!');
+                                        console.warn('got update from server but element ' + oldElement.id + ' was not already being tracked!');
                                         // eventBus.fire('server.create', {
                                         //     serverElement: serverElement,
                                         // });
@@ -60,7 +63,7 @@ export default class ElementUpdate {
                             // new
                             if (newElement.isSubClassOf('instanceSpecification')) {
                                 const serverElement = await getUmlDiagramElement(newElement.id, umlWebClient);
-                                if (serverElement) {
+                                if (serverElement && newElement.owner.id() === diagramContext.diagram.id) {
                                     eventBus.fire('server.create', {
                                         serverElement: serverElement,
                                     });
@@ -101,7 +104,7 @@ export default class ElementUpdate {
     }
 }
 
-ElementUpdate.$inject = ['diagramEmitter', 'umlWebClient', 'elementRegistry', 'modelElementMap', 'eventBus'];
+ElementUpdate.$inject = ['diagramEmitter', 'umlWebClient', 'elementRegistry', 'modelElementMap', 'eventBus', 'diagramContext'];
 
 async function updateDiagramElement(newElement, modelElementMap, elementRegistry, eventBus, umlWebClient) {
     const diagramElementIDs = modelElementMap.get(newElement.id);
@@ -114,6 +117,9 @@ async function updateDiagramElement(newElement, modelElementMap, elementRegistry
                 eventBus.fire('server.update', {
                     localElement: diagramElement,
                     serverElement: serverElement,
+                });
+                eventBus.fire('elements.changed', {
+                    elements: [diagramElement],
                 });
             }
         }

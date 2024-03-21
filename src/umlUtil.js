@@ -101,6 +101,7 @@ export async function createUmlClassDiagram(diagramID, owner, umlWebClient) {
         children: [],
     };
     const umlDiagram = await createClassDiagram(proxyDiagramObject, umlWebClient, diagramContext);
+    umlWebClient.put(owner);
     return diagramPackage;
 } 
 
