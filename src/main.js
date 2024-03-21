@@ -9,7 +9,7 @@ import { getProjectLoginObject } from './umlUtil';
 
 let projectName = randomID();
 let groupName = 'sessions';
-let serverAddress = 'ws://localhost:1672';//'wss://uml.cafe/api/';
+let serverAddress = 'wss://uml.cafe/api/';
 
 // this is some logic to determine wether we are accessing an already created project or if we are in a new state.
 if (location.pathname != "/") {

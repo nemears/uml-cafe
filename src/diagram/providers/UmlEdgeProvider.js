@@ -43,6 +43,9 @@ export default class UmlEdgeProvider {
         commandStack.registerHandler('move.edge.uml', AdjustWaypointsHandler);
         eventBus.on('connectionSegment.move.end', 1100, (event) => {
             commandStack.execute('move.edge.uml', event.context);
+            eventBus.fire('edge.move', {
+                edge: event.context.connection
+            });
             return false;
         });
     
@@ -75,6 +78,9 @@ export default class UmlEdgeProvider {
                 newWaypoints: originalWaypoints
             }
             commandStack.execute('move.edge.uml', context);
+            eventBus.fire('edge.move', {
+                edge: context.connection
+            });
             return false;
         });
 
@@ -122,6 +128,9 @@ export default class UmlEdgeProvider {
                 localEdge.waypoints = serverEdge.waypoints;
 
                 graphicsFactory.update('connection', localEdge, canvas.getGraphics(localEdge));
+                eventBus.fire('edge.move', {
+                    edge: localEdge
+                });
             }
         });
 
