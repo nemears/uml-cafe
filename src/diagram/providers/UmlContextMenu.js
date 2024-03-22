@@ -251,6 +251,45 @@ export default class UmlContextMenu {
             menu.items.push(showRelationshipsOption);
             menu.items.push(showPropertiesOption);
         }
+        if (element.modelElement.isSubClassOf('association')) {
+            const showMemberEndsOption = {
+                label: 'Show Member Ends',
+                children: []
+            };
+
+            // show all
+            const showAllOption = {
+                label: 'Show All',
+                icon: h('img', {
+                    src: require('../../assets/icons/general/property.svg')
+                }),
+                disabled: umlWebClient.readonly,
+            };
+            showAllOption.onClick = () => {
+                // TODO
+            };
+            showMemberEndsOption.children.push(showAllOption);
+
+            for await (const memberEnd of element.modelElement.memberEnds) {
+                const memberEndOption = {
+                    label: memberEnd.name,
+                    icon: h('img', {
+                        src: require('../../assets/icons/general/property.svg')
+                    }),
+                    disabled: umlWebClient.readonly,
+                };
+                if (!modelElementMap.get(memberEnd.id)) { // TODO check for AssociationEndLabel and MultiplicityLabel
+                    memberEndOption.onClick = () => {
+                        // TODO
+                    }
+                } else {
+                    memberEndOption.disabled = true;
+                }
+                showMemberEndsOption.children.push(memberEndOption);
+            }
+
+            menu.items.push(showMemberEndsOption);
+        }
         diagramEmitter.fire('contextmenu', menu);
     }
 }
