@@ -453,7 +453,12 @@ export default {
                         const labelTarget = elementRegistry.get(umlDiagramElement.owningElement);
                         let placement;
                         if (labelTarget.waypoints) {
-                            throw Error('TODO multiplicity DiagramPage!');
+                            // setup alignment
+                            if (umlDiagramElement.modelElement.type.id() === labelTarget.source.modelElement.id) {
+                                placement = 'source'
+                            } else if (umlDiagramElement.modelElement.type.id() === labelTarget.target.modelElement.id) {
+                                placement = 'target';
+                            }
                         }
                         const label = elementFactory.createLabel({
                             id: umlDiagramElement.id,

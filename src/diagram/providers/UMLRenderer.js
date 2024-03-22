@@ -280,7 +280,7 @@ export default class UMLRenderer extends BaseRenderer {
                 });
                 svgAppend(group, text);
             }
-        } else if (element.elementType === 'keywordLabel' || element.elementType === 'associationEndLabel') {
+        } else if (element.elementType === 'keywordLabel' || element.elementType === 'associationEndLabel' || element.elementType === 'multiplicityLabel') {
             const rect = createRectangle();
             svgAttr(rect, assign({}, this.LABEL_STYLE), attrs || {});
             if (!element.text) {
