@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@imengyu/vue3-context-menu": "^1.2.3",
-    "diagram-js": "^14.1.1",
+    "diagram-js": "^14.3.1",
     "diagram-js-direct-editing": "^2.1.2",
     "events": "^3.3.0",
     "uml-client": "^0.3.15",

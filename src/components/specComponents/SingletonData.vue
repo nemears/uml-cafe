@@ -224,7 +224,8 @@ export default {
             this.setData({
                 img: getImage(el),
                 id: el.id,
-                label: el.name !== undefined ? el.name : '' 
+                label: el.name !== undefined ? el.name : '',
+                currentUsers: this.getCurrentUsers(el),
             });
         },
         onContextMenu(evt) {
