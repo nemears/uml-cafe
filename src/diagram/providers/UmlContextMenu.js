@@ -267,6 +267,7 @@ export default class UmlContextMenu {
             };
             showAllOption.onClick = () => {
                 // TODO
+                //
             };
             showMemberEndsOption.children.push(showAllOption);
 

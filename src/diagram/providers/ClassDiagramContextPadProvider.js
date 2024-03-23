@@ -107,10 +107,9 @@ export default class ClassDiagramContextPadProvider {
                 group: 'edit',
                 className: 'context-pad-icon-remove',
                 title: 'Remove Shape',
-                action: {
-                    click: remove,
-                    dragstart: remove
-                }
+                action: () => {
+                    remove(element);
+                },
             },
             'delete': {
                 group: 'edit',
