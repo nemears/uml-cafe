@@ -16,6 +16,15 @@ export default class UmlDiagramProvider extends RuleProvider {
         eventBus.on('uml.shape.move', (context) => {
             this.checkAndMoveShape(context.shape);
         });
+        eventBus.on('resize.start', 1500, (context) => {
+            const shape = context.shape;
+            if (isDiagram(shape.elementType)) {
+                // delete context.context.resizeConstraints;
+                context.context.minBounds = this.getDiagramMinBounds();
+                // Passing general padding
+                context.context.childrenBoxPadding = 25;
+            }
+        });
         eventBus.on('resize.end', (context) => {
             this.checkAndMoveShape(context.shape);
         });
@@ -73,6 +82,13 @@ export default class UmlDiagramProvider extends RuleProvider {
         }
         if (element.id === diagramContext.umlDiagram.id) {
             this.diagramFrame = element;
+            // TODO / in progress move label
+            const heading = element.heading;
+            if (heading) {
+                heading.x = element.x;
+                heading.y = element.y;
+                this.doLater(false, true);
+            }
             return;
         }
         if (element.parent === this.root) {
@@ -135,6 +151,49 @@ export default class UmlDiagramProvider extends RuleProvider {
             }
         }
         this.doLater(changedFrame, changedHeading);
+    }
+    getDiagramMinBounds() {
+        const diagramContext = this._diagramContext;
+        const bigNumber = 10000000;
+        if (!this.root) {
+            throw Error('not tracking root, bad state!');
+        }
+        const ret = {
+            x: bigNumber,
+            y: bigNumber,
+            width: this.diagramFrame.heading.width,
+            height: this.diagramFrame.heading.height,
+        }
+        for (const child of this.root.children) {
+            if (child.id === diagramContext.umlDiagram.id) {
+                continue;
+            }
+            if (child.x < ret.x) {
+                if (ret.width !== 0) {
+                    const dx = ret.x - child.x + 25;
+                    ret.width += dx;
+                }
+                ret.x = child.x - 25;
+            }
+            if (child.y < ret.y) {
+                if (ret.height !== 0) {
+                    const dy = ret.y - child.y + 35;
+                    ret.height += dy;
+                }
+                ret.y = child.y - 35;
+            }
+            if (child.x + child.width > ret.x + ret.width) {
+                ret.width = child.x + child.width + 25 - ret.x;
+            }
+            if (child.y + child.height > ret.y + ret.height) {
+                ret.height = child.y + child.height + 25 - ret.y;
+            }
+        }
+        if (ret.x === bigNumber || ret.y === bigNumber) {
+            delete ret.x;
+            delete ret.y;
+        }
+        return ret;
     }
 }
 

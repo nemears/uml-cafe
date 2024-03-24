@@ -182,11 +182,10 @@ export default class UmlCompartmentableShapeProvider {
     constructor(eventBus, commandStack, elementRegistry, elementFactory, canvas, diagramContext) {
         let root = undefined;
         commandStack.registerHandler('resize.compartmentableShape.uml', ResizeCompartmentableShapeHandler);
-        eventBus.on('resize.start', (event) => {
+        eventBus.on('resize.start', 1500, (event) => {
             const shape = event.shape;
             if (shape.elementType === 'compartmentableShape' || shape.elementType === 'classifierShape') {
                 // overiding resize.start so that minSize is different
-                delete event.context.resizeConstraints;
                 let totalHeight = CLASS_SHAPE_HEADER_HEIGHT;
                 for (const compartment of shape.compartments) {
                     totalHeight += CLASSIFIER_SHAPE_GAP_HEIGHT;
@@ -198,10 +197,57 @@ export default class UmlCompartmentableShapeProvider {
                         }
                     }
                 }
+
                 event.context.minBounds = {
                     width: 50,
                     height: totalHeight,
                 }
+
+                const minBounds = event.context.minBounds;
+
+                switch (event.context.direction) {
+                    case 'nw':
+                        // top left
+                        minBounds.x = shape.x + shape.width - minBounds.width;
+                        minBounds.y = shape.y + shape.height - minBounds.height;
+                        break;
+                    case 'w':
+                        // left
+                        minBounds.x = shape.x + shape.width - minBounds.width;
+                        minBounds.y = shape.y; // doesn't matter
+                        break;
+                    case 'sw':
+                        // bottom left
+                        minBounds.x = shape.x + shape.width - minBounds.width;
+                        minBounds.y = shape.y;
+                        break;
+                    case 's':
+                        // bottom
+                        minBounds.x = shape.x; // doesn't matter
+                        minBounds.y = shape.y;
+                        break;
+                    case 'se':
+                        // bottom right
+                        minBounds.x = shape.x;
+                        minBounds.y = shape.y;
+                        break;
+                    case 'e':
+                        minBounds.x = shape.x;
+                        minBounds.y = shape.y // doesn't matter
+                        break;
+                    case 'ne':
+                        minBounds.x = shape.x;
+                        minBounds.y = shape.y + shape.height - minBounds.height;
+                        break;
+                    case 'n':
+                        minBounds.x = shape.x; // doesn't matter
+                        minBounds.y = shape.y + shape.height - minBounds.height;
+                        break;
+                    default:
+                        throw Error('bad direction!');
+                }
+                
+                event.context.childrenBoxPadding = 0;
             }
         });
         eventBus.on('resize.end', 1100, (event) => {
