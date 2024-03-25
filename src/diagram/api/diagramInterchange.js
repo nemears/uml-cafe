@@ -454,10 +454,12 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
                             if (!instanceValueToRemove) {
                                 throw Error('bad state, cannot find ownedElement value to correspond');
                             }
-                            owningElementSlot.values.remove(instanceValueToRemove);
+                            umlWebClient.deleteElement(instanceValueToRemove);
+                            umlWebClient.put(owningElementSlot);
                             break;
                         }
                     }
+                    umlWebClient.put(owningElementInstance);
                 }
             }
             
