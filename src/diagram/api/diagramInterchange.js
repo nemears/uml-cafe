@@ -146,6 +146,7 @@ export const TYPED_ELEMENT_LABEL_ID = 'kY&kIIA_XPbHZrs73YN&uDcSAhuh';
 export const ASSOCIATION_END_LABEL_ID = 'aaOkfblFlFn7QjVstTUgbCoNqyl8';
 export const MULTIPLICITY_LABEL_ID = '5pVpZ7MJzq5mysPkikGPT9kcvE10';
 export const OWNED_ELEMENTS_SLOT_ID = 'rnm_zSDRk_kdPiWTfx6QZRkgUvFe';
+export const OWNING_ELEMENT_SLOT_ID = '3&io9rgm9t1Vu9l8EEwU3QBNblgX';
 export const CLASS_DIAGRAM_ID = 'OlOjWJGfJyejrDUQ&zPwT68unIFd';
 export const DIAGRAM_NAME_SLOT_ID = 'CN7vzxOOpQJkGS964DTMuDWQkLlz';
 export const DIAGRAM_DOCUMENTATION_SLOT_ID = '6CjufML0&O3S4cmtN2cL44BYr8HL';
@@ -394,7 +395,13 @@ export function isLabel(elementType) {
             elementType === 'typedElementLabel' || 
             elementType === 'keywordLabel' || 
             elementType === 'associationEndLabel' || 
-            elementType === 'multiplicityLabel';    
+            elementType === 'multiplicityLabel' ||
+            elementType === LABEL_ID ||
+            elementType === NAME_LABEL_ID ||
+            elementType === TYPED_ELEMENT_LABEL_ID ||
+            elementType === KEYWORD_LABEL_ID ||
+            elementType === ASSOCIATION_END_LABEL_ID ||
+            elementType === MULTIPLICITY_LABEL_ID;
 }
 
 export function isDiagram(elementType) {
@@ -405,6 +412,9 @@ export function isShape(id) {
     return  id === SHAPE_ID ||
             id === COMPARTMENTABLE_SHAPE_ID ||
             id === CLASSIFIER_SHAPE_ID ||
+            id === 'shape' ||
+            id === 'classifierShape' ||
+            id === 'compartmentableShape' ||
             isLabel(id);
 }
 
@@ -421,20 +431,33 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
                 if (shapeSlot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
                     // bounds get and delete instance
                     await umlWebClient.deleteElement(await (await shapeSlot.values.front()).instance.get());
-                } else if (shapeSlot.definingFeature.id() === OWNED_ELEMENTS_SLOT_ID) {
-                    // TODO eventually i want to be able to uncomment this and cleanup automatically but 
-                    // .has() is not completely deterministic with the api currently when it is there will be
-                    // an easy way to ensure this
-                    
-
-                    // CLEANUP ALL CHILDREN OR MODEL WILL GET CLUTTERED AND LARGE
-                    
-                    // // delete owned elements if not already deleted
-                    // for await (const ownedElementValue of shapeSlot.values) {
-                    //     if (ownedElementValue.instance.has()) {
-                    //         await deleteUmlDiagramElement(ownedElementValue.instance.id(), umlWebClient);
-                    //     }
-                    // }
+                } else if (shapeSlot.definingFeature.id() === OWNED_ELEMENTS_SLOT_ID) {                    
+                    // delete owned elements if not already deleted
+                    for await (const ownedElementValue of shapeSlot.values) {
+                        if (ownedElementValue.instance.has()) {
+                            await deleteUmlDiagramElement(ownedElementValue.instance.id(), umlWebClient);
+                        }
+                    }
+                } else if (shapeSlot.definingFeature.id() === OWNING_ELEMENT_SLOT_ID) {
+                    const owningElementInstance = await (await shapeSlot.values.front()).instance.get();
+                    for await (const owningElementSlot of owningElementInstance.slots) {
+                        if (owningElementSlot.definingFeature.id() === OWNED_ELEMENTS_SLOT_ID) {
+                            let instanceValueToRemove = undefined;
+                            for await (const value of owningElementSlot.values) {
+                                if (value.isSubClassOf('instanceValue')) {
+                                    if (value.instance.id() === diagramElementInstance.id) {
+                                        instanceValueToRemove = value;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!instanceValueToRemove) {
+                                throw Error('bad state, cannot find ownedElement value to correspond');
+                            }
+                            owningElementSlot.values.remove(instanceValueToRemove);
+                            break;
+                        }
+                    }
                 }
             }
             
@@ -501,7 +524,7 @@ export async function createDiagramElementFeatures(shape, umlWebClient, shapeIns
         }
         owningElementSlot = umlWebClient.post('slot');
         owningElementValue = umlWebClient.post('instanceValue');
-        owningElementSlot.definingFeature.set('3&io9rgm9t1Vu9l8EEwU3QBNblgX');
+        owningElementSlot.definingFeature.set(OWNING_ELEMENT_SLOT_ID);
         owningElementValue.instance.set(owningElementInstance);
         owningElementSlot.values.add(owningElementValue);
         shapeInstance.slots.add(owningElementSlot);

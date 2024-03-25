@@ -209,6 +209,9 @@ export default {
                     if (shapeAlreadyDrawn) {
                         return shapeAlreadyDrawn;
                     }
+                    if (isDiagram(umlDiagramElement.elementType())) {
+                        return root;
+                    }
                     if (umlDiagramElement.elementType() === 'shape') {
                         const umlShape = umlDiagramElement;
                         if (umlShape.modelElement.isSubClassOf('property')) {
