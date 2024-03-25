@@ -4,6 +4,7 @@ import { isDiagram, updateLabel } from "../api/diagramInterchange";
 export default class UmlDiagramProvider extends RuleProvider {
     constructor(eventBus, canvas, diagramContext, graphicsFactory, umlWebClient) {
         super(eventBus);
+        this._eventBus = eventBus;
         this.root = undefined;
         this.diagramFrame = undefined;
         this._canvas = canvas;
@@ -19,9 +20,7 @@ export default class UmlDiagramProvider extends RuleProvider {
         eventBus.on('resize.start', 1500, (context) => {
             const shape = context.shape;
             if (isDiagram(shape.elementType)) {
-                // delete context.context.resizeConstraints;
-                context.context.minBounds = this.getDiagramMinBounds();
-                // Passing general padding
+                context.context.minBounds = this.getDiagramMinBounds(context.context.direction);
                 context.context.childrenBoxPadding = 25;
             }
         });
@@ -61,16 +60,23 @@ export default class UmlDiagramProvider extends RuleProvider {
 
     async doLater(changedFrame, changedHeading) {
         const umlWebClient = this._umlWebClient,
+        eventBus = this._eventBus,
         graphicsFactory = this._graphicsFactory,
         canvas = this._canvas;
         if (changedHeading) {
             await updateLabel(this.diagramFrame.heading, umlWebClient);
         }
+        const elements = [];
         if (changedFrame) {
-            graphicsFactory.update('shape', this.diagramFrame, canvas.getGraphics(this.diagramFrame));
+            // graphicsFactory.update('shape', this.diagramFrame, canvas.getGraphics(this.diagramFrame));
+            elements.push(this.diagramFrame);
         }
         if (changedHeading) {
-            graphicsFactory.update('shape', this.diagramFrame.heading, canvas.getGraphics(this.diagramFrame.heading));
+            // graphicsFactory.update('shape', this.diagramFrame.heading, canvas.getGraphics(this.diagramFrame.heading));
+            elements.push(this.diagramFrame.heading);
+        }
+        if (elements.length > 0) {
+            eventBus.fire('elements.changed', {elements: elements});
         }
     }
 
@@ -91,7 +97,7 @@ export default class UmlDiagramProvider extends RuleProvider {
             }
             return;
         }
-        if (element.parent === this.root) {
+        if (element.parent === this.root && this.diagramFrame) {
             let changedFrame = false;
             let changedHeading = false;
             if (element.x < this.diagramFrame.x + 25) {
@@ -124,6 +130,9 @@ export default class UmlDiagramProvider extends RuleProvider {
     checkAndMoveEdgeWaypoints(edge) {
         let changedFrame = false;
         let changedHeading = false;
+        if (!this.diagramFrame) {
+            return;
+        }
         for (const point of edge.waypoints) {
             if (point.x < this.diagramFrame.x + 25) {
                 const dx = this.diagramFrame.x - point.x + 25;
@@ -152,7 +161,7 @@ export default class UmlDiagramProvider extends RuleProvider {
         }
         this.doLater(changedFrame, changedHeading);
     }
-    getDiagramMinBounds() {
+    getDiagramMinBounds(direction) {
         const diagramContext = this._diagramContext;
         const bigNumber = 10000000;
         if (!this.root) {
@@ -170,14 +179,14 @@ export default class UmlDiagramProvider extends RuleProvider {
             }
             if (child.x < ret.x) {
                 if (ret.width !== 0) {
-                    const dx = ret.x - child.x + 25;
+                    const dx = this.diagramFrame.x - child.x + 25;
                     ret.width += dx;
                 }
                 ret.x = child.x - 25;
             }
             if (child.y < ret.y) {
                 if (ret.height !== 0) {
-                    const dy = ret.y - child.y + 35;
+                    const dy = this.diagramFrame.y - child.y + 35;
                     ret.height += dy;
                 }
                 ret.y = child.y - 35;
@@ -190,8 +199,30 @@ export default class UmlDiagramProvider extends RuleProvider {
             }
         }
         if (ret.x === bigNumber || ret.y === bigNumber) {
-            delete ret.x;
-            delete ret.y;
+            switch(direction) {
+                case 'nw':
+                    ret.x = this.diagramFrame.x + this.diagramFrame.width - this.diagramFrame.heading.width;
+                    ret.y = this.diagramFrame.y + this.diagramFrame.height - this.diagramFrame.heading.height;
+                    break;
+                case 'w':
+                case 'sw':
+                    ret.x = ret.x = this.diagramFrame.x + this.diagramFrame.width - this.diagramFrame.heading.width;
+                    ret.y = this.diagramFrame.y;
+                    break;
+                case 's':
+                case 'se':
+                case 'e':
+                    ret.x = this.diagramFrame.x;
+                    ret.y = this.diagramFrame.y;
+                    break;
+                case 'ne':
+                case 'n':
+                    ret.x = this.diagramFrame.x;
+                    ret.y = this.diagramFrame.y + this.diagramFrame.height - this.diagramFrame.heading.height;
+                    break;
+                default:
+                    throw Error('Bad direction!');
+            }
         }
         return ret;
     }

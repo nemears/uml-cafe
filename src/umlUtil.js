@@ -99,6 +99,7 @@ export async function createUmlClassDiagram(diagramID, owner, umlWebClient) {
         modelElement: owner,
         name: owner.name,
         children: [],
+        isFrame: false, // TODO turn to true when https://forum.bpmn.io/t/contextpad-dom-events-untriggered-in-frame/10818 is resolved
     };
     const umlDiagram = await createClassDiagram(proxyDiagramObject, umlWebClient, diagramContext);
     umlWebClient.put(owner);

@@ -2,7 +2,7 @@
 import { Editor } from '../diagram/editor';
 const EventEmitter = require('events');
 import { createElementUpdate } from '../umlUtil.js';
-import { getUmlDiagramElement, deleteUmlDiagramElement, updateLabel, CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID , TYPED_ELEMENT_LABEL_ID , KEYWORD_LABEL_ID, ASSOCIATION_END_LABEL_ID, MULTIPLICITY_LABEL_ID, CLASS_DIAGRAM_ID, createDiagramLabel, updateClassDiagram } from '../diagram/api/diagramInterchange';
+import { isDiagram, getUmlDiagramElement, deleteUmlDiagramElement, updateLabel, CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID , TYPED_ELEMENT_LABEL_ID , KEYWORD_LABEL_ID, ASSOCIATION_END_LABEL_ID, MULTIPLICITY_LABEL_ID, CLASS_DIAGRAM_ID, createDiagramLabel, updateClassDiagram } from '../diagram/api/diagramInterchange';
 import { toRaw } from 'vue';
 import { CLASS_SHAPE_HEADER_HEIGHT } from '../diagram/providers/ClassHandler';
 import { getTypedElementText, getTextDimensions, LABEL_HEIGHT } from '../diagram/providers/ClassDiagramPaletteProvider';
@@ -207,6 +207,9 @@ export default {
                     const shapeAlreadyDrawn = elementRegistry.get(umlDiagramElement.id); 
                     if (shapeAlreadyDrawn) {
                         return shapeAlreadyDrawn;
+                    }
+                    if (isDiagram(umlDiagramElement.elementType())) {
+                        return root;
                     }
                     if (umlDiagramElement.elementType() === 'shape') {
                         const umlShape = umlDiagramElement;

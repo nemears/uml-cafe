@@ -13,6 +13,7 @@ export const OWNED_END_RADIUS = 5;
 export default class Association extends RuleProvider {
     constructor(eventBus, umlWebClient, umlRenderer, canvas, graphicsFactory, commandStack, diagramContext, elementFactory, diagramEmitter, elementRegistry, modelElementMap) {
         super(eventBus);
+        commandStack.registerHandler('memberEnds.show', ShowMemberEndsHandler);
         eventBus.on('connect.end', 1100, (event) => {
             // check if it can connect
             if (isAssociationConnectType(event.context.start.connectType)) {
@@ -367,183 +368,6 @@ export default class Association extends RuleProvider {
                 doLater();
             }
         });
-        // diagramEmitter.on('elementUpdate', (event) => {
-        //     for (const update of event.updatedElements) {
-        //         const newElement = update.newElement;
-        //         if (newElement && newElement.isSubClassOf('property')) {
-        //             if (newElement.association.has()) {
-        //                 const edges = modelElementMap.get(newElement.association.id());
-        //                 if (edges) {
-        //                     // relevant to check for update
-        //                     const doLater = async () => {
-        //                         for (const edge of edges.map(id => elementRegistry.get(id))) {
-
-        //                             // helper
-                                   
-
-        //                             const createPropertyLabelOfType = async (labelType, text) => {
-        //                                 // create it
-        //                                 let placement = undefined
-        //                                 if (newElement.type.id() === edge.source.modelElement.id) {
-        //                                     placement = 'source';
-        //                                 }
-        //                                 if (newElement.type.id() === edge.target.modelElement.id) {
-        //                                     placement = 'target';
-        //                                 }
-        //                                 if (!placement) {
-        //                                     return undefined;
-        //                                 }
-        //                                 const ret = elementFactory.createLabel({
-        //                                     id: randomID(),
-        //                                     width: getTextWidth(text),
-        //                                     height: 24,
-        //                                     modelElement: newElement,
-        //                                     labelTarget: edge,
-        //                                     parent: edge,
-        //                                     elementType: labelType,
-        //                                     text: text,
-        //                                     placement: placement,
-        //                                 });
-        //                                 placeEdgeLabel(ret, edge);
-        //                                 canvas.addShape(ret, edge);
-        //                                 switch (labelType) {
-        //                                     case 'associationEndLabel':
-        //                                         await createAssociationEndLabel(ret, umlWebClient, diagramContext);
-        //                                         break;
-        //                                     case 'multiplicityLabel':
-        //                                         await createMultiplicityLabel(ret, umlWebClient, diagramContext);
-        //                                         break;
-        //                                     default:
-        //                                         throw Error('bad label for property update!');
-        //                                 }
-        //                                 return ret;
-        //                             };
-
-        //                             // determine if we need to update a the associationEndLabel associated with this property being updated
-        //                             let associationEndLabel = undefined;
-        //                             for (const label of edge.labels) {
-        //                                 if (label.elementType === 'associationEndLabel' && label.modelElement.id === newElement.id) {
-        //                                     associationEndLabel = label;
-        //                                     break;
-        //                                 }
-        //                             }
-        //                             if (associationEndLabel && newElement.name === '') {
-        //                                 // remove associationEndLabel, no need for it
-        //                                 associationEndLabel = undefined;
-        //                                 canvas.removeShape(associationEndLabel);
-        //                                 await deleteUmlDiagramElement(associationEndLabel.id, umlWebClient);
-        //                             }
-        //                             if (!associationEndLabel && newElement.name !== '') {
-        //                                 // create it since the name has been updated to not be empty
-        //                                 associationEndLabel = await createPropertyLabelOfType('associationEndLabel', newElement.name);
-        //                             } else if (associationEndLabel) {
-        //                                 // update it
-        //                                 associationEndLabel.text = newElement.name;
-                                        
-        //                                 // resize label
-        //                                 const textWidth = getTextWidth(newElement.name);
-                                            
-        //                                 // determine whether to move
-        //                                 let shape = undefined;
-        //                                 if (associationEndLabel.placement === 'target') {
-        //                                     shape = edge.target;
-        //                                 } else if (associationEndLabel.placement === 'source') {
-        //                                     shape = edge.source
-        //                                 } else {
-        //                                     throw Error('Bad placement');
-        //                                 }
-
-        //                                 if (shape.x > associationEndLabel.x) {
-        //                                     // adjust width
-        //                                     const dWidth = textWidth - associationEndLabel.width;
-        //                                     associationEndLabel.x -= dWidth;
-        //                                 }
-
-        //                                 associationEndLabel.width = textWidth;
-
-        //                                 await updateLabel(associationEndLabel, umlWebClient);
-        //                                 graphicsFactory.update('shape', associationEndLabel, canvas.getGraphics(associationEndLabel));
-        //                             }
-
-        //                             let multiplicityLabel = undefined;
-        //                             for (const label of edge.labels) {
-        //                                 if (label.elementType === 'multiplicityLabel' && label.modelElement.id === newElement.id) {
-        //                                     multiplicityLabel = label;
-        //                                     break;
-        //                                 }
-        //                             }
-
-        //                             const isPropertyValidForMultiplicityLabel = async () => {
-        //                                 let isNotValidForMultiplicityLabel = false;
-        //                                 if (!newElement.lowerValue.has()) {
-        //                                     isNotValidForMultiplicityLabel = true;
-        //                                 } else {
-        //                                     const lowerValue = await newElement.lowerValue.get();
-        //                                     switch (lowerValue.elementType()) {
-        //                                         case 'literalInt':
-        //                                             if (lowerValue.value === undefined) {
-        //                                                 isNotValidForMultiplicityLabel = true;
-        //                                             }
-        //                                             // TODO more vetting
-        //                                             break;
-        //                                         default:
-        //                                             // bad type
-        //                                             isNotValidForMultiplicityLabel = true;
-        //                                             console.warn('bad type for multiplicity, cannot make label!');
-        //                                             break;
-        //                                     }
-        //                                 }
-        //                                 if (!newElement.upperValue.has()) {
-        //                                     isNotValidForMultiplicityLabel = true;
-        //                                 } else {
-        //                                     const upperValue = await newElement.upperValue.get();
-        //                                     switch (upperValue.elementType()) {
-        //                                         case 'literalInt':
-        //                                         case 'literalUnlimitedNatural':
-        //                                             if (upperValue.value === undefined) {
-        //                                                 isNotValidForMultiplicityLabel = true;
-        //                                             }
-        //                                             // TODO more vetting
-        //                                             break;
-        //                                         default:
-        //                                             // bad type
-        //                                             isNotValidForMultiplicityLabel = true;
-        //                                             console.warn('bad type for multiplicity, cannot make label!');
-        //                                             break;
-        //                                     }
-        //                                 }
-
-        //                                 return !isNotValidForMultiplicityLabel;
-        //                             };
-
-        //                             if (multiplicityLabel) {
-        //                                 if (!(await isPropertyValidForMultiplicityLabel())) {
-        //                                     multiplicityLabel = undefined;
-        //                                     canvas.removeShape(multiplicityLabel);
-        //                                     await deleteUmlDiagramElement(multiplicityLabel.id, umlWebClient);
-        //                                 }
-        //                             } else if (await isPropertyValidForMultiplicityLabel()) {
-        //                                 multiplicityLabel = await createPropertyLabelOfType('multiplicityLabel');
-        //                             }
-
-        //                             if (multiplicityLabel) {
-        //                                 // update the label
-        //                                 let multiplicityText = (await newElement.lowerValue.get()).value + '..' + (await newElement.upperValue.get()).value;
-        //                                 if (multiplicityLabel.text !== multiplicityText) {
-        //                                     multiplicityLabel.text = multiplicityText;
-        //                                     await updateLabel(multiplicityLabel, umlWebClient);
-        //                                     // graphicsFactory.update('shape', multiplicityLabel, canvas.getGraphics(multiplicityLabel));
-        //                                     diagramEmitter.fire('elementUpdate', createElementUpdate(await umlWebClient.get(multiplicityLabel.id)));
-        //                                 }
-        //                             }
-        //                         }
-        //                     }
-        //                     doLater();
-        //                 }
-        //             }
-        //         }
-        //     }
-        // });
     }
 
     init() {
@@ -576,6 +400,190 @@ function canConnect(context) {
 }
 
 Association.$inject = ['eventBus', 'umlWebClient', 'umlRenderer', 'canvas', 'graphicsFactory', 'commandStack', 'diagramContext', 'elementFactory', 'diagramEmitter', 'elementRegistry', 'modelElementMap'];
+
+class ShowMemberEndsHandler {
+    constructor(elementFactory, canvas, umlWebClient, diagramContext, graphicsFactory, umlRenderer) {
+        this._elementFactory = elementFactory;
+        this._canvas = canvas;
+        this._umlWebClient = umlWebClient;
+        this._diagramContext = diagramContext;
+        this._graphicsFactory = graphicsFactory;
+        this._umlRenderer = umlRenderer;
+    }
+    execute(context) {
+        const doLater = async () => {
+            const elementFactory = this._elementFactory,
+            canvas = this._canvas,
+            umlWebClient = this._umlWebClient,
+            diagramContext = this._diagramContext,
+            graphicsFactory = this._graphicsFactory,
+            umlRenderer = this._umlRenderer;
+            const edge = context.edge;
+            const getTextWidth = (text) => {
+                return Math.round(getTextDimensions(text, umlRenderer).width) + 10
+            }
+            for (const property of context.ends) {
+                const createPropertyLabelOfType = async (labelType, text) => {
+                    // create it
+                    let placement = undefined
+                    if (property.type.id() === edge.source.modelElement.id) {
+                        placement = 'source';
+                    }
+                    if (property.type.id() === edge.target.modelElement.id) {
+                        placement = 'target';
+                    }
+                    if (!placement) {
+                        return undefined;
+                    }
+                    const ret = elementFactory.createLabel({
+                        id: randomID(),
+                        width: getTextWidth(text),
+                        height: 24,
+                        modelElement: property,
+                        labelTarget: edge,
+                        parent: edge,
+                        elementType: labelType,
+                        text: text,
+                        placement: placement,
+                    });
+                    placeEdgeLabel(ret, edge);
+                    canvas.addShape(ret, edge);
+                    switch (labelType) {
+                        case 'associationEndLabel':
+                            await createAssociationEndLabel(ret, umlWebClient, diagramContext);
+                            break;
+                        case 'multiplicityLabel':
+                            await createMultiplicityLabel(ret, umlWebClient, diagramContext);
+                            break;
+                        default:
+                            throw Error('bad label for property update!');
+                    }
+                    return ret;
+                };
+
+                // determine if we need to update a the associationEndLabel associated with this property being updated
+                let associationEndLabel = undefined;
+                for (const label of edge.labels) {
+                    if (label.elementType === 'associationEndLabel' && label.modelElement.id === property.id) {
+                        associationEndLabel = label;
+                        break;
+                    }
+                }
+                if (associationEndLabel && property.name === '') {
+                    // remove associationEndLabel, no need for it
+                    associationEndLabel = undefined;
+                    canvas.removeShape(associationEndLabel);
+                    await deleteUmlDiagramElement(associationEndLabel.id, umlWebClient);
+                }
+                if (!associationEndLabel && property.name !== '') {
+                    // create it since the name has been updated to not be empty
+                    associationEndLabel = await createPropertyLabelOfType('associationEndLabel', property.name);
+                } else if (associationEndLabel) {
+                    // update it
+                    associationEndLabel.text = property.name;
+                    
+                    // resize label
+                    const textWidth = getTextWidth(property.name);
+                        
+                    // determine whether to move
+                    let shape = undefined;
+                    if (associationEndLabel.placement === 'target') {
+                        shape = edge.target;
+                    } else if (associationEndLabel.placement === 'source') {
+                        shape = edge.source
+                    } else {
+                        throw Error('Bad placement');
+                    }
+
+                    if (shape.x > associationEndLabel.x) {
+                        // adjust width
+                        const dWidth = textWidth - associationEndLabel.width;
+                        associationEndLabel.x -= dWidth;
+                    }
+
+                    associationEndLabel.width = textWidth;
+
+                    await updateLabel(associationEndLabel, umlWebClient);
+                    graphicsFactory.update('shape', associationEndLabel, canvas.getGraphics(associationEndLabel));
+                }
+
+                let multiplicityLabel = undefined;
+                for (const label of edge.labels) {
+                    if (label.elementType === 'multiplicityLabel' && label.modelElement.id === property.id) {
+                        multiplicityLabel = label;
+                        break;
+                    }
+                }
+
+                const isPropertyValidForMultiplicityLabel = async () => {
+                    let isNotValidForMultiplicityLabel = false;
+                    if (!property.lowerValue.has()) {
+                        isNotValidForMultiplicityLabel = true;
+                    } else {
+                        const lowerValue = await property.lowerValue.get();
+                        switch (lowerValue.elementType()) {
+                            case 'literalInt':
+                                if (lowerValue.value === undefined) {
+                                    isNotValidForMultiplicityLabel = true;
+                                }
+                                // TODO more vetting
+                                break;
+                            default:
+                                // bad type
+                                isNotValidForMultiplicityLabel = true;
+                                console.warn('bad type for multiplicity, cannot make label!');
+                                break;
+                        }
+                    }
+                    if (!property.upperValue.has()) {
+                        isNotValidForMultiplicityLabel = true;
+                    } else {
+                        const upperValue = await property.upperValue.get();
+                        switch (upperValue.elementType()) {
+                            case 'literalInt':
+                            case 'literalUnlimitedNatural':
+                                if (upperValue.value === undefined) {
+                                    isNotValidForMultiplicityLabel = true;
+                                }
+                                // TODO more vetting
+                                break;
+                            default:
+                                // bad type
+                                isNotValidForMultiplicityLabel = true;
+                                console.warn('bad type for multiplicity, cannot make label!');
+                                break;
+                        }
+                    }
+
+                    return !isNotValidForMultiplicityLabel;
+                };
+
+                if (multiplicityLabel) {
+                    if (!(await isPropertyValidForMultiplicityLabel())) {
+                        multiplicityLabel = undefined;
+                        canvas.removeShape(multiplicityLabel);
+                        await deleteUmlDiagramElement(multiplicityLabel.id, umlWebClient);
+                    } else {
+                        let multiplicityText = (await property.lowerValue.get()).value + '..' + (await property.upperValue.get()).value;
+                        if (multiplicityLabel.text !== multiplicityText) {
+                            multiplicityLabel.text = multiplicityText;
+                            await updateLabel(multiplicityLabel, umlWebClient);
+                        }
+                    }
+                } else if (await isPropertyValidForMultiplicityLabel()) {
+                    let multiplicityText = (await property.lowerValue.get()).value + '..' + (await property.upperValue.get()).value;
+                    multiplicityLabel = await createPropertyLabelOfType('multiplicityLabel', multiplicityText);
+                }
+            }
+        }
+        doLater();
+    }
+    revert(context) {
+
+    }
+}
+
+ShowMemberEndsHandler.$inject = ['elementFactory', 'canvas', 'umlWebClient', 'diagramContext', 'graphicsFactory', 'umlRenderer'];
 
 export function getLabelBounds(property, association, umlRenderer) {
     let labelName = property.name;

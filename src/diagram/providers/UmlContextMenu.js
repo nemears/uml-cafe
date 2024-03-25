@@ -130,7 +130,7 @@ export default class UmlContextMenu {
                 createCommentClick(event, element, create, elementFactory);
             }
         });
-        if (element.modelElement.isSubClassOf('classifier')) {
+        if (element.modelElement.isSubClassOf('classifier') && !element.modelElement.isSubClassOf('association')) {
             // show relationships
             const showRelationshipsOption = {
                 label: 'Show Relationships',
@@ -265,9 +265,17 @@ export default class UmlContextMenu {
                 }),
                 disabled: umlWebClient.readonly,
             };
-            showAllOption.onClick = () => {
-                // TODO
-                //
+            showAllOption.onClick = async () => {
+                // TODO / In Progress
+                const ends = [];
+                for await (const end of element.modelElement.memberEnds) {
+                    ends.push(end);
+                }
+                commandStack.execute('memberEnds.show', {
+                    edge: element,
+                    ends: ends,
+                });
+                
             };
             showMemberEndsOption.children.push(showAllOption);
 
@@ -282,6 +290,10 @@ export default class UmlContextMenu {
                 if (!modelElementMap.get(memberEnd.id)) { // TODO check for AssociationEndLabel and MultiplicityLabel
                     memberEndOption.onClick = () => {
                         // TODO
+                        commandStack.execute('memberEnds.show', {
+                            edge: element,
+                            ends: [memberEnd],
+                        })
                     }
                 } else {
                     memberEndOption.disabled = true;
