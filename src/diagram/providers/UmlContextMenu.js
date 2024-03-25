@@ -5,6 +5,7 @@ import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { randomID } from "uml-client/lib/element";
 import { createCommentClick } from "../../umlUtil";
 import { getTextDimensions } from './ClassDiagramPaletteProvider';
+import { isPropertyValidForMultiplicityLabel } from "./relationships/Association";
 
 export default class UmlContextMenu {
     constructor(eventBus, diagramEmitter, umlWebClient, modelElementMap, directEditing, create, elementFactory, commandStack, canvas, relationshipEdgeCreator) {    
@@ -287,7 +288,26 @@ export default class UmlContextMenu {
                     }),
                     disabled: umlWebClient.readonly,
                 };
-                if (!modelElementMap.get(memberEnd.id)) { // TODO check for AssociationEndLabel and MultiplicityLabel
+                let isValid = false;
+                let associationEndLabel = undefined;
+                let multiplicityLabel = undefined;
+                for (const child of element.children) {
+                    if (child.modelElement.id !== memberEnd.id) {
+                        continue;
+                    }
+                    if (child.elementType === 'associationEndLabel') {
+                        associationEndLabel = child;
+                    } else if (child.elementType === 'multiplicityLabel') {
+                        multiplicityLabel = child;
+                    }
+                }
+                if (
+                    (!associationEndLabel && memberEnd.name.length !== 0) ||
+                    (!multiplicityLabel && (await isPropertyValidForMultiplicityLabel(memberEnd)))
+                ) {
+                    isValid = true;
+                }
+                if (isValid) {
                     memberEndOption.onClick = () => {
                         // TODO
                         commandStack.execute('memberEnds.show', {

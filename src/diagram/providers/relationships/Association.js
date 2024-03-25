@@ -469,42 +469,43 @@ class ShowMemberEndsHandler {
                         break;
                     }
                 }
-                if (associationEndLabel && property.name === '') {
-                    // remove associationEndLabel, no need for it
-                    associationEndLabel = undefined;
-                    canvas.removeShape(associationEndLabel);
-                    await deleteUmlDiagramElement(associationEndLabel.id, umlWebClient);
-                }
+                // if (associationEndLabel && property.name === '') {
+                //     // remove associationEndLabel, no need for it
+                //     associationEndLabel = undefined;
+                //     canvas.removeShape(associationEndLabel);
+                //     await deleteUmlDiagramElement(associationEndLabel.id, umlWebClient);
+                // }
                 if (!associationEndLabel && property.name !== '') {
                     // create it since the name has been updated to not be empty
-                    associationEndLabel = await createPropertyLabelOfType('associationEndLabel', property.name);
+                    context.associationEndLabel = await createPropertyLabelOfType('associationEndLabel', property.name);
                 } else if (associationEndLabel) {
-                    // update it
-                    associationEndLabel.text = property.name;
+                    // throw Error('associationEndLabel already exists, dont do this!');
+                    // // update it
+                    // associationEndLabel.text = property.name;
                     
-                    // resize label
-                    const textWidth = getTextWidth(property.name);
+                    // // resize label
+                    // const textWidth = getTextWidth(property.name);
                         
-                    // determine whether to move
-                    let shape = undefined;
-                    if (associationEndLabel.placement === 'target') {
-                        shape = edge.target;
-                    } else if (associationEndLabel.placement === 'source') {
-                        shape = edge.source
-                    } else {
-                        throw Error('Bad placement');
-                    }
+                    // // determine whether to move
+                    // let shape = undefined;
+                    // if (associationEndLabel.placement === 'target') {
+                    //     shape = edge.target;
+                    // } else if (associationEndLabel.placement === 'source') {
+                    //     shape = edge.source
+                    // } else {
+                    //     throw Error('Bad placement');
+                    // }
 
-                    if (shape.x > associationEndLabel.x) {
-                        // adjust width
-                        const dWidth = textWidth - associationEndLabel.width;
-                        associationEndLabel.x -= dWidth;
-                    }
+                    // if (shape.x > associationEndLabel.x) {
+                    //     // adjust width
+                    //     const dWidth = textWidth - associationEndLabel.width;
+                    //     associationEndLabel.x -= dWidth;
+                    // }
 
-                    associationEndLabel.width = textWidth;
+                    // associationEndLabel.width = textWidth;
 
-                    await updateLabel(associationEndLabel, umlWebClient);
-                    graphicsFactory.update('shape', associationEndLabel, canvas.getGraphics(associationEndLabel));
+                    // await updateLabel(associationEndLabel, umlWebClient);
+                    // graphicsFactory.update('shape', associationEndLabel, canvas.getGraphics(associationEndLabel));
                 }
 
                 let multiplicityLabel = undefined;
@@ -515,64 +516,22 @@ class ShowMemberEndsHandler {
                     }
                 }
 
-                const isPropertyValidForMultiplicityLabel = async () => {
-                    let isNotValidForMultiplicityLabel = false;
-                    if (!property.lowerValue.has()) {
-                        isNotValidForMultiplicityLabel = true;
-                    } else {
-                        const lowerValue = await property.lowerValue.get();
-                        switch (lowerValue.elementType()) {
-                            case 'literalInt':
-                                if (lowerValue.value === undefined) {
-                                    isNotValidForMultiplicityLabel = true;
-                                }
-                                // TODO more vetting
-                                break;
-                            default:
-                                // bad type
-                                isNotValidForMultiplicityLabel = true;
-                                console.warn('bad type for multiplicity, cannot make label!');
-                                break;
-                        }
-                    }
-                    if (!property.upperValue.has()) {
-                        isNotValidForMultiplicityLabel = true;
-                    } else {
-                        const upperValue = await property.upperValue.get();
-                        switch (upperValue.elementType()) {
-                            case 'literalInt':
-                            case 'literalUnlimitedNatural':
-                                if (upperValue.value === undefined) {
-                                    isNotValidForMultiplicityLabel = true;
-                                }
-                                // TODO more vetting
-                                break;
-                            default:
-                                // bad type
-                                isNotValidForMultiplicityLabel = true;
-                                console.warn('bad type for multiplicity, cannot make label!');
-                                break;
-                        }
-                    }
-
-                    return !isNotValidForMultiplicityLabel;
-                };
-
                 if (multiplicityLabel) {
-                    if (!(await isPropertyValidForMultiplicityLabel())) {
-                        multiplicityLabel = undefined;
-                        canvas.removeShape(multiplicityLabel);
-                        await deleteUmlDiagramElement(multiplicityLabel.id, umlWebClient);
-                    } else {
-                        let multiplicityText = (await property.lowerValue.get()).value + '..' + (await property.upperValue.get()).value;
-                        if (multiplicityLabel.text !== multiplicityText) {
-                            multiplicityLabel.text = multiplicityText;
-                            await updateLabel(multiplicityLabel, umlWebClient);
-                        }
-                    }
-                } else if (await isPropertyValidForMultiplicityLabel()) {
+                    // throw Error('Bad state, label already created!');
+                    // if (!(await isPropertyValidForMultiplicityLabel(property))) {
+                    //     multiplicityLabel = undefined;
+                    //     canvas.removeShape(multiplicityLabel);
+                    //     await deleteUmlDiagramElement(multiplicityLabel.id, umlWebClient);
+                    // } else {
+                    //     let multiplicityText = (await property.lowerValue.get()).value + '..' + (await property.upperValue.get()).value;
+                    //     if (multiplicityLabel.text !== multiplicityText) {
+                    //         multiplicityLabel.text = multiplicityText;
+                    //         await updateLabel(multiplicityLabel, umlWebClient);
+                    //     }
+                    // }
+                } else if (await isPropertyValidForMultiplicityLabel(property)) {
                     let multiplicityText = (await property.lowerValue.get()).value + '..' + (await property.upperValue.get()).value;
-                    multiplicityLabel = await createPropertyLabelOfType('multiplicityLabel', multiplicityText);
+                    context.multiplicityLabel = await createPropertyLabelOfType('multiplicityLabel', multiplicityText);
                 }
             }
         }
@@ -664,4 +623,47 @@ function isAssociationConnectType(connectType) {
            connectType === 'directedAssociation' ||
            connectType === 'association' ||
            connectType === 'biDirectionalAssociation';
+}
+
+export async function isPropertyValidForMultiplicityLabel(property) {
+    let isNotValidForMultiplicityLabel = false;
+    if (!property.lowerValue.has()) {
+        isNotValidForMultiplicityLabel = true;
+    } else {
+        const lowerValue = await property.lowerValue.get();
+        switch (lowerValue.elementType()) {
+            case 'literalInt':
+                if (lowerValue.value === undefined) {
+                    isNotValidForMultiplicityLabel = true;
+                }
+                // TODO more vetting
+                break;
+            default:
+                // bad type
+                isNotValidForMultiplicityLabel = true;
+                console.warn('bad type for multiplicity, cannot make label!');
+                break;
+        }
+    }
+    if (!property.upperValue.has()) {
+        isNotValidForMultiplicityLabel = true;
+    } else {
+        const upperValue = await property.upperValue.get();
+        switch (upperValue.elementType()) {
+            case 'literalInt':
+            case 'literalUnlimitedNatural':
+                if (upperValue.value === undefined) {
+                    isNotValidForMultiplicityLabel = true;
+                }
+                // TODO more vetting
+                break;
+            default:
+                // bad type
+                isNotValidForMultiplicityLabel = true;
+                console.warn('bad type for multiplicity, cannot make label!');
+                break;
+        }
+    }
+
+    return !isNotValidForMultiplicityLabel;
 }
