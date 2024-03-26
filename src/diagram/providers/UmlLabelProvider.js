@@ -1,8 +1,8 @@
-import { isLabel } from '../api/diagramInterchange';
+import { isLabel, updateLabel } from '../api/diagramInterchange';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 
 export default class UmlLabelProvider extends RuleProvider {
-    constructor(eventBus, elementRegistry, elementFactory, canvas, graphicsFactory) {
+    constructor(eventBus, elementRegistry, elementFactory, canvas, graphicsFactory, umlWebClient) {
         super(eventBus);
         eventBus.on('server.create', (event) => {
             const elementType = event.serverElement.elementType();
@@ -66,6 +66,21 @@ export default class UmlLabelProvider extends RuleProvider {
                 localLabel.height = serverLabel.bounds.height;
                 localLabel.text = serverLabel.text;
                 localLabel.modelElement = serverLabel.modelElement;
+
+                switch (elementType) {
+                    case 'nameLabel':
+                    case 'associationEndLabel':
+                        if (localLabel.modelElement.name != localLabel.text) {
+                            localLabel.text = localLabel.modelElement.name;
+                            updateLabel(localLabel, umlWebClient);
+                        }
+                        break;
+                    case 'typedElementLabel':
+                        // TODO (maybe necessary?)
+                        break;
+                        
+                }
+
                 graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
             }
         });

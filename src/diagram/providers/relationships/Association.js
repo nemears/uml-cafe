@@ -402,12 +402,11 @@ function canConnect(context) {
 Association.$inject = ['eventBus', 'umlWebClient', 'umlRenderer', 'canvas', 'graphicsFactory', 'commandStack', 'diagramContext', 'elementFactory', 'diagramEmitter', 'elementRegistry', 'modelElementMap'];
 
 class ShowMemberEndsHandler {
-    constructor(elementFactory, canvas, umlWebClient, diagramContext, graphicsFactory, umlRenderer) {
+    constructor(elementFactory, canvas, umlWebClient, diagramContext, umlRenderer) {
         this._elementFactory = elementFactory;
         this._canvas = canvas;
         this._umlWebClient = umlWebClient;
         this._diagramContext = diagramContext;
-        this._graphicsFactory = graphicsFactory;
         this._umlRenderer = umlRenderer;
     }
     execute(context) {
@@ -416,7 +415,6 @@ class ShowMemberEndsHandler {
             canvas = this._canvas,
             umlWebClient = this._umlWebClient,
             diagramContext = this._diagramContext,
-            graphicsFactory = this._graphicsFactory,
             umlRenderer = this._umlRenderer;
             const edge = context.edge;
             const getTextWidth = (text) => {
@@ -469,43 +467,10 @@ class ShowMemberEndsHandler {
                         break;
                     }
                 }
-                // if (associationEndLabel && property.name === '') {
-                //     // remove associationEndLabel, no need for it
-                //     associationEndLabel = undefined;
-                //     canvas.removeShape(associationEndLabel);
-                //     await deleteUmlDiagramElement(associationEndLabel.id, umlWebClient);
-                // }
+                
                 if (!associationEndLabel && property.name !== '') {
                     // create it since the name has been updated to not be empty
                     context.associationEndLabel = await createPropertyLabelOfType('associationEndLabel', property.name);
-                } else if (associationEndLabel) {
-                    // throw Error('associationEndLabel already exists, dont do this!');
-                    // // update it
-                    // associationEndLabel.text = property.name;
-                    
-                    // // resize label
-                    // const textWidth = getTextWidth(property.name);
-                        
-                    // // determine whether to move
-                    // let shape = undefined;
-                    // if (associationEndLabel.placement === 'target') {
-                    //     shape = edge.target;
-                    // } else if (associationEndLabel.placement === 'source') {
-                    //     shape = edge.source
-                    // } else {
-                    //     throw Error('Bad placement');
-                    // }
-
-                    // if (shape.x > associationEndLabel.x) {
-                    //     // adjust width
-                    //     const dWidth = textWidth - associationEndLabel.width;
-                    //     associationEndLabel.x -= dWidth;
-                    // }
-
-                    // associationEndLabel.width = textWidth;
-
-                    // await updateLabel(associationEndLabel, umlWebClient);
-                    // graphicsFactory.update('shape', associationEndLabel, canvas.getGraphics(associationEndLabel));
                 }
 
                 let multiplicityLabel = undefined;
@@ -516,20 +481,7 @@ class ShowMemberEndsHandler {
                     }
                 }
 
-                if (multiplicityLabel) {
-                    // throw Error('Bad state, label already created!');
-                    // if (!(await isPropertyValidForMultiplicityLabel(property))) {
-                    //     multiplicityLabel = undefined;
-                    //     canvas.removeShape(multiplicityLabel);
-                    //     await deleteUmlDiagramElement(multiplicityLabel.id, umlWebClient);
-                    // } else {
-                    //     let multiplicityText = (await property.lowerValue.get()).value + '..' + (await property.upperValue.get()).value;
-                    //     if (multiplicityLabel.text !== multiplicityText) {
-                    //         multiplicityLabel.text = multiplicityText;
-                    //         await updateLabel(multiplicityLabel, umlWebClient);
-                    //     }
-                    // }
-                } else if (await isPropertyValidForMultiplicityLabel(property)) {
+                if (!multiplicityLabel && (await isPropertyValidForMultiplicityLabel(property))) {
                     let multiplicityText = (await property.lowerValue.get()).value + '..' + (await property.upperValue.get()).value;
                     context.multiplicityLabel = await createPropertyLabelOfType('multiplicityLabel', multiplicityText);
                 }
@@ -542,7 +494,7 @@ class ShowMemberEndsHandler {
     }
 }
 
-ShowMemberEndsHandler.$inject = ['elementFactory', 'canvas', 'umlWebClient', 'diagramContext', 'graphicsFactory', 'umlRenderer'];
+ShowMemberEndsHandler.$inject = ['elementFactory', 'canvas', 'umlWebClient', 'diagramContext', 'umlRenderer'];
 
 export function getLabelBounds(property, association, umlRenderer) {
     let labelName = property.name;

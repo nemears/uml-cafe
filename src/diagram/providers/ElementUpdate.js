@@ -70,8 +70,6 @@ export default class ElementUpdate {
                                 }
                             }
 
-                            // this probably isn't necessary
-                            // TODO check
                             await updateDiagramElement(newElement, modelElementMap, elementRegistry, eventBus, umlWebClient);
                         }
                     }
