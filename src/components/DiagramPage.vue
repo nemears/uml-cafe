@@ -7,6 +7,7 @@ import { toRaw } from 'vue';
 import { CLASS_SHAPE_HEADER_HEIGHT } from '../diagram/providers/ClassHandler';
 import { getTypedElementText, getTextDimensions, LABEL_HEIGHT } from '../diagram/providers/ClassDiagramPaletteProvider';
 import { randomID } from 'uml-client/lib/element.js';
+import { isPropertyValidForMultiplicityLabel } from '../diagram/providers/relationships/Association';
 export default {
     data() {
         return {
@@ -208,6 +209,20 @@ export default {
                     if (shapeAlreadyDrawn) {
                         return shapeAlreadyDrawn;
                     }
+                    const updateLabelTextAndBounds = (text, connection, placement) => {
+                        umlDiagramElement.text = text;
+                        const oldWidth = umlDiagramElement.bounds.width;
+                        umlDiagramElement.bounds.width = Math.round(getTextDimensions(text, umlRenderer).width) + 10;
+                        let lastPoint = undefined;
+                        if (placement === 'source') {
+                            lastPoint = connection.waypoints[0];
+                        } else if (placement === 'target') {
+                            lastPoint = connection.waypoints.slice(-1)[0];
+                        }
+                        if (lastPoint.x > umlDiagramElement.bounds.x) {
+                            umlDiagramElement.bounds.x += oldWidth - umlDiagramElement.bounds.width;
+                        }
+                    };
                     if (isDiagram(umlDiagramElement.elementType())) {
                         return root;
                     }
@@ -430,13 +445,29 @@ export default {
                     } else if (umlDiagramElement.elementType() === 'associationEndLabel') {
                         const labelTarget = elementRegistry.get(umlDiagramElement.owningElement);
                         let placement;
+                        let placementIndex;
                         if (labelTarget.waypoints) {
                             // setup alignment
+                            placementIndex = 0;
                             if (umlDiagramElement.modelElement.type.id() === labelTarget.source.modelElement.id) {
                                 placement = 'source'
+                                labelTarget.numSourceLabels += 1;
                             } else if (umlDiagramElement.modelElement.type.id() === labelTarget.target.modelElement.id) {
                                 placement = 'target';
+                                labelTarget.numTargetLabels += 1;
                             }
+                        }
+                        // update name 
+                        let updatedName = false;
+                        if (umlDiagramElement.modelElement.name === '') {
+                            // not valid, delete from diagram
+                            await deleteUmlDiagramElement(umlDiagramElement.id, this.$umlWebClient);
+                            return undefined;
+                        }
+
+                        if (umlDiagramElement.text != umlDiagramElement.modelElement.name) {
+                            updatedName = true;
+                            updateLabelTextAndBounds(umlDiagramElement.modelElement.name, labelTarget, placement);
                         }
                         const label = elementFactory.createLabel({
                             id: umlDiagramElement.id,
@@ -449,20 +480,44 @@ export default {
                             height: umlDiagramElement.bounds.height,
                             elementType: 'associationEndLabel',
                             placement: placement,
+                            placementIndex: placementIndex,
                         });
+                        if (updatedName) {
+                            await updateLabel(label, this.$umlWebClient);
+                        }
                         canvas.addShape(label, labelTarget);
                         return label;
                     } else if (umlDiagramElement.elementType() === 'multiplicityLabel') {
                         const labelTarget = elementRegistry.get(umlDiagramElement.owningElement);
                         let placement;
+                        let placementIndex;
                         if (labelTarget.waypoints) {
+                            placementIndex = 1; // put on bottom
                             // setup alignment
                             if (umlDiagramElement.modelElement.type.id() === labelTarget.source.modelElement.id) {
                                 placement = 'source'
+                                labelTarget.numSourceLabels += 1;
                             } else if (umlDiagramElement.modelElement.type.id() === labelTarget.target.modelElement.id) {
                                 placement = 'target';
+                                labelTarget.numTargetLabels += 1;
                             }
                         }
+
+                        // TODO update label if changed
+                        const modelElement = umlDiagramElement.modelElement;
+                        if (!(await isPropertyValidForMultiplicityLabel(modelElement))) {
+                            // not valid, delete from diagram
+                            await deleteUmlDiagramElement(umlDiagramElement.id, this.$umlWebClient);
+                            return undefined;
+                        }
+
+                        let multiplicityText = (await modelElement.lowerValue.get()).value + '..' + (await modelElement.upperValue.get()).value;
+                        let updateLabel = false;
+                        if (multiplicityText !== umlDiagramElement.text) {
+                            updateLabel = true;
+                            updateLabelTextAndBounds(multiplicityText, labelTarget, placement);
+                        }
+
                         const label = elementFactory.createLabel({
                             id: umlDiagramElement.id,
                             text: umlDiagramElement.text,
@@ -474,7 +529,11 @@ export default {
                             height: umlDiagramElement.bounds.height,
                             elementType: 'multiplicityLabel',
                             placement: placement,
+                            placementIndex: placementIndex,
                         });
+                        if (updateLabel) {
+                            await updateLabel(label, this.$umlWebClient);
+                        }
                         canvas.addShape(label, labelTarget);
                         return label;
                     } else {

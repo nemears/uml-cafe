@@ -219,7 +219,7 @@ function placeSecondLabel(child, waypoint, orientation) {
         case 'top':
             // place to right
             child.x = waypoint.x + 5;
-            child.y = waypoint.y + child.height+ 5;
+            child.y = waypoint.y - child.height - 5;
             break;
         default:
             throw Error('invalid orientation given to label for placement ' + orientation);
