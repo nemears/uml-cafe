@@ -78,7 +78,9 @@ export default class UmlLabelProvider extends RuleProvider {
                     case 'typedElementLabel':
                         // TODO (maybe necessary?)
                         break;
-                        
+                    case 'multiplicityLabel':
+                        // TODO (maybe necessary?)
+                        break;
                 }
 
                 graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
@@ -99,7 +101,7 @@ export default class UmlLabelProvider extends RuleProvider {
             if (context.shape.elementType === 'nameLabel' || context.shape.elementType === 'keyWordLabel') {
                 return false;
             }
-        });         
+        });
     }
 }
 
