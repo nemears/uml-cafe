@@ -490,7 +490,32 @@ class ShowMemberEndsHandler {
         doLater();
     }
     revert(context) {
+        const canvas = this._canvas,
+        umlWebClient = this._umlWebClient;
+        const deleteLabel = (label) => {
+            deleteUmlDiagramElement(label.id, umlWebClient);
+            if (label.placement === 'source') {
+                context.edge.numSourceLabels -= 1;
+            } else if (label.placement === 'target') {
+                context.edge.numTargetLabels -= 1;
+            }
+            const index = context.edge.labels.indexOf(label);
+            if (index > -1) {
+                context.edge.labels.splice(index, 1);
+            }
+            canvas.removeShape(label);
+        }
+        if (context.associationEndLabel) {
+            // there was an associationEndLabel created delete it
+            deleteLabel(context.associationEndLabel);
+            delete context.associationEndLabel;
+        }
 
+        if (context.multiplicityLabel) {
+            // there was a multiplicityLabel created, delete it
+            deleteLabel(context.multiplicityLabel);
+            delete context.multiplicityLabel;
+        }
     }
 }
 
