@@ -449,7 +449,7 @@ export default {
                         let placementIndex;
                         if (labelTarget.waypoints) {
                             // setup alignment
-                            placementIndex = 0;
+                            placementIndex = 0; // always put it on top (Assumption) // get around this by having additional di
                             if (umlDiagramElement.modelElement.type.id() === labelTarget.source.modelElement.id) {
                                 placement = 'source'
                                 labelTarget.numSourceLabels += 1;
@@ -493,7 +493,7 @@ export default {
                         let placement;
                         let placementIndex;
                         if (labelTarget.waypoints) {
-                            placementIndex = 1; // put on bottom
+                            placementIndex = 1; // put on bottom // assumption since it is multiplicityLabel
                             // setup alignment
                             if (umlDiagramElement.modelElement.type.id() === labelTarget.source.modelElement.id) {
                                 placement = 'source'
