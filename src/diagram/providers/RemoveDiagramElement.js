@@ -65,6 +65,21 @@ class RemoveDiagramElementHandler {
             }
             await deleteUmlDiagramElement(diagramElement.id, umlWebClient);
             const parent = diagramElement.parent;
+            if (diagramElement.labelTarget) {
+                if (diagramElement.placement === 'source') {
+                    diagramElement.labelTarget.numSourceLabels -= 1;   
+                }
+                if (diagramElement.placement === 'target') {
+                    diagramElement.labelTarget.numTargetLabels -= 1;
+                }
+                if (diagramElement.placement === 'center') {
+                    diagramElement.labelTarget.numCenterLabels -= 1;
+                }
+                let index = diagramElement.labelTarget.labels.indexOf(diagramElement);
+                if (index > -1) {
+                    diagramElement.labelTarget.labels.splice(diagramElement, 1);
+                }
+            }
             canvas.removeShape(diagramElement);
             eventBus.fire('uml.remove', {
                 element: diagramElement,
