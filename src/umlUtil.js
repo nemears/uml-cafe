@@ -52,11 +52,7 @@ export function createCommentClick (event, element, create, elementFactory) {
 
 export async function assignTabLabel(newElement) {
     if (newElement.isSubClassOf('namedElement')) {
-        if (!newElement.name || newElement.name === '') {
-            return '< >';
-        } else if (newElement.name) {
-            return newElement.name;
-        }
+        return newElement.name;
     } else if (newElement.isSubClassOf('comment')) {
         if (newElement.annotatedElements.size() === 0) {
             return '< >';
@@ -185,4 +181,7 @@ export function getProjectLoginObject(wholeProjectName, serverAddress) {
         passwordHash: passwordHash,
         create: groupName !== 'sessions',
     }
+}
+export function isTypedElement(elementType) {
+    return elementType === 'property';
 }

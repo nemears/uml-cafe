@@ -611,25 +611,34 @@ export default {
                     :input-type="'checkbox'"
                     :initial-data="literalBoolData.value"
                     :umlid="umlID"
-                    :type="'value'">
+                    :type="'value'"
+                    @element-update="propogateElementUpdate">
         </InputData>
     </ElementType>
 	<ElementType :element-type="'Literal Int'" v-if="literalIntData !== undefined">
-        <InputData :label="'Value'" :input-type="'number'" :initial-data="literalIntData.value" :umlid="umlID" :type="'value'"></InputData>
+        <InputData 
+                    :label="'Value'"
+                    :input-type="'number'"
+                    :initial-data="literalIntData.value"
+                    :umlid="umlID"
+                    :type="'value'"
+                    @element-update="propogateElementUpdate"></InputData>
 	</ElementType>
     <ElementType :element-type="'Literal Real'" v-if="literalRealData">
         <InputData  :label="'Value'"
                     :input-type="'number'"
                     :initial-data="literalRealData.value"
                     :umlid="umlID"
-                    :type="'value'"></InputData>
+                    :type="'value'"
+                    @element-update="propogateElementUpdate"></InputData>
     </ElementType>
     <ElementType :element-type="'Literal String'" v-if="literalStringData">
         <InputData  :label="'Value'"
                     :input-type="'string'"
                     :initial-data="literalStringData.value"
                     :umlid="umlID"
-                    :type="'value'"></InputData>
+                    :type="'value'"
+                    @element-update="propogateElementUpdate"></InputData>
     </ElementType>
 	<ElementType :element-type="'Multiplicity Element'" v-if="multiplicityElementData !== undefined">
         <SingletonData  :label="'Lower Value'" 

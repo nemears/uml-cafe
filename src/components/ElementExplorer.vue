@@ -2,7 +2,7 @@
 import packageImage from '../assets/icons/general/package.svg';
 import getImage from '../GetUmlImage.vue';
 import classDiagramImage from '../assets/icons/general/class_diagram.svg';
-import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createUmlClassDiagram, mapColor, getPanelClass } from '../umlUtil.js'
+import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createUmlClassDiagram, mapColor, getPanelClass, isTypedElement } from '../umlUtil.js'
 import { randomID } from 'uml-client/lib/element';
 
 export default {
@@ -49,6 +49,10 @@ export default {
             selected: false,
             currentUsers: [],
             hover: false,
+            typedElementLabel: "",
+            stereotypedLabel: [],
+            propertyLabel: "",
+            generalizationLabel: ""
         };
     },
     components: [
@@ -428,6 +432,27 @@ export default {
                     this.deleteElement(el);
                 }
             });
+            
+            if (el.isSubClassOf('typedElement') && el.type.has()) {
+                this.typedElementLabel = ': ' + (await el.type.get()).name;
+            }
+            if (el.appliedStereotypes && el.appliedStereotypes.size() !== 0) {
+                for await (let instance of el.appliedStereotypes) {
+                    for await (let classifier of instance.classifiers) {
+                        this.stereotypedLabel.push('«' + classifier.name + '»'); 
+                    }
+                }
+            }
+            if (el.elementType() === 'property' && el.defaultValue.has()) {
+                const defaultValue = await el.defaultValue.get();
+                if (defaultValue.elementType() === 'literalString') {
+                    this.propertyLabel = '= "' + (await el.defaultValue.get()).value + '"';
+                } else {this.propertyLabel = '= ' + (await el.defaultValue.get()).value;}
+            }
+            if (el.isSubClassOf('generalization')) {
+                var name = (await el.general.get()).name;
+                this.generalizationLabel = '-> ' + name;
+            }
 
             this.name = await assignTabLabel(el);
             this.isFetching = false;
@@ -487,11 +512,20 @@ export default {
         propogateSpecification(spec) {
             this.$emit('specification', spec);
         },
-        async handleElementUpdate(newElementUpdate) {
+        async handleElementUpdate(newElementUpdate) { //add data here
             for (const update of newElementUpdate.updatedElements) {
                 const newElement = update.newElement;
+                const oldElement = update.oldElement;
                 // const oldElement = newElementUpdate.oldElement;
                 if (!newElement) {
+                    if (isTypedElement(this.elementType)) {
+                        const element = await this.$umlWebClient.get(this.umlID);
+                        if (oldElement.isSubClassOf('classifier')) {
+                            if (element.type.id() === oldElement.id) {
+                                    this.typedElementLabel = '';
+                            }
+                        }
+                    }
                     // TODO delete
                     // check if the deleted element is in our children
                     // might not be worth it
@@ -531,6 +565,56 @@ export default {
                         for (let elID of element.annotatedElements.ids()) {
                             if (elID === newElement.id) {
                                 this.name = await assignTabLabel(element);
+                            }
+                        }
+                    }
+                    if (newElement.isSubClassOf('typedElement')) {
+                        if (newElement.type.has()) {
+                            this.typedElementLabel = ': ' + (await newElement.type.get()).name;
+                        } else { this.typedElementLabel = ''; }    
+                    }
+                    if (newElement.appliedStereotypes && newElement.appliedStereotypes.size() !== 0) {
+                        for await (let instance of newElement.appliedStereotypes) {
+                            for await (let classifier of instance.classifiers) {
+                                this.stereotypedLabel.push('«' + classifier.name + '»'); 
+                            }
+                        }
+                    }
+                    if (newElement.elementType() === 'property' && newElement.defaultValue.has()) {
+                        const defaultValue = await newElement.defaultValue.get();
+                        if (defaultValue.elementType() === 'literalString') {
+                            this.propertyLabel = '= "' + (await newElement.defaultValue.get()).value + '"';
+                        } else {this.propertyLabel = '= ' + (await newElement.defaultValue.get()).value;}
+                    }
+                    
+                    if (newElement.isSubClassOf('generalization')) {
+                        this.generalizationLabel = '-> ' + await (newElement.general.get()).name;
+                    }
+                        
+                } else {
+                    if (isTypedElement(this.elementType)) {
+                        const element = await this.$umlWebClient.get(this.umlID);
+                        if (newElement.isSubClassOf('classifier')) {
+                            if (element.type.id() === newElement.id) {
+                                this.typedElementLabel = ': ' + newElement.name;
+                            }
+                        }
+                    }
+                    if (this.elementType === 'property') {
+                        const element = await this.$umlWebClient.get(this.umlID);
+                        if (element.defaultValue.has() && (element.defaultValue.id() === newElement.id)) {
+                            if (newElement.value) {
+                                if (newElement.elementType() === 'literalString') {
+                                    this.propertyLabel = '= "' + newElement.value + '"';
+                                } else {this.propertyLabel = '= ' + newElement.value;}
+                            }
+                        }
+                    }
+                    if (this.elementType === 'generalization') {
+                        const element = await this.$umlWebClient.get(this.umlID);
+                        if (newElement.isSubClassOf('classifier')) {
+                            if (element.general.id() === newElement.id) {
+                                this.generalizationLabel = '-> ' + newElement.name;
                             }
                         }
                     }
@@ -640,6 +724,10 @@ export default {
                      @keydown.escape="cancelRename">
                     {{ umlName }}
                 </div>
+                <div v-if="typedElementLabel.length != 0" style="color:gray" class="labelSpacing">{{ typedElementLabel }}</div>
+                <div v-if="propertyLabel.length != 0" style="color:lightgray" class="labelSpacing">{{ propertyLabel }}</div>
+                <div style="color:orange" class="labelSpacing" v-for="label in stereotypedLabel" :key="label">{{ label }}</div>
+                <div v-if="generalizationLabel.length != 0" class="labelSpacing">{{ generalizationLabel }}</div>
                     <!-- TODO we need some sort of handling for a click-outside of this div directive to cancel rename TODO -->
             </div>
         </div>
@@ -740,5 +828,9 @@ export default {
 }
 .noExpand {
     min-width: 15px;
+}
+.labelSpacing {
+    padding-left:5px;
+    padding-right:5px;
 }
 </style>

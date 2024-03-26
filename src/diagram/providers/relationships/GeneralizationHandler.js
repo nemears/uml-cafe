@@ -38,7 +38,7 @@ export default class GeneralizationHandler extends RuleProvider {
                 generalization.general.set(general);
                 umlWebClient.put(generalization);
                 umlWebClient.put(specific);
-                diagramEmitter.fire('elementUpdate', createElementUpdate(specific));         
+                diagramEmitter.fire('elementUpdate', createElementUpdate(specific, generalization));
             }
         });
         eventBus.on('edge.connect.undo', (context) => {
