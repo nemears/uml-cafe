@@ -98,7 +98,7 @@ export default class UmlLabelProvider extends RuleProvider {
 
     init() {
         this.addRule('shape.resize', (context) => {
-            if (context.shape.elementType === 'nameLabel' || context.shape.elementType === 'keyWordLabel') {
+            if (context.shape.elementType === 'nameLabel' || context.shape.elementType === 'keywordLabel') {
                 return false;
             }
         });
