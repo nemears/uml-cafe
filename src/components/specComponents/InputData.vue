@@ -18,7 +18,6 @@ export default {
     },
     methods: {
         async submitDataChange() {
-            console.log('TODO submit integer data change (maybe not needed)');
             this.data = this.inputType === 'checkbox' ? this.$refs.numberInput.checked : this.$refs.numberInput.value;
             const el = await this.$umlWebClient.get(this.umlid);
             el[this.type] = this.data; // this may be dangerous in the future

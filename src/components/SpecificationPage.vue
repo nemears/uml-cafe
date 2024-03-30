@@ -6,6 +6,7 @@ import SingletonData from './specComponents/SingletonData.vue';
 import InputData from './specComponents/InputData.vue';
 import EnumerationData from './specComponents/EnumerationData.vue';
 import { assignTabLabel } from '../umlUtil';
+import LiteralUnlimitedNaturalData from './specComponents/LiteralUnlimitedNaturalData.vue';
 export default {
     props: [
         'umlID', 
@@ -192,6 +193,13 @@ export default {
                 this.literalStringData = undefined;
             }
 
+            if (el.isSubClassOf('literalUnlimitedNatural')) {
+                this.literalUnlimitedNaturalData = {};
+                this.literalUnlimitedNaturalData.value = el.value;
+            } else {
+                this.literalUnlimitedNaturalData = undefined;
+            }
+
             if (el.isSubClassOf('packageableElement')) {
                 this.packageableElementData = {};
                 reloadSingleton(this.packageableElementData, el.owningPackage, 'owningPackage');
@@ -366,7 +374,7 @@ export default {
             }
         },
     },
-    components: { ElementType, SetData, SingletonData, InputData, EnumerationData }
+    components: { ElementType, SetData, SingletonData, InputData, EnumerationData, LiteralUnlimitedNaturalData }
 }
 </script>
 <template>
@@ -639,6 +647,12 @@ export default {
                     :umlid="umlID"
                     :type="'value'"
                     @element-update="propogateElementUpdate"></InputData>
+    </ElementType>
+    <ElementType :element-type="'Literal Unlimited Natural'" v-if="literalUnlimitedNaturalData">
+        <LiteralUnlimitedNaturalData 
+            :initial-data="literalUnlimitedNaturalData.value" 
+            :umlid="umlID" 
+            @element-update="propogateElementUpdate"></LiteralUnlimitedNaturalData>
     </ElementType>
 	<ElementType :element-type="'Multiplicity Element'" v-if="multiplicityElementData !== undefined">
         <SingletonData  :label="'Lower Value'" 
