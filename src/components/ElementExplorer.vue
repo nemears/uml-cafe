@@ -574,6 +574,7 @@ export default {
                         } else { this.typedElementLabel = ''; }    
                     }
                     if (newElement.appliedStereotypes && newElement.appliedStereotypes.size() !== 0) {
+                        this.stereotypedLabel = [];
                         for await (let instance of newElement.appliedStereotypes) {
                             for await (let classifier of instance.classifiers) {
                                 this.stereotypedLabel.push('«' + classifier.name + '»'); 

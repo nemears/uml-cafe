@@ -37,10 +37,14 @@ export default {
             this.reloadDiagram();
         },
         userSelected(newUserSelected) {
-            this.emitter.emit('user.selected',newUserSelected);
+            if (this.emitter) {
+                this.emitter.emit('user.selected',newUserSelected);
+            }
         },
         userDeselected(newUserDeselected) {
-            this.emitter.emit('user.deselected', newUserDeselected);
+            if (this.emitter) {
+                this.emitter.emit('user.deselected', newUserDeselected);
+            }
         },
         latestCommand(newCommand) {
             if (newCommand.redo === this.umlID) {

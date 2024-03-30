@@ -266,7 +266,7 @@ export default class UmlCompartmentableShapeProvider {
                 let owner = elementRegistry.get(umlShape.owningElement);
 
                 // if owner is diagram, just add it to root instead (difference between omg DI and diagram-js)
-                if (owner.id === diagramContext.umlDiagram.id) {
+                if (owner && owner.id === diagramContext.umlDiagram.id) {
                     if (!root) {
                         root = canvas.findRoot(owner);
                     }
