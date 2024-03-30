@@ -29,7 +29,7 @@ export default class ElementUpdate {
                                     eventBus.fire('server.delete', {
                                         element: diagramElement
                                     });
-                                    await removeShapeAndEdgeFromServer(diagramElement, umlWebClient);
+                                    // await removeShapeAndEdgeFromServer(diagramElement, umlWebClient);
                                 }
                             }
                         } else {

@@ -112,6 +112,7 @@ class CreatePropertyHandler {
             this.eventBus.fire('compartmentableShape.resize', {
                 shape: clazzShape,
                 newBounds: clazzShape,
+                oldBounds: context.oldBounds,
             });
         };
         doLater();
@@ -147,6 +148,12 @@ class CreatePropertyHandler {
         this.eventBus.fire('compartmentableShape.resize', {
             shape: context.clazzShape,
             newBounds: context.oldBounds,
+            oldBounds: {
+                x: context.clazzShape.x,
+                y: context.clazzShape.y,
+                width: context.clazzShape.width,
+                height: context.clazzShape.height,
+            }
         });
         return [context.clazzShape, ...context.clazzShape.children, ...compartment.children];
     }
