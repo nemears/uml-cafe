@@ -5,19 +5,19 @@
         </div>
         <div class="information">
             <p>
-                This is an alpha stage open source uml based modeling client. Please be patient with development, or help us with it! There is so much to do! Be aware that the profile and code itself are subject to changes so any projects you create now may not be compatible easily with future versions. To start right click the Model in the element explorer to the left and start creating! 
+                This is an alpha stage open source uml based modeling client. Create a Class Diagram, and model the structure of your systems or code. You can sign up and have your Projects saved in the cloud. Make sure to model with your friends in real time as well, just share your url. Feel free to plug into your own code and automate your modeling as well with our open source APIs in c++ and javascript, here are all of them you can use with this tool!
             </p>
             <p>
-                Check out these open source APIs you can use with this tool!
+                
             </p>
             <p>
-                <a href="https://github.com/nemears/uml-cafe">uml-cafe</a> The vue based application built for the browser that allows interaction with a managed model in the backend. The diagramming ability is built upon bpmn.io's <a href="https://github.com/bpmn-io/diagram-js">diagram-js</a>. It holds some addition diagramming interfaces that may be useful for development.
+                <a href="https://github.com/nemears/uml-cpp">uml-cpp</a> A versatile reconfigurable uml API that can be used in a C++ environment. It can interface with the same uml protocol as uml-client.
             </p>
             <p>
                 <a href="https://github.com/nemears/uml-client">uml-client</a> The client API in javascript that allows interaction with a Project hosted using a reusable uml protocol.
             </p>
             <p>
-                <a href="https://github.com/nemears/uml-cpp">uml-cpp</a> A versatile reconfigurable uml API that can be used in a C++ environment. It can interface with the same uml protocol as uml-client.
+                <a href="https://github.com/nemears/uml-cafe">uml-cafe</a> The vue based application built for the browser that allows interaction with a managed model in the backend. The diagramming ability is built upon bpmn.io's <a href="https://github.com/bpmn-io/diagram-js">diagram-js</a>. It holds some addition diagramming interfaces that may be useful for development.
             </p>
             <h2>Why uml.cafe?</h2>
             <ul>
@@ -27,8 +27,22 @@
                 <li>Open source api in C++ and javascript</li>
             </ul>
             <p>
-                Contact: emory@uml.cafe
+                Have fun Modeling!
             </p>
+            <p>
+                <b>Contact:</b> emory@uml.cafe
+            </p>
+            <h2>Release Notes</h2>
+            <h3>0.5.0</h3>
+            <p>
+                This is our first stable release! Class Diagrams are the only diagram currently while we work on setting up the rest of the diagrams.
+            </p>
+            <p>Known issues</p>
+            <ul>
+                <li>Context pad becomes unusable after some shapes are added</li>
+                <li>Move central oriented labels on edges when edges move</li>
+                <li>More to be added as we use the tool</li>
+            </ul>
         </div>
     </div>
 </template>
