@@ -540,10 +540,21 @@ export async function createDiagramElementFeatures(shape, umlWebClient, shapeIns
             owningElementOwnedElementsSlot = umlWebClient.post('slot');
             owningElementOwnedElementsSlot.definingFeature.set(OWNED_ELEMENTS_SLOT_ID);
             owningElementInstance.slots.add(owningElementOwnedElementsSlot);
+            umlWebClient.put(owningElementOwnedElementsSlot);
         }
-        owningElementOwnedElementsValue = umlWebClient.post('instanceValue');
-        owningElementOwnedElementsValue.instance.set(shapeInstance);
-        owningElementOwnedElementsSlot.values.add(owningElementOwnedElementsValue);
+        // see if parent already is tracking us (ownedElements is a set)
+        let createInstanceValue = true;
+        for await (const owningElementsOwnedElementsValue of owningElementOwnedElementsSlot.values) {
+            if (owningElementsOwnedElementsValue.instance.id() === shapeInstance.id) {
+                createInstanceValue = false;
+            }
+        }
+        if (createInstanceValue) {
+            owningElementOwnedElementsValue = umlWebClient.post('instanceValue');
+            owningElementOwnedElementsValue.instance.set(shapeInstance);
+            owningElementOwnedElementsSlot.values.add(owningElementOwnedElementsValue);
+            umlWebClient.put(owningElementOwnedElementsValue);
+        }
     }
     ownedElementsSlot = umlWebClient.post('slot');
     ownedElementsSlot.definingFeature.set(OWNED_ELEMENTS_SLOT_ID);
@@ -567,7 +578,9 @@ export async function createDiagramElementFeatures(shape, umlWebClient, shapeIns
         umlWebClient.put(owningElementValue);
         umlWebClient.put(owningElementInstance);
         umlWebClient.put(owningElementOwnedElementsSlot);
-        umlWebClient.put(owningElementOwnedElementsValue);
+        if (owningElementOwnedElementsValue) {
+            umlWebClient.put(owningElementOwnedElementsValue);
+        }
     }
     umlWebClient.put(ownedElementsSlot);
     if (shape.children.length > 0) {

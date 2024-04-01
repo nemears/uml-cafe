@@ -404,7 +404,7 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
                 id: randomID(),
                 y: yPos,
                 x: compartment.x + 5,
-                width: dimensions.width + 15,
+                width: Math.round(dimensions.width) + 15,
                 height: LABEL_HEIGHT,
                 modelElement: property,
                 elementType: 'typedElementLabel',
