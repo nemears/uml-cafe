@@ -574,12 +574,13 @@ export default {
                         } else { this.typedElementLabel = ''; }    
                     }
                     if (newElement.appliedStereotypes && newElement.appliedStereotypes.size() !== 0) {
-                        this.stereotypedLabel = [];
+                        const newStereotypeLabels = [];
                         for await (let instance of newElement.appliedStereotypes) {
                             for await (let classifier of instance.classifiers) {
-                                this.stereotypedLabel.push('«' + classifier.name + '»'); 
+                                newStereotypeLabels.push('«' + classifier.name + '»'); 
                             }
                         }
+                        this.stereotypedLabel = newStereotypeLabels;
                     }
                     if (newElement.elementType() === 'property' && newElement.defaultValue.has()) {
                         const defaultValue = await newElement.defaultValue.get();
