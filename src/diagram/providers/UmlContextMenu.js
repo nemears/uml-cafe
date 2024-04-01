@@ -366,6 +366,9 @@ class EdgeCreationHandler {
         let index = 0;
         for (const targetShapeID of targetShapeIds) {
             const target = elementRegistry.get(targetShapeID);
+            if (target.inselectable) {
+                continue;
+            }
             if (oldConnections.length <= index) {
                 oldConnections.push({id: randomID()});
             }
