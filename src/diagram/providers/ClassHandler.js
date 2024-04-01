@@ -10,9 +10,10 @@ export default class ClassHandler {
             if (element.modelElement.elementType() === 'class') {
                 const classID = element.modelElement.id;
                 let clazz = umlWebClient.post('class', {id:classID});
-                clazz.owningPackage.set(diagramContext.context);
+                let owner = umlWebClient.getLocal(diagramContext.context.id);
+                clazz.owningPackage.set(owner);
                 umlWebClient.put(clazz);
-                umlWebClient.put(diagramContext.context);
+                umlWebClient.put(owner);
 
                 // bfs set modelElement
                 const queue = [element];
@@ -26,7 +27,7 @@ export default class ClassHandler {
                     }
                 }
 
-                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));
+                diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
             }
         });
         eventBus.on('elementDeleted', (event) => {
