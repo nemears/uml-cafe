@@ -36,8 +36,8 @@ class ElementCreationHandler {
             return;
         }
         const assignPosition = (shape) => {
-            shape.x = context.x - shape.width / 2;
-            shape.y = context.y - shape.height / 2;
+            shape.x = Math.round(context.x - shape.width / 2);
+            shape.y = Math.round(context.y - shape.height / 2);
         }
         const placeLabel = (element) => {
             if (element.owningElement) {
@@ -45,8 +45,8 @@ class ElementCreationHandler {
                 if (element.owningElement.waypoints) {
                     placeEdgeLabel(element, element.owningElement);
                 } else {
-                    element.x = element.x + context.x;
-                    element.y = element.y + context.y;
+                    element.x = Math.round(element.x + context.x);
+                    element.y = Math.round(element.y + context.y);
                 }
 
                 // update model element if relevant just in case
