@@ -97,6 +97,7 @@ export default class UmlContextMenu {
         }
         menu.items.push({
             label: 'Remove Element',
+            shortcut: 'Del',
             disabled: umlWebClient.readonly,
             onClick: () => {
                 commandStack.execute('removeDiagramElement', {
@@ -111,6 +112,7 @@ export default class UmlContextMenu {
         });
         menu.items.push({
             label: 'Delete Element',
+            shortcut: 'Ctrl + Del',
             disabled: umlWebClient.readonly,
             onClick: () => {
                 commandStack.execute('removeDiagramElement', {
