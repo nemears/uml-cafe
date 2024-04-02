@@ -287,8 +287,9 @@ export default {
                                 y: umlClassifierShape.bounds.y + CLASS_SHAPE_HEADER_HEIGHT,
                                 width: umlClassifierShape.bounds.width,
                                 height: umlClassifierShape.bounds.height - CLASS_SHAPE_HEADER_HEIGHT,
-                                modelElement: umlClassifierShape.modelElement,
+                                // modelElement: umlClassifierShape.modelElement,
                                 elementType: 'compartment',
+                                inselectable: true,
                             });
                             compartments.push(compartmentShape);
                         }
@@ -516,9 +517,9 @@ export default {
                         }
 
                         let multiplicityText = (await modelElement.lowerValue.get()).value + '..' + (await modelElement.upperValue.get()).value;
-                        let updateLabel = false;
+                        let updateMultiplictyLabel = false;
                         if (multiplicityText !== umlDiagramElement.text) {
-                            updateLabel = true;
+                            updateMultiplictyLabel = true;
                             updateLabelTextAndBounds(multiplicityText, labelTarget, placement);
                         }
 
@@ -535,7 +536,7 @@ export default {
                             placement: placement,
                             placementIndex: placementIndex,
                         });
-                        if (updateLabel) {
+                        if (updateMultiplictyLabel) {
                             await updateLabel(label, this.$umlWebClient);
                         }
                         canvas.addShape(label, labelTarget);

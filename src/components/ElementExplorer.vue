@@ -450,8 +450,12 @@ export default {
                 } else {this.propertyLabel = '= ' + (await el.defaultValue.get()).value;}
             }
             if (el.isSubClassOf('generalization')) {
-                var name = (await el.general.get()).name;
-                this.generalizationLabel = '-> ' + name;
+                if (el.general.has()) {
+                    var name = (await el.general.get()).name;
+                    this.generalizationLabel = '-> ' + name;
+                } else {
+                    this.generalizationLabel = '';
+                }
             }
 
             this.name = await assignTabLabel(el);

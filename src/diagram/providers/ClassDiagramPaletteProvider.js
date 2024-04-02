@@ -342,6 +342,7 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
         y: CLASS_SHAPE_HEADER_HEIGHT,
         id: compartmentID,
         elementType: 'compartment',
+        inselectable: true,
     });
 
     // create classifierShape
