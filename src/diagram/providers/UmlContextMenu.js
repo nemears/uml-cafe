@@ -510,9 +510,6 @@ async function drawAssociation(element, association, commandStack, elementRegist
         }
     }
 
-    commandStack.execute('elementCreation', {
-        elements: elements
-    });
     commandStack.execute('edgeCreation', {
         targetID: targetID,
         source: element,

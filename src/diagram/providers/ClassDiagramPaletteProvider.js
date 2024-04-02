@@ -326,7 +326,7 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
             classifierShapeHeight += PROPERTY_GAP;
             const dimensions = getTextDimensions(getTypedElementText(property), umlRenderer);
             if (dimensions.width + 20 > classifierShapeWidth) {
-                classifierShapeWidth = dimensions.width + 20;
+                classifierShapeWidth = Math.round(dimensions.width) + 20;
             }
         }
         classifierShapeHeight += 2 * CLASSIFIER_SHAPE_GAP_HEIGHT;

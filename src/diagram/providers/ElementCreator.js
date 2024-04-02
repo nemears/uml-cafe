@@ -36,8 +36,8 @@ class ElementCreationHandler {
             return;
         }
         const assignPosition = (shape) => {
-            shape.x = Math.round(context.x - shape.width / 2);
-            shape.y = Math.round(context.y - shape.height / 2);
+            shape.x = context.x - Math.round(shape.width / 2);
+            shape.y = context.y - Math.round(shape.height / 2);
         }
         const placeLabel = (element) => {
             if (element.owningElement) {
