@@ -88,7 +88,7 @@ export default class RelationshipEdgeCreator {
                                         placement: placement,
                                         elementType: 'associationEndLabel',
                                         labelTarget: associationEdge,
-                                        parent: associationEdge,
+                                        owningElement: associationEdge,
                                     }));
                                 }
                                 if (end.lowerValue.has() && end.upperValue.has()) {
