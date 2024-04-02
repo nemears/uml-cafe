@@ -20,10 +20,11 @@ export default class ClassDiagramKeyBindings {
                     elements.push({
                         element: el,
                         parent: el.parent,
+                        deleteModelElement: true
                     });
                 }
-                commandStack.execute('deleteModelElement', {
-                    elements: elements
+                commandStack.execute('removeDiagramElement', {
+                    elements: elements,
                 });
             }
         })
