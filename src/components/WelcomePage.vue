@@ -5,7 +5,15 @@
         </div>
         <div class="information">
             <p>
-                This is an alpha stage open source uml based modeling client. Create a Class Diagram, and model the structure of your systems or code. You can sign up and have your Projects saved in the cloud. Make sure to model with your friends in real time as well, just share your url. Feel free to plug into your own code and automate your modeling as well with our open source APIs in c++ and javascript, here are all of them you can use with this tool!
+                This is an alpha stage open source uml based modeling client. Create a Class Diagram, and model the structure of your systems or code. You can sign up and have your Projects saved in the cloud. Make sure to model with your friends in real time as well, just share your url.
+            </p>
+            <div style="text-align: center;">
+                <video controls width="80%">
+                    <source src="@/assets/demo_video_uml_cafe.webm" type="video/mp4">
+                </video>
+            </div>
+            <p>
+                Feel free to plug into your own code and automate your modeling as well with our open source APIs in c++ and javascript, here are all of them you can use with this tool!
             </p>
             <p>
                 
