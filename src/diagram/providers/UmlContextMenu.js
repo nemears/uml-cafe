@@ -205,7 +205,9 @@ export default class UmlContextMenu {
                         }
                         for (const association of associations) {
                             if (!modelElementMap.get(association.id)) {
-                                await drawAssociation(element, association, commandStack);
+                                relationshipEdgeCreator.create({
+                                    elements: [association]
+                                });
                             }
                         }
                     }
@@ -451,70 +453,4 @@ async function drawDependency(element, dependency, commandStack) {
         modelElement: dependency,
         id: randomID(),
     });
-}
-
-async function drawAssociation(element, association, commandStack, elementRegistry, elementFactory, umlRenderer) {
-    let targetID;
-    for await(const end of association.memberEnds) {
-        if (end.type.id() !== element.modelElement.id) {
-            targetID = end.type.id();     
-        }
-    }
-
-    const elements = [];
-
-    const target = elementRegistry.get(targetID);
-
-    const associationEdge = elementFactory.createConnection({
-        id: randomID(),
-        source: element,
-        target: target,
-        waypoints: connectRectangles(element, target, getMid(element), getMid(target)),
-        modelElement: association,
-        elementType: 'edge',
-        children: [],
-    });
-    elements.push(associationEdge);
-    
-    if (association.name !== '') {
-        const textDimensions = getTextDimensions(association.name, umlRenderer);
-        elements.push(elementFactory.createLabel({
-            id: randomID(),
-            text: association.name,
-            width: Math.round(textDimensions.width) + 15,
-            height: 24,
-            placement: 'center',
-            elementType: 'nameLabel',
-        }));
-    }
-    
-    for await (const end of association.memberEnds) {
-        const createEndLabels = (end, placement) => {
-            if (end.name !== '') {
-                const textDimensions = getTextDimensions(end.name, umlRenderer);
-                elements.push(elementFactory.createLabel({
-                    id: randomID(),
-                    rext: end.name,
-                    width: Math.round(textDimensions.width) + 15,
-                    height: 24,
-                    placement: placement,
-                    elementType: 'associationEndLabel',
-                }));
-            }
-            if (end.lowerValue.has() && end.upperValue.has()) {
-                // TODO
-            } 
-        };
-        if (end.type.id() === element.modelElement.id) {
-            createEndLabels(end, 'source');
-        } else if (end.type.id() === targetID) {
-            createEndLabels(end, 'target');
-        }
-    }
-
-    commandStack.execute('edgeCreation', {
-        targetID: targetID,
-        source: element,
-        modelElement: association,
-    }); 
 }
