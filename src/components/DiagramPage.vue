@@ -665,6 +665,11 @@ export default {
 }
 </script>
 <template>
+    <div
+        v-if="this.loading" 
+        style="position:absolute;background-color:var(--vt-c-dark-dark);opacity:75%;width:100%;height:100%;z-index:5;text-align:center;">
+        <img style="display: block;margin-left: auto;margin-right: auto;margin-top:45vh;" width="50" alt="YouTube loading symbol 3 (transparent)" src="https://upload.wikimedia.org/wikipedia/commons/a/ad/YouTube_loading_symbol_3_%28transparent%29.gif">
+    </div>
     <div ref="diagram" class="diagramContainer"></div>
 </template>
 <style>
