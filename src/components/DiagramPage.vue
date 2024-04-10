@@ -547,44 +547,58 @@ export default {
                     }
                 }
 
-                // draw all shapes
-                for await (let packagedEl of diagramPackage.packagedElements) {
-                    if (!packagedEl.isSubClassOf('instanceSpecification')) {
+                const edges = [];
+                const labels = [];
+                const shapes = [];
+                for (const diagramElementID of umlDiagram.ownedElements) {
+                    const diagramElement = await getUmlDiagramElement(diagramElementID, this.$umlWebClient);
+                    if (!diagramElement) {
+                        console.warn('diagram owniedElement ' + diagramElementID + ' cannot be found TODO clean up');
                         continue;
                     }
-                    if (!packagedEl.classifiers.contains(SHAPE_ID) && !packagedEl.classifiers.contains(CLASSIFIER_SHAPE_ID)) {
-                        continue;
+                    if (diagramElement.elementType() === 'edge') {
+                        edges.push(diagramElement);
+                    } else if (isLabel(diagramElement.elementType())) {
+                        labels.push(diagramElement);
+                    } else if (isShape(diagramElement.elementType())) {
+                        shapes.push(diagramElement);
                     }
-                    // draw shape
-                    const umlShape = await getUmlDiagramElement(packagedEl.id, this.$umlWebClient)
-                    await drawDiagramElement(umlShape);
                 }
 
-                // draw all connections between shapes
-                for await (let packagedEl of diagramPackage.packagedElements) {
-                    if (!packagedEl.isSubClassOf('instanceSpecification')) {
-                        continue;
+                const drawDiagramElementAndChildren = async (shape) => {
+                    await drawDiagramElement(shape);
+                    const queue = [];
+                    const addChildrenToQueue = async (parent) => {
+                        for (const ownedElementID of parent.ownedElements) {
+                            const diagramElement = await getUmlDiagramElement(ownedElementID, this.$umlWebClient);
+                            if (!diagramElement) {
+                                console.warn(shape.elementType() + ' ' + diagramElement.id + ' owned element ' + ownedElementID + ' could not be found! TODO cleanup');
+                                continue;
+                            }
+                            queue.push(diagramElement);
+                        }
+                    };
+                    await addChildrenToQueue(shape);
+                    
+                    while (queue.length > 0) {
+                        const front = queue.shift();
+                        await drawDiagramElement(front);
+                        await addChildrenToQueue(front);
                     }
-                    if (!packagedEl.classifiers.contains('u2fIGW2nEDfMfVxqDvSmPd5e_wNR')) {
-                        continue;
-                    }
+                };
 
-                    const umlEdge = await getUmlDiagramElement(packagedEl.id, this.$umlWebClient);
-                    await drawDiagramElement(umlEdge);
+                for (const shape of shapes) {
+                    await drawDiagramElementAndChildren(shape);
                 }
 
-                // draw all labels
-                for await (let packagedEl of diagramPackage.packagedElements) {
-                    if (!packagedEl.isSubClassOf('instanceSpecification')) {
-                        continue;
-                    }
-                    if (!packagedEl.classifiers.contains(LABEL_ID) && !packagedEl.classifiers.contains(NAME_LABEL_ID) && !packagedEl.classifiers.contains(TYPED_ELEMENT_LABEL_ID) && !packagedEl.classifiers.contains(KEYWORD_LABEL_ID) && !packagedEl.classifiers.contains(ASSOCIATION_END_LABEL_ID) && !packagedEl.classifiers.contains(MULTIPLICITY_LABEL_ID)) {
-                        continue;
-                    }
-
-                    const umlLabel = await getUmlDiagramElement(packagedEl.id, this.$umlWebClient);
-                    await drawDiagramElement(umlLabel);
+                for (const edge of edges) {
+                    await drawDiagramElementAndChildren(edge);
                 }
+
+                for (const label of labels) {
+                    await drawDiagramElementAndChildren(label);
+                }
+
                 const colorMap = new Map();
                 colorMap.set('Red', 'var(--uml-cafe-red-user)');
                 colorMap.set('Blue', 'var(--uml-cafe-blue-user)');
