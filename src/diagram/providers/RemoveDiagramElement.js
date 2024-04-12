@@ -113,10 +113,10 @@ class RemoveDiagramElementHandler {
         diagramEmitter.fire('command', {name: 'removeDiagramElement', context: context});
 
         for (const elementContext of context.elements) {
-            
-            if (elementContext.deleteModelElement) {
+            if (!elementContext.parent) {
                 elementContext.parent = elementContext.element.parent;
-                
+            }
+            if (elementContext.deleteModelElement) {
                 const element = elementContext.element;
                 const elementsToRemove = [];
                 const rawData = {};

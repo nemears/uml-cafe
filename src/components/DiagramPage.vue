@@ -2,8 +2,6 @@
 import { Editor } from '../diagram/editor';
 const EventEmitter = require('events');
 import { createElementUpdate } from '../umlUtil.js';
-import { getUmlDiagramElement, deleteUmlDiagramElement } from '../diagram/api/diagramInterchange/util';
-import { CLASSIFIER_SHAPE_ID, LABEL_ID, NAME_LABEL_ID, SHAPE_ID , TYPED_ELEMENT_LABEL_ID } from './diagram/api/diagramInterchange/ids';
 import { toRaw } from 'vue';
 import { CLASS_SHAPE_HEADER_HEIGHT } from '../diagram/providers/ClassHandler';
 import { getTypedElementText, getTextDimensions, LABEL_HEIGHT } from '../diagram/providers/ClassDiagramPaletteProvider';
@@ -77,20 +75,17 @@ export default {
             }
             const scopedEmitter = new EventEmitter();
             const diagramPackage = await this.$umlWebClient.get(this.umlID);
-            let diagramInstance = undefined;
-            for await (const packagedElement of diagramPackage.packagedElements) {
-                if (packagedElement.isSubClassOf('instanceSpecification')) {
-                    for (const classifierID of packagedElement.classifiers.ids()) {
-                        if (classifierID === CLASS_DIAGRAM_ID) {
-                            diagramInstance = packagedElement;
-                        } // TODO other diagrams
-                    }
+            const diagramStereotype = await diagramPackage.appliedStereotypes.front();
+            let diagramInstanceSlot;
+            for await (const diagramSlot of diagramStereotype.slots) {
+                if (diagramSlot.definingFeature.id() === 'YmGBfGJeYE6vPhEDOF1gJg&1ahEP') {
+                    diagramInstanceSlot = diagramSlot;
                 }
             }
-            if (!diagramInstance) {
-                throw Error("could not find a diagram to open in Diagram Package of id " + this.umlID);
+            if (!diagramInstanceSlot) {
+                throw Error('could not find slot for uml di diagram');
             }
-            const umlDiagram = await getUmlDiagramElement(diagramInstance.id, this.$umlWebClient);
+            const umlDiagram = await getUmlDiagramElement((await diagramInstanceSlot.values.front()).instance.id(), this.$umlWebClient);
             this.diagram = new Editor({
                 container: this.$refs.diagram,
                 umlWebClient: this.$umlWebClient,
@@ -233,7 +228,7 @@ export default {
                     }
                     if (umlDiagramElement.elementType() === 'shape') {
                         const umlShape = umlDiagramElement;
-                        if (umlShape.modelElement.isSubClassOf('property')) {
+                        /**if (umlShape.modelElement.isSubClassOf('property')) {
                             if (umlShape.modelElement.type.has()) {
                                 await umlShape.modelElement.type.get();
                             }
@@ -243,7 +238,7 @@ export default {
                             if (umlShape.modelElement.upperValue.has()) {
                                 await umlShape.modelElement.upperValue.get();
                             }
-                        }
+                        }**/
 
                         if (!umlShape.modelElement) {
                             // modelElement for shape has been deleted
@@ -553,7 +548,7 @@ export default {
                 for (const diagramElementID of umlDiagram.ownedElements) {
                     const diagramElement = await getUmlDiagramElement(diagramElementID, this.$umlWebClient);
                     if (!diagramElement) {
-                        console.warn('diagram owniedElement ' + diagramElementID + ' cannot be found TODO clean up');
+                        console.warn('diagram ownedElement ' + diagramElementID + ' cannot be found TODO clean up');
                         continue;
                     }
                     if (diagramElement.elementType() === 'edge') {

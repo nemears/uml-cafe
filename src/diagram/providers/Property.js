@@ -8,7 +8,7 @@ import { adjustShape } from "./UmlShapeProvider";
 
 export const PROPERTY_COMPARTMENT_HEIGHT = 15;
 
-export function createProperty(property, clazzShape, umlWebClient, umlRenderer, elementFactory, canvas, diagramContext) {
+export async function createProperty(property, clazzShape, umlWebClient, umlRenderer, elementFactory, canvas) {
     const compartment = clazzShape.compartments[0];
     if (!compartment) {
         throw Error('Cannot find compartment to put property in bad state!');
@@ -16,6 +16,9 @@ export function createProperty(property, clazzShape, umlWebClient, umlRenderer, 
     let yPos = compartment.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
     for (const _child of compartment.children) {
         yPos += PROPERTY_GAP;
+    }
+    if (property.type.has()) {
+        await property.type.get();
     }
     const text = getTypedElementText(property);
     const dimensions = getTextDimensions(text, umlRenderer);
@@ -76,13 +79,13 @@ class CreatePropertyHandler {
             throw Error('could not find compartment in classifier');
         }
         const elsChanged = [clazzShape, ...clazzShape.children, ...compartment.children];
-        for (let property of context.properties) {
-            property = this.umlWebClient.getLocal(property.id); // upate if it was deleted
-            elsChanged.push(createProperty(property, clazzShape, this.umlWebClient, this.umlRenderer, this.elementFactory, this.canvas, this.diagramContext));
-        }
+        
 
         const doLater = async () => {
-
+            for (let property of context.properties) {
+                property = this.umlWebClient.getLocal(property.id); // upate if it was deleted
+                await createProperty(property, clazzShape, this.umlWebClient, this.umlRenderer, this.elementFactory, this.canvas);
+            } 
             // first adjust shape
             await adjustShape(clazzShape, await this.umlWebClient.get(clazzShape.id), this.umlWebClient);
             
