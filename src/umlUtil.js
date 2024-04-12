@@ -1,6 +1,5 @@
 import { randomID } from "uml-client/lib/element";
-import { createClassDiagram, createDiagramLabel } from "./diagram/api/diagramInterchange";
-import { LABEL_HEIGHT } from "./diagram/providers/ClassDiagramPaletteProvider";
+import { createClassDiagram } from "./diagram/api/diagramInterchange";
 export function createElementUpdate() {
     const ret = {
         updatedElements: []
@@ -77,7 +76,6 @@ export async function createUmlClassDiagram(diagramID, owner, umlWebClient) {
     diagramPackage.name = owner.name;
     const diagramStereotypeInstance = umlWebClient.post('instanceSpecification');
     diagramStereotypeInstance.classifiers.add(await umlWebClient.get('Diagram_nuc1IC2Cavgoa4zMBlVq'));
-    // TODO slots
 
     diagramPackage.appliedStereotypes.add(diagramStereotypeInstance);
     umlWebClient.put(diagramStereotypeInstance);
@@ -98,6 +96,15 @@ export async function createUmlClassDiagram(diagramID, owner, umlWebClient) {
         isFrame: false, // TODO turn to true when https://forum.bpmn.io/t/contextpad-dom-events-untriggered-in-frame/10818 is resolved
     };
     const umlDiagram = await createClassDiagram(proxyDiagramObject, umlWebClient, diagramContext);
+    const instanceSlot = umlWebClient.post('slot');
+    instanceSlot.definingFeature.set('YmGBfGJeYE6vPhEDOF1gJg&1ahEP');
+    const instanceValue = umlWebClient.post('instanceValue');
+    instanceValue.instance.set(umlDiagram.id);
+    instanceSlot.values.add(instanceValue);
+    diagramStereotypeInstance.slots.add(instanceSlot);
+    umlWebClient.put(instanceSlot);
+    umlWebClient.put(instanceValue);
+    umlWebClient.put(diagramStereotypeInstance);
     umlWebClient.put(owner);
     return diagramPackage;
 } 
