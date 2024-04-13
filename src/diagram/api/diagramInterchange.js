@@ -424,46 +424,50 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
         console.warn('could not delete diagramElement ' + diagramElementID + ' from server, already removed!');
         return;
     }
+    const cleanupDiagramElementSlots = async (diagramElementSlot) => {
+        if (diagramElementSlot.definingFeature.id() === OWNED_ELEMENTS_SLOT_ID) {                    
+            // delete owned elements if not already deleted
+            for await (const ownedElementValue of diagramElementSlot.values) {
+                if (ownedElementValue.instance.has()) {
+                    await deleteUmlDiagramElement(ownedElementValue.instance.id(), umlWebClient);
+                }
+            }
+        } else if (diagramElementSlot.definingFeature.id() === OWNING_ELEMENT_SLOT_ID) {
+            const owningElementInstance = await (await diagramElementSlot.values.front()).instance.get();
+            for await (const owningElementSlot of owningElementInstance.slots) {
+                if (owningElementSlot.definingFeature.id() === OWNED_ELEMENTS_SLOT_ID) {
+                    let instanceValueToRemove = undefined;
+                    for await (const value of owningElementSlot.values) {
+                        if (value.isSubClassOf('instanceValue')) {
+                            if (value.instance.id() === diagramElementInstance.id) {
+                                instanceValueToRemove = value;
+                                break;
+                            }
+                        }
+                    }
+                    if (!instanceValueToRemove) {
+                        throw Error('bad state, cannot find ownedElement value to correspond');
+                    }
+                    umlWebClient.deleteElement(instanceValueToRemove);
+                    umlWebClient.put(owningElementSlot);
+                    break;
+                }
+            }
+            umlWebClient.put(owningElementInstance);
+        }
+    }
     for (const classifierID of diagramElementInstance.classifiers.ids()) {
         if (isShape(classifierID)) {
             // shape
             for await (const shapeSlot of diagramElementInstance.slots) {
-                if (shapeSlot.definingFeature.id() === 'KbKmDNU19SWMJwggKTQ9FrzAzozO') {
+                if (shapeSlot.definingFeature.id() === BOUNDS_ID) {
                     // bounds get and delete instance
                     await umlWebClient.deleteElement(await (await shapeSlot.values.front()).instance.get());
-                } else if (shapeSlot.definingFeature.id() === OWNED_ELEMENTS_SLOT_ID) {                    
-                    // delete owned elements if not already deleted
-                    for await (const ownedElementValue of shapeSlot.values) {
-                        if (ownedElementValue.instance.has()) {
-                            await deleteUmlDiagramElement(ownedElementValue.instance.id(), umlWebClient);
-                        }
-                    }
-                } else if (shapeSlot.definingFeature.id() === OWNING_ELEMENT_SLOT_ID) {
-                    const owningElementInstance = await (await shapeSlot.values.front()).instance.get();
-                    for await (const owningElementSlot of owningElementInstance.slots) {
-                        if (owningElementSlot.definingFeature.id() === OWNED_ELEMENTS_SLOT_ID) {
-                            let instanceValueToRemove = undefined;
-                            for await (const value of owningElementSlot.values) {
-                                if (value.isSubClassOf('instanceValue')) {
-                                    if (value.instance.id() === diagramElementInstance.id) {
-                                        instanceValueToRemove = value;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (!instanceValueToRemove) {
-                                throw Error('bad state, cannot find ownedElement value to correspond');
-                            }
-                            umlWebClient.deleteElement(instanceValueToRemove);
-                            umlWebClient.put(owningElementSlot);
-                            break;
-                        }
-                    }
-                    umlWebClient.put(owningElementInstance);
+                } else {
+                    await cleanupDiagramElementSlots(shapeSlot);
                 }
             }
             
-            // TODO incoming outgoing, maybe not, maybe just on client side being tracked
             await umlWebClient.deleteElement(diagramElementInstance);
             break;
         } else if (classifierID === EDGE_ID) {
@@ -474,6 +478,8 @@ export async function deleteUmlDiagramElement(diagramElementID, umlWebClient) {
                     for await (const waypointValue of edgeSlot.values) {
                         await umlWebClient.deleteElement(await waypointValue.instance.get());
                     }
+                } else {
+                    await cleanupDiagramElementSlots(edgeSlot);
                 }
             }
             await umlWebClient.deleteElement(diagramElementInstance);
