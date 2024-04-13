@@ -23,6 +23,11 @@ class ResizeCompartmentableShapeHandler {
             adjustCompartmentsAndEdges(shape, context.oldBounds, this.umlRenderer);
             if (!context.update) {
                 this.resize(context);
+                const elsChanged = [shape];
+                for (const compartment of shape.compartments) {
+                    elsChanged.push(compartment);
+                }
+                eventBus.fire('elements.changed', {elements: elsChanged});
             } else {
                 graphicsFactory.update('shape', shape, canvas.getGraphics(shape));
                 // update compartments
