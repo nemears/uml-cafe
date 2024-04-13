@@ -88,17 +88,29 @@ function canConnectHelper(context) {
         return true;
     }
     if (context.source && context.source.connectType === 'generalization') {
-        if (!context.source.modelElement) {
+        let modelElement = context.source.modelElement;
+        if (!modelElement) {
+            if (context.source.parent) {
+                modelElement = context.source.parent.modelElement;
+            }
+        }
+        if (!modelElement) {
             return false;
         }
-        if (!context.source.modelElement.isSubClassOf('classifier')) {
+        if (!modelElement.isSubClassOf('classifier')) {
             return false;
         }
         if (context.target) {
-            if (!context.target.modelElement) {
+            modelElement = context.target.modelElement;
+            if (!modelElement) {
+                if (context.target.parent) {
+                    modelElement = context.target.parent.modelElement;
+                }
+            }
+            if (!modelElement) {
                 return false;
             }
-            if (!context.target.modelElement.isSubClassOf('classifier')) {
+            if (!modelElement.isSubClassOf('classifier')) {
                 return false;
             }
         }
