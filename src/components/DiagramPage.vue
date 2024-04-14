@@ -70,6 +70,7 @@ export default {
             }
         },
         async reloadDiagram() {
+            this.loading = true;
             if (this.diagram) {
                 this.diagram.destroy()
             }
@@ -228,17 +229,6 @@ export default {
                     }
                     if (umlDiagramElement.elementType() === 'shape') {
                         const umlShape = umlDiagramElement;
-                        /**if (umlShape.modelElement.isSubClassOf('property')) {
-                            if (umlShape.modelElement.type.has()) {
-                                await umlShape.modelElement.type.get();
-                            }
-                            if (umlShape.modelElement.lowerValue.has()) {
-                                await umlShape.modelElement.lowerValue.get();
-                            }
-                            if (umlShape.modelElement.upperValue.has()) {
-                                await umlShape.modelElement.upperValue.get();
-                            }
-                        }**/
 
                         if (!umlShape.modelElement) {
                             // modelElement for shape has been deleted
@@ -638,7 +628,7 @@ export default {
 
             const executeCommand = (command) => {
                 command.context.proxy = true;
-                if (command.element === this.umlID) {
+                if (command.element === this.umlID && command.name !== 'elementExplorerRename') { // there may be more edgecases as development continues
                     commandStack.execute(command.name, toRaw(command.context));
                 } else {
                     commandStack.execute('proxy', command);

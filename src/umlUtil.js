@@ -107,7 +107,7 @@ export async function createUmlClassDiagram(diagramID, owner, umlWebClient) {
     umlWebClient.put(diagramStereotypeInstance);
     umlWebClient.put(owner);
     return diagramPackage;
-} 
+}
 
 export function mapColor(color) {
     switch (color) {
