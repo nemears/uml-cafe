@@ -2,6 +2,7 @@
 import { nullID } from 'uml-client/lib/element';
 import CloseSymbol from '../assets/icons/general/close_symbol.svg';
 import { assignTabLabel } from '../umlUtil';
+import { nextTick } from 'vue';
 
     export default {
         props: ['focusTab'],
@@ -9,20 +10,32 @@ import { assignTabLabel } from '../umlUtil';
         inject: ['elementUpdate'],
         data() {
             return {
-                tabs: [],
+                tabs: [this.focusTab],
                 closeSymbol: CloseSymbol,
+                totalTabWidth: 0,
+                tabOffset: 0,
             }
         },
         mounted() {
-            this.tabs.push(this.focusTab);
+            this.totalTabWidth += this.$refs[this.focusTab.id][0].clientWidth;
         },
         watch: {
-            focusTab(tab) {
+            async focusTab(tab) {
                 if (this.focus(tab.id)) {
                     return;
                 }
                 this.tabs.push(tab);
                 this.updateTab(tab);
+
+                await nextTick();
+
+                // calculate total width
+                this.totalTabWidth += this.$refs[tab.id][0].clientWidth;
+
+                const tabContainerWidth = this.getTabContainerVisibleWidth();
+                if (this.totalTabWidth > tabContainerWidth) {
+                    this.tabOffset = this.totalTabWidth - tabContainerWidth;
+                }
             },
             async elementUpdate(newElementUpdate) {
                 for (const update of newElementUpdate.updatedElements) {
@@ -62,12 +75,25 @@ import { assignTabLabel } from '../umlUtil';
                 this.$emit('tabSelected', tab);
                 tab.isActive = true;
             },
+            getTabContainerVisibleWidth() {
+                return Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0) - this.$refs.tabContainer.getBoundingClientRect().left;
+            },
             focus(id) {
                 let ret = false;
+                let focusedTabOffset = 0;
                 for (let tab of this.tabs) {
                     if (tab.id === id) {
                         this.updateTab(tab);
+                        // make sure tab is within view!
+                        if (this.tabOffset > focusedTabOffset) {
+                            this.tabOffset = focusedTabOffset;
+                        }
+                        const tabContainerWidth = this.getTabContainerVisibleWidth();
+                        if (focusedTabOffset > tabContainerWidth + this.tabOffset) {
+                            this.tabOffset = focusedTabOffset - tabContainerWidth + this.$refs[tab.id][0].clientWidth;
+                        }
                         ret = true;
+                        break;
                     } else {
                         if (tab.isActive) {
                             if (tab.type === 'diagram') {
@@ -75,13 +101,15 @@ import { assignTabLabel } from '../umlUtil';
                             }
                         }
                         tab.isActive = false;
+                        focusedTabOffset += this.$refs[tab.id][0].clientWidth;
                     }
                 }
                 return ret;
             },
-            remove(id) {
+            async remove(id) {
                 const tabIndex = this.tabs.findIndex(tab => tab.id === id);
                 const tab = this.tabs[tabIndex];
+                this.totalTabWidth -= this.$refs[tab.id].clientWidth;
                 this.tabs.splice(tabIndex , 1);
                 if (tab.isActive) {
                     if (this.tabs.length > 0) {
@@ -93,17 +121,38 @@ import { assignTabLabel } from '../umlUtil';
                         });
                     }
                 }
+            },
+            scrollTabs(event) {
+                const tabContainerWidth = this.getTabContainerVisibleWidth();
+                if (this.totalTabWidth > tabContainerWidth && this.tabOffset >= 0 && tabContainerWidth + this.tabOffset <= this.totalTabWidth) {
+                    const scrollValue = event.deltaY;
+                    this.tabOffset += scrollValue;
+                    if (this.tabOffset < 0) {
+                        this.tabOffset = 0;
+                    }
+                    if (tabContainerWidth + this.tabOffset > this.totalTabWidth) {
+                        this.tabOffset = this.totalTabWidth - tabContainerWidth;
+                    }
+                }
+            },
+            tabTransform() {
+                return 'translateX(-' + this.tabOffset + 'px)';
             }
         }
     }
 </script>
 <template>
-    <div class="tabContainer">
+    <div 
+    class="tabContainer"
+    ref="tabContainer"
+    @wheel="scrollTabs">
         <div v-for="tab in tabs" 
             :key="tab.id" 
             class="tab" 
-            :class="tab.isActive ? 'activeTab' : 'tab'" 
-            @click="focus(tab.id)">
+            :class="tab.isActive ? 'activeTab' : 'tab'"
+            :style="{transform: tabTransform()}"
+            @click="focus(tab.id)"
+            :ref="tab.id">
             <img v-bind:src="tab.img" v-if="tab.img !== undefined" class="tabImage"/>
             <div style="float:left;padding:5px;">{{ tab.label }}</div>
             <img v-bind:src="closeSymbol" @click.stop="remove(tab.id)" style="padding:5px"/>
