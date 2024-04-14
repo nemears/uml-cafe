@@ -4,27 +4,25 @@ import ElementExplorer from './components/ElementExplorer.vue';
 import SpecificationPage from './components/SpecificationPage.vue';
 import WelcomePage from './components/WelcomePage.vue';
 import DiagramPage from './components/DiagramPage.vue';
-import CloseSymbol from './assets/icons/general/close_symbol.svg';
 import getImage from './GetUmlImage.vue';
 import classDiagramImage from './assets/icons/general/class_diagram.svg';
 import { computed } from 'vue';
 import { assignTabLabel } from './umlUtil';
+import TabContainer from './components/TabContainer.vue';
+import { nullID } from 'uml-client/lib/element';
 </script>
 <script>
 export default {
 	data() {
 		return {
-			closeSymbol: CloseSymbol,
 			headID: '',
 			isFetching: true,
-			tabs : [
-				{
-					label: 'Welcome!',
-					id: 'VQvHG72Z_FjNQlEeeFEcrX1v6RRy',
-					isActive: true,
-					type: 'Welcome'
-				}
-			],
+			focusTab: {
+                label: 'Welcome!',
+                id: 'VQvHG72Z_FjNQlEeeFEcrX1v6RRy',
+                isActive: true,
+                type: 'Welcome'
+            },
 			specificationTab: 'VQvHG72Z_FjNQlEeeFEcrX1v6RRy',
 			recentDraginfo: {
 				selectedElements: [],
@@ -176,54 +174,18 @@ export default {
 			}
 		},
 		async specification(el) {
-			if (this.tabs.find(tab => tab.id === el.id)) { // no duplicates
-				this.specificationTab = el.id;
-                this.focus(this.specificationTab);
-				return;
-			}
-			for (let tab of this.tabs) {
-				tab.isActive = false;
-			}
-			this.tabs.push({
+            this.focusTab = {
 				label: await assignTabLabel(el),
 				id: el.id,
 				isActive: true,
 				type: 'Specification',
 				img: getImage(el)
-			});
-			this.specificationTab = el.id;
-			this.focus(this.specificationTab);
+			};
 		},
         async elementUpdateHandler(newElementUpdate) {
 			for (const update of newElementUpdate.updatedElements) {
                 const newElement = update.newElement;
-                const oldElement = update.oldElement;
-                if (!newElement) {
-                    // element has been deleted, lets check if it is a tab
-                    const tab = this.tabs.find(tab => tab.id === oldElement.id);
-                    if (tab) {
-                        this.remove(tab.id);
-                    }
-                } else {
-                    // handle tab labels
-                    const tab = this.tabs.find(tab => tab.id === newElement.id);
-                    if (tab) {
-                        tab.label = await assignTabLabel(newElement);
-                    }
-                    for (let tab of this.tabs) {
-                        if (tab.type === 'Welcome') {
-                            continue;
-                        }
-                        const elTab = await this.$umlWebClient.get(tab.id);
-                        if (elTab && elTab.isSubClassOf('comment')) {
-                            for await (let el of elTab.annotatedElements) {
-                                if (el.id === newElement.id) {
-                                    tab.label = await assignTabLabel(elTab);
-                                }
-                            }
-                        }
-                    }
-
+                if (newElement) {
                     // helper function
                     const createTreeNode = (treeNode, id) => {
                         const newTreeNode = {
@@ -266,27 +228,13 @@ export default {
         },
 		diagram(diagramClass) {
             document.removeEventListener('keydown', this.keypress);
-			if (this.tabs.find(tab => tab.id === diagramClass.id)) { // no duplicates
-				this.specificationTab = diagramClass.id;
-				this.focus(this.specificationTab);
-				return;
-			}
-			for (let tab of this.tabs) {
-				tab.isActive = false;
-			}
-			this.tabs.push({
+            this.focusTab = {
 				label: diagramClass.name !== undefined && diagramClass.name !== '' ? diagramClass.name : diagramClass.id,
 				id: diagramClass.id,
 				isActive: true,
 				type: 'Diagram',
 				img: classDiagramImage
-			});
-			if (this.specificationTab === diagramClass.id) {
-				throw new Error('huuh? App.vue');
-			} else {
-				this.specificationTab = diagramClass.id;
-				this.focus(this.specificationTab);
-			}
+			};
 		},
 		async dragInfo(info) {
 			const draggedElements = [];
@@ -316,37 +264,13 @@ export default {
 				this.elementExplorerButtonTitle = 'Collapse'
 			}
 		},
-		updateTab(id) {
-            this.specificationTab = id;
-			this.focus(id);
-        },
-		focus(id) {
-            for (let tab of this.tabs) {
-                if (tab.id === id) {
-                    tab.isActive = true;
-					this.editorType = tab.type;
-                } else {
-                    if (tab.isActive) {
-                        if (tab.type === 'diagram') {
-                            document.addEventListener('keydown', this.keypress)
-                        }
-                    }
-                    tab.isActive = false;
-                }
-            }
-        },
-		remove(id) {
-            const tabIndex = this.tabs.findIndex(tab => tab.id === id);
-            const tab = this.tabs[tabIndex];
-            this.tabs.splice(tabIndex , 1);
-            if (tab.isActive) {
-				if (this.tabs.length > 0) {
-					this.specificationTab = this.tabs[tabIndex - 1].id;
-					this.focus(this.specificationTab);
-				} else {
-					this.editorType = undefined;
-					this.specificationTab = undefined;
-				}
+		updateTab(tab) {
+            if (tab.id === nullID()) {
+                this.specificationTab = undefined;
+                this.editorType = undefined;
+            } else {
+                this.specificationTab = tab.id;
+                this.editorType = tab.type;
             }
         },
         shiftClickAction(event, fn) {
@@ -697,17 +621,9 @@ export default {
 					Element Explorer
 				</div>
 			</div>
-			<div class="tabContainer">
-				<div v-for="tab in tabs" 
-					:key="tab.id" 
-					class="tab" 
-					:class="tab.isActive ? 'activeTab' : 'tab'" 
-					@click="updateTab(tab.id)">
-					<img v-bind:src="tab.img" v-if="tab.img !== undefined" class="tabImage"/>
-					<div style="float:left;padding:5px;">{{ tab.label }}</div>
-					<img v-bind:src="closeSymbol" @click.stop="remove(tab.id)" style="padding:5px"/>
-				</div>
-			</div>
+            <TabContainer
+                :focus-tab="focusTab"
+                @tab-selected="updateTab"></TabContainer>
 		</div>
 		<div class="parent">
 			<div class="elementExplorer" v-if="!elementExplorerHide" draggable="false">
@@ -727,7 +643,7 @@ export default {
                     @command="command"></ElementExplorer>
 			</div>
 			<div class="editor">
-				<WelcomePage v-if="editorType=='Welcome'"></WelcomePage>
+				<WelcomePage v-if="editorType==='Welcome'"></WelcomePage>
 				<SpecificationPage v-if="editorType=='Specification'" 
 						:uml-i-d="specificationTab" 
                         :selected-elements="selectedElements"
@@ -761,11 +677,11 @@ export default {
 }
 .elementExplorerHeaderExpanded {
 	display: flex;
-	flex: 0 1 300px;
+	flex: 0 0 300px;
 }
 .elementExplorerHeaderCollapsed {
 	display: flex;
-	flex: 0 1 auto;
+	flex: 0 0 auto;
 }
 .elementExplorerLabel {
 	padding: 5px 15px 5px 15px;
