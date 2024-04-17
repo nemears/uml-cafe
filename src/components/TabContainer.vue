@@ -15,6 +15,7 @@ import { nextTick } from 'vue';
                 totalTabWidth: 0,
                 tabOffset: 0,
                 dragOffset: 0,
+                scrollInterval: undefined,
             }
         },
         mounted() {
@@ -133,7 +134,8 @@ import { nextTick } from 'vue';
             async remove(id) {
                 const tabIndex = this.tabs.findIndex(tab => tab.id === id);
                 const tab = this.tabs[tabIndex];
-                this.totalTabWidth -= this.$refs[tab.id].clientWidth;
+                const tabDiv = this.$refs[tab.id][0];
+                this.totalTabWidth -= tabDiv.clientWidth;
                 this.tabs.splice(tabIndex , 1);
                 if (tab.isActive) {
                     if (this.tabs.length > 0) {
@@ -149,6 +151,7 @@ import { nextTick } from 'vue';
             scrollTabs(event) {
                 const tabContainerWidth = this.getTabContainerVisibleWidth();
                 if (this.totalTabWidth > tabContainerWidth && this.tabOffset >= 0 && tabContainerWidth + this.tabOffset <= this.totalTabWidth) {
+                    const oldOffset = this.tabOffset;
                     const scrollValue = event.deltaY;
                     this.tabOffset += scrollValue;
                     if (this.tabOffset < 0) {
@@ -157,7 +160,9 @@ import { nextTick } from 'vue';
                     if (tabContainerWidth + this.tabOffset > this.totalTabWidth) {
                         this.tabOffset = this.totalTabWidth - tabContainerWidth;
                     }
+                    return this.tabOffset - oldOffset;
                 }
+                return 0;
             },
             tabTransform(tab) {
                 let val = this.tabOffset;
@@ -168,105 +173,137 @@ import { nextTick } from 'vue';
             },
             startDrag(event, tab) {
                 tab.dragging = true;
-                tab.clickPoint = {
-                    x: event.x,
-                    y: event.y,
-                }
+                tab.clickX = event.x;
+                tab.relativeOffset = 0;
                 tab.tabsState = [...this.tabs];
+            },
+            async checkTabForSwap(tab) {
+                // detect if we passed another tab and swap position
+                if (tab.previousTab) {
+                    if (tab.dragOffset - tab.swapOffset > tab.previousTab.bounds.width) {
+                        tab.swapping = true;
+
+                        tab.dragOffset = tab.swapOffset + tab.previousTab.bounds.width;
+                        tab.swapOffset = tab.dragOffset;
+
+                        const previousTab = tab.previousTab;
+
+                        // adjust neighboring tab offset to make it look right
+                        previousTab.dragOffset -= tab.bounds.width
+
+                        // swap
+                        const prevPrev = previousTab.previousTab;
+                        previousTab.nextTab = tab.nextTab;
+                        previousTab.previousTab = tab;
+                        if (tab.nextTab) {
+                            tab.nextTab.previousTab = previousTab;
+                        }
+                        tab.nextTab = previousTab;
+                        tab.previousTab = prevPrev;
+                        if (prevPrev) {
+                            prevPrev.nextTab = tab;
+                        }
+
+                        const index = tab.tabsState.findIndex(curr => curr.id === tab.id);
+                        tab.tabsState.splice(index, 1);
+                        tab.tabsState.splice(index - 1, 0, tab);
+
+                        this.dragOffset = 0;
+
+                        await nextTick();
+
+                        this.calculateTabBounds(tab);
+                        this.calculateTabBounds(tab.nextTab);
+
+                        tab.swapping = false;
+                        return;
+                    }
+                }
+                if (tab.nextTab) {
+                    if (-1 * (tab.dragOffset - tab.swapOffset) > tab.nextTab.bounds.width) {
+                        tab.swapping = true;
+
+                        tab.dragOffset = tab.swapOffset - tab.nextTab.bounds.width;
+                        tab.swapOffset = tab.dragOffset;
+
+                        const nextTab = tab.nextTab;
+
+                        // adjust neighboring tab offset to make it look right
+                        nextTab.dragOffset += tab.bounds.width
+
+                        // swap
+                        const nextNext = nextTab.nextTab;
+                        nextTab.previousTab = tab.previousTab;
+                        nextTab.nextTab = tab;
+                        if (tab.previousTab) {
+                            tab.previousTab.nextTab = nextTab;
+                        }
+                        tab.previousTab = nextTab;
+                        tab.nextTab = nextNext;
+                        if (nextNext) {
+                            nextNext.previousTab = tab;
+                        }
+
+                        const index = tab.tabsState.findIndex(curr => curr.id === tab.id);
+                        tab.tabsState.splice(index, 1);
+                        tab.tabsState.splice(index + 1, 0, tab);
+
+                        this.dragOffset = 0;
+
+                        await nextTick();
+
+                        this.calculateTabBounds(tab);
+                        this.calculateTabBounds(tab.previousTab);
+
+                        tab.swapping = false;
+                        return;
+                    }
+                }
             },
             async mousemove(event, tab) {
                 if (tab.dragging && !tab.swapping) {
                     if (!tab.bounds) {
                         throw Error('Bad state!, tab must have bounds before being moved!');
                     }
-                    tab.dragOffset = tab.clickPoint.x - event.x;
-                    this.dragOffset = tab.dragOffset;
 
                     // TODO trigger scroll if necessary
-
-                    // detect if we passed another tab and swap position
-                    if (tab.previousTab) {
-                        if (tab.dragOffset - tab.swapOffset > tab.previousTab.bounds.width) {
-                            tab.swapping = true;
-
-                            tab.dragOffset = tab.swapOffset + tab.previousTab.bounds.width;
-                            tab.swapOffset = tab.dragOffset;
-
-                            const previousTab = tab.previousTab;
-
-                            // adjust neighboring tab offset to make it look right
-                            previousTab.dragOffset -= tab.bounds.width
-
-                            // swap
-                            const prevPrev = previousTab.previousTab;
-                            previousTab.nextTab = tab.nextTab;
-                            previousTab.previousTab = tab;
-                            if (tab.nextTab) {
-                                tab.nextTab.previousTab = previousTab;
-                            }
-                            tab.nextTab = previousTab;
-                            tab.previousTab = prevPrev;
-                            if (prevPrev) {
-                                prevPrev.nextTab = tab;
-                            }
-
-                            const index = tab.tabsState.findIndex(curr => curr.id === tab.id);
-                            tab.tabsState.splice(index, 1);
-                            tab.tabsState.splice(index - 1, 0, tab);
-
-                            this.dragOffset = 0;
-
-                            await nextTick();
-
-                            this.calculateTabBounds(tab);
-                            this.calculateTabBounds(tab.nextTab);
-
-                            console.log(tab.tabsState);
-                            tab.swapping = false;
+                    const containerX = this.$refs.tabContainer.getBoundingClientRect().left;
+                    const containerWidth = this.getTabContainerVisibleWidth();
+                    if (event.x < containerX + 25) {
+                        if (this.scrollInterval) {
                             return;
                         }
-                    }
-                    if (tab.nextTab) {
-                        if (-1 * (tab.dragOffset - tab.swapOffset) > tab.nextTab.bounds.width) {
-                            tab.swapping = true;
-
-                            tab.dragOffset = tab.swapOffset - tab.nextTab.bounds.width;
-                            tab.swapOffset = tab.dragOffset;
-
-                            const nextTab = tab.nextTab;
-
-                            // adjust neighboring tab offset to make it look right
-                            nextTab.dragOffset += tab.bounds.width
-
-                            // swap
-                            const nextNext = nextTab.nextTab;
-                            nextTab.previousTab = tab.previousTab;
-                            nextTab.nextTab = tab;
-                            if (tab.previousTab) {
-                                tab.previousTab.nextTab = nextTab;
-                            }
-                            tab.previousTab = nextTab;
-                            tab.nextTab = nextNext;
-                            if (nextNext) {
-                                nextNext.previousTab = tab;
-                            }
-
-                            const index = tab.tabsState.findIndex(curr => curr.id === tab.id);
-                            tab.tabsState.splice(index, 1);
-                            tab.tabsState.splice(index + 1, 0, tab);
-
-                            this.dragOffset = 0;
-
-                            await nextTick();
-
-                            this.calculateTabBounds(tab);
-                            this.calculateTabBounds(tab.previousTab);
-
-                            console.log(tab.tabsState);
-                            tab.swapping = false;
+                        // scroll left
+                        const me = this;
+                        this.scrollInterval = setInterval(() => {
+                            const scrollVal = this.scrollTabs({ deltaY: -7 });
+                            tab.dragOffset -= scrollVal;
+                            tab.clickX -= scrollVal;
+                            me.checkTabForSwap(tab);
+                        }, 50);
+                        return;
+                    } else if (event.x > containerX + containerWidth - 25) {
+                        if (this.scrollInterval) {
                             return;
                         }
+                        const me = this;
+                        this.scrollInterval = setInterval(() => {
+                            const scrollVal = this.scrollTabs({ deltaY: 7 });
+                            tab.dragOffset -= scrollVal;
+                            tab.clickX -= scrollVal;
+                            me.checkTabForSwap(tab);
+                        }, 50);
+                        return;
+                    } else if (this.scrollInterval) {
+                        clearInterval(this.scrollInterval);
+                        this.scrollInterval = undefined;
+                        return;
                     }
+
+                    tab.dragOffset = tab.clickX - event.x;
+                    this.dragOffset = tab.dragOffset;
+
+                    await this.checkTabForSwap(tab);
                 }
             },
             endDrag(tab) {
@@ -280,6 +317,10 @@ import { nextTick } from 'vue';
                     }
                     this.tabs = tab.tabsState;
                     delete tab.tabsState;
+                    if (this.scrollInterval) {
+                        clearInterval(this.scrollInterval);
+                        this.scrollInterval = undefined;
+                    }
                 }
             }
         }
