@@ -14,15 +14,23 @@ import { nextTick } from 'vue';
                 closeSymbol: CloseSymbol,
                 totalTabWidth: 0,
                 tabOffset: 0,
+                dragOffset: 0,
             }
         },
         mounted() {
-            this.totalTabWidth += this.$refs[this.focusTab.id][0].clientWidth;
+            this.calculateTabBounds(this.tabs[0]);
+            this.totalTabWidth += this.tabs[0].bounds.width;
         },
         watch: {
             async focusTab(tab) {
                 if (this.focus(tab.id)) {
                     return;
+                }
+                
+                if (this.tabs.length > 0) {
+                    const lastTab = this.tabs.slice(-1)[0];
+                    lastTab.nextTab = tab;
+                    tab.previousTab = lastTab;
                 }
                 this.tabs.push(tab);
                 this.updateTab(tab);
@@ -30,7 +38,8 @@ import { nextTick } from 'vue';
                 await nextTick();
 
                 // calculate total width
-                this.totalTabWidth += this.$refs[tab.id][0].clientWidth;
+                this.calculateTabBounds(tab);
+                this.totalTabWidth += tab.bounds.width;
 
                 const tabContainerWidth = this.getTabContainerVisibleWidth();
                 if (this.totalTabWidth > tabContainerWidth) {
@@ -71,6 +80,22 @@ import { nextTick } from 'vue';
             }
         },
         methods: {
+            calculateTabBounds(tab) {
+                const tabDiv = this.$refs[tab.id][0];
+                const tabBounds = tabDiv.getBoundingClientRect();
+                tab.bounds = {
+                    x: tabBounds.left,
+                    y: tabBounds.top,
+                    width: tabDiv.clientWidth,
+                    height: tabDiv.clientHeight,
+                };
+                if (!tab.dragOffset) {
+                    tab.dragOffset = 0;
+                }
+                if (!tab.swapOffset) {
+                    tab.swapOffset = 0;
+                }
+            },
             updateTab(tab) {
                 this.$emit('tabSelected', tab);
                 tab.isActive = true;
@@ -93,7 +118,6 @@ import { nextTick } from 'vue';
                             this.tabOffset = focusedTabOffset - tabContainerWidth + this.$refs[tab.id][0].clientWidth;
                         }
                         ret = true;
-                        break;
                     } else {
                         if (tab.isActive) {
                             if (tab.type === 'diagram') {
@@ -135,8 +159,128 @@ import { nextTick } from 'vue';
                     }
                 }
             },
-            tabTransform() {
-                return 'translateX(-' + this.tabOffset + 'px)';
+            tabTransform(tab) {
+                let val = this.tabOffset;
+                if (tab.dragOffset) {
+                    val += tab.dragOffset;
+                }
+                return 'translateX(' + (val * -1) + 'px)';
+            },
+            startDrag(event, tab) {
+                tab.dragging = true;
+                tab.clickPoint = {
+                    x: event.x,
+                    y: event.y,
+                }
+                tab.tabsState = [...this.tabs];
+            },
+            async mousemove(event, tab) {
+                if (tab.dragging && !tab.swapping) {
+                    if (!tab.bounds) {
+                        throw Error('Bad state!, tab must have bounds before being moved!');
+                    }
+                    tab.dragOffset = tab.clickPoint.x - event.x;
+                    this.dragOffset = tab.dragOffset;
+
+                    // TODO trigger scroll if necessary
+
+                    // detect if we passed another tab and swap position
+                    if (tab.previousTab) {
+                        if (tab.dragOffset - tab.swapOffset > tab.previousTab.bounds.width) {
+                            tab.swapping = true;
+
+                            tab.dragOffset = tab.swapOffset + tab.previousTab.bounds.width;
+                            tab.swapOffset = tab.dragOffset;
+
+                            const previousTab = tab.previousTab;
+
+                            // adjust neighboring tab offset to make it look right
+                            previousTab.dragOffset -= tab.bounds.width
+
+                            // swap
+                            const prevPrev = previousTab.previousTab;
+                            previousTab.nextTab = tab.nextTab;
+                            previousTab.previousTab = tab;
+                            if (tab.nextTab) {
+                                tab.nextTab.previousTab = previousTab;
+                            }
+                            tab.nextTab = previousTab;
+                            tab.previousTab = prevPrev;
+                            if (prevPrev) {
+                                prevPrev.nextTab = tab;
+                            }
+
+                            const index = tab.tabsState.findIndex(curr => curr.id === tab.id);
+                            tab.tabsState.splice(index, 1);
+                            tab.tabsState.splice(index - 1, 0, tab);
+
+                            this.dragOffset = 0;
+
+                            await nextTick();
+
+                            this.calculateTabBounds(tab);
+                            this.calculateTabBounds(tab.nextTab);
+
+                            console.log(tab.tabsState);
+                            tab.swapping = false;
+                            return;
+                        }
+                    }
+                    if (tab.nextTab) {
+                        if (-1 * (tab.dragOffset - tab.swapOffset) > tab.nextTab.bounds.width) {
+                            tab.swapping = true;
+
+                            tab.dragOffset = tab.swapOffset - tab.nextTab.bounds.width;
+                            tab.swapOffset = tab.dragOffset;
+
+                            const nextTab = tab.nextTab;
+
+                            // adjust neighboring tab offset to make it look right
+                            nextTab.dragOffset += tab.bounds.width
+
+                            // swap
+                            const nextNext = nextTab.nextTab;
+                            nextTab.previousTab = tab.previousTab;
+                            nextTab.nextTab = tab;
+                            if (tab.previousTab) {
+                                tab.previousTab.nextTab = nextTab;
+                            }
+                            tab.previousTab = nextTab;
+                            tab.nextTab = nextNext;
+                            if (nextNext) {
+                                nextNext.previousTab = tab;
+                            }
+
+                            const index = tab.tabsState.findIndex(curr => curr.id === tab.id);
+                            tab.tabsState.splice(index, 1);
+                            tab.tabsState.splice(index + 1, 0, tab);
+
+                            this.dragOffset = 0;
+
+                            await nextTick();
+
+                            this.calculateTabBounds(tab);
+                            this.calculateTabBounds(tab.previousTab);
+
+                            console.log(tab.tabsState);
+                            tab.swapping = false;
+                            return;
+                        }
+                    }
+                }
+            },
+            endDrag(tab) {
+                if (tab.dragging) {
+                    tab.dragging = false;
+                    tab.swapOffset = 0;
+                    delete tab.clickPoint;
+                    this.dragOffset = 0;
+                    for (const currTab of tab.tabsState) {
+                        currTab.dragOffset = 0;
+                    }
+                    this.tabs = tab.tabsState;
+                    delete tab.tabsState;
+                }
             }
         }
     }
@@ -150,8 +294,12 @@ import { nextTick } from 'vue';
             :key="tab.id" 
             class="tab" 
             :class="tab.isActive ? 'activeTab' : 'tab'"
-            :style="{transform: tabTransform()}"
+            :style="{transform: tabTransform(tab),'z-index': tab.dragging ? 1 : 0}"
             @click="focus(tab.id)"
+            @mousedown="startDrag($event, tab)"
+            @mousemove="mousemove($event, tab)"
+            @mouseup="endDrag(tab)"
+            @mouseleave="endDrag(tab)"
             :ref="tab.id">
             <img v-bind:src="tab.img" v-if="tab.img !== undefined" class="tabImage"/>
             <div style="float:left;padding:5px;">{{ tab.label }}</div>
@@ -178,6 +326,12 @@ import { nextTick } from 'vue';
 }
 .tabImage {
 	padding-left: 5px;
+    user-drag: none;
+    -webkit-user-drag: none;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 .activeTab {
 	vertical-align: middle;
