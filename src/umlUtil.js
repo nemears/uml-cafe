@@ -1,5 +1,6 @@
 import { randomID } from "uml-client/lib/element";
 import { createClassDiagram } from "./diagram/api/diagramInterchange";
+
 export function createElementUpdate() {
     const ret = {
         updatedElements: []
@@ -172,12 +173,12 @@ export function getProjectLoginObject(wholeProjectName, serverAddress) {
 
     // check for stashed user and passwordHash
     let user = sessionStorage.getItem('user');
-    let passwordHash = sessionStorage.getItem('passwordHash');
+    let password = sessionStorage.getItem('password'); // triple check this is safe
     if (user === 'null' || user === 'undefined') {
         user = undefined;
     }
-    if (passwordHash === 'null' || user === 'undefined') {
-        passwordHash = undefined;
+    if (password === 'null' || password === 'undefined') {
+        password = undefined;
     }
 
     return {
@@ -185,7 +186,7 @@ export function getProjectLoginObject(wholeProjectName, serverAddress) {
         group: groupName,
         project: projectName,
         user: user,
-        passwordHash: passwordHash,
+        password: password,
         create: groupName !== 'sessions',
     }
 }

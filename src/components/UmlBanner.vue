@@ -156,13 +156,10 @@ export default {
                     this.$emit("newModelLoaded");
                     this.$emit('userUpdate');
                     if (this.rememberUserEnabled) {
-                        sessionStorage.setItem('user', this.$umlWebClient.user);
-                        const setPasswordHash = async() => {
-                            sessionStorage.setItem('passwordHash', Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)))).map(b => b.toString(16).padStart(2, '0')).join(''));
-                        };
-                        setPasswordHash();
+                        this.saveUserState(password);
                     } else {
                         sessionStorage.removeItem('user');
+                        sessionStorage.removeItem('password');
                         sessionStorage.removeItem('passwordHash');
                     }
                 }
@@ -208,13 +205,13 @@ export default {
             }).then(() => {
                 this.user = this.$umlWebClient.user;
                 this.$emit('userUpdate');
-                sessionStorage.setItem('user', this.$umlWebClient.user);
-                const setPasswordHash = async() => {
-                    sessionStorage.setItem('passwordHash', Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)))).map(b => b.toString(16).padStart(2, '0')).join(''));
-                };
-                setPasswordHash();
+                this.saveUserState(password);
                 this.toggleSignup();
             });
+        },
+        saveUserState(password) {
+            sessionStorage.setItem('user', this.$umlWebClient.user);
+            sessionStorage.setItem('password', password);
         },
         toggleCreateProject() {
             this.projectExplorerEnabled = false;
@@ -290,8 +287,6 @@ export default {
                 }
             });
 
-            sessionStorage.setItem('user', this.$umlWebClient.user);
-            sessionStorage.setItem('passwordHash', this.$umlWebClient.passwordHash);
             window.location.replace('/' + this.$umlWebClient.user + '/' + this.$refs.projectIdentifier.value);
         },
         closeLoginAndGoToSignUp() {
