@@ -2,7 +2,7 @@
 :root {
   --vt-c-white: #ffffff;
   --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  --vt-c-white-mute: #e7e7e3;
 
   --vt-c-off-white: #c6dfff;
 
@@ -17,7 +17,7 @@
   --vt-c-indigo: #2c3e50;
   --vt-c-azure: azure;
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
+  --vt-c-divider-light-1: rgb(59, 59, 59);
   --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
   --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
   --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
@@ -29,6 +29,18 @@
 
   --open-uml-selection-dark-1 :  #222427;
   --open-uml-selection-dark-2 : #292c30;
+  
+  --uml-cafe-selection-light-1: rgb(235, 234, 227);
+  --uml-cafe-selection-light-2: rgb(233, 232, 214);
+
+  --uml-cafe-light-light-1: rgb(221, 220, 214);
+  --uml-cafe-light-light-2: rgb(206, 204, 197);
+  --uml-cafe-light-dark: rgb(247, 245, 222);
+  --uml-cafe-light-dark-1 : rgb(255, 255, 238);
+  --uml-cafe-light-dark-2: rgb(228, 226, 203);
+
+  --uml-cafe-dark-mute: #34383f;
+  --uml-cafe-light-mute: #f0f0f0;
 
   --uml-cafe-manilla:#f0edd3;
 

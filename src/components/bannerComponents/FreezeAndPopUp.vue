@@ -1,7 +1,7 @@
 <script>
 import closeSVG from '../../assets/icons/general/close_symbol.svg';
 export default {
-    props: ['label', 'toggle'],
+    props: ['label', 'toggle', 'theme'],
     data() {
         return {
             closeSVG: closeSVG,
@@ -24,7 +24,11 @@ export default {
 </script>
 <template>
     <div class="freezeBackGround">
-        <div class="selectionWindow">
+        <div    class="selectionWindow"
+                :class="{
+                    selectionDark : theme === 'dark',
+                    selectionLight : theme === 'light',
+                }">
             <div class="popUpHeader">
                 <div :style="closeButtonStyle" @click.stop="toggle">
                     <img v-bind:src="closeSVG"/>
@@ -60,6 +64,15 @@ export default {
     padding: 5px;
     display: flex;
     flex-direction: column;
+}
+.selectionDark {
+    background-color: var(--vt-c-black);
+    border-color: var(--vt-c-dark-soft);
+}
+.selectionLight {
+    background-color: var(--uml-cafe-light-dark);
+    border-color: var(--vt-c-divider-light-1);
+    color: var(--vt-c-dark-dark);
 }
 .popUpHeader {
     padding: 10px;

@@ -1,6 +1,6 @@
 <script>
 export default {
-    props: ['elementType'],
+    props: ['elementType', 'theme'],
     data() {
         return {
             expanded: true
@@ -9,7 +9,10 @@ export default {
 }
 </script>
 <template>
-    <div class="elementTypeDiv">
+    <div :class="{
+        elementTypeDarkDiv : theme === 'dark',
+        elementTypeLightDiv : theme === 'light',
+    }">
         <div @click="expanded = !expanded" class="elementTypeLabel">
             {{  elementType }}
         </div>
@@ -19,12 +22,15 @@ export default {
     </div>
 </template>
 <style>
-.elementTypeDiv {
+.elementTypeDarkDiv .elementTypeLightDiv {
     display: block;
     padding: 10px;
 }
-.elementTypeDiv:hover {
-    background-color: #34383f;
+.elementTypeDarkDiv:hover {
+    background-color: var(--uml-cafe-dark-mute);
+}
+.elementTypeLightDiv:hover {
+    background-color: var(--uml-cafe-light-mute);
 }
 .elementTypeLabel {
     font-size: 30px;

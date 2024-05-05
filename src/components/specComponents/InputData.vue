@@ -1,7 +1,7 @@
 <script>
 import { createElementUpdate } from '../../umlUtil.js'
 export default {
-    props: ['label', 'inputType', 'initialData', 'readOnly', 'type', 'umlid'],
+    props: ['label', 'inputType', 'initialData', 'readOnly', 'type', 'umlid', 'theme'],
     data() {
         return {
             data: undefined
@@ -34,7 +34,17 @@ export default {
                 <b>{{ label }}</b>
             </label>
         </div>
-        <input name="dataField" :type="inputType" :id="umlid" v-model="data" :readonly="readOnly" @change="submitDataChange" ref="numberInput"/>
+        <input  name="dataField"
+                :class="{
+                    inputLight : theme === 'light',
+                    inputDark : theme === 'dark',
+                }"
+                :type="inputType" 
+                :id="umlid" 
+                v-model="data" 
+                :readonly="readOnly" 
+                @change="submitDataChange" 
+                ref="numberInput"/>
     </div>
 </template>
 <style>
@@ -44,10 +54,16 @@ export default {
 }
 .numberInputContainer > input {
     min-width: 700px;
-    color: azure;
-    background-color: #222427;
     border: none;
     font-size: 18px;
+}
+.inputDark {
+    color: azure;
+    background-color: #222427;
+}
+.inputLight {
+    background-color: var(--uml-cafe-selection-light-1);
+    color: var(--vt-c-dark-dark);
 }
 .numberInputLabel {
     min-width: 200px;

@@ -12,6 +12,7 @@ export default {
         'umlID', 
         'selectedElements',
         'users',
+        'theme',
     ],
     emits: [
         'specification', 
@@ -386,13 +387,15 @@ export default {
         </h1>
         <img v-bind:src="elementImage" v-if="elementImage !== undefined" class="headerImage"/>
 	</div>
-	<ElementType :element-type="'Element'">
+	<ElementType    :element-type="'Element'"
+                    :theme="theme">
         <InputData  :label="'ID'" 
                     :input-type="'string'" 
                     :initial-data="umlID" 
                     :read-only="true" 
                     :umlid="umlID" 
-                    :type="'id'" 
+                    :type="'id'"
+                    :theme="theme"
                     @element-update="propogateElementUpdate"
                     ></InputData>
         <SetData    :label="'Owned Elements'" 
@@ -404,6 +407,7 @@ export default {
                         readonly: true,
                         setName: 'ownedElements'
                     }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
                     @select="propogateSelect"
@@ -415,6 +419,7 @@ export default {
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'owner', readonly: true}"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
@@ -424,6 +429,7 @@ export default {
                  :initial-data="elementData.appliedStereotypes" 
                  :umlid="umlID" 
                  :selected-elements="selectedElements"
+                 :theme="theme"
                  @specification="propogateSpecification"
                  @select="propogateSelect"
                  @deselect="propogateDeselect"
@@ -438,6 +444,7 @@ export default {
                  :initial-data="elementData.ownedComments" 
                  :umlid="umlID" 
                  :selected-elements="selectedElements"
+                 :theme="theme"
                  @specification="propogateSpecification"
                  @select="propogateSelect"
                  @deselect="propogateDeselect"
@@ -450,13 +457,14 @@ export default {
                  @element-update="propogateElementUpdate"
                  ></SetData>
 	</ElementType>
-	<ElementType :element-type="'Named Element'" v-if="namedElementData !== undefined">
+	<ElementType :element-type="'Named Element'" :theme="theme" v-if="namedElementData !== undefined">
         <InputData  :label="'Name'" 
                     :initial-data="namedElementData.name" 
                     :input-type="'string'" 
                     :read-only="false" 
                     :umlid="umlID" 
                     :type="'name'" 
+                    :theme="theme"
                     @element-update="propogateElementUpdate"
                     ></InputData>
         <SingletonData  :label="'Namespace'" 
@@ -465,6 +473,7 @@ export default {
                         :uml-i-d="umlID"
                         :singleton-data="{setName:'namespace', readonly: true}"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
@@ -478,13 +487,14 @@ export default {
                         readonly: true,
                         setName: 'clientDependencies'
                     }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     ></SetData>                        
 	</ElementType>
-	<ElementType :element-type="'Relationship'" v-if="relationshipData !== undefined">
+	<ElementType :element-type="'Relationship'" :theme="theme" v-if="relationshipData !== undefined">
         <SetData    :label="'Related Elements'" 
                     :initial-data="relationshipData.relatedElements" 
                     :umlid="umlID" 
@@ -497,10 +507,11 @@ export default {
                                     readonly: true,
                                     setName: 'relatedElements'
                                 }"
+                    :theme="theme"
                     @element-update="propogateElementUpdate"  
                     ></SetData>
 	</ElementType>
-	<ElementType :element-type="'Directed Relationship'" v-if="directedRelationshipData !== undefined">
+	<ElementType :element-type="'Directed Relationship'" :theme="theme" v-if="directedRelationshipData !== undefined">
         <SetData    :label="'Targets'" 
                     :initial-data="directedRelationshipData.targets" 
                     :umlid="umlID"
@@ -509,6 +520,7 @@ export default {
                                     setName: 'targets',
                                     readonly: true
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
                     @select="propogateSelect"
@@ -522,18 +534,20 @@ export default {
                                     readonly: true,
                                     setName: 'sources'
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
-	<ElementType :element-type="'Generalization'" v-if="generalizationData !== undefined">
+	<ElementType :element-type="'Generalization'" :theme="theme" v-if="generalizationData !== undefined">
         <SingletonData  :label="'Specific'" 
                         :initial-data="generalizationData.specific" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'specific', type:'classifier'}"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
@@ -543,11 +557,12 @@ export default {
                         :initial-data="generalizationData.general" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'general', type:'classifier'}"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         ></SingletonData>
     </ElementType>
-    <ElementType :element-type="'Dependency'" v-if="dependencyData !== undefined">
+    <ElementType :element-type="'Dependency'" :theme="theme" v-if="dependencyData !== undefined">
         <SetData  :label="'Clients'" 
                         :initial-data="dependencyData.clients" 
                         :umlid="umlID" 
@@ -556,6 +571,7 @@ export default {
                                     setName: 'clients'
                                     }"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
@@ -569,37 +585,40 @@ export default {
                                     setName: 'suppliers'
                                     }"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
                         @deselect="propogateDeselect"
                         ></SetData>
     </ElementType>
-    <ElementType :element-type="'Typed Element'" v-if="typedElementData !== undefined">
+    <ElementType :element-type="'Typed Element'" :theme="theme" v-if="typedElementData !== undefined">
         <SingletonData  :label="'Type'" 
                         :initial-data="typedElementData.type" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'type',type:'classifier'}"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
                         @deselect="propogateDeselect"
                         ></SingletonData>
     </ElementType>
-    <ElementType :element-type="'Packageable Element'" v-if="packageableElementData !== undefined">
+    <ElementType :element-type="'Packageable Element'" :theme="theme" v-if="packageableElementData !== undefined">
         <SingletonData  :label="'OwningPackage'" 
                         :initial-data="packageableElementData.owningPackage" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'owningPackage', type:'package'}"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
                         @deselect="propogateDeselect"
                         ></SingletonData>
 	</ElementType>
-    <ElementType :element-type="'Instance Value'" v-if="instanceValueData">
+    <ElementType :element-type="'Instance Value'" :theme="theme" v-if="instanceValueData">
         <SingletonData  :label="'Instance'"
                         :initial-data="instanceValueData.instance"
                         :uml-i-d="umlID"
@@ -608,59 +627,65 @@ export default {
                             type: 'instanceSpecification',    
                         }" 
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
                         @deselect="propogateDeselect"
                         ></SingletonData>
     </ElementType>
-    <ElementType :element-type="'Literal Bool'" v-if="literalBoolData !== undefined">
+    <ElementType :element-type="'Literal Bool'" :theme="theme" v-if="literalBoolData !== undefined">
         <InputData  :label="'Value'"
                     :input-type="'checkbox'"
                     :initial-data="literalBoolData.value"
                     :umlid="umlID"
                     :type="'value'"
+                    :theme="theme"
                     @element-update="propogateElementUpdate">
         </InputData>
     </ElementType>
-	<ElementType :element-type="'Literal Int'" v-if="literalIntData !== undefined">
+	<ElementType :element-type="'Literal Int'" :theme="theme" v-if="literalIntData !== undefined">
         <InputData 
                     :label="'Value'"
                     :input-type="'number'"
                     :initial-data="literalIntData.value"
                     :umlid="umlID"
                     :type="'value'"
+                    :theme="theme"
                     @element-update="propogateElementUpdate"></InputData>
 	</ElementType>
-    <ElementType :element-type="'Literal Real'" v-if="literalRealData">
+    <ElementType :element-type="'Literal Real'" :theme="theme" v-if="literalRealData">
         <InputData  :label="'Value'"
                     :input-type="'number'"
                     :initial-data="literalRealData.value"
                     :umlid="umlID"
                     :type="'value'"
+                    :theme="theme"
                     @element-update="propogateElementUpdate"></InputData>
     </ElementType>
-    <ElementType :element-type="'Literal String'" v-if="literalStringData">
+    <ElementType :element-type="'Literal String'" :theme="theme" v-if="literalStringData">
         <InputData  :label="'Value'"
                     :input-type="'string'"
                     :initial-data="literalStringData.value"
                     :umlid="umlID"
                     :type="'value'"
+                    :theme="theme"
                     @element-update="propogateElementUpdate"></InputData>
     </ElementType>
-    <ElementType :element-type="'Literal Unlimited Natural'" v-if="literalUnlimitedNaturalData">
+    <ElementType :element-type="'Literal Unlimited Natural'" :theme="theme" v-if="literalUnlimitedNaturalData">
         <LiteralUnlimitedNaturalData 
             :initial-data="literalUnlimitedNaturalData.value" 
             :umlid="umlID" 
             @element-update="propogateElementUpdate"></LiteralUnlimitedNaturalData>
     </ElementType>
-	<ElementType :element-type="'Multiplicity Element'" v-if="multiplicityElementData !== undefined">
+	<ElementType :element-type="'Multiplicity Element'" :theme="theme" v-if="multiplicityElementData !== undefined">
         <SingletonData  :label="'Lower Value'" 
                         :createable="{types:['literalInt']}" 
                         :initial-data="multiplicityElementData.lowerValue" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'lowerValue', type:'valueSpecification'}"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
@@ -672,13 +697,14 @@ export default {
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'upperValue', type:'valueSpecification'}"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
                         @deselect="propogateDeselect"
                         ></SingletonData>
 	</ElementType>
-	<ElementType :element-type="'Property'" v-if="propertyData !== undefined">
+	<ElementType :element-type="'Property'" :theme="theme" v-if="propertyData !== undefined">
         <EnumerationData    :label="'Aggregation'"
                             :initial-value="propertyData.aggregation"
                             :enum-name="'aggregation'"
@@ -696,12 +722,14 @@ export default {
                                             label: 'Composite'
                                         }
                                     ]"
-                            :uml-i-d="umlID"></EnumerationData>
+                            :uml-i-d="umlID"
+                            :theme="theme"></EnumerationData>
         <SingletonData  :label="'Class'" 
                         :initial-data="propertyData.clazz" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'class', type: 'class'}"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
@@ -712,6 +740,7 @@ export default {
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'dataType', type:'dataType'}"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
@@ -722,6 +751,7 @@ export default {
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'owningAssociation', type:'assoiation'}"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
@@ -732,6 +762,7 @@ export default {
                         :uml-i-d="umlID" 
                         :singleton-data="{setName: 'association', type:'association'}"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
@@ -754,13 +785,14 @@ export default {
                         :uml-i-d="umlID"
                         :singleton-data="{setName:'defaultValue', type:'valueSpecification'}"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @select="propogateSelect"
                         @deselect="propogateDeselect"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate" 
                         ></SingletonData>
 	</ElementType>
-	<ElementType :element-type="'Namespace'" v-if="namespaceData !== undefined">
+	<ElementType :element-type="'Namespace'" :theme="theme" v-if="namespaceData !== undefined">
         <SetData    :label="'Members'" 
                     :initial-data="namespaceData.members" 
                     :umlid="umlID" 
@@ -770,6 +802,7 @@ export default {
                         readonly: true,
                         setName: 'members'
                     }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
                     @select="propogateSelect"
@@ -784,12 +817,13 @@ export default {
                                     setName: 'ownedMembers',
                                     readonly: true
                                 }"
+                    :theme="theme"
                     @element-update="propogateElementUpdate" 
                     @specification="propogateSpecification"
                     @select="propogateSelect"
                     @deselect="propogateDeselect"></SetData>
 	</ElementType>
-    <ElementType :element-type="'Package'" v-if="packageData !== undefined">
+    <ElementType :element-type="'Package'" :theme="theme" v-if="packageData !== undefined">
         <SetData    :label="'Packaged Elements'" 
                     :initial-data="packageData.packagedElements" 
                     :umlid="umlID" 
@@ -817,13 +851,14 @@ export default {
                                     readonly: false,
                                     type: 'packageableElement'
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
-	<ElementType :element-type="'Instance Specification'" v-if="instanceSpecificationData !== undefined">
+	<ElementType :element-type="'Instance Specification'" :theme="theme" v-if="instanceSpecificationData !== undefined">
         <SetData    :label="'Classifiers'"
                     :initial-data="instanceSpecificationData.classifiers"
                     :umlid="umlID"
@@ -834,6 +869,7 @@ export default {
                                     type:'classifier',
                                     readonly: false
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
                     @select="propogateSelect"
@@ -849,13 +885,14 @@ export default {
                                     setName: 'slots',
                                     readonly: false,
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
-    <ElementType :element-type="'Enumeration Literal'" v-if="enumerationLiteralData">
+    <ElementType :element-type="'Enumeration Literal'" :theme="theme" v-if="enumerationLiteralData">
         <SingletonData  :label="'Enumeration'"
                         :initial-data="enumerationLiteralData.enumeration"
                         :uml-i-d="umlID"
@@ -864,19 +901,21 @@ export default {
                             type: 'enumeration'
                         }"
                         :selected-elements="selectedElements"
+                        :theme="theme"
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate"
                         @select="propogateSelect"
                         @deselect="propogateDeselect"
                         ></SingletonData>
     </ElementType>
-	<ElementType :element-type="'Slot'" v-if="slotData !== undefined">
+	<ElementType :element-type="'Slot'" :theme="theme" v-if="slotData !== undefined">
         <SingletonData
             :label="'Owning Instance'"
             :initial-data="slotData.owningInstance"
             :uml-i-d="umlID" 
             :singleton-data="{setName: 'owningInstance', type:'instanceSpecification'}"
             :selected-elements="selectedElements"
+            :theme="theme"
             @specification="propogateSpecification"
             @element-update="propogateElementUpdate"
             @select="propogateSelect"
@@ -901,6 +940,7 @@ export default {
                                     setName: 'values',
                                     readonly: false
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
                     @select="propogateSelect"
@@ -912,13 +952,14 @@ export default {
             :uml-i-d="umlID"
             :singleton-data="{ setName: 'definingFeature', type: 'property' }"
             :selected-elements="selectedElements"
+            :theme="theme"
             @specification="propogateSpecification"
             @element-update="propogateElementUpdate" 
             @select="propogateSelect"
             @deselect="propogateDeselect"
             ></SingletonData>
 	</ElementType>
-	<ElementType :elementType="'Classifier'" v-if="classifierData !== undefined">
+	<ElementType :elementType="'Classifier'" :theme="theme" v-if="classifierData !== undefined">
         <SetData    :label="'Generalizations'" 
                     :initial-data="classifierData.generalizations" 
                     :umlid="umlID" 
@@ -930,6 +971,7 @@ export default {
                         readonly: false,
                         type: 'generalization',
                     }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
                     @select="propogateSelect"
@@ -944,13 +986,14 @@ export default {
                                     setName: 'attributes',
                                     readonly: true
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
-    <ElementType :elementType="'DataType'" v-if="dataTypeData">
+    <ElementType :elementType="'DataType'" :theme="theme" v-if="dataTypeData">
         <SetData    :label="'Owned Attributes'"
                     :initial-data="dataTypeData.ownedAttributes"
                     :umlid="umlID"
@@ -967,13 +1010,14 @@ export default {
                                             ],
                                     set: 'ownedAttributes'
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     ></SetData>
     </ElementType>
-    <ElementType :elementType="'Enumeration'" v-if="enumerationData">
+    <ElementType :elementType="'Enumeration'" :theme="theme" v-if="enumerationData">
         <SetData    :label="'Owned Literals'"
                     :initial-data="enumerationData.ownedLiterals"
                     :umlid="umlID"
@@ -988,13 +1032,14 @@ export default {
                                     types: [ 'enumerationLiteral' ],
                                     set: 'ownedLiterals'
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     ></SetData>
     </ElementType>
-	<ElementType :elementType="'Structured Classifier'" v-if="structuredClassifierData !== undefined">
+	<ElementType :elementType="'Structured Classifier'" :theme="theme" v-if="structuredClassifierData !== undefined">
         <SetData    :label="'Owned Attributes'" 
                     :initial-data="structuredClassifierData.ownedAttributes" 
                     :umlid="umlID" 
@@ -1004,13 +1049,14 @@ export default {
                                     setName: 'ownedAttributes',
                                     readonly: true
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate" 
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
-	<ElementType :element-type="'Association'" v-if="associationData !== undefined">
+	<ElementType :element-type="'Association'" :theme="theme" v-if="associationData !== undefined">
         <SetData    :label="'Member Ends'" 
                     :initial-data="associationData.memberEnds" 
                     :umlid="umlID" 
@@ -1021,6 +1067,7 @@ export default {
                                     readonly: false,
                                     type: 'property'
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
                     @select="propogateSelect"
@@ -1042,6 +1089,7 @@ export default {
                                     ],
                                     set: 'ownedEnds'
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
                     @select="propogateSelect"
@@ -1062,13 +1110,14 @@ export default {
                                     ],
                                     set: 'navigableOwnedEnds'
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
-	<ElementType :elementType="'Class'" v-if="classData !== undefined">
+	<ElementType :elementType="'Class'" :theme="theme" v-if="classData !== undefined">
         <SetData    :label="'Owned Attributes'" 
                     :initial-data="classData.ownedAttributes" 
                     :umlid="umlID" 
@@ -1079,19 +1128,21 @@ export default {
                                     setName: 'ownedAttributes',
                                     readonly: false
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     ></SetData>
 	</ElementType>
-    <ElementType :element-type="'Comment'" v-if="commentData !== undefined">
+    <ElementType :element-type="'Comment'" :theme="theme" v-if="commentData !== undefined">
         <InputData  :label="'Body'" 
                     :initial-data="commentData.body" 
                     :input-type="'string'" 
                     :read-only="false" 
                     :umlid="umlID" 
-                    :type="'body'" 
+                    :type="'body'"
+                    :theme="theme"
                     @element-update="propogateElementUpdate"
                     ></InputData>
         <SetData    :label="'Annotated Elements'" 
@@ -1103,6 +1154,7 @@ export default {
                                     readonly: false,
                                     type: 'element'
                                 }"
+                    :theme="theme"
                     @specification="propogateSpecification"
                     @element-update="propogateElementUpdate"
                     @select="propogateSelect"
@@ -1135,7 +1187,7 @@ export default {
 .mainDiv {
     padding: 10px;
     flex: 1 1 69vw;
-    border: solid #525258;
+    /* border: solid #525258; */
     border-width: 2px;
     overflow: auto;
 }

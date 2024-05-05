@@ -42,6 +42,7 @@ export default {
             undoStack: [],
             latestCommand: undefined,
             commandUndo: undefined,
+            theme: 'dark',
 		}
 	},
 	provide() {
@@ -52,7 +53,8 @@ export default {
 			userSelected: computed(() => this.userSelected),
 			userDeselected: computed(() => this.userDeselected),
             latestCommand: computed(() => this.latestCommand),
-            commandUndo: computed(() => this.commandUndo)
+            commandUndo: computed(() => this.commandUndo),
+            theme: computed(() => this.theme),
 		}
 	},
 	mounted() {
@@ -597,6 +599,9 @@ export default {
 
             this.users = userList;
         },
+        changeTheme(theme) {
+            this.theme = theme;
+        },
 	}
 }
 </script>
@@ -604,16 +609,27 @@ export default {
 	<div style="display: flex;flex-direction: column;height:100vh;overflow: hidden;">
 		<UmlBanner 
 			:users="users"
+            :theme="theme"
 			@new-model-loaded="getHeadFromServer"
             @user-update="userUpdate"
 			@diagram="diagram" 
 			@element-update="elementUpdateHandler"
-            @command="command"></UmlBanner>
-		<div class="collapseAndTabPanel">
-			<div class="elementExplorerHeaderExpanded" :class="elementExplorerHide ? 'elementExplorerHeaderCollapsed' : 'elementExplorerHeaderExpanded'">
+            @command="command"
+            @theme="changeTheme"></UmlBanner>
+		<div    class="backgroundPanel" 
+                :class="{
+                    backgroundPanelDark : theme === 'dark', 
+                    backgroundPanelLight : theme === 'light'
+                    }">
+			<div    class="elementExplorerHeaderExpanded" 
+                    :class="elementExplorerHide ? 'elementExplorerHeaderCollapsed' : 'elementExplorerHeaderExpanded'">
 				<button 
 					type="button" 
-					class="elementExplorerButton" 
+					class="elementExplorerButton"
+                    :class="{
+                        elementExplorerButtonLight: theme === 'light',
+                        elementExplorerButtonDark: theme === 'dark',
+                    }"
 					@click="ElementExplorerCollapse">
 						{{ elementExplorerButtonTitle }} 
 				</button>
@@ -623,9 +639,14 @@ export default {
 			</div>
             <TabContainer
                 :focus-tab="focusTab"
+                :theme="theme"
                 @tab-selected="updateTab"></TabContainer>
 		</div>
-		<div class="parent">
+		<div    class="parent"
+                :class="{
+                    parentLight: theme === 'light',
+                    parentDark: theme === 'dark',
+                }">
 			<div class="elementExplorer" v-if="!elementExplorerHide" draggable="false">
 				<ElementExplorer 
 					v-if="!isFetching && headID !== undefined"
@@ -633,6 +654,7 @@ export default {
 					:depth="0"
                     :selected-elements="selectedElements"
                     :tree-graph="treeGraph"
+                    :theme="theme"
 					@specification="specification" 
 					@element-update="elementUpdateHandler" 
 					@diagram="diagram"
@@ -648,6 +670,7 @@ export default {
 						:uml-i-d="specificationTab" 
                         :selected-elements="selectedElements"
                         :users="users"
+                        :theme="theme"
 						@specification="specification" 
 						@element-update="elementUpdateHandler"
                         @select="select"
@@ -670,10 +693,16 @@ export default {
 </template>
 <style>
 
-.collapseAndTabPanel {
+.backgroundPanel {
 	flex: 0 1 auto;
 	display: flex;
-	background-color: var(--vt-c-black)
+}
+.backgroundPanelLight {
+    background-color: var(--uml-cafe-light-dark);
+    color: var(--vt-c-dark-dark);
+}
+.backgroundPanelDark {
+    background-color: var(--vt-c-black)
 }
 .elementExplorerHeaderExpanded {
 	display: flex;
@@ -690,48 +719,33 @@ export default {
 	padding: 10px;
     overflow-y: auto;
     flex: 0 1 auto;
-    border-color: var(--color-border);
+	margin-right: 10px;
+    border: none;
+}
+.elementExplorerButtonLight {
+    background-color: var(--uml-cafe-light-light-1);
+}
+.elementExplorerButtonDark {
     background-color: var(--open-uml-selection-dark-1);
     color: var(--vt-c-text-light-1);
-	margin-right: 10px;
 }
-.elementExplorerButton:hover {
+.elementExplorerButtonDark:hover {
     background-color: var(--vt-c-dark-soft);
 }
-.tabContainer {
-	background-color: var(--vt-c-black);
-	overflow: hidden;
-	flex: 1 0 auto;
-	display: flex;
-}
-.tab {
-	display: flex;
-	align-items:center;
-	float: left;
-	background-color: var(--vt-c-dark-dark);
-	-webkit-user-select: none; /* Safari */        
-	-moz-user-select: none; /* Firefox */
-	-ms-user-select: none; /* IE10+/Edge */
-	user-select: none; /* Standard */
-}
-.tabImage {
-	padding-left: 5px;
-}
-.activeTab {
-	vertical-align: middle;
-	float: left;
-	background-color: #2d3035;
-}
-.activeTab:hover {
-	background-color: #383c46;
-}
-.tab:hover {
-	background-color: var(--vt-c-dark-soft);
+.elementExplorerButtonLight:hover {
+    background-color: var(--uml-cafe-light-light-2);
 }
 .parent {
 	flex: 1 1 auto;
 	display: flex;
 	overflow: hidden;
+}
+.parentLight {
+    background-color: var(--vt-c-white-soft);
+    color: var(--vt-c-dark-dark);
+}
+.parentDark {
+    background-color: var(--vt-c-dark);
 }
 .elementExplorer{
 	width: 300px;

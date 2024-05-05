@@ -1,6 +1,6 @@
 <script>
 export default {
-    props: ['label', 'users'],
+    props: ['label', 'users', 'theme'],
     methods: {
         addUser() {
             const userValue = this.$refs.userSelectorInput.value;
@@ -39,39 +39,63 @@ export default {
             <label> {{ label }}</label>
             <slot></slot>
         </div>
-        <div v-for="user in users" :key="user" class="userSelectorElement" @contextmenu="rightClick">
+        <div    v-for="user in users" 
+                :key="user" 
+                class="userSelectorElement"
+                :class="{
+                    darkSelector : theme === 'dark',
+                    lightSelector: theme === 'light',
+                }"
+                @contextmenu="rightClick">
             {{ user }}
         </div>
-        <input type="text" class="userSelectorElement" @keydown.enter="addUser" ref="userSelectorInput">
-        <input class="userAddButton" type="button" value="add" @click="addUser">
+        <input  type="text" 
+                class="userSelectorElement"
+                :class="{
+                    darkSelector : theme === 'dark',
+                    lightSelector: theme === 'light',
+                }"
+                @keydown.enter="addUser" ref="userSelectorInput">
+        <input  class="userAddButton" 
+                :class="{
+                    darkSelector : theme === 'dark',
+                    lightSelector: theme === 'light',
+                }"
+                type="button" 
+                value="add" 
+                @click="addUser">
     </div>
 </template>
 <style>
 .userSelectorElement {
     width: 46vw;
-    background-color: var(--open-uml-selection-dark-1);
     min-height: 24px;
     display: flex;
     padding-left: 5px;
     border: none;
+}
+.darkSelector {
+    background-color: var(--open-uml-selection-dark-1);
     color: var( --vt-c-text-light-1);
 }
-.userSelectorElement:hover {
+.darkSelector:hover {
     background-color: var(--vt-c-dark-soft);
+}
+.lightSelector {
+    color: var(--vt-c-dark-dark);
+    background-color: var(--vt-c-white-soft);
+}
+.lightSelector:hover {
+    background-color: var(--vt-c-white-mute);
 }
 input:focus {
     border: solid 2px;
     border-color: var(--vt-c-dark-soft);
 }
 .userAddButton {
-    background-color: var(--open-uml-selection-dark-1);
     border: none;
-    color: var( --vt-c-text-light-1);
     height: 2em;
     border-radius: 10px;
     margin-top: 5px;
-}
-.userAddButton:hover {
-    background-color: var(--vt-c-dark-soft);
 }
 </style>
