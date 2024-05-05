@@ -5,7 +5,7 @@ import { assignTabLabel } from '../umlUtil';
 import { nextTick } from 'vue';
 
     export default {
-        props: ['focusTab'],
+        props: ['focusTab','theme'],
         emits: ['tabSelected'],
         inject: ['elementUpdate'],
         data() {
@@ -334,7 +334,13 @@ import { nextTick } from 'vue';
         <div v-for="tab in tabs" 
             :key="tab.id" 
             class="tab" 
-            :class="tab.isActive ? 'activeTab' : 'tab'"
+            :class="{
+                activeTab: tab.isActive,
+                activeTabLight : tab.isActive && theme === 'light',
+                activeTabDark : tab.isActive && theme === 'dark',
+                tabDark: !tab.isActive && theme === 'dark',
+                tabLight: !tab.isActive && theme === 'light',
+            }"
             :style="{transform: tabTransform(tab),'z-index': tab.dragging ? 1 : 0}"
             @click="focus(tab.id)"
             @mousedown="startDrag($event, tab)"
@@ -350,7 +356,6 @@ import { nextTick } from 'vue';
 </template>
 <style>
 .tabContainer {
-	background-color: var(--vt-c-black);
 	overflow: hidden;
 	flex: 1 0 auto;
 	display: flex;
@@ -359,11 +364,22 @@ import { nextTick } from 'vue';
 	display: flex;
 	align-items:center;
 	float: left;
-	background-color: var(--vt-c-dark-dark);
 	-webkit-user-select: none; /* Safari */        
 	-moz-user-select: none; /* Firefox */
 	-ms-user-select: none; /* IE10+/Edge */
 	user-select: none; /* Standard */
+}
+.tabDark {
+    background-color: var(--vt-c-black-mute);
+}
+.tabDark:hover {
+	background-color: var(--vt-c-dark-soft);
+}
+.tabLight {
+    background-color: var(--uml-cafe-light-dark-2);
+}
+.tabLight:hover {
+    background-color: var(--uml-cafe-light-dark-1);
 }
 .tabImage {
 	padding-left: 5px;
@@ -377,12 +393,17 @@ import { nextTick } from 'vue';
 .activeTab {
 	vertical-align: middle;
 	float: left;
-	background-color: #2d3035;
 }
-.activeTab:hover {
-	background-color: #383c46;
+.activeTabDark {
+    background-color: #2d3035;
 }
-.tab:hover {
-	background-color: var(--vt-c-dark-soft);
+.activeTabDark:hover {
+    background-color: #383c46;
+}
+.activeTabLight {
+    background-color: var(--vt-c-white-soft);
+}
+.activeTabLight:hover {
+    background-color: var(--vt-c-white-mute);
 }
 </style>

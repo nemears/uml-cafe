@@ -10,7 +10,8 @@ export default {
         'readonly', 
         'createable', 
         'singletonData',
-        'selectedElements'
+        'selectedElements',
+        'theme',
     ],
     emits: [
         'specification',
@@ -41,15 +42,14 @@ export default {
     },
     computed: {
         panelClass() {
-            const result = getPanelClass(this.selected, this.hover, this.currentUsers, this.$umlWebClient); 
-            switch (result) {
-                case 'elementExplorerPanel':
-                    return 'singletonElement';
-                case 'elementExplorerPanelLight':
-                    return 'singletonElementLight';
-                default:
-                    return result;
-            }
+            let computedPanelClass = getPanelClass(this.selected, this.hover, this.currentUsers, this.$umlWebClient, this.theme); 
+            computedPanelClass = computedPanelClass.replace('elementExplorerPanel', 'singletonElement');
+            let ret = {
+                singletonBadDrag : this.drag && this.badDrag,
+                singletonGoodDrag : this.drag,
+            };
+            ret[computedPanelClass] = true;
+            return ret;
         },
     },
     mounted() {
@@ -322,10 +322,7 @@ export default {
             {{ label }}
         </div>
         <div class="singletonElement" 
-            :class="[
-                panelClass, 
-                drag ? badDrag ? 'singletonBadDrag' : 'singletonGoodDrag' : 'singletonElement'
-            ]"
+            :class="panelClass"
             @click.exact="select('none')"
             @click.ctrl="select('ctrl')"
             @click.shift="select('shift')"
@@ -347,7 +344,8 @@ export default {
             <CreationPopUp  v-if="creationPopUp && !$umlWebClient.readonly" 
                             :types="createable.types" 
                             :set="singletonData.setName" 
-                            :umlid="umlID" 
+                            :umlid="umlID"
+                            :theme="theme"
                             @closePopUp="closePopUp"></CreationPopUp>
         </div>
     </div>
@@ -361,16 +359,24 @@ export default {
     min-width: 200px;
 }
 .singletonElement {
-    border: 1px solid;
-    border-color:#292c30;
     width: 700px;
-    background-color: var(--open-uml-selection-dark-1);
     min-height: 24px;
     display: flex;
     padding-left: 5px;
 }
-.singletonElementLight {
+.singletonElementDark {
+    background-color: var(--open-uml-selection-dark-1);
+}
+.singletonElementDarkHover {
     background-color: var(--open-uml-selection-dark-2);
+}
+.singletonElementLight {
+    background-color: var(--uml-cafe-selection-light-1);
+    color: var(--vt-c-dark-dark);
+}
+.singletonElementLightHover {
+    background-color: var(--uml-cafe-selection-light-2);
+    color: var(--vt-c-dark-dark);
 }
 .redUserPanel {
     background-color: var(--uml-cafe-red-user);

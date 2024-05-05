@@ -5,12 +5,14 @@ import classSVG from '../assets/icons/general/class.svg'
 const packageJSON = require('../../package.json');
 import FreezeAndPopUp from './bannerComponents/FreezeAndPopUp.vue';
 import UserSelector from './bannerComponents/UserSelector.vue';
-import CreateDiagramButton from './bannerComponents/CreateDiagramButton.vue';
+import BannerButton from './bannerComponents/BannerButton.vue';
 import UserBubble from './bannerComponents/UserBubble.vue';
-import { getProjectLoginObject } from '../umlUtil';
+import { getProjectLoginObject, createUmlClassDiagram, createElementUpdate } from '../umlUtil';
+import { randomID } from 'uml-client/lib/element';
 export default {
     props: [
         'users',
+        'theme',
     ],
     data() {
         return {
@@ -41,6 +43,7 @@ export default {
             projectExplorerEnabled: false,
             recentProjects: undefined,
             userProjects: undefined,
+            isDark: true,
         }
     },
     emits: [
@@ -49,6 +52,7 @@ export default {
         'diagram', 
         'userUpdate',
         'command',
+        'theme',
     ],
     mounted() {
         // TODO check if we need to enable login on startup
@@ -362,6 +366,27 @@ export default {
             });
             this.toggleProjectSettings();
         },
+        toggleTheme() {
+            console.warn('TODO change theme!');
+            this.isDark = !this.isDark;
+            this.$emit('theme', this.isDark ? 'dark' : 'light');
+        },
+        async createDiagram () {
+            const head = await this.$umlWebClient.head();
+            const diagramID = randomID();
+            const diagramPackage = await createUmlClassDiagram(diagramID, head, this.$umlWebClient);
+            this.$emit('command', {
+                name: 'diagramCreate',
+                element: head.id,
+                redo: false,
+                context: {
+                    diagramID: diagramID,
+                    parentID: head.id,
+                }
+            });
+            this.$emit('diagram', diagramPackage);
+            this.$emit('elementUpdate', createElementUpdate(head));
+        },
         propogateElementUpdate(elementUpdate) {
             this.$emit('elementUpdate', elementUpdate);
         },
@@ -377,13 +402,31 @@ export default {
             return {
                 width: '10px'
             }
+        },
+        entryStyle() {
+            return {
+                inputStyle : true,
+                inputDark : this.theme === 'dark',
+                inputLight : this.theme === 'light',
+            }
+        },
+        entryButton() {
+            return {
+                inputButton : true,
+                inputDark : this.theme === 'dark',
+                inputLight : this.theme === 'light',
+            }
         }
     },
-    components: { FreezeAndPopUp, UserSelector, CreateDiagramButton, UserBubble }
+    components: { FreezeAndPopUp, UserSelector, BannerButton, UserBubble }
 }
 </script>
 <template>
-    <div class="umlBanner">
+    <div class="umlBanner"
+            :class="{
+                bannerDark : theme === 'dark',
+                bannerLight : theme === 'light',
+            }">
         <div class="titleContainer">
             <img v-bind:src="websiteImage"/>
             uml-cafe v{{ version }}
@@ -398,18 +441,22 @@ export default {
         </div>
         <div class="bannerItems">
             <UserBubble v-for="user in users" :key="user.id" :user="user"/>
-            <CreateDiagramButton 
-                @elementUpdate="propogateElementUpdate" 
-                @diagram="propogateDiagram"
-                @command="propogateCommand"></CreateDiagramButton>
+            <BannerButton 
+                @button-clicked="createDiagram"
+                :label="'Create New Diagram'"
+                :theme="theme"></BannerButton>
             <div :style="gapStyle"></div>
-            <button type="button" class="logInButton" @click="toggleLogin">Log In</button>
+            <BannerButton 
+                @button-clicked="toggleLogin"
+                :label="'Login'"
+                :theme="theme"
+                ></BannerButton>
             <div class="optionsContainer">
                 <div class="optionsButton" @click="optionToggle">
                     <img v-bind:src="hamburgerSVG" v-if="!hamburgerHover" @mouseenter="toggleHamburgerHover"/>
                     <img v-bind:src="hamburgerHoverSVG" v-if="hamburgerHover" @mouseleave="toggleHamburgerHover"/>
                 </div>
-            </div> 
+            </div>
         </div>
     </div>
     <div class="dropdown" v-if="optionsEnabled">
@@ -429,6 +476,13 @@ export default {
         <div class="optionsOption" @click="saveToFile">
             Save to file
         </div>
+        <div class="optionsOption">
+            Theme 
+            <label class="switch">
+                <input type="checkbox" @change="toggleTheme">
+                <span class="slider"></span>
+            </label>
+        </div>
         <div class="optionsOption" @click="toggleLogin">
             Log In
         </div> 
@@ -440,13 +494,17 @@ export default {
         </div>
         <a :href="downloadRef" :download="downloadDownload" ref="saveA" style="display: none;"></a>
     </div>
-    <FreezeAndPopUp :label="'Log In'" :toggle="toggleLogin" v-if="loginEnabled" @keydown.enter="login">
+    <FreezeAndPopUp :label="'Log In'"
+                    :toggle="toggleLogin"
+                    :theme="theme"
+                    v-if="loginEnabled" 
+                    @keydown.enter="login">
         <form>
             <label for="'logInUserInput'">username: </label>
-            <input class="inputStyle" type="text" id="'logInUserInput'" name="'logInUserInput'" ref="logInUserInput">
+            <input :class="entryStyle" type="text" id="'logInUserInput'" name="'logInUserInput'" ref="logInUserInput">
             <br>
             <label for="'logInPasswordInput'">password: </label>
-            <input class="inputStyle" type="password" id="'logInPasswordInput'" name="'logInPasswordInput'" ref="logInPasswordInput">
+            <input :class="entryStyle" type="password" id="'logInPasswordInput'" name="'logInPasswordInput'" ref="logInPasswordInput">
             <br>
             <label for="rememberUser">Remember Me</label>
             <input style="margin-left:5px;" type="checkbox" v-model="this.rememberUserEnabled" id="rememberUser" @click="toggleRememberUser">
@@ -456,33 +514,40 @@ export default {
                 <div v-if="loginErrorMessage !== undefined" class="signUpError">
                     {{ loginErrorMessage }}
                 </div>
-                <input class="inputButton" type="button" value="Log In" @click="login">
+                <input :class="entryButton" type="button" value="Log In" @click="login">
             </div>
             <hr>
-            <input class="inputButton" style="margin-right:20px;" type="button" value="Sign Up" @click="closeLoginAndGoToSignUp">
-            <input class="inputButton" type="button" value="Log Out" @click="toggleLogout">
+            <input :class="entryButton" style="margin-right:20px;" type="button" value="Sign Up" @click="closeLoginAndGoToSignUp">
+            <input :class="entryButton" type="button" value="Log Out" @click="toggleLogout">
         </form>
     </FreezeAndPopUp>
-    <FreezeAndPopUp :label="'Sign Up'" :toggle="toggleSignup" v-if="signupEnabled" @keydown.enter="signup">
+    <FreezeAndPopUp :label="'Sign Up'"
+                    :toggle="toggleSignup"
+                    :theme="theme"
+                    v-if="signupEnabled"
+                    @keydown.enter="signup">
         <form>
             <label for="'signUpUserInput'">username: </label>
-            <input class="inputStyle" type="text" id="'signUpUserInput'" name="'signUpUserInput'" ref="signUpUserInput">
+            <input :class="entryStyle" type="text" id="'signUpUserInput'" name="'signUpUserInput'" ref="signUpUserInput">
             <br>
             <label for="'signUpPasswordInput'">password: </label>
-            <input class="inputStyle" type="password" id="'signUpPasswordInput'" name="'signUpPasswordInput'" ref="signUpPasswordInput">
+            <input :class="entryStyle" type="password" id="'signUpPasswordInput'" name="'signUpPasswordInput'" ref="signUpPasswordInput">
             <br>
             <label for="'signUpPasswordInput2'">retype password: </label>
-            <input class="inputStyle" type="password" id="'signUpPasswordInput2'" name="'signUpPasswordInput2'" ref="signUpPasswordInput2">
+            <input :class="entryStyle" type="password" id="'signUpPasswordInput2'" name="'signUpPasswordInput2'" ref="signUpPasswordInput2">
             <br>
             <div style="vertical-align:middle;">
                 <div v-if="signUpErrorMessage !== undefined" class="signUpError">
                     {{ signUpErrorMessage }}
                 </div>
-                <input class="inputButton" type="button" value="Sign Up" @click="signup">
+                <input :class="entryButton" type="button" value="Sign Up" @click="signup">
             </div>
         </form>
     </FreezeAndPopUp>
-    <FreezeAndPopUp :label="'Create Project'" :toggle="toggleCreateProject" v-if="createProjectEnabled">
+    <FreezeAndPopUp :label="'Create Project'" 
+                    :toggle="toggleCreateProject"
+                    :theme="theme"
+                    v-if="createProjectEnabled">
         <p>
             Creating a new project allows your project to become persistent on this server. Being persistent means that the url will always be the same, and as long as the server is up your project will be accessible via the internet. This allows for easy sharing of models in different view modes. You may also grant other users permissions to see or write to the project you have created. Just give the project an identifier and choose the permissions and your project should be ready to build and share.
         </p>
@@ -493,7 +558,7 @@ export default {
                 <p>
                     The Project Identifier is used for the url that you can share and the name of the model file if you download it.
                 </p>
-                <input class="inputStyle" type="text" 
+                <input :class="entryStyle" type="text" 
                        id="'projectIdentifier'" 
                        name="'projectIdentifier'" 
                        ref="projectIdentifier"
@@ -506,21 +571,21 @@ export default {
                 <p>
                     The Project Visibility establishes a general rule to who can view this project. If it is private then only you and who you add to the editors and viewers list can edit and view it. If it is Read-Only Public that means that anyone with the link can see the project and walk around it but cannot edit it. If it is Public then anyone can view or edit the project if they have the link.
                 </p>
-                <select class="inputStyle" name="visibilitySelect" id="visibilitySelect" ref="visibilitySelect">
+                <select :class="entryStyle" name="visibilitySelect" id="visibilitySelect" ref="visibilitySelect">
                     <option value="private">Private</option>
                     <option value="readonly">Read-Only Public</option>
                     <option value="public">Public</option>
                 </select>
             </div>
             <div class="floatFormOption">
-                <UserSelector :label="'Edit List'" :users="editUsers">
+                <UserSelector :label="'Edit List'" :users="editUsers" :theme="theme">
                     <p>
                         The list of users on the server that can edit the project. They will be able to create and delete from your project. This list has no effect if your project is Public.
                     </p>
                 </UserSelector>
             </div>
             <div class="floatFormOption">
-                <UserSelector :label="'View List'" :users="viewUsers">
+                <UserSelector :label="'View List'" :users="viewUsers" :theme="theme">
                     <p>
                         The list of users on the server that can view the project. They will be able to navigate around the project and view all of the details within it. They will not however be allowed to make any changes to the Project.
                     </p>
@@ -528,7 +593,7 @@ export default {
             </div>
             <div class="floatFormOption">
                 <div class="createProjectDiv">
-                    <input class="inputButton" type="button" value="Create" @click="createProject">
+                    <input :class="entryButton" type="button" value="Create" @click="createProject">
                 </div>
                 <div class="createProjectError" v-if="createProjectWarningMessage !== undefined">
                     {{ createProjectWarningMessage }}
@@ -536,7 +601,10 @@ export default {
             </div>
         </form>
     </FreezeAndPopUp>
-    <FreezeAndPopUp :label="'Project Settings'" v-if="projectSettingsEnabled" :toggle="toggleProjectSettings">
+    <FreezeAndPopUp :label="'Project Settings'"
+    v-if="projectSettingsEnabled"
+    :toggle="toggleProjectSettings"
+    :theme="theme">
         <p>
             These are the current settings that the project has. Only the user who created and owns the project may alter these settings.
         </p>
@@ -549,21 +617,21 @@ export default {
                 <p>
                     The Project Visibility establishes a general rule to who can view this project. If it is private then only you and who you add to the editors and viewers list can edit and view it. If it is Read-Only Public that means that anyone with the link can see the project and walk around it but cannot edit it. If it is Public then anyone can view or edit the project if they have the link.
                 </p>
-                <select class="inputStyle" name="visibilitySelect" id="visibilitySelect" ref="visibilitySelect">
+                <select :class="entryStyle" name="visibilitySelect" id="visibilitySelect" ref="visibilitySelect">
                     <option value="private">Private</option>
                     <option value="readonly">Read-Only Public</option>
                     <option value="public">Public</option>
                 </select>
             </div>
             <div class="floatFormOption">
-                <UserSelector :label="'Edit List'" :users="editUsers">
+                <UserSelector :label="'Edit List'" :users="editUsers" :theme="theme">
                     <p>
                         The list of users on the server that can edit the project. They will be able to create and delete from your project. This list has no effect if your project is Public.
                     </p>
                 </UserSelector>
             </div>
             <div class="floatFormOption">
-                <UserSelector :label="'View List'" :users="viewUsers">
+                <UserSelector :label="'View List'" :users="viewUsers" :theme="theme">
                     <p>
                         The list of users on the server that can view the project. They will be able to navigate around the project and view all of the details within it. They will not however be allowed to make any changes to the Project.
                     </p>
@@ -571,7 +639,7 @@ export default {
             </div>
             <div class="floatFormOption">
                 <div class="createProjectDiv">
-                    <input class="inputButton" type="button" value="Update" @click="updateProjectSettings">
+                    <input :class="entryButton" type="button" value="Update" @click="updateProjectSettings">
                 </div>
                 <div class="createProjectError" v-if="projectSettingsWarningMessage !== undefined">
                     {{ projectSettingsWarningMessage }}
@@ -579,7 +647,10 @@ export default {
             </div>
         </form>
     </FreezeAndPopUp>
-    <FreezeAndPopUp :label="'Project Explorer'" v-if="projectExplorerEnabled" :toggle="toggleProjectExplorer">
+    <FreezeAndPopUp :label="'Project Explorer'" 
+                    v-if="projectExplorerEnabled"
+                    :toggle="toggleProjectExplorer"
+                    :theme="theme">
         Browse your recent projects, as well as the projects that you own. Double click on a project to open it.
         <hr/>
         <h3>Recent Projects:</h3>
@@ -587,24 +658,24 @@ export default {
             v-if="recentProjects" 
             v-for="recentProject in recentProjects" 
             :key="recentProject" 
-            class="inputStyle" 
+            :class="entryStyle" 
             @dblclick="openProject(recentProject)">
             {{ recentProject }}
         </div>
-        <div v-if="!recentProjects" class="inputStyle"></div>
+        <div v-if="!recentProjects" :class="entryStyle"></div>
         <br/>
         <h3>Your Projects:</h3>
         <div 
             v-if="userProjects" 
             v-for="userProject in userProjects" 
             :key="userProject" 
-            class="inputStyle"
+            :class="entryStyle"
             @dblclick="openProject(userProject)">
             {{ userProject }}
         </div>
-        <div v-if="!userProjects" class="inputStyle"></div>
+        <div v-if="!userProjects" :class="entryStyle"></div>
         <br/>
-        <button class="inputButton" @click="toggleCreateProject">
+        <button :class="entryButton" @click="toggleCreateProject">
             Create Project
         </button>
 
@@ -613,8 +684,14 @@ export default {
 <style>
 .umlBanner {
     flex: 0 1 auto;
-    background-color: var(--vt-c-black);
     max-height: 10vh;
+}
+.bannerDark {
+    background-color: var(--vt-c-black);
+}
+.bannerLight {
+    background-color: var(--uml-cafe-light-dark);
+    color: var(--vt-c-dark-dark);
 }
 .bannerItems {
     display: flex;
@@ -634,7 +711,6 @@ export default {
 }
 .optionsOption {
     padding: 5px 15px;
-    /* background-color: #d8dee8; */
     font-family: system-ui;
     position: relative;
 }
@@ -682,38 +758,101 @@ hr {
 }
 .inputStyle {
     width: 46vw;
-    background-color: var(--open-uml-selection-dark-1);
+    
     min-height: 24px;
     display: flex;
     padding-left: 5px;
     border: none;
+    
+}
+.inputDark {
+    background-color: var(--open-uml-selection-dark-1);
     color: var( --vt-c-text-light-1);
 }
-.inputStyle:hover {
+.inputDark:hover {
     background-color: var(--vt-c-dark-soft);
+    color: var( --vt-c-text-light-1);
+}
+.inputLight {
+    color: var(--vt-c-dark-dark);
+    background-color: var(--vt-c-white-soft);
+}
+.inputLight:hover {
+    background-color: var(--vt-c-white-mute);
+    color: var(--vt-c-dark-dark);
 }
 .createProjectDiv {
     float: right;
 }
 .inputButton {
-    background-color: var(--open-uml-selection-dark-1);
     border: none;
-    color: var( --vt-c-text-light-1);
     height: 2em;
     border-radius: 10px;
 }
-.inputButton:hover {
-    background-color: var(--vt-c-dark-soft);
+
+/* special slider input */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 24px;
+    margin-left: 10px;
 }
-.logInButton {
-    padding: 10px;
-    overflow-y: auto;
-    flex: 0 1 auto;
-    border-color: var(--color-border);
-    background-color: var(--open-uml-selection-dark-1);
-    color: var(--vt-c-text-light-1);
+
+/* Hide default HTML checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
-.logInButton:hover {
-    background-color: var(--vt-c-dark-soft);
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 15px;
+  width: 15px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+input:checked + .slider {
+  background-color: var(--uml-cafe-light-dark-2);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--uml-cafe-light-dark-2); /* change to user color */
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(15px);
+  -ms-transform: translateX(15px);
+  transform: translateX(15px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
 }
 </style>

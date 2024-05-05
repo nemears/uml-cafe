@@ -12,6 +12,7 @@ export default {
         "depth",
         "selectedElements",
         "treeGraph",
+        'theme',
     ],
     inject: [
         'elementUpdate',
@@ -69,7 +70,7 @@ export default {
             return this.name;
         },
         panelClass() {
-            return getPanelClass(this.selected, this.hover, this.currentUsers, this.$umlWebClient);
+            return getPanelClass(this.selected, this.hover, this.currentUsers, this.$umlWebClient, this.theme);
         }
     },
     watch: {
@@ -743,6 +744,7 @@ export default {
                     :depth="depth + 1"
                     :selected-elements="selectedElements"
                     :tree-graph="treeGraph"
+                    :theme="theme"
                     :key="child"
                     @specification="propogateSpecification" 
                     @element-update="propogateElementUpdate"
@@ -771,8 +773,19 @@ export default {
     width: 100%;
     font-size: 15px;
 }
-.elementExplorerPanelLight {
+.elementExplorerPanelDarkHover {
     background-color: var(--vt-c-dark-soft);
+}
+.elementExplorerPanelDark {
+    background-color: var(--vt-c-dark);
+}
+.elementExplorerPanelLightHover {
+    background-color: var(--vt-c-white-mute);
+    color: var(--vt-c-dark-dark);
+}
+.elementExplorerPanelLight {
+    background-color: var(--vt-c-white-soft);
+    color: var(--vt-c-dark-dark);
 }
 .redUserPanel {
     background-color: var(--uml-cafe-red-user);

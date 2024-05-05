@@ -2,7 +2,7 @@
 import CloseSymbol from '../../assets/icons/general/close_symbol.svg';
 import getImage from '../../GetUmlImage.vue';
 export default {
-    props: ['types', 'umlid', 'set'],
+    props: ['types', 'umlid', 'set', 'theme'],
     emits: ['closePopUp'],
     data() {
         return {
@@ -16,7 +16,7 @@ export default {
         }
     },
     methods: {
-        closePopUp(event) {
+        closePopUp() {
             this.$emit('closePopUp', undefined);
         },
         async createElement(elementType) {
@@ -31,7 +31,11 @@ export default {
 }
 </script>
 <template>
-    <div class="mainPopUp">
+    <div    class="mainPopUp"
+            :class="{
+                popupLight : theme === 'light',
+                popupDark : theme === 'dark',
+            }">
         <div class="banner">
             Select Element Type to create...
             <div class="closePopUp" @click.stop="closePopUp">
@@ -39,7 +43,14 @@ export default {
             </div>
         </div>
         <div class="content">
-            <div class="elementCreationOption" v-for="elementType in types" :key="elementType" @dblclick="createElement(elementType)">
+            <div    class="elementCreationOption"
+                    :class="{
+                        optionLight : theme === 'light',
+                        optionDark : theme === 'dark',
+                    }"
+                    v-for="elementType in types" 
+                    :key="elementType" 
+                    @dblclick="createElement(elementType)">
                 <img v-bind:src="images[elementType]"/>
                 <div style="padding-left:5px" class="notEditable">
                     {{ elementType }}
@@ -52,9 +63,15 @@ export default {
 .mainPopUp {
     position: absolute;
     z-index: 1;
-    background-color: var(--open-uml-selection-dark-1);
     pointer-events: all;
     border: 1px solid;
+}
+.popupLight {
+    background-color: var(--uml-cafe-selection-light-1);
+    border-color: var(--vt-c-divider-light-1);
+}
+.popupDark {
+    background-color: var(--open-uml-selection-dark-1);
     border-color: var(--vt-c-divider-dark-1);
 }
 .content {
@@ -72,14 +89,23 @@ export default {
 }
 .elementCreationOption {
     border: 1px solid;
-    border-color: var(--vt-c-divider-dark-1);
     width: 400px;
-    background-color: var(--open-uml-selection-dark-1);
     vertical-align: middle;
     display: flex;
     padding-left: 5px;
 }
-.elementCreationOption:hover {
+.optionLight {
+    border-color: var(--vt-c-divider-light-1);
+    background-color: var(--uml-cafe-selection-light-1);
+}
+.optionLight:hover {
+    background-color: var(--uml-cafe-selection-light-2);
+}
+.optionDark {
+    border-color: var(--vt-c-divider-dark-1);
+    background-color: var(--open-uml-selection-dark-1);
+}
+.optionDark:hover {
     background-color: var(--open-uml-selection-dark-2);
 }
 </style>

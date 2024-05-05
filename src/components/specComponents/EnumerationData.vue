@@ -1,6 +1,6 @@
 <script>
 export default {
-    props: ['label', 'umlID', 'enumValues', 'enumName', 'initialValue'],
+    props: ['label', 'umlID', 'enumValues', 'enumName', 'initialValue', 'theme'],
     data() {
         return {
 
@@ -35,7 +35,13 @@ export default {
                 <b>{{ label }}</b>
             </label>
         </div>
-        <select name="dataField" @change="submitDataChange" ref="enumInput">
+        <select name="dataField"
+                :class="{
+                    darkInput : theme === 'dark',
+                    lightInput : theme === 'light',
+                }"
+                @change="submitDataChange" 
+                ref="enumInput">
             <option v-for="value in enumValues" 
                     :key="value.name" 
                     :value="value.name">{{ value.label }}</option>
@@ -49,10 +55,16 @@ export default {
 }
 .enumInputContainer > select {
     min-width: 700px;
-    color: azure;
-    background-color: #222427;
     border: none;
     font-size: 18px;
+}
+.darkInput {
+    color: azure;
+    background-color: var(--open-uml-selection-dark-1);
+}
+.lightInput {
+    background-color: var(--uml-cafe-selection-light-1);
+    color: var(--vt-c-dark-dark);
 }
 .enumInputLabel {
     min-width: 200px;

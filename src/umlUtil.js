@@ -146,16 +146,17 @@ export function mapClientColor(color) {
     }
 }
 
-export function getPanelClass(selected, hover, currentUsers, umlWebClient) {
+export function getPanelClass(selected, hover, currentUsers, umlWebClient, theme) {
     if (!selected) {
         if (currentUsers.length > 0) {
             return currentUsers[0];
         }
+        let ret = 'elementExplorerPanel';
+        ret += theme.charAt(0).toUpperCase() + theme.slice(1);
         if (hover) {
-            return 'elementExplorerPanelLight';
-        } else {
-            return 'elementExplorerPanel'
+            return ret + 'Hover';
         }
+        return ret;
     } else {
         if (hover) {
             return mapClientColor(umlWebClient.color) + 'Light';

@@ -11,6 +11,7 @@ export default {
         'creatable', 
         'setData',
         'selectedElements',
+        'theme',
     ],
     inject: [
         'elementUpdate',
@@ -121,18 +122,9 @@ export default {
         }
     },
     methods: {
-        getPanelClassHelper(result) {
-            switch (result) {
-                case 'elementExplorerPanel':
-                    return 'setElement';
-                case 'elementExplorerPanelLight':
-                    return 'setElementLight';
-                default:
-                    return result;
-            }
-        },
         panelClass(elementData) {
-            return this.getPanelClassHelper(getPanelClass(elementData.selected, elementData.hover, elementData.currentUsers, this.$umlWebClient));
+            const ret = getPanelClass(elementData.selected, elementData.hover, elementData.currentUsers, this.$umlWebClient, this.theme).replace('elementExplorerPanel', 'setElement');
+            return ret;
         },
         async specification(id) {
             this.$emit('specification', await this.$umlWebClient.get(id));
@@ -295,11 +287,15 @@ export default {
                     {{ el.label }}
                 </div>
             </div>
-            <div v-if="creatable || data.length === 0" >
+            <div v-if="creatable || data.length === 0">
                 <div class="setElement" @dblclick="createElement">
-                    <div class="createToolTip" 
-                         :class="{ readOnlyToolTip : $umlWebClient.readonly }" 
-                         v-if="creatable">
+                    <div    class="createToolTip" 
+                            :class="{
+                                readOnlyToolTip : $umlWebClient.readonly,
+                                setElementDark : theme === 'dark',
+                                setElementLight : theme === 'light',
+                            }"
+                            v-if="creatable">
                         double click to create an element
                     </div>
                     <div class="createButton" 
@@ -312,7 +308,8 @@ export default {
                 <CreationPopUp v-if="createPopUp && !$umlWebClient.readonly" 
                                :types="creatable.types" 
                                :set="creatable.set" 
-                               :umlid="umlid" 
+                               :umlid="umlid"
+                               :theme="theme"
                                @closePopUp="closePopUp"></CreationPopUp>
             </div>
         </div>
@@ -332,11 +329,19 @@ export default {
     display: flex;
     padding-left: 5px;
 }
-.setElement {
+.setElementDark {
     background-color: var(--open-uml-selection-dark-1);
 }
-.setElementLight {
+.setElementDarkHover {
     background-color: var(--open-uml-selection-dark-2);
+}
+.setElementLight {
+    background-color: var(--uml-cafe-selection-light-1);
+    color: var(--vt-c-dark-dark);
+}
+.setElementLightHover {
+    background-color: var(--uml-cafe-selection-light-2);
+    color: var(--vt-c-dark-dark);
 }
 .redUserPanel {
     background-color: var(--uml-cafe-red-user);
@@ -419,6 +424,7 @@ export default {
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
+    width: 700px;
 }
 .readOnlyToolTip {
     color: var(--vt-c-divider-dark-1);
