@@ -7,9 +7,6 @@
             <p>
                 This is an alpha stage open source uml based modeling client. Create a Class Diagram, and model the structure of your systems or code. You can sign up and have your Projects saved in the cloud. Make sure to model with your friends in real time as well, just share your url.
             </p>
-            <p>
-                <b>uml.cafe Server Upgrade Planned:</b> The server is running on a small pool of resources at it's current state. We are looking into moving and upgrading the server for faster performance for the users. This will significantly speed up the loading of models and diagrams for you the user.
-            </p>
             <div style="text-align: center;">
                 <video controls width="80%">
                     <source src="@/assets/demo_video_uml_cafe.webm" type="video/mp4">

@@ -161,13 +161,10 @@ export default {
                     this.$emit('userUpdate');
                     if (this.rememberUserEnabled) {
                         sessionStorage.setItem('user', this.$umlWebClient.user);
-                        const setPasswordHash = async() => {
-                            sessionStorage.setItem('passwordHash', Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)))).map(b => b.toString(16).padStart(2, '0')).join(''));
-                        };
-                        setPasswordHash();
+                        sessionStorage.setItem('password', password);
                     } else {
                         sessionStorage.removeItem('user');
-                        sessionStorage.removeItem('passwordHash');
+                        sessionStorage.removeItem('password');
                     }
                 }
             });
@@ -213,10 +210,7 @@ export default {
                 this.user = this.$umlWebClient.user;
                 this.$emit('userUpdate');
                 sessionStorage.setItem('user', this.$umlWebClient.user);
-                const setPasswordHash = async() => {
-                    sessionStorage.setItem('passwordHash', Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)))).map(b => b.toString(16).padStart(2, '0')).join(''));
-                };
-                setPasswordHash();
+                sessionStorage.setItem('password', password);
                 this.toggleSignup();
             });
         },
@@ -273,6 +267,7 @@ export default {
             await this.$umlWebClient.close();
             await this.$umlWebClient.login({
                 user: this.$umlWebClient.user,
+                password: this.$umlWebClient.password,
                 address: this.$umlWebClient.address,
                 group: this.$umlWebClient.user,
                 project: this.$refs.projectIdentifier.value,
