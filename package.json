@@ -1,6 +1,6 @@
 {
   "name": "uml-cafe",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "private": true,
   "license": "BSD-2.0",
   "scripts": {
@@ -13,7 +13,7 @@
     "diagram-js": "^14.3.1",
     "diagram-js-direct-editing": "^2.1.2",
     "events": "^3.3.0",
-    "uml-client": "^0.4.2",
+    "uml-client": "^0.4.3",
     "vue": "^3.2.26"
   },
   "devDependencies": {

@@ -173,12 +173,12 @@ export function getProjectLoginObject(wholeProjectName, serverAddress) {
 
     // check for stashed user and passwordHash
     let user = sessionStorage.getItem('user');
-    let passwordHash = sessionStorage.getItem('passwordHash');
+    let password = sessionStorage.getItem('password');
     if (user === 'null' || user === 'undefined') {
         user = undefined;
     }
-    if (passwordHash === 'null' || user === 'undefined') {
-        passwordHash = undefined;
+    if (password === 'null' || user === 'undefined') {
+        password = undefined;
     }
 
     return {
@@ -186,7 +186,7 @@ export function getProjectLoginObject(wholeProjectName, serverAddress) {
         group: groupName,
         project: projectName,
         user: user,
-        passwordHash: passwordHash,
+        password: password,
         create: groupName !== 'sessions',
     }
 }

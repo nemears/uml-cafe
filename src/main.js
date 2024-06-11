@@ -9,7 +9,7 @@ import { getProjectLoginObject } from './umlUtil';
 
 let projectName = randomID();
 let groupName = 'sessions';
-let serverAddress = 'ws://localhost:1672';//'wss://uml.cafe/api/';
+let serverAddress = 'wss://uml.cafe/api/';
 
 // this is some logic to determine wether we are accessing an already created project or if we are in a new state.
 if (location.pathname != "/") {
@@ -31,7 +31,7 @@ if (location.pathname != "/") {
 
     umlWebClient.initialization.then(() => {
         sessionStorage.setItem('user', loginObject.user);
-        sessionStorage.setItem('passwordHash', loginObject.passwordHash);
+        sessionStorage.setItem('password', loginObject.password);
         mountApp();
     }).catch((err) => {
         console.error(err);
