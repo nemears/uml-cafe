@@ -6,10 +6,11 @@ import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { UmlWebClient } from 'uml-client';
 import { getProjectLoginObject } from './umlUtil';
+import config from '../config.json';
 
 let projectName = randomID();
 let groupName = 'sessions';
-let serverAddress = 'wss://uml.cafe/api/';
+let serverAddress = config.api_location;
 
 // this is some logic to determine wether we are accessing an already created project or if we are in a new state.
 if (location.pathname != "/") {
