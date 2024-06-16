@@ -47,6 +47,12 @@
             <p>Did you find an issue? Submit it to our issues list <a href="https://github.com/nemears/uml-cafe/issues">here</a>!</p>
             <br/>
             <h2>Release Notes</h2>
+            <h3>0.5.4</h3>
+            <p>New config option for customizing between builds</p>
+            <h3>0.5.3</h3>
+            <p>New light dark theme toggle and fixed problem with api login and sessionStorage</p>
+            <h3>0.5.2</h3>
+            <p>Tab updates so that tabs can be moved around and reordered. Updated uml-client to have more secure api.</p>
             <h3>0.5.1</h3>
             <p>Added a throbber when loading diagrams so user cannot mess with incomplete state. Fixed Bugs with edges, properties and persistence.</p>
             <h3>0.5.0</h3>
