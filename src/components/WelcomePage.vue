@@ -35,7 +35,7 @@
             </ul>
             <br/>
             <p>
-                <b>Contact:</b> emory@uml.cafe
+                <b>Contact:</b> em@uml.cafe
             </p>
             <br/>
             <h2>Known issues</h2>
