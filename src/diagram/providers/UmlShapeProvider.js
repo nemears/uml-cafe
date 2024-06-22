@@ -1,5 +1,6 @@
 import { getMid, roundBounds } from "diagram-js/lib/layout/LayoutUtil";
-import { BOUNDS_ID, EDGE_ID, isShape } from "../api/diagramInterchange";
+import { EDGE_ID, SHAPE_BOUNDS_SLOT_ID } from "../api/diagramInterchange/ids";
+import { isShape  } from '../api/diagramInterchange/is';
 import { adjustEdgeWaypoints } from './UmlEdgeProvider';
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 
@@ -274,7 +275,7 @@ export async function adjustShape(shape, shapeInstance, umlWebClient) {
         throw Error('cannot handle shapeInstance that is not an instanceSpecification!');
     }
     for await (let slot of shapeInstance.slots) {
-        if (slot.definingFeature.id() === BOUNDS_ID) {
+        if (slot.definingFeature.id() === SHAPE_BOUNDS_SLOT_ID) {
             boundsInstance = await (await slot.values.front()).instance.get();
             break;
         }

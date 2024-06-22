@@ -2,6 +2,10 @@
 import { Editor } from '../diagram/editor';
 const EventEmitter = require('events');
 import { createElementUpdate } from '../umlUtil.js';
+import { isDiagram, isLabel, isShape } from '../diagram/api/diagramInterchange/is';
+import { updateLabel, createDiagramLabel } from '../diagram/api/diagramInterchange/label';
+import { updateClassDiagram } from '../diagram/api/diagramInterchange/classDiagram';
+import { getUmlDiagramElement, deleteUmlDiagramElement } from '../diagram/api/diagramInterchange/util';
 import { toRaw } from 'vue';
 import { CLASS_SHAPE_HEADER_HEIGHT } from '../diagram/providers/ClassHandler';
 import { getTypedElementText, getTextDimensions, LABEL_HEIGHT } from '../diagram/providers/ClassDiagramPaletteProvider';

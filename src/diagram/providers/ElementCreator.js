@@ -1,4 +1,8 @@
-import { createAssociationEndLabel, createClassifierShape, createComparment, createDiagramEdge, createDiagramLabel, createDiagramShape, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel, deleteUmlDiagramElement } from '../api/diagramInterchange';
+import { createAssociationEndLabel, createDiagramLabel, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel } from '../api/diagramInterchange/label';
+import { createClassifierShape, createComparment } from '../api/diagramInterchange/compartmentableShape';
+import { createDiagramEdge } from '../api/diagramInterchange/edge';
+import { deleteUmlDiagramElement  } from '../api/diagramInterchange/util';
+import { createDiagramShape } from '../api/diagramInterchange/shape'; 
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { placeEdgeLabel } from './EdgeConnect';
 /**

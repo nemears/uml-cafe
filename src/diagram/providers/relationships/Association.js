@@ -5,7 +5,8 @@ import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { getTextDimensions } from '../ClassDiagramPaletteProvider';
 import { adjustShape } from '../UmlShapeProvider';
 import { placeEdgeLabel } from '../EdgeConnect';
-import { createAssociationEndLabel, createMultiplicityLabel, createNameLabel, deleteUmlDiagramElement, updateLabel } from '../../api/diagramInterchange';
+import { createAssociationEndLabel, createMultiplicityLabel, createNameLabel, updateLabel } from '../../api/diagramInterchange/label';
+import { deleteUmlDiagramElement } from '../../api/diagramInterchange/util';
 import { createAssociationNameLabel } from '../RelationshipEdgeCreator';
 
 export const OWNED_END_RADIUS = 5;

@@ -1,6 +1,8 @@
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { getMid } from "diagram-js/lib/layout/LayoutUtil";
-import { createAssociationEndLabel, createDiagramEdge, createDiagramLabel, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel, deleteUmlDiagramElement } from "../api/diagramInterchange";
+import { createAssociationEndLabel, createDiagramLabel, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel } from "../api/diagramInterchange/label";
+import { deleteUmlDiagramElement } from '../api/diagramInterchange/util';
+import { createDiagramEdge } from '../api/diagramInterchange/edge';
 
 class EdgeConnectHandler {
     constructor(diagramEmitter, elementFactory, canvas, eventBus, umlWebClient, diagramContext) {

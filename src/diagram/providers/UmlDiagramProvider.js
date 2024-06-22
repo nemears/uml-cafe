@@ -1,5 +1,6 @@
 import RuleProvider from "diagram-js/lib/features/rules/RuleProvider";
-import { isDiagram, updateLabel } from "../api/diagramInterchange";
+import { isDiagram } from "../api/diagramInterchange/is";
+import { updateLabel  } from '../api/diagramInterchange/label';
 
 export default class UmlDiagramProvider extends RuleProvider {
     constructor(eventBus, canvas, diagramContext, graphicsFactory, umlWebClient) {

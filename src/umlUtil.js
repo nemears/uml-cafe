@@ -1,5 +1,6 @@
 import { randomID } from "uml-client/lib/element";
-import { createClassDiagram } from "./diagram/api/diagramInterchange";
+import { createClassDiagram } from "./diagram/api/diagramInterchange/classDiagram";
+
 export function createElementUpdate() {
     const ret = {
         updatedElements: []

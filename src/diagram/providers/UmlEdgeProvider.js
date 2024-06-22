@@ -1,4 +1,4 @@
-import { makeUMLWaypoints } from './relationships/relationshipUtil';
+import { makeUMLWaypoints } from '../api/diagramInterchange/edge';
 
 class AdjustWaypointsHandler {
     constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, eventBus) {

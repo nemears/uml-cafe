@@ -1,4 +1,4 @@
-import { getUmlDiagramElement, deleteUmlDiagramElement } from '../api/diagramInterchange';
+import { getUmlDiagramElement, deleteUmlDiagramElement } from '../api/diagramInterchange/util';
 
 export default class ElementUpdate {
 

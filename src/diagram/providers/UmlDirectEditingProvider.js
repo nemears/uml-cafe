@@ -1,5 +1,5 @@
 import { createElementUpdate } from '../../umlUtil';
-import { updateLabel } from '../api/diagramInterchange';
+import { updateLabel } from '../api/diagramInterchange/label';
 import { getTextDimensions, getTypedElementText } from './ClassDiagramPaletteProvider';
 import { placeEdgeLabel } from './EdgeConnect';
 

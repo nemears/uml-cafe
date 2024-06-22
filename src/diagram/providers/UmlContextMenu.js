@@ -1,4 +1,5 @@
-import { createDiagramEdge, deleteUmlDiagramElement } from "../api/diagramInterchange";
+import { createDiagramEdge } from "../api/diagramInterchange/edge";
+import { deleteUmlDiagramElement } from '../api/diagramInterchange/util';
 import { h } from "vue";
 import { getMid } from "diagram-js/lib/layout/LayoutUtil";
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
