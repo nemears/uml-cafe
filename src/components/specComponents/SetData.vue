@@ -29,6 +29,9 @@ export default {
             recentDragInfo: undefined,
             dragCounter: 0,
             dummy: false,
+            emptyData: {
+                hover:false,
+            },
         };
     },
     mounted() {
@@ -119,6 +122,15 @@ export default {
             if (reRender) {
                 this.dummy = !this.dummy;
             }
+        }
+    },
+    computed : {
+        blankPanelClass() {
+            return this.panelClass({
+                selected: false,
+                hover: this.emptyData.hover, 
+                currentUsers: []
+            });
         }
     },
     methods: {
@@ -288,12 +300,18 @@ export default {
                 </div>
             </div>
             <div v-if="creatable || data.length === 0">
-                <div class="setElement" @dblclick="createElement">
+                <div class="setElement" 
+                     :class="blankPanelClass"
+                     @mouseenter="mouseEnter(emptyData)"
+                     @mouseleave="mouseLeave(emptyData)"
+                     @dblclick="createElement">
                     <div    class="createToolTip" 
                             :class="{
                                 readOnlyToolTip : $umlWebClient.readonly,
-                                setElementDark : theme === 'dark',
-                                setElementLight : theme === 'light',
+                                setElementDark : theme === 'dark' && !emptyData.hover,
+                                setElementLight : theme === 'light' && !emptyData.hover,
+                                setElementDarkHover : theme === 'dark' && emptyData.hover,
+                                setElementLightHover : theme === 'light' && emptyData.hover
                             }"
                             v-if="creatable">
                         double click to create an element
@@ -325,7 +343,7 @@ export default {
 }
 .setElement, .selectedSetElement{
     width: 700px;
-    min-height: 24px;
+    min-height: 30px;
     display: flex;
     padding-left: 5px;
 }
@@ -397,7 +415,7 @@ export default {
     border: 1px solid;
     min-width: 25px;
     border-color: var(--vt-c-black-soft);
-    background-color: var(--vt-c-white-soft);
+    /*background-color: var(--vt-c-white-soft);*/
     color: var(--vt-c-black-soft);
     -webkit-user-select: none; /* Safari */        
     -moz-user-select: none; /* Firefox */

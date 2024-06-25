@@ -114,6 +114,15 @@ export default {
                 this.namedElementData = undefined;
             }
 
+            if (el.isSubClassOf('redefinableElement')) {
+                this.redefinableElementData = {};
+                this.redefinableElementData.isLeaf = el.isLeaf;
+                await reloadSet(this.redefinableElementData, el.redefinedElements, 'redefinedElements');
+                await reloadSet(this.redefinableElementData, el.redefinitionContexts, 'redefinitionContexts');
+            } else {
+                this.redefinableElementData = undefined;
+            }
+
             if (el.isSubClassOf('relationship')) {
                 this.relationshipData = {};
                 await reloadSet(this.relationshipData, el.relatedElements, 'relatedElements');
@@ -494,6 +503,37 @@ export default {
                     @deselect="propogateDeselect"
                     ></SetData>                        
 	</ElementType>
+    <ElementType :element-type="'RedefinableElement'" :theme="theme" v-if="redefinableElementData !== undefined">
+        <!-- TODO isLeaf -->
+        <SetData    :label="'Redefined Elements'"
+                    :initial-data="redefinableElementData.redefinedElements"
+                    :umlid="umlID"
+                    :selected-elements="selectedElements"
+                    :theme="theme"
+                    :set-data="{
+                        readonly: true,
+                        setName: 'redefinedElements'
+                    }"
+                    @specification="propogateSpecification" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
+                    @element-update="propogateElementUpdate"
+                    ></SetData>
+        <SetData    :label="'Redefinition Contexts'"
+                    :initial-data="redefinableElementData.redefinitionContexts"
+                    :umlid="umlID"
+                    :selected-elements="selectedElements"
+                    :theme="theme"
+                    :set-data="{
+                        readonly: true,
+                        setName: 'redefinitionContexts'
+                    }"
+                    @specification="propogateSpecification" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
+                    @element-update="propogateElementUpdate"
+                    ></SetData>
+    </ElementType>
 	<ElementType :element-type="'Relationship'" :theme="theme" v-if="relationshipData !== undefined">
         <SetData    :label="'Related Elements'" 
                     :initial-data="relationshipData.relatedElements" 
@@ -1181,25 +1221,6 @@ export default {
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     ></SetData>
-    </ElementType>
-    <ElementType :element-type="'Feature'" v-if="featureData !== undefined">
-        <InputData  :label="'isStatic'" 
-                    :input-type="'checkbox'"
-                    :initial-data="featureData.isStatic"
-                    :umlid="umlID"
-                    :type="'isStatic'" 
-                    @element-update="propogateElementUpdate"
-                    ></InputData>
-        <SingletonData :label="'Featuring Classifier'"
-                    :initial-data="featureData.featuringClassifier"
-                    :uml-i-d="umlID"
-                    :singleton-data="{ setName: 'featuringClassifier', type: 'classifier' }"
-                    :selected-elements="selectedElements"
-                    @specification="propogateSpecification"
-                    @element-update="propogateElementUpdate" 
-                    @select="propogateSelect"
-                    @deselect="propogateDeselect"
-                    ></SingletonData>        
     </ElementType>
     </div> 
 </div>

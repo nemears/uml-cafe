@@ -360,7 +360,7 @@ export default {
 }
 .singletonElement {
     width: 700px;
-    min-height: 24px;
+    min-height: 30px;
     display: flex;
     padding-left: 5px;
 }
