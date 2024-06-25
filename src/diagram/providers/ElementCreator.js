@@ -22,19 +22,21 @@ import { placeEdgeLabel } from './EdgeConnect';
  * }
  **/
 class ElementCreationHandler {
-    constructor(eventBus, canvas, umlWebClient, diagramContext, diagramEmitter) {
+    constructor(eventBus, canvas, umlWebClient, diagramContext, diagramEmitter, diManager) {
         this._eventBus = eventBus;
         this._canvas = canvas;
         this._umlWebClient = umlWebClient;
         this._diagramContext = diagramContext;
         this._diagramEmitter = diagramEmitter;
+        this._diManager = diManager;
     }
     execute(context) {
         const eventBus = this._eventBus,
         canvas = this._canvas,
         umlWebClient = this._umlWebClient,
         diagramContext = this._diagramContext,
-        diagramEmitter = this._diagramEmitter;
+        diagramEmitter = this._diagramEmitter,
+        diManager = this._diManager;
         if (context.proxy) {
             delete context.proxy;
             return;
@@ -134,12 +136,34 @@ class ElementCreationHandler {
                     case 'label':
                         createDiagramLabel(element, umlWebClient, diagramContext);
                         break;
-                    case 'classifierShape':
-                        await createClassifierShape(element, umlWebClient, diagramContext);
+                    case 'classifierShape': {
+                        const classifierShape = diManager.post('UML DI.UMLClassifierShape', {id:element.id});
+                        const bounds = diManager.post('Diagram Common.Bounds');
+                        bounds.x = element.x;
+                        bounds.y = element.y;
+                        bounds.width = element.width;
+                        bounds.height = element.height;
                         for (const compartment of element.compartments) {
-                            await createComparment(compartment, umlWebClient, diagramContext);
+                            const diCompartment = diManager.post('UML DI.UMLCompartment', {id:compartment.id});
+                            classifierShape.compartment.add(diCompartment);
                         }
+                        if (element.owningElement) {
+                            const owningElementDI = await diManager.get(element.owningElement.id);
+                            owningElementDI.ownedElements.add(classifierShape);
+                        } else {
+                            diagramContext.umlDiagram.ownedElements.add(classifierShape);
+                        }
+                        diManager.put(classifierShape);
+                        for await (const compartment of classifierShape.compartment) {
+                            diManager.put(compartment);
+                        }
+                        diManager.put(await classifierShape.owningElement.get());
+                        // await createClassifierShape(element, umlWebClient, diagramContext);
+                        // for (const compartment of element.compartments) {
+                        //     await createComparment(compartment, umlWebClient, diagramContext);
+                        // }
                         break;
+                    }
                     case 'nameLabel':
                         await createNameLabel(element, umlWebClient, diagramContext);
                         break;
@@ -174,7 +198,8 @@ class ElementCreationHandler {
         const diagramEmitter = this._diagramEmitter,
         eventBus = this._eventBus,
         canvas = this._canvas,
-        umlWebClient = this._umlWebClient;
+        umlWebClient = this._umlWebClient,
+        diManager = this._diManager;
         diagramEmitter.fire('command', {undo: {
                        // TODO
         }});
@@ -218,19 +243,24 @@ class ElementCreationHandler {
             for (const element of context.elements.toReversed()) {
                 switch (element.elementType) {
                     case 'classifierShape':
-                    case 'compartmentableShape':
-                        for (const compartment of element.compartments) {
-                            await deleteUmlDiagramElement(compartment.id, umlWebClient);
+                    case 'compartmentableShape': {
+                        const diElement = await diManager.get(element.id);
+                        for await (const compartment of diElement.compartment) {
+                            //await deleteUmlDiagramElement(compartment.id, umlWebClient);
+                            await diManager.delete(compartment);
                         }
-                        await deleteUmlDiagramElement(element.id, umlWebClient);
+                        // await deleteUmlDiagramElement(element.id, umlWebClient);
+                        await diManager.delete(diElement);
                         if (element.createModelElement) {
                             eventBus.fire('elementDeleted', {
                                 element: element
                             });
                         }
                         break;
+                    }
                     default:
-                        await deleteUmlDiagramElement(element.id, umlWebClient);
+                        await diManager.delete(await diManager.get(element.id));
+                        // await deleteUmlDiagramElement(element.id, umlWebClient);
                         break;
                 }
             }
@@ -240,7 +270,7 @@ class ElementCreationHandler {
     }
 }
 
-ElementCreationHandler.$inject = ['eventBus', 'canvas', 'umlWebClient', 'diagramContext', 'diagramEmitter'];
+ElementCreationHandler.$inject = ['eventBus', 'canvas', 'umlWebClient', 'diagramContext', 'diagramEmitter', 'diManager'];
 
 export default class ElementCreator {
     constructor(eventBus, commandStack) {

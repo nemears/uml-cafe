@@ -10,6 +10,7 @@ import { toRaw } from 'vue';
 import { CLASS_SHAPE_HEADER_HEIGHT } from '../diagram/providers/ClassHandler';
 import { getTypedElementText, getTextDimensions, LABEL_HEIGHT } from '../diagram/providers/ClassDiagramPaletteProvider';
 import { randomID } from 'uml-client/lib/element.js';
+import { generate } from 'uml-client/lib/generate.js'
 import { isPropertyValidForMultiplicityLabel } from '../diagram/providers/relationships/Association';
 export default {
     data() {
@@ -80,6 +81,9 @@ export default {
             }
             const scopedEmitter = new EventEmitter();
             const diagramPackage = await this.$umlWebClient.get(this.umlID);
+            const umlPackage = await this.$umlWebClient.get('UML_r67OnwwyTHCtCmWnZsd8ePh5');
+            const ModelUmlModule = await generate(umlPackage, this.$umlWebClient);
+            const DIManager = new ModelUmlModule.UMLManager(diagramPackage, this.$umlWebClient);
             const diagramStereotype = await diagramPackage.appliedStereotypes.front();
             let diagramInstanceSlot;
             for await (const diagramSlot of diagramStereotype.slots) {
@@ -90,7 +94,8 @@ export default {
             if (!diagramInstanceSlot) {
                 throw Error('could not find slot for uml di diagram');
             }
-            const umlDiagram = await getUmlDiagramElement((await diagramInstanceSlot.values.front()).instance.id(), this.$umlWebClient);
+            const umlDiagram = await DIManager.get((await diagramInstanceSlot.values.front()).instance.id());
+            // const umlDiagram = await getUmlDiagramElement((await diagramInstanceSlot.values.front()).instance.id(), this.$umlWebClient);
             this.diagram = new Editor({
                 container: this.$refs.diagram,
                 umlWebClient: this.$umlWebClient,
@@ -98,6 +103,7 @@ export default {
                 context: await diagramPackage.owningPackage.get(),
                 diagramElement: diagramPackage,
                 umlDiagram: umlDiagram,
+                diManager: DIManager,
             });
             const canvas = this.diagram.get('canvas');
             const elementFactory = this.diagram.get('elementFactory');
@@ -539,12 +545,7 @@ export default {
                 const edges = [];
                 const labels = [];
                 const shapes = [];
-                for (const diagramElementID of umlDiagram.ownedElements) {
-                    const diagramElement = await getUmlDiagramElement(diagramElementID, this.$umlWebClient);
-                    if (!diagramElement) {
-                        console.warn('diagram ownedElement ' + diagramElementID + ' cannot be found TODO clean up');
-                        continue;
-                    }
+                for await (const diagramElement of umlDiagram.ownedElements) {
                     if (diagramElement.elementType() === 'edge') {
                         edges.push(diagramElement);
                     } else if (isLabel(diagramElement.elementType())) {

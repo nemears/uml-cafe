@@ -52,6 +52,7 @@ export function Editor(options) {
     context,
     diagramElement,
     umlDiagram,
+    diManager,
     additionalModules = []
   } = options;
 
@@ -103,15 +104,38 @@ export function Editor(options) {
     umlDiagram = umlDiagram;
   }
 
+  class DIManager {
+    post(type, options) {
+      return diManager.post(type, options);
+    }
+    async get(id) {
+      return await diManager.get(id);
+    }
+    getLocal(id) {
+        return diManager.getLocal(id);
+    }
+    put(el) {
+      return diManager.put(el);
+    }
+    async head() {
+      return await diManager.head();
+    }
+    async delete(el) {
+      await diManager.delete(el);
+    } 
+  }
+
   const umlClientModule = {
     __init__: [
       'umlWebClient',
       'diagramEmitter',
       'diagramContext',
+      'diManager',
     ],
     umlWebClient: ['type', DiagramUmlClient],
     diagramEmitter: ['type', DiagramEmitter],
     diagramContext: ['type', DiagramContext],
+    diManager: ['type', DIManager],
   };
 
   // default modules provided by the toolbox

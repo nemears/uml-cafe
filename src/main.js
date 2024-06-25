@@ -5,6 +5,7 @@ import { randomID } from 'uml-client/lib/element';
 import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { UmlWebClient } from 'uml-client';
+import { generate } from 'uml-client/lib/generate';
 import { getProjectLoginObject } from './umlUtil';
 import config from '../config.json';
 
@@ -34,6 +35,12 @@ if (location.pathname != "/") {
         sessionStorage.setItem('user', loginObject.user);
         sessionStorage.setItem('password', loginObject.password);
         mountApp();
+
+        // preload uml api for later
+        const doLater = async () => {
+            await generate(await umlWebClient.get('UML_r67OnwwyTHCtCmWnZsd8ePh5'), umlWebClient);
+        };
+        doLater();
     }).catch((err) => {
         console.error(err);
         const errObj = JSON.parse(err);
