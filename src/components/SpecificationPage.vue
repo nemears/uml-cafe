@@ -5,6 +5,7 @@ import getImage from '../GetUmlImage.vue';
 import SingletonData from './specComponents/SingletonData.vue';
 import InputData from './specComponents/InputData.vue';
 import EnumerationData from './specComponents/EnumerationData.vue';
+import MultiplicitySelector from './specComponents/MultiplicitySelector.vue';
 import { assignTabLabel } from '../umlUtil';
 import LiteralUnlimitedNaturalData from './specComponents/LiteralUnlimitedNaturalData.vue';
 export default {
@@ -259,6 +260,8 @@ export default {
 
             if (el.isSubClassOf('multiplicityElement')) {
                 this.multiplicityElementData = {};
+                this.multiplicityElementData.isOrdered = el.isOrdered;
+                this.multiplicityElementData.isUnique = el.isUnique;
                 reloadSingleton(this.multiplicityElementData, el.lowerValue, 'lowerValue');
                 reloadSingleton(this.multiplicityElementData, el.upperValue, 'upperValue');
             } else {
@@ -273,6 +276,8 @@ export default {
                 await reloadSingleton(this.propertyData, el.owningAssociation, 'owningAssociation');
                 await reloadSingleton(this.propertyData, el.association, 'association');
                 await reloadSingleton(this.propertyData, el.defaultValue, 'defaultValue');
+                await reloadSet(this.propertyData, el.subsettedProperties, 'subsettedProperties');
+                await reloadSet(this.propertyData, el.redefinedProperties, 'redefinedProperties');
             } else {
                 this.propertyData = undefined;
             }
@@ -346,6 +351,13 @@ export default {
                 this.featureData = undefined;
             }
 
+            if (el.isSubClassOf('structuralFeature')) {
+                this.structuralFeatureData = {};
+                this.structuralFeatureData.isReadOnly = el.isReadOnly;
+            } else {
+                this.structuralFeatureData = undefined;
+            }
+
             this.isFetching = false;
         },
         propogateSpecification(spec) {
@@ -384,7 +396,7 @@ export default {
             }
         },
     },
-    components: { ElementType, SetData, SingletonData, InputData, EnumerationData, LiteralUnlimitedNaturalData }
+    components: { ElementType, SetData, SingletonData, InputData, EnumerationData, LiteralUnlimitedNaturalData, MultiplicitySelector }
 }
 </script>
 <template>
@@ -632,6 +644,27 @@ export default {
                         @deselect="propogateDeselect"
                         ></SetData>
     </ElementType>
+    <ElementType :element-type="'Feature'" theme="theme" v-if="featureData !== undefined">
+        <InputData  :label="'isStatic'" 
+                    :input-type="'checkbox'"
+                    :initial-data="featureData.isStatic"
+                    :umlid="umlID"
+                    :type="'isStatic'" 
+                    :theme="theme"
+                    @element-update="propogateElementUpdate"
+                    ></InputData>
+        <SingletonData :label="'Featuring Classifier'"
+                    :initial-data="featureData.featuringClassifier"
+                    :uml-i-d="umlID"
+                    :singleton-data="{ setName: 'featuringClassifier', type: 'classifier' }"
+                    :selected-elements="selectedElements"
+                    :theme="theme"
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate" 
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"
+                    ></SingletonData>        
+    </ElementType>
     <ElementType :element-type="'Typed Element'" :theme="theme" v-if="typedElementData !== undefined">
         <SingletonData  :label="'Type'" 
                         :initial-data="typedElementData.type" 
@@ -645,7 +678,62 @@ export default {
                         @deselect="propogateDeselect"
                         ></SingletonData>
     </ElementType>
-    <ElementType :element-type="'Packageable Element'" :theme="theme" v-if="packageableElementData !== undefined">
+    <ElementType :element-type="'Multiplicity Element'" :theme="theme" v-if="multiplicityElementData !== undefined">
+        <MultiplicitySelector   :umlid="umlID" 
+                                :theme="theme" 
+                                @element-update="propogateElementUpdate"></MultiplicitySelector>
+       <InputData  :label="'isOrdered'" 
+                   :input-type="'checkbox'"
+                   :initial-data="multiplicityElementData.isOrdered"
+                   :umlid="umlID"
+                   :type="'isOrdered'" 
+                   :theme="theme"
+                   @element-update="propogateElementUpdate"
+                   ></InputData>
+        <InputData  :label="'isUnique'" 
+                    :input-type="'checkbox'"
+                    :initial-data="multiplicityElementData.isUnique"
+                    :umlid="umlID"
+                    :type="'isUnique'" 
+                    :theme="theme"
+                    @element-update="propogateElementUpdate"
+                    ></InputData>
+        <SingletonData  :label="'Lower Value'" 
+                        :createable="{types:['literalInt']}" 
+                        :initial-data="multiplicityElementData.lowerValue" 
+                        :uml-i-d="umlID" 
+                        :singleton-data="{setName:'lowerValue', type:'valueSpecification'}"
+                        :selected-elements="selectedElements"
+                        :theme="theme"
+                        @specification="propogateSpecification"
+                        @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
+                        ></SingletonData>
+        <SingletonData  :label="'Upper Value'" 
+                        :createable="{types:['literalInt', 'literalUnlimitedNatural']}"
+                        :initial-data="multiplicityElementData.upperValue" 
+                        :uml-i-d="umlID" 
+                        :singleton-data="{setName:'upperValue', type:'valueSpecification'}"
+                        :selected-elements="selectedElements"
+                        :theme="theme"
+                        @specification="propogateSpecification"
+                        @element-update="propogateElementUpdate"
+                        @select="propogateSelect"
+                        @deselect="propogateDeselect"
+                        ></SingletonData>
+	</ElementType>
+    <ElementType element-type="Structural Feature" :theme="theme" v-if="structuralFeatureData !== undefined">
+        <InputData  :label="'isReadOnly'" 
+                    :input-type="'checkbox'"
+                    :initial-data="structuralFeatureData.isReadOnly"
+                    :umlid="umlID"
+                    :type="'isReadOnly'" 
+                    :theme="theme"
+                    @element-update="propogateElementUpdate"
+                    ></InputData>
+    </ElementType>
+ <ElementType :element-type="'Packageable Element'" :theme="theme" v-if="packageableElementData !== undefined">
         <SingletonData  :label="'OwningPackage'" 
                         :initial-data="packageableElementData.owningPackage" 
                         :uml-i-d="umlID" 
@@ -717,53 +805,6 @@ export default {
             :initial-data="literalUnlimitedNaturalData.value" 
             :umlid="umlID" 
             @element-update="propogateElementUpdate"></LiteralUnlimitedNaturalData>
-    </ElementType>
-	<ElementType :element-type="'Multiplicity Element'" :theme="theme" v-if="multiplicityElementData !== undefined">
-        <SingletonData  :label="'Lower Value'" 
-                        :createable="{types:['literalInt']}" 
-                        :initial-data="multiplicityElementData.lowerValue" 
-                        :uml-i-d="umlID" 
-                        :singleton-data="{setName:'lowerValue', type:'valueSpecification'}"
-                        :selected-elements="selectedElements"
-                        :theme="theme"
-                        @specification="propogateSpecification"
-                        @element-update="propogateElementUpdate"
-                        @select="propogateSelect"
-                        @deselect="propogateDeselect"
-                        ></SingletonData>
-        <SingletonData  :label="'Upper Value'" 
-                        :createable="{types:['literalInt', 'literalUnlimitedNatural']}"
-                        :initial-data="multiplicityElementData.upperValue" 
-                        :uml-i-d="umlID" 
-                        :singleton-data="{setName:'upperValue', type:'valueSpecification'}"
-                        :selected-elements="selectedElements"
-                        :theme="theme"
-                        @specification="propogateSpecification"
-                        @element-update="propogateElementUpdate"
-                        @select="propogateSelect"
-                        @deselect="propogateDeselect"
-                        ></SingletonData>
-	</ElementType>
-    <ElementType :element-type="'Feature'" theme="theme" v-if="featureData !== undefined">
-        <InputData  :label="'isStatic'" 
-                    :input-type="'checkbox'"
-                    :initial-data="featureData.isStatic"
-                    :umlid="umlID"
-                    :type="'isStatic'" 
-                    :theme="theme"
-                    @element-update="propogateElementUpdate"
-                    ></InputData>
-        <SingletonData :label="'Featuring Classifier'"
-                    :initial-data="featureData.featuringClassifier"
-                    :uml-i-d="umlID"
-                    :singleton-data="{ setName: 'featuringClassifier', type: 'classifier' }"
-                    :selected-elements="selectedElements"
-                    :theme="theme"
-                    @specification="propogateSpecification"
-                    @element-update="propogateElementUpdate" 
-                    @select="propogateSelect"
-                    @deselect="propogateDeselect"
-                    ></SingletonData>        
     </ElementType>
 	<ElementType :element-type="'Property'" :theme="theme" v-if="propertyData !== undefined">
         <EnumerationData    :label="'Aggregation'"
@@ -852,6 +893,37 @@ export default {
                         @specification="propogateSpecification"
                         @element-update="propogateElementUpdate" 
                         ></SingletonData>
+        <SetData    :label="'Subsetted Properties'" 
+                    :initial-data="propertyData.subsettedProperties" 
+                    :umlid="umlID" 
+                    :selected-elements="selectedElements"
+                    :set-data="{
+                        readonly: false,
+                        setName: 'subsettedProperties',
+                        type: 'property',
+                    }"
+                    :theme="theme"
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"              
+                    ></SetData>
+        <SetData    :label="'Redefined Properties'" 
+                    :initial-data="propertyData.redefinedProperties" 
+                    :umlid="umlID" 
+                    :selected-elements="selectedElements"
+                    :set-data="{
+                        readonly: false,
+                        setName: 'redefinedProperties',
+                        type: 'property',
+                    }"
+                    :theme="theme"
+                    @specification="propogateSpecification"
+                    @element-update="propogateElementUpdate"
+                    @select="propogateSelect"
+                    @deselect="propogateDeselect"          
+                    ></SetData>
+        
 	</ElementType>
 	<ElementType :element-type="'Namespace'" :theme="theme" v-if="namespaceData !== undefined">
         <SetData    :label="'Members'" 

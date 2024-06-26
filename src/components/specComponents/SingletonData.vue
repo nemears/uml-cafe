@@ -42,7 +42,7 @@ export default {
     },
     computed: {
         panelClass() {
-            let computedPanelClass = getPanelClass(this.selected, this.hover, this.currentUsers, this.$umlWebClient, this.theme); 
+            let computedPanelClass = getPanelClass(this.selected, this.hover, this.currentUsers || [], this.$umlWebClient, this.theme); 
             computedPanelClass = computedPanelClass.replace('elementExplorerPanel', 'singletonElement');
             let ret = {
                 singletonBadDrag : this.drag && this.badDrag,

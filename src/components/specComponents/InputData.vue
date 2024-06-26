@@ -28,7 +28,7 @@ export default {
 }
 </script>
 <template>
-    <div class="numberInputContainer">
+    <div :class="{ numberInputContainer : inputType !== 'checkbox' , checkBoxInputContainer : inputType === 'checkbox' }">
         <div class="numberInputLabel">
             <label for="dataField">
                 <b>{{ label }}</b>
@@ -48,7 +48,7 @@ export default {
     </div>
 </template>
 <style>
-.numberInputContainer {
+.numberInputContainer, .checkBoxInputContainer {
     display: flex;
     padding-bottom: 10px;
 }
@@ -56,6 +56,12 @@ export default {
     min-width: 700px;
     border: none;
     font-size: 18px;
+}
+.checkBoxInputContainer > input {
+    border: none;
+    font-size:18px;
+    min-height: 20px;
+    min-width: 20px;
 }
 .inputDark {
     color: azure;
