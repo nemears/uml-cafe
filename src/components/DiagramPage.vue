@@ -561,7 +561,12 @@ export default {
                 const edges = [];
                 const labels = [];
                 const shapes = [];
-                for await (const diagramElement of umlDiagram.ownedElements) {
+                for (const diagramElementID of umlDiagram.ownedElements) {
+                    const diagramElement = await getUmlDiagramElement(diagramElementID, this.$umlWebClient);
+                    if (!diagramElement) {
+                        console.warn('diagram ownedElement ' + diagramElementID + ' cannot be found TODO clean up');
+                        continue;
+                    }
                     if (diagramElement.elementType() === 'edge') {
                         edges.push(diagramElement);
                     } else if (isLabel(diagramElement.elementType())) {
