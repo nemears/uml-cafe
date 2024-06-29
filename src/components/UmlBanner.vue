@@ -369,7 +369,7 @@ export default {
         async createDiagram () {
             const head = await this.$umlWebClient.head();
             const diagramID = randomID();
-            const diagramPackage = await createUmlClassDiagram(diagramID, head, this.$umlWebClient);
+            const diagramPackage = await createUmlClassDiagram(diagramID, head, this.$umlWebClient, this.$umlCafeModule);
             this.$emit('command', {
                 name: 'diagramCreate',
                 element: head.id,

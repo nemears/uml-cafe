@@ -1,5 +1,5 @@
 import { randomID } from "uml-client/lib/element";
-import { createClassDiagram } from "./diagram/api/diagramInterchange/classDiagram";
+import { generate } from 'uml-client/lib/generate';
 
 export function createElementUpdate() {
     const ret = {
@@ -71,7 +71,9 @@ export async function assignTabLabel(newElement) {
     }
 }
 
-export async function createUmlClassDiagram(diagramID, owner, umlWebClient) {
+export async function createUmlClassDiagram(diagramID, owner, umlWebClient, umlCafeModule) {
+    await umlCafeModule.initialization;
+    // TODO generate stereotypes in uml-client
     const diagramPackage = umlWebClient.post('package', {id:diagramID});
     owner.packagedElements.add(diagramPackage);
     diagramPackage.name = owner.name;
@@ -80,23 +82,12 @@ export async function createUmlClassDiagram(diagramID, owner, umlWebClient) {
 
     diagramPackage.appliedStereotypes.add(diagramStereotypeInstance);
     umlWebClient.put(diagramStereotypeInstance);
-
-    // setup diagram instance
-    const diagramContext = {
-        diagram : diagramPackage,
-        context: owner,
-        umlDiagram: {
-            id: randomID(),
-        }
-    };
-    const proxyDiagramObject = {
-        id: diagramContext.umlDiagram.id,
-        modelElement: owner,
-        name: owner.name,
-        children: [],
-        isFrame: false, // TODO turn to true when https://forum.bpmn.io/t/contextpad-dom-events-untriggered-in-frame/10818 is resolved
-    };
-    const umlDiagram = await createClassDiagram(proxyDiagramObject, umlWebClient, diagramContext);
+    
+    const diManager = new umlCafeModule.module.UMLManager(diagramPackage);
+    const umlDiagram = await diManager.post('UML DI.ClassDiagram');
+    umlDiagram.isFrame = false; // TODO turn to true when https://forum.bpmn.io/t/contextpad-dom-events-untriggered-in-frame/10818 is resolved 
+    umlDiagram.modelElement.add(owner);
+    umlDiagram.name = owner.name;
     const instanceSlot = umlWebClient.post('slot');
     instanceSlot.definingFeature.set('YmGBfGJeYE6vPhEDOF1gJg&1ahEP');
     const instanceValue = umlWebClient.post('instanceValue');
@@ -107,6 +98,8 @@ export async function createUmlClassDiagram(diagramID, owner, umlWebClient) {
     umlWebClient.put(instanceValue);
     umlWebClient.put(diagramStereotypeInstance);
     umlWebClient.put(owner);
+
+    diManager.put(umlDiagram);
     return diagramPackage;
 }
 
@@ -193,4 +186,15 @@ export function getProjectLoginObject(wholeProjectName, serverAddress) {
 }
 export function isTypedElement(elementType) {
     return elementType === 'property';
+}
+
+export class UmlCafeModule {
+    constructor(umlClient) {
+        const initializationPromise = async () => {
+            await umlClient.initialization;
+            const uml = await umlClient.get('UML_r67OnwwyTHCtCmWnZsd8ePh5');
+            this.module = await generate(uml, umlClient);
+        };
+        this.initialization = initializationPromise();
+    }
 }

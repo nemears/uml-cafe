@@ -6,7 +6,7 @@ import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
 import ContextMenu from '@imengyu/vue3-context-menu'
 import { UmlWebClient } from 'uml-client';
 import { generate } from 'uml-client/lib/generate';
-import { getProjectLoginObject } from './umlUtil';
+import { getProjectLoginObject, UmlCafeModule } from './umlUtil';
 import config from '../config.json';
 
 let projectName = randomID();
@@ -22,10 +22,12 @@ if (location.pathname != "/") {
 
     let loginObject = getProjectLoginObject(projectUrl, serverAddress); 
     let umlWebClient = new UmlWebClient(loginObject);
+    let umlCafeModule = new UmlCafeModule(umlWebClient);
 
     const mountApp = () => {
         const app = createApp(App);
         app.config.globalProperties.$umlWebClient = umlWebClient;
+        app.config.globalProperties.$umlCafeModule = umlCafeModule;
         app.config.unwrapInjectedRef = true;
         app.mount('#app');
         app.use(ContextMenu);

@@ -81,9 +81,8 @@ export default {
             }
             const scopedEmitter = new EventEmitter();
             const diagramPackage = await this.$umlWebClient.get(this.umlID);
-            const umlPackage = await this.$umlWebClient.get('UML_r67OnwwyTHCtCmWnZsd8ePh5');
-            const ModelUmlModule = await generate(umlPackage, this.$umlWebClient);
-            const DIManager = new ModelUmlModule.UMLManager(diagramPackage, this.$umlWebClient);
+            await this.$umlCafeModule.initialization;
+            const DIManager = new this.$umlCafeModule.module.UMLManager(diagramPackage, this.$umlWebClient);
             const diagramStereotype = await diagramPackage.appliedStereotypes.front();
             let diagramInstanceSlot;
             for await (const diagramSlot of diagramStereotype.slots) {
@@ -561,12 +560,7 @@ export default {
                 const edges = [];
                 const labels = [];
                 const shapes = [];
-                for (const diagramElementID of umlDiagram.ownedElements) {
-                    const diagramElement = await getUmlDiagramElement(diagramElementID, this.$umlWebClient);
-                    if (!diagramElement) {
-                        console.warn('diagram ownedElement ' + diagramElementID + ' cannot be found TODO clean up');
-                        continue;
-                    }
+                for await (const diagramElement of umlDiagram.ownedElements) {
                     if (diagramElement.elementType() === 'edge') {
                         edges.push(diagramElement);
                     } else if (isLabel(diagramElement.elementType())) {
