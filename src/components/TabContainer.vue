@@ -1,5 +1,5 @@
 <script>
-import { nullID } from 'uml-client/lib/element';
+import { nullID } from 'uml-client/lib/types/element';
 import CloseSymbol from '../assets/icons/general/close_symbol.svg';
 import { assignTabLabel } from '../umlUtil';
 import { nextTick } from 'vue';
@@ -68,7 +68,7 @@ import { nextTick } from 'vue';
                                 continue;
                             }
                             const elTab = await this.$umlWebClient.get(tab.id);
-                            if (elTab && elTab.isSubClassOf('comment')) {
+                            if (elTab && elTab.is('Comment')) {
                                 for await (let el of elTab.annotatedElements) {
                                     if (el.id === newElement.id) {
                                         tab.label = await assignTabLabel(elTab);

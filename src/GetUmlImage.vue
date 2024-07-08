@@ -28,88 +28,88 @@ import SignalSVG from './assets/icons/general/signal.svg';
 export default function getImage(el) {
     let elementType = typeof el === 'string' ? el : el.elementType();
     switch(elementType) {
-        case 'abstraction': {
+        case 'Abstraction': {
             return AbstractionSVG;
         }
-        case 'association' : {
+        case 'Association' : {
             return AssociationSVG;
         }
-        case 'class': {
+        case 'Class': {
             return ClassSVG;
         }
-        case 'comment': {
+        case 'Comment': {
             return CommentSVG;
         }
-        case 'dataType': {
+        case 'DataType': {
             return DataTypeSVG;
         }
-        case 'dependency': {
+        case 'Dependency': {
             return DependencySVG;
         }
-        case 'enumeration': {
+        case 'Enumeration': {
             return EnumerationSVG;
         }
-        case 'enumerationLiteral': {
+        case 'EnumerationLiteral': {
             return PropertySVG;
         }
-        case 'extension': {
+        case 'Extension': {
             return AssociationSVG;
         }
-        case 'generalization': {
+        case 'Generalization': {
             return GeneralizationSVG;
         }
-        case 'instanceSpecification': {
+        case 'InstanceSpecification': {
             return InstanceSpecificationSVG;
         }
-        case 'instanceValue': {
+        case 'InstanceValue': {
             return InstanceValueSVG;
         }
-        case 'interface': {
+        case 'Interface': {
             return InterfaceSVG;
         }
-        case 'literalBool': {
+        case 'LiteralBool': {
             return LiteralBoolSVG;
         }
-        case 'literalInt': {
+        case 'LiteralInt': {
             return LiteralIntSVG;
         }
-        case 'literalNull': {
+        case 'LiteralNull': {
             return LiteralNullSVG;
         }
-        case 'literalReal': {
+        case 'LiteralReal': {
             return LiteralRealSVG;
         }
-        case 'literalString': {
+        case 'LiteralString': {
             return LiteralStringSVG;
         }
-        case 'literalUnlimitedNatural': {
+        case 'LiteralUnlimitedNatural': {
             return LiteralUnlimitedNaturalSVG;
         }
-        case 'package': {
+        case 'Package': {
             return PackageSVG;
         }
-        case 'primitiveType': {
+        case 'PrimitiveType': {
             return PrimitiveTypeSVG;
         }
-        case 'profile': {
+        case 'Profile': {
             return PackageSVG;
         }
-        case 'property': {
+        case 'Property': {
             return PropertySVG;
         }
-        case 'realization': {
+        case 'Realization': {
             return RealizationSVG;
         }
-        case 'signal': {
+        case 'Signal': {
             return SignalSVG;
         }
-        case 'slot': {
+        case 'Slot': {
             return SlotSVG;
         }
-        case 'stereotype': {
+        case 'Stereotype': {
             return StereotypeSVG;
         }
-        case 'usage': {
+        case 'Usage': {
             return UsageSVG;
         }
     }

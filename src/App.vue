@@ -9,7 +9,7 @@ import classDiagramImage from './assets/icons/general/class_diagram.svg';
 import { computed } from 'vue';
 import { assignTabLabel } from './umlUtil';
 import TabContainer from './components/TabContainer.vue';
-import { nullID } from 'uml-client/lib/element';
+import { nullID } from 'uml-client/lib/types/element';
 </script>
 <script>
 export default {

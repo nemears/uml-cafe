@@ -3,7 +3,7 @@ import { deleteUmlDiagramElement } from '../api/diagramInterchange/util';
 import { h } from "vue";
 import { getMid } from "diagram-js/lib/layout/LayoutUtil";
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
-import { randomID } from "uml-client/lib/element";
+import { randomID } from "uml-client/lib/types/element";
 import { createCommentClick } from "../../umlUtil";
 import { getTextDimensions } from './ClassDiagramPaletteProvider';
 import { isPropertyValidForMultiplicityLabel } from "./relationships/Association";

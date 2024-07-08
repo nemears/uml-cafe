@@ -9,7 +9,7 @@ import { getUmlDiagramElement, deleteUmlDiagramElement } from '../diagram/api/di
 import { toRaw } from 'vue';
 import { CLASS_SHAPE_HEADER_HEIGHT } from '../diagram/providers/ClassHandler';
 import { getTypedElementText, getTextDimensions, LABEL_HEIGHT } from '../diagram/providers/ClassDiagramPaletteProvider';
-import { randomID } from 'uml-client/lib/element.js';
+import { randomID } from 'uml-client/lib/types/element.js';
 import { generate } from 'uml-client/lib/generate.js'
 import { isPropertyValidForMultiplicityLabel } from '../diagram/providers/relationships/Association';
 export default {
@@ -80,27 +80,38 @@ export default {
                 this.diagram.destroy()
             }
             const scopedEmitter = new EventEmitter();
+
+            // get the diagram as a regular UML Package first
             const diagramPackage = await this.$umlWebClient.get(this.umlID);
+
+            // we will be using the built in api to get the diagram as a Diagram type from our Profile
             await this.$umlCafeModule.initialization;
             const DIManager = new this.$umlCafeModule.module.UMLManager(diagramPackage, this.$umlWebClient);
-            const diagramStereotype = await diagramPackage.appliedStereotypes.front();
-            let diagramInstanceSlot;
-            for await (const diagramSlot of diagramStereotype.slots) {
-                if (diagramSlot.definingFeature.id() === 'YmGBfGJeYE6vPhEDOF1gJg&1ahEP') {
-                    diagramInstanceSlot = diagramSlot;
-                }
-            }
-            if (!diagramInstanceSlot) {
-                throw Error('could not find slot for uml di diagram');
-            }
-            const umlDiagram = await DIManager.get((await diagramInstanceSlot.values.front()).instance.id());
-            // const umlDiagram = await getUmlDiagramElement((await diagramInstanceSlot.values.front()).instance.id(), this.$umlWebClient);
+            const umlDiagram = await DIManager.get(this.umlID);
+            
+            // I commented all of this out because I am in the process of changing how the diagram
+            // is organized within the model, remove the following when it is confirmed the alternate
+            // approach is possible
+            //
+            // const diagramStereotype = await diagramPackage.appliedStereotypes.front();
+            // let diagramInstanceSlot;
+            // for await (const diagramSlot of diagramStereotype.slots) {
+            //     if (diagramSlot.definingFeature.id() === 'YmGBfGJeYE6vPhEDOF1gJg&1ahEP') {
+            //         diagramInstanceSlot = diagramSlot;
+            //     }
+            // }
+            // if (!diagramInstanceSlot) {
+            //     throw Error('could not find slot for uml di diagram');
+            // }
+            // const umlDiagram = await DIManager.get((await diagramInstanceSlot.values.front()).instance.id());
+            // // const umlDiagram = await getUmlDiagramElement((await diagramInstanceSlot.values.front()).instance.id(), this.$umlWebClient);
+            
             this.diagram = new Editor({
                 container: this.$refs.diagram,
                 umlWebClient: this.$umlWebClient,
                 emitter: scopedEmitter,
                 context: await diagramPackage.owningPackage.get(),
-                diagramElement: diagramPackage,
+                // diagramElement: diagramPackage, // TODO delete
                 umlDiagram: umlDiagram,
                 diManager: DIManager,
             });

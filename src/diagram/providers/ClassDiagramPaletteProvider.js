@@ -1,4 +1,4 @@
-import { randomID } from "uml-client/lib/element";
+import { randomID } from "uml-client/lib/types/element";
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler' 
 import { CLASSIFIER_SHAPE_GAP_HEIGHT } from './UmlCompartmentableShapeProvider';
 

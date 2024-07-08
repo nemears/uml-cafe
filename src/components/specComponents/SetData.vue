@@ -51,7 +51,7 @@ export default {
                         const existingIDs = this.data.map((el) => el.id);
 
                         // check if we need to add children
-                        for (const elementID of newElement.sets[this.setData.setName].ids()) {
+                        for (const elementID of newElement.sets.get(this.setData.setName).ids()) {
                             if (!this.data.find((el) => el.id === elementID)) {
                                 // add the data
                                 const element = await this.$umlWebClient.get(elementID);
@@ -68,7 +68,7 @@ export default {
 
                         // check if we need remove an element
                         for (const existingID of existingIDs) {
-                            if (!newElement.sets[this.setData.setName].contains(existingID)) {
+                            if (!newElement.sets.get(this.setData.setName).contains(existingID)) {
                                 // remove the element
                                 this.data = this.data.filter((el) => el.id !== existingID);
                             }
@@ -219,7 +219,7 @@ export default {
                     label: 'Remove',
                     onClick: async () => {
                         const owner = await this.$umlWebClient.get(this.umlid);
-                        owner.sets[this.setData.setName].remove(element);
+                        owner.sets.get(this.setData.setName).remove(element);
                         this.$umlWebClient.put(owner);
                         this.$umlWebClient.put(element);
                         this.$emit('elementUpdate', createElementUpdate(owner));

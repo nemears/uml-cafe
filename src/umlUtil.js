@@ -1,4 +1,4 @@
-import { randomID } from "uml-client/lib/element";
+import { randomID } from "uml-client/lib/types/element";
 import { generate } from 'uml-client/lib/generate';
 
 export function createElementUpdate() {
@@ -51,9 +51,9 @@ export function createCommentClick (event, element, create, elementFactory) {
 }
 
 export async function assignTabLabel(newElement) {
-    if (newElement.isSubClassOf('namedElement')) {
+    if (newElement.is('NamedElement')) {
         return newElement.name;
-    } else if (newElement.isSubClassOf('comment')) {
+    } else if (newElement.is('Comment')) {
         if (newElement.annotatedElements.size() === 0) {
             return '< >';
         } else if (newElement.annotatedElements) {
@@ -72,34 +72,19 @@ export async function assignTabLabel(newElement) {
 }
 
 export async function createUmlClassDiagram(diagramID, owner, umlWebClient, umlCafeModule) {
+    console.log('diagram id : ' + diagramID);
     await umlCafeModule.initialization;
-    // TODO generate stereotypes in uml-client
     const diagramPackage = umlWebClient.post('package', {id:diagramID});
     owner.packagedElements.add(diagramPackage);
     diagramPackage.name = owner.name;
-    const diagramStereotypeInstance = umlWebClient.post('instanceSpecification');
-    diagramStereotypeInstance.classifiers.add(await umlWebClient.get('Diagram_nuc1IC2Cavgoa4zMBlVq'));
-
-    diagramPackage.appliedStereotypes.add(diagramStereotypeInstance);
-    umlWebClient.put(diagramStereotypeInstance);
     
     const diManager = new umlCafeModule.module.UMLManager(diagramPackage);
-    const umlDiagram = await diManager.post('UML DI.ClassDiagram');
+    const umlDiagram = await diManager.apply(diagramPackage, 'uml-cafe-profile.Diagram');
     umlDiagram.isFrame = false; // TODO turn to true when https://forum.bpmn.io/t/contextpad-dom-events-untriggered-in-frame/10818 is resolved 
-    umlDiagram.modelElement.add(owner);
+    await umlDiagram.modelElement.add(owner);
     umlDiagram.name = owner.name;
-    const instanceSlot = umlWebClient.post('slot');
-    instanceSlot.definingFeature.set('YmGBfGJeYE6vPhEDOF1gJg&1ahEP');
-    const instanceValue = umlWebClient.post('instanceValue');
-    instanceValue.instance.set(umlDiagram.id);
-    instanceSlot.values.add(instanceValue);
-    diagramStereotypeInstance.slots.add(instanceSlot);
-    umlWebClient.put(instanceSlot);
-    umlWebClient.put(instanceValue);
-    umlWebClient.put(diagramStereotypeInstance);
-    umlWebClient.put(owner);
-
-    diManager.put(umlDiagram);
+    
+    await diManager.put(umlDiagram);
     return diagramPackage;
 }
 

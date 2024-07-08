@@ -1,4 +1,4 @@
-import { randomID } from "uml-client/lib/element";
+import { randomID } from "uml-client/lib/types/element";
 import { createTypedElementLabel, updateLabel } from "../api/diagramInterchange/label";
 import { OWNED_ELEMENTS_SLOT_ID } from '../api/diagramInterchange/ids';
 import { deleteUmlDiagramElement } from '../api/diagramInterchange/util';

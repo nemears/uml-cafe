@@ -1,6 +1,6 @@
 import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
 import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout';
-import { randomID } from 'uml-client/lib/element.js'
+import { randomID } from 'uml-client/lib/types/element.js'
 import { getTextDimensions } from './ClassDiagramPaletteProvider';
 
 export default class RelationshipEdgeCreator {

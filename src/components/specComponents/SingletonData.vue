@@ -70,7 +70,7 @@ export default {
                 if (newElement) {
                     if (newElement.id === this.umlID) {
                         const asyncSetData = async () => {
-                            const el = await newElement.sets[me.singletonData.setName].get();
+                            const el = await newElement.sets.get(me.singletonData.setName).get();
                             const currentUsers = this.getCurrentUsers(el);
                             me.setData({
                                 img: getImage(el),
@@ -80,8 +80,8 @@ export default {
                             });
                         };
                         if (this.valID) {
-                            if (newElement.sets[this.singletonData.setName].id() !== this.valID) {
-                                if (!newElement.sets[this.singletonData.setName].has()) {
+                            if (newElement.sets.get(this.singletonData.setName).id() !== this.valID) {
+                                if (!newElement.sets.get(this.singletonData.setName).has()) {
                                     this.setData({
                                         id: undefined,
                                         img: undefined,
@@ -92,7 +92,7 @@ export default {
                                 }
                             }
                         } else {
-                            if (newElement.sets[this.singletonData.setName].has()) {
+                            if (newElement.sets.get(this.singletonData.setName).has()) {
                                 asyncSetData();
                             }
                         }

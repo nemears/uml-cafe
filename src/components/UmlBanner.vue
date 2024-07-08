@@ -8,7 +8,7 @@ import UserSelector from './bannerComponents/UserSelector.vue';
 import BannerButton from './bannerComponents/BannerButton.vue';
 import UserBubble from './bannerComponents/UserBubble.vue';
 import { getProjectLoginObject, createUmlClassDiagram, createElementUpdate } from '../umlUtil';
-import { randomID } from 'uml-client/lib/element';
+import { randomID } from 'uml-client/lib/types/element';
 export default {
     props: [
         'users',

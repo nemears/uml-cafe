@@ -3,7 +3,7 @@ import packageImage from '../assets/icons/general/package.svg';
 import getImage from '../GetUmlImage.vue';
 import classDiagramImage from '../assets/icons/general/class_diagram.svg';
 import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createUmlClassDiagram, mapColor, getPanelClass, isTypedElement } from '../umlUtil.js'
-import { randomID } from 'uml-client/lib/element';
+import { randomID } from 'uml-client/lib/types/element';
 
 export default {
     name: "ElementExplorer",
@@ -163,7 +163,7 @@ export default {
     methods: {
         async createElementAndAddToSet(id, type, set, parent) {
             const createdEl = await this.$umlWebClient.post(type, {id:id});
-            parent.sets[set].add(createdEl);
+            await parent.sets.get(set).add(createdEl);
             this.$umlWebClient.put(createdEl);
             this.$umlWebClient.put(parent);
             this.children.push(createdEl.id);
@@ -229,7 +229,7 @@ export default {
                             this.$emit('specification', await this.$umlWebClient.get(this.umlID));
                         }
                     });
-            if (el.isSubClassOf('namedElement')) {
+            if (el.is('NamedElement')) {
                 this.options.push({
                     label: 'Rename',
                     disabled: this.$umlWebClient.readonly,
@@ -250,7 +250,7 @@ export default {
             // creation options
 
             // create diagrams
-            if (el.isSubClassOf('package')) {
+            if (el.is('Package')) {
                 this.options.push({
                     label: 'Create Class Diagram',
                     disabled: this.$umlWebClient.readonly,
@@ -293,11 +293,11 @@ export default {
             for (let commentID of el.ownedComments.ids()) {
                 this.children.push(commentID);
             }
-            if (el.isSubClassOf('classifier')) {
+            if (el.is('Classifier')) {
                 for (let generalizationID of el.generalizations.ids()) {
                     this.children.push(generalizationID);
                 }
-                if (el.isSubClassOf('class') || el.isSubClassOf('dataType')) {
+                if (el.is('Class') || el.is('DataType')) {
                     for (let attributeID of el.ownedAttributes.ids()) {
                         this.children.push(attributeID);
                     }
@@ -310,12 +310,12 @@ export default {
                     }
                 });
             }
-            if (el.isSubClassOf('association')) {
+            if (el.is('Association')) {
                 for (let propertyID of el.ownedEnds.ids()) {
                     this.children.push(propertyID);
                 }
             }
-            if (el.isSubClassOf('enumeration')) {
+            if (el.is('Enumeration')) {
                 for (const literalID of el.ownedLiterals.ids()) {
                     this.children.push(literalID);
                 }
@@ -327,7 +327,7 @@ export default {
                     }
                 });
             }
-            if (el.isSubClassOf('instanceSpecification')) {
+            if (el.is('InstanceSpecification')) {
                 for (let slotID of el.slots.ids()) {
                     this.children.push(slotID);
                 }
@@ -339,7 +339,7 @@ export default {
                     }
                 });
             }
-            if (el.isSubClassOf('package')) {
+            if (el.is('Package')) {
                 for (let packagedElID of el.packagedElements.ids()) {
                     this.children.push(packagedElID);
                 }
@@ -434,7 +434,7 @@ export default {
                 }
             });
             
-            if (el.isSubClassOf('typedElement') && el.type.has()) {
+            if (el.is('TypedElement') && el.type.has()) {
                 this.typedElementLabel = ': ' + (await el.type.get()).name;
             }
             if (el.appliedStereotypes && el.appliedStereotypes.size() !== 0) {
@@ -444,13 +444,13 @@ export default {
                     }
                 }
             }
-            if (el.elementType() === 'property' && el.defaultValue.has()) {
+            if (el.is('Property') && el.defaultValue.has()) {
                 const defaultValue = await el.defaultValue.get();
                 if (defaultValue.elementType() === 'literalString') {
                     this.propertyLabel = '= "' + (await el.defaultValue.get()).value + '"';
                 } else {this.propertyLabel = '= ' + (await el.defaultValue.get()).value;}
             }
-            if (el.isSubClassOf('generalization')) {
+            if (el.is('Generalization')) {
                 if (el.general.has()) {
                     var name = (await el.general.get()).name;
                     this.generalizationLabel = '-> ' + name;
@@ -525,7 +525,7 @@ export default {
                 if (!newElement) {
                     if (isTypedElement(this.elementType)) {
                         const element = await this.$umlWebClient.get(this.umlID);
-                        if (oldElement.isSubClassOf('classifier')) {
+                        if (oldElement.is('Classifier')) {
                             if (element.type.id() === oldElement.id) {
                                     this.typedElementLabel = '';
                             }
@@ -538,7 +538,7 @@ export default {
                     // cons: will always run a loop through all of our children when an element is updated (laggy)
                 } else if (newElement.id === this.umlID) { //umlID represents 
                     //name
-                    if (newElement.isSubClassOf('namedElement')) {
+                    if (newElement.is('NamedElement')) {
                         if (newElement.name !== this.name) {
                             this.name = newElement.name; 
                         } 
@@ -566,14 +566,14 @@ export default {
                     });
 
                     const element = await this.$umlWebClient.get(this.umlID);
-                    if (element && element.isSubClassOf('comment')) {
+                    if (element && element.is('Comment')) {
                         for (let elID of element.annotatedElements.ids()) {
                             if (elID === newElement.id) {
                                 this.name = await assignTabLabel(element);
                             }
                         }
                     }
-                    if (newElement.isSubClassOf('typedElement')) {
+                    if (newElement.is('TypedElement')) {
                         if (newElement.type.has()) {
                             this.typedElementLabel = ': ' + (await newElement.type.get()).name;
                         } else { this.typedElementLabel = ''; }    
@@ -587,39 +587,39 @@ export default {
                         }
                         this.stereotypedLabel = newStereotypeLabels;
                     }
-                    if (newElement.elementType() === 'property' && newElement.defaultValue.has()) {
+                    if (newElement.elementType() === 'Property' && newElement.defaultValue.has()) {
                         const defaultValue = await newElement.defaultValue.get();
-                        if (defaultValue.elementType() === 'literalString') {
+                        if (defaultValue.elementType() === 'LiteralString') {
                             this.propertyLabel = '= "' + (await newElement.defaultValue.get()).value + '"';
                         } else {this.propertyLabel = '= ' + (await newElement.defaultValue.get()).value;}
                     }
                     
-                    if (newElement.isSubClassOf('generalization')) {
+                    if (newElement.is('Generalization')) {
                         this.generalizationLabel = '-> ' + await (newElement.general.get()).name;
                     }
                         
                 } else {
                     if (isTypedElement(this.elementType)) {
                         const element = await this.$umlWebClient.get(this.umlID);
-                        if (newElement.isSubClassOf('classifier')) {
+                        if (newElement.is('Classifier')) {
                             if (element.type.id() === newElement.id) {
                                 this.typedElementLabel = ': ' + newElement.name;
                             }
                         }
                     }
-                    if (this.elementType === 'property') {
+                    if (this.elementType === 'Property') {
                         const element = await this.$umlWebClient.get(this.umlID);
                         if (element.defaultValue.has() && (element.defaultValue.id() === newElement.id)) {
                             if (newElement.value) {
-                                if (newElement.elementType() === 'literalString') {
+                                if (newElement.elementType() === 'LiteralString') {
                                     this.propertyLabel = '= "' + newElement.value + '"';
                                 } else {this.propertyLabel = '= ' + newElement.value;}
                             }
                         }
                     }
-                    if (this.elementType === 'generalization') {
+                    if (this.elementType === 'Generalization') {
                         const element = await this.$umlWebClient.get(this.umlID);
-                        if (newElement.isSubClassOf('classifier')) {
+                        if (newElement.is('Classifier')) {
                             if (element.general.id() === newElement.id) {
                                 this.generalizationLabel = '-> ' + newElement.name;
                             }

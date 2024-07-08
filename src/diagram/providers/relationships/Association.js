@@ -1,5 +1,5 @@
 import { createElementUpdate } from '../../../umlUtil';
-import { randomID } from 'uml-client/lib/element';
+import { randomID } from 'uml-client/lib/types/element';
 import { getMultiplicityText } from '../UMLRenderer';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { getTextDimensions } from '../ClassDiagramPaletteProvider';

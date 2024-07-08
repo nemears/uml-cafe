@@ -54,7 +54,7 @@
                     }
                 };
                 const checkAndCreateSingletonUpper = async () => {
-                    if (upperValue && !upperValue.isSubClassOf('literalInt')) {
+                    if (upperValue && !upperValue.is('LiteralInt')) {
                         el.upperValue.set(undefined);
                         await this.$umlWebClient.deleteElement(upperValue);
                         upperValue = undefined;
@@ -66,7 +66,7 @@
                     upperValue.value = 1;
                 };
                 const checkAndCreateSetUpper = async () => {
-                    if (upperValue && !upperValue.isSubClassOf('literalUnlimitedNatural')) {
+                    if (upperValue && !upperValue.is('LiteralUnlimitedNatural')) {
                         el.upperValue.set(undefined);
                         await this.$umlWebClient.deleteElement(upperValue);
                         upperValue = undefined;
