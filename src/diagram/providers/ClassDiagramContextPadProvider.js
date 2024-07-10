@@ -213,7 +213,7 @@ export default class ClassDiagramContextPadProvider {
                 }
             };
         }
-        if (element.modelElement.isSubClassOf('namedElement')) {
+        if (element.modelElement.is('NamedElement')) {
             ret.createDependency = {
                 group: 'edit',
                 className: 'context-pad-icon-dependency',

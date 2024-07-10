@@ -34,7 +34,7 @@ export default class ElementUpdate {
                             }
                         } else {
                             // update
-                            if (newElement.isSubClassOf('instanceSpecification')) {
+                            if (newElement.is('InstanceSpecification')) {
                                 // could be a diagram element
                                 const serverElement = await getUmlDiagramElement(oldElement.id, umlWebClient);
                                 if (serverElement) {
@@ -61,7 +61,7 @@ export default class ElementUpdate {
                     } else {
                         if (newElement) {
                             // new
-                            if (newElement.isSubClassOf('instanceSpecification')) {
+                            if (newElement.is('InstanceSpecification')) {
                                 const serverElement = await getUmlDiagramElement(newElement.id, umlWebClient);
                                 if (serverElement && newElement.owner.id() === diagramContext.diagram.id) {
                                     eventBus.fire('server.create', {

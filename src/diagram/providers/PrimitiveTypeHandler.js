@@ -7,7 +7,7 @@ export default class PrimitiveTypeHandler {
     constructor(eventBus, modeling, umlWebClient, diagramContext, diagramEmitter, canvas) {
         eventBus.on('elementCreated', (event) => {
             const element = event.element;
-            if (element.modelElement.elementType() === 'primitiveType') {
+            if (element.modelElement.elementType() === 'PrimitiveType') {
                 const primitiveTypeID = element.modelElement.id;
                 let clazz = umlWebClient.post('primitiveType', {id:primitiveTypeID});
                 diagramContext.context.packagedElements.add(clazz);
@@ -31,7 +31,7 @@ export default class PrimitiveTypeHandler {
         });
         eventBus.on('elementDeleted', (event) => {
             const element = event.element;
-            if (element.modelElement.elementType() === 'primitiveType') {
+            if (element.modelElement.elementType() === 'PrimitiveType') {
                 const doLater = async (element) => {
                     const modelElement = await umlWebClient.get(element.modelElement.id);
                     const owner = await modelElement.owner.get();

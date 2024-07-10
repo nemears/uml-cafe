@@ -41,11 +41,11 @@ class UpdateNameHandler {
             oldBounds: context.oldBounds,
         }});
         if (element.modelElement) {
-            if (element.modelElement.isSubClassOf('namedElement')) {
+            if (element.modelElement.is('NamedElement')) {
                 context.oldText = element.modelElement.name;
                 element.modelElement.name = newLabel;
                 umlWebClient.put(element.modelElement);
-            } else if (element.modelElement.isSubClassOf('comment')) {
+            } else if (element.modelElement.is('Comment')) {
                 context.oldText = element.modelElement.body;
                 element.modelElement.body = newLabel;
                 umlWebClient.put(element.modelElement);
@@ -87,9 +87,9 @@ class UpdateNameHandler {
             element.text = oldText;
         }
         if (element.modelElement) {
-            if (element.modelElement.isSubClassOf('namedElement')) {
+            if (element.modelElement.is('NamedElement')) {
                 element.modelElement.name = oldText;
-            } else if (element.modelElement.elementType() === 'comment') {
+            } else if (element.modelElement.elementType() === 'Comment') {
                 element.modelElement.body = oldText;
             }
         }
@@ -113,9 +113,9 @@ export default class NameEditProvider {
     activate(element) {
         const ret = {};
         if (element.modelElement) {
-            if (element.modelElement.isSubClassOf('namedElement')) {
+            if (element.modelElement.is('NamedElement')) {
                 ret.text = element.modelElement.name;
-            } else if (element.modelElement.isSubClassOf('comment')) {
+            } else if (element.modelElement.is('Comment')) {
                 ret.text = element.modelElement.body;
             }
         }

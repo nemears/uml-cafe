@@ -59,7 +59,7 @@ export default class UmlContextMenu {
                 diagramEmitter.fire('specification', element.modelElement);
             }
         });
-        if (element.modelElement.isSubClassOf('namedElement')) {
+        if (element.modelElement.is('NamedElement')) {
             menu.items.push({
                 label: 'Rename',
                 onClick: () => {
@@ -88,7 +88,7 @@ export default class UmlContextMenu {
                     }
                 }
             });
-        } else if (element.modelElement.isSubClassOf('comment')) {
+        } else if (element.modelElement.is('Comment')) {
             menu.items.push({
                 label: 'Edit Body',
                 onClick: () => {
@@ -134,7 +134,7 @@ export default class UmlContextMenu {
                 createCommentClick(event, element, create, elementFactory);
             }
         });
-        if (element.modelElement.isSubClassOf('classifier') && !element.modelElement.isSubClassOf('association')) {
+        if (element.modelElement.is('Classifier') && !element.modelElement.is('Association')) {
             // show relationships
             const showRelationshipsOption = {
                 label: 'Show Relationships',
@@ -257,7 +257,7 @@ export default class UmlContextMenu {
             menu.items.push(showRelationshipsOption);
             menu.items.push(showPropertiesOption);
         }
-        if (element.modelElement.isSubClassOf('association')) {
+        if (element.modelElement.is('Association')) {
             const showMemberEndsOption = {
                 label: 'Show Member Ends',
                 children: []

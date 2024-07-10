@@ -470,7 +470,7 @@ export default class UMLRenderer extends BaseRenderer {
                     svgAppend(group, circle);
                     svgAttr(circle, assign({}, this.OWNED_ATTRIBUTE_STYLE), attrs || {});
                 }
-            } else if (element.parent && element.parent.modelElement && element.parent.modelElement.isSubClassOf('classifier')) {
+            } else if (element.parent && element.parent.modelElement && element.parent.modelElement.is('Classifier')) {
                 const rect = createRectangle();
                 svgAttr(rect, assign({}, this.PROPERTY_STYLE), attrs || {});
                 

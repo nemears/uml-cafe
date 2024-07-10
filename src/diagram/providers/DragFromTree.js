@@ -5,7 +5,7 @@ export default class DragFromTree {
         diagramEmitter.on('dragenter', async (event) => {
             const elements = [];
             for (const element of event.selectedElements) {
-                if (element.isSubClassOf('classifier')) {
+                if (element.is('Classifier')) {
                     // load attributes
                     for await (const attr of element.attributes) {
                         if (attr.type.has()) {

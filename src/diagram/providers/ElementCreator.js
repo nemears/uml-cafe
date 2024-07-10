@@ -1,10 +1,9 @@
 import { createAssociationEndLabel, createDiagramLabel, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel } from '../api/diagramInterchange/label';
-import { createClassifierShape, createComparment } from '../api/diagramInterchange/compartmentableShape';
 import { createDiagramEdge } from '../api/diagramInterchange/edge';
-import { deleteUmlDiagramElement  } from '../api/diagramInterchange/util';
 import { createDiagramShape } from '../api/diagramInterchange/shape'; 
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { placeEdgeLabel } from './EdgeConnect';
+import { translateDJEdgeToUMLEdge, translateDJLabelToUMLLabel, translateDJSCompartmentableShapeToUmlCompartmentableShape, translateDJShapeToUMLShape } from '../translations';
 /**
  * context for this commandHandler looks like this
  * {
@@ -127,58 +126,60 @@ class ElementCreationHandler {
         const doLater = async () => {
             for (const element of context.elements) {
                 switch (element.elementType) {
-                    case 'shape':
-                        await createDiagramShape(element, umlWebClient, diagramContext);
-                        break;
-                    case 'edge':
-                        await createDiagramEdge(element, umlWebClient, diagramContext);
-                        break;
-                    case 'label':
-                        createDiagramLabel(element, umlWebClient, diagramContext);
-                        break;
-                    case 'classifierShape': {
-                        const classifierShape = diManager.post('UML DI.UMLClassifierShape', {id:element.id});
-                        const bounds = diManager.post('Diagram Common.Bounds');
-                        bounds.x = element.x;
-                        bounds.y = element.y;
-                        bounds.width = element.width;
-                        bounds.height = element.height;
-                        for (const compartment of element.compartments) {
-                            const diCompartment = diManager.post('UML DI.UMLCompartment', {id:compartment.id});
-                            classifierShape.compartment.add(diCompartment);
-                        }
-                        if (element.owningElement) {
-                            const owningElementDI = await diManager.get(element.owningElement.id);
-                            owningElementDI.ownedElements.add(classifierShape);
-                        } else {
-                            diagramContext.umlDiagram.ownedElements.add(classifierShape);
-                        }
-                        diManager.put(classifierShape);
-                        for await (const compartment of classifierShape.compartment) {
-                            diManager.put(compartment);
-                        }
-                        diManager.put(await classifierShape.owningElement.get());
-                        // await createClassifierShape(element, umlWebClient, diagramContext);
-                        // for (const compartment of element.compartments) {
-                        //     await createComparment(compartment, umlWebClient, diagramContext);
-                        // }
+                    case 'shape': {
+                        const shape = diManager.post('UML DI.UMLShape', { id : element.id });
+                        await translateDJShapeToUMLShape(element, shape, diManager, diagramContext.umlDiagram);
+                        await diManager.put(shape);
                         break;
                     }
-                    case 'nameLabel':
-                        await createNameLabel(element, umlWebClient, diagramContext);
+                    case 'edge': {
+                        const edge = diManager.post('UML DI.UMLEdge', { id : element.id });
+                        await translateDJEdgeToUMLEdge(element, edge, diManager, diagramContext.umlDiagram);
+                        await diManager.put(edge);
                         break;
-                    case 'typedElementLabel':
-                        await createTypedElementLabel(element, umlWebClient, diagramContext);
+                    }
+                    case 'label': {
+                        const label = diManager.post('UML DI.UMLLabel', { id : element.id });
+                        await translateDJLabelToUMLLabel(element, label, diManager, diagramContext.umlDiagram);
+                        await diManager.put(label);
                         break;
-                    case 'keywordLabel':
-                        await createKeywordLabel(element, umlWebClient, diagramContext);
+                    }
+                    case 'classifierShape': {
+                        const classifierShape = diManager.post('UML DI.UMLClassifierShape', { id : element.id });
+                        await translateDJSCompartmentableShapeToUmlCompartmentableShape(element, classifierShape, diManager, diagramContext.umlDiagram);
+                        await diManager.put(classifierShape);
                         break;
-                    case 'associationEndLabel':
-                        await createAssociationEndLabel(element, umlWebClient, diagramContext);
+                    }
+                    case 'nameLabel': {
+                        const nameLabel = diManager.post('UML DI.UMLNameLabel', { id: element.id });
+                        await translateDJLabelToUMLLabel(element, nameLabel, diManager, diagramContext.umlDiagram);
+                        await diManager.put(nameLabel);
                         break;
-                    case 'multiplicityLabel':
-                        await createMultiplicityLabel(element, umlWebClient, diagramContext);
+                    }
+                    case 'typedElementLabel': {
+                        const typedElementLabel = diManager.post('UML DI.UMLTypedElementLabel', { id: element.id });
+                        await translateDJLabelToUMLLabel(element, typedElementLabel, diManager, diagramContext.umlDiagram);
+                        await diManager.put(typedElementLabel);
                         break;
+                    }
+                    case 'keywordLabel': {
+                        const keywordLabel = diManager.post('UML DI.UMLKeywordLabel', { id : element.id });
+                        await translateDJLabelToUMLLabel(element, keywordLabel, diManager, diagramContext.umlDiagram);
+                        await diManager.put(keywordLabel);
+                        break;
+                    }
+                    case 'associationEndLabel': {
+                        const associationEndLabel = diManager.post('UML DI.UMLAssociationEndLabel', { id : element.id });
+                        await translateDJLabelToUMLLabel(element, associationEndLabel, diManager, diagramContext.umlDiagram);
+                        await diManager.put(associationEndLabel);
+                        break;
+                    }
+                    case 'multiplicityLabel': {
+                        const multiplicityLabel = diManager.post('UML DI.UMLMultiplicityLabel', { id : element.id });
+                        await translateDJLabelToUMLLabel(element, multiplicityLabel, diManager, diagramContext.umlDiagram);
+                        await diManager.put(multiplicityLabel);
+                        break;
+                    }
                     default:
                         throw Error('invalid uml di elementType given to ElementCreationHandler!');
                 }    

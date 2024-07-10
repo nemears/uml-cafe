@@ -98,7 +98,7 @@ export default {
                         }
                     }
                     if (newElement.id === this.valID) {
-                        if (newElement.isSubClassOf('namedElement')) {
+                        if (newElement.is('NamedElement')) {
                             if (newElement.name !== this.valLabel) {
                                 this.valLabel = newElement.name;
                             }
@@ -173,7 +173,7 @@ export default {
                     this.badDrag = true;
                 }
                 const el = this.recentDragInfo.selectedElements[0];
-                if (!el.isSubClassOf(this.singletonData.type)) {
+                if (!el.is(this.singletonData.type)) {
                     this.badDrag = true;
                 }
             }

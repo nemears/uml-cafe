@@ -90,7 +90,7 @@ export default class UmlEdgeProvider {
                 const createEdge = async () => {
                     const source = elementRegistry.get(umlEdge.source); 
                     const target = elementRegistry.get(umlEdge.target);
-                    if (umlEdge.modelElement.isSubClassOf('association')) { // TODO move to Association
+                    if (umlEdge.modelElement.is('Association')) { // TODO move to Association
                         for await (const memberEnd of umlEdge.modelElement.memberEnds) {}
                     }
                     

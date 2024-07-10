@@ -165,7 +165,7 @@ export default {
             this.badDrag = this.setData.readonly || this.$umlWebClient.readonly;
             if (!this.badDrag) {
                 for (const el of this.recentDragInfo.selectedElements) {
-                    if (!el.isSubClassOf(this.setData.type)) {
+                    if (!el.is(this.setData.type)) {
                         this.badDrag = true;
                         break;
                     }

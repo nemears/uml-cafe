@@ -22,7 +22,7 @@ export default {
         async createElement(elementType) {
             const elCreated = await this.$umlWebClient.post(elementType);
             const contextEl = await this.$umlWebClient.get(this.umlid);
-            contextEl.sets[this.set].add(elCreated);
+            await contextEl.sets.get(this.set).add(elCreated);
             this.$umlWebClient.put(contextEl);
             this.$umlWebClient.put(elCreated);
             this.$emit('closePopUp', elCreated);
