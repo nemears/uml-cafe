@@ -474,7 +474,7 @@ export default {
                     setName: 'ownedComments',
                     type: 'Comment',
                  }"
-                :creatable="{types:['comment'], set:'ownedComments'}"
+                :creatable="{types:['Comment'], set:'ownedComments'}"
                  @element-update="propogateElementUpdate"
                  ></SetData>
 	</ElementType>
@@ -699,7 +699,7 @@ export default {
                     @element-update="propogateElementUpdate"
                     ></InputData>
         <SingletonData  :label="'Lower Value'" 
-                        :createable="{types:['literalInt']}" 
+                        :createable="{types:['LiteralInt']}" 
                         :initial-data="multiplicityElementData.lowerValue" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'lowerValue', type:'ValueSpecification'}"
@@ -711,7 +711,7 @@ export default {
                         @deselect="propogateDeselect"
                         ></SingletonData>
         <SingletonData  :label="'Upper Value'" 
-                        :createable="{types:['literalInt', 'literalUnlimitedNatural']}"
+                        :createable="{types:['LiteralInt', 'LiteralUnlimitedNatural']}"
                         :initial-data="multiplicityElementData.upperValue" 
                         :uml-i-d="umlID" 
                         :singleton-data="{setName:'upperValue', type:'ValueSpecification'}"
@@ -874,13 +874,13 @@ export default {
                         :createable="
                                     {
                                         types: [
-                                            'instanceValue',
-                                            'literalBool',
-                                            'literalInt',
-                                            'literalNull',
-                                            'literalReal',
-                                            'literalString',
-                                            'literalUnlimitedNatural'
+                                            'InstanceValue',
+                                            'LiteralBool',
+                                            'LiteralInt',
+                                            'LiteralNull',
+                                            'LiteralReal',
+                                            'LiteralString',
+                                            'LiteralUnlimitedNatural'
                                         ],
                                     }"
                         :initial-data="propertyData.defaultValue"
@@ -964,18 +964,18 @@ export default {
                     :subsets="['packagedElements']"
                     :creatable="{
                                     types: [
-                                        'class', 
-                                        'dataType',
-                                        'instanceSpecification',
-                                        'instanceValue',
-                                        'literalBool',
-                                        'literalInt',
-                                        'literalNull',
-                                        'literalReal',
-                                        'literalString',
-                                        'literalUnlimitedNatural',
-                                        'package',
-                                        'primitiveType',
+                                        'Class', 
+                                        'DataType',
+                                        'InstanceSpecification',
+                                        'InstanceValue',
+                                        'LiteralBool',
+                                        'LiteralInt',
+                                        'LiteralNull',
+                                        'LiteralReal',
+                                        'LiteralString',
+                                        'LiteralUnlimitedNatural',
+                                        'Package',
+                                        'PrimitiveType',
                                     ], 
                                     set: 'packagedElements'
                                 }"
@@ -1013,7 +1013,7 @@ export default {
                     :umlid="umlID"
                     :selected-elements="selectedElements"
                     :subsets="[]"
-                    :creatable="{types:['slot'], set:'slots'}"
+                    :creatable="{types:['Slot'], set:'slots'}"
                     :set-data="{
                                     setName: 'slots',
                                     readonly: false,
@@ -1061,12 +1061,12 @@ export default {
                     :subsets="[]"
                     :creatable="{
                         types:[
-                            'instanceValue',
-                            'literalInt', 
-                            'literalNull', 
-                            'literalReal', 
-                            'literalString', 
-                            'literalUnlimitedNatural'
+                            'InstanceValue',
+                            'LiteralInt', 
+                            'LiteralNull', 
+                            'LiteralReal', 
+                            'LiteralString', 
+                            'LiteralUnlimitedNatural'
                         ], 
                     }"
                     :set-data="{
@@ -1098,7 +1098,7 @@ export default {
                     :umlid="umlID" 
                     :selected-elements="selectedElements"
                     :subsets="['generalizations']" 
-                    :creatable="{types:['generalization'], set: 'generalizations'}"
+                    :creatable="{types:['Generalization'], set: 'generalizations'}"
                     :set-data="{
                         setName: 'generalizations',
                         readonly: false,
@@ -1139,7 +1139,7 @@ export default {
                                 }"
                     :creatable="{
                                     types: [
-                                                'property'
+                                                'Property'
                                             ],
                                     set: 'ownedAttributes'
                                 }"
@@ -1162,7 +1162,7 @@ export default {
                                     type: 'EnumerationLiteral'
                                 }"
                     :creatable="{
-                                    types: [ 'enumerationLiteral' ],
+                                    types: [ 'EnumerationLiteral' ],
                                     set: 'ownedLiterals'
                                 }"
                     :theme="theme"
@@ -1218,7 +1218,7 @@ export default {
                                 }"
                     :creatable="{
                                     types: [
-                                        'property'
+                                        'Property'
                                     ],
                                     set: 'ownedEnds'
                                 }"
@@ -1239,7 +1239,7 @@ export default {
                                 }"
                     :creatable="{
                                     types: [
-                                        'property'
+                                        'Property'
                                     ],
                                     set: 'navigableOwnedEnds'
                                 }"
@@ -1256,7 +1256,7 @@ export default {
                     :umlid="umlID" 
                     :selected-elements="selectedElements"
                     :subsets="['ownedAttributes']"
-                    :creatable="{types:['property'], set: 'ownedAttributes'}"
+                    :creatable="{types:['Property'], set: 'ownedAttributes'}"
                     :set-data="{
                                     setName: 'ownedAttributes',
                                     readonly: false

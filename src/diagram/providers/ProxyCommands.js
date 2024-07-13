@@ -32,7 +32,7 @@ export default class ProxyCommands {
     constructor (diagramEmitter, commandStack, diagramContext) {
         commandStack.registerHandler('proxy', ProxyCommandHandler);
         diagramEmitter.on('externalCommand', (command) => {
-            if (command.element !== diagramContext.diagram.id) {
+            if (command.element !== diagramContext.umlDiagram.id) {
                 commandStack.execute('proxy', command); //pass entire command to proxy
             }
         });

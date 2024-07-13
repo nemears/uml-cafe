@@ -1,12 +1,12 @@
-import { makeUMLWaypoints } from '../api/diagramInterchange/edge';
-
+import { translateDJEdgeToUMLEdge } from '../translations';
 class AdjustWaypointsHandler {
-    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, eventBus) {
+    constructor(canvas, diagramEmitter, elementRegistry, eventBus, diManager, diagramContext) {
         this.canvas = canvas;
-        this.umlWebClient = umlWebClient;
         this.diagramEmitter = diagramEmitter;
         this.elementRegistry = elementRegistry;
         this.eventBus = eventBus;
+        this.diManager = diManager;
+        this.diagramContext = diagramContext;
     }
     execute(context) {
         if (context.proxy) {
@@ -16,7 +16,7 @@ class AdjustWaypointsHandler {
         context.connection = this.elementRegistry.get(context.connection.id);
         this.diagramEmitter.fire('command', {name: 'move.edge.uml', context: context});
         context.connection.waypoints = context.newWaypoints;
-        adjustEdgeWaypoints(context.connection, this.umlWebClient);
+        adjustEdgeWaypoints(context.connection, this.diManager, this.diagramContext.umlDiagram);
         this.eventBus.fire('edge.move.end', context);
         return context.connection;
     }
@@ -30,13 +30,20 @@ class AdjustWaypointsHandler {
             // TODO
         }});
         context.connection.waypoints = context.originalWaypoints;
-        adjustEdgeWaypoints(context.connection, this.umlWebClient);
+        adjustEdgeWaypoints(context.connection, this.diManager, this.diagramContext.umlDiagram);
         this.eventBus.fire('edge.move.end', context);
         return context.connection;
     }
 }
 
-AdjustWaypointsHandler.$inject= ['canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry', 'eventBus'];
+AdjustWaypointsHandler.$inject= [
+    'canvas', 
+    'diagramEmitter', 
+    'elementRegistry', 
+    'eventBus',
+    'diManager',
+    'diagramContext'
+];
 
 export default class UmlEdgeProvider {
     constructor(eventBus, umlWebClient, diagramContext, elementRegistry, elementFactory, canvas, graphicsFactory, commandStack) {
@@ -115,22 +122,41 @@ export default class UmlEdgeProvider {
         });
 
         eventBus.on('server.update', (event) => {
-            if (event.serverElement.elementType() === 'edge') {
+            if (event.serverElement.is('UMLEdge')) {
                 const serverEdge = event.serverElement;
                 const localEdge = event.localElement;
-                if (localEdge.target.id !== serverEdge.target) {
-                    localEdge.target = elementRegistry.get(serverEdge.target);
+                if (serverEdge.waypoints.size() === 0) {
+                    // edge is still being created skip
+                    // TODO a little messy, the problem is that edge isn't made instantly
+                    // anymore with the generated api, so we just have to understand that
+                    // if there are no waypoints thats impossible meaning it's in a bad
+                    // state getting set up or torn down
+                    return;
                 }
-                if (localEdge.source.id !== serverEdge.source) {
-                    localEdge.source = elementRegistry.get(serverEdge.source);
+                if (localEdge.target.id !== serverEdge.target.id()) {
+                    localEdge.target = elementRegistry.get(serverEdge.target.id());
                 }
+                if (localEdge.source.id !== serverEdge.source.id()) {
+                    localEdge.source = elementRegistry.get(serverEdge.source.id());
+                }
+                
+                const doLater = async () => {
+                    const waypoints = [];
+                    for await (const point of serverEdge.waypoints) {
+                        waypoints.push({
+                            x: point.x,
+                            y: point.y
+                        });
+                    }
 
-                localEdge.waypoints = serverEdge.waypoints;
+                    localEdge.waypoints = waypoints;
 
-                graphicsFactory.update('connection', localEdge, canvas.getGraphics(localEdge));
-                eventBus.fire('edge.move', {
-                    edge: localEdge
-                });
+                    graphicsFactory.update('connection', localEdge, canvas.getGraphics(localEdge));
+                    eventBus.fire('edge.move', {
+                        edge: localEdge
+                    });
+                };
+                doLater();
             }
         });
 
@@ -146,22 +172,8 @@ export default class UmlEdgeProvider {
 
 UmlEdgeProvider.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory', 'commandStack'];
 
-export async function adjustEdgeWaypoints(edge, umlWebClient) {
-    const edgeInstance = await umlWebClient.get(edge.id);
-    for await (const edgeSlot of edgeInstance.slots) {
-        if (edgeSlot.definingFeature.id() === 'Zf2K&k0k&jwaAz1GLsTSk7rN742p') {
-            let waypointValues = [];
-            for await (const waypointValue of edgeSlot.values) {
-                await umlWebClient.deleteElement(await waypointValue.instance.get());
-                waypointValues.push(waypointValue);
-            }
-            for (const waypointValue of waypointValues) {
-                edgeSlot.values.remove(waypointValue);
-                await umlWebClient.deleteElement(waypointValue);
-            }
-            makeUMLWaypoints(edge, umlWebClient, edgeSlot, {diagram: await edgeInstance.owningPackage.get()});
-            umlWebClient.put(edgeSlot);
-        }
-    }
-    umlWebClient.put(edgeInstance);
+export async function adjustEdgeWaypoints(edge, diManager, umlDiagram) {
+    const umlEdge = await diManager.get(edge.id);
+    await translateDJEdgeToUMLEdge(edge, umlEdge, diManager, umlDiagram);
+    await diManager.put(umlEdge);
 }

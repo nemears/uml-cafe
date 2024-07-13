@@ -14,7 +14,7 @@ export default class GeneralizationHandler extends RuleProvider {
                         modelElement: {
                             id: randomID(),
                             elementType() {
-                                'generalization'
+                                'Generalization'
                             }
                         },
                         createModelElement: true,
@@ -32,7 +32,7 @@ export default class GeneralizationHandler extends RuleProvider {
             if (context.connectType === 'generalization') {
                 const specific = context.connection.source.modelElement,
                 general = context.connection.target.modelElement;
-                const generalization = umlWebClient.post('generalization', {id: context.connection.modelElement.id});
+                const generalization = umlWebClient.post('Generalization', {id: context.connection.modelElement.id});
                 context.connection.modelElement = generalization;
                 specific.generalizations.add(generalization);
                 generalization.general.set(general);
@@ -97,7 +97,7 @@ function canConnectHelper(context) {
         if (!modelElement) {
             return false;
         }
-        if (!modelElement.isSubClassOf('classifier')) {
+        if (!modelElement.is('Classifier')) {
             return false;
         }
         if (context.target) {
@@ -110,7 +110,7 @@ function canConnectHelper(context) {
             if (!modelElement) {
                 return false;
             }
-            if (!modelElement.isSubClassOf('classifier')) {
+            if (!modelElement.is('Classifier')) {
                 return false;
             }
         }

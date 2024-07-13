@@ -24,7 +24,7 @@ export default class Association extends RuleProvider {
                         modelElement: {
                             id: randomID(),
                             elementType() {
-                                'association'
+                                'Association'
                             }
                         },
                         createModelElement: true,
@@ -54,10 +54,10 @@ export default class Association extends RuleProvider {
             }
             if (context.connectType === 'directedComposition') {
                 // create the association and properties
-                const association = umlWebClient.post('association', {id: context.connection.modelElement.id});
+                const association = umlWebClient.post('Association', {id: context.connection.modelElement.id});
                 context.connection.modelElement = association;
-                const memberEnd = umlWebClient.post('property');
-                const ownedEnd = umlWebClient.post('property');
+                const memberEnd = umlWebClient.post('Property');
+                const ownedEnd = umlWebClient.post('Property');
                 memberEnd.type.set(context.connection.target.modelElement);
                 memberEnd.aggregation = 'composite';
 
@@ -83,10 +83,10 @@ export default class Association extends RuleProvider {
                 }
                 diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context, clazz, context.connection.modelElement)); 
             } else if (context.connectType === 'composition') {
-                const association = umlWebClient.post('association', {id: context.connection.modelElement.id});
+                const association = umlWebClient.post('Association', {id: context.connection.modelElement.id});
                 context.connection.modelElement = association;
-                const sourceEnd = umlWebClient.post('property');
-                const targetEnd = umlWebClient.post('property');
+                const sourceEnd = umlWebClient.post('Property');
+                const targetEnd = umlWebClient.post('Property');
                 sourceEnd.type.set(context.connection.source.modelElement);
                 targetEnd.aggregation = 'composite';
                 targetEnd.type.set(context.connection.target.modelElement);
@@ -106,10 +106,10 @@ export default class Association extends RuleProvider {
             } else if (context.connectType === 'directedAssociation') {
                 const source = context.connection.source.modelElement,
                 target = context.connection.target.modelElement;
-                const association = umlWebClient.post('association', {id:context.connection.modelElement.id});
+                const association = umlWebClient.post('Association', {id:context.connection.modelElement.id});
                 context.connection.modelElement = association;
-                const memberEnd = umlWebClient.post('property');
-                const ownedEnd = umlWebClient.post('property');
+                const memberEnd = umlWebClient.post('Property');
+                const ownedEnd = umlWebClient.post('Property');
                 memberEnd.clazz.set(source);
                 memberEnd.type.set(target);
                 memberEnd.name = target.name.toLowerCase();
@@ -131,10 +131,10 @@ export default class Association extends RuleProvider {
             } else if (context.connectType === 'association') {
                 const source = context.connection.source.modelElement;
                 const target = context.connection.target.modelElement;
-                const association = umlWebClient.post('association', {id:context.connection.modelElement.id});
+                const association = umlWebClient.post('Association', {id:context.connection.modelElement.id});
                 context.connection.modelElement = association;
-                const sourceEnd = umlWebClient.post('property');
-                const targetEnd = umlWebClient.post('property');
+                const sourceEnd = umlWebClient.post('Property');
+                const targetEnd = umlWebClient.post('Property');
                 sourceEnd.type.set(source);
                 sourceEnd.name = source.name.toLowerCase();
                 association.ownedEnds.add(sourceEnd);
@@ -159,10 +159,10 @@ export default class Association extends RuleProvider {
             } else if (context.connectType === 'biDirectionalAssociation') {
                 const target = context.connection.target.modelElement;
                 const source = context.connection.source.modelElement;
-                const association = umlWebClient.post('association', {id:context.connection.modelElement.id});
+                const association = umlWebClient.post('Association', {id:context.connection.modelElement.id});
                 context.connection.modelElement = association;
-                const sourceEnd = umlWebClient.post('property');
-                const targetEnd = umlWebClient.post('property');
+                const sourceEnd = umlWebClient.post('Property');
+                const targetEnd = umlWebClient.post('Property');
                 sourceEnd.type.set(source);
                 sourceEnd.clazz.set(target);
                 sourceEnd.name = source.name.toLowerCase();
@@ -248,8 +248,10 @@ export default class Association extends RuleProvider {
         });
 
         eventBus.on('server.update', 900, (event) => {
-            if (event.serverElement.modelElement && event.serverElement.modelElement.elementType() === 'association' && 
-                event.serverElement.elementType() === 'edge') {
+            if (event.serverElement.modelElement.size() > 0 && 
+                event.serverElement.modelElement.unsafe().front().elementType() === 'association' && 
+                event.serverElement.is('UMLEdge')) 
+            {
                     // check if name has changed
                     const edge = elementRegistry.get(event.serverElement.id);
                     const association = edge.modelElement;
@@ -610,7 +612,7 @@ export async function isPropertyValidForMultiplicityLabel(property) {
     } else {
         const lowerValue = await property.lowerValue.get();
         switch (lowerValue.elementType()) {
-            case 'literalInt':
+            case 'LiteralInt':
                 if (lowerValue.value === undefined) {
                     isNotValidForMultiplicityLabel = true;
                 }
@@ -628,8 +630,8 @@ export async function isPropertyValidForMultiplicityLabel(property) {
     } else {
         const upperValue = await property.upperValue.get();
         switch (upperValue.elementType()) {
-            case 'literalInt':
-            case 'literalUnlimitedNatural':
+            case 'LiteralInt':
+            case 'LiteralUnlimitedNatural':
                 if (upperValue.value === undefined) {
                     isNotValidForMultiplicityLabel = true;
                 }

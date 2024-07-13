@@ -1,11 +1,11 @@
 import { getMid, roundBounds } from "diagram-js/lib/layout/LayoutUtil";
 import { EDGE_ID, SHAPE_BOUNDS_SLOT_ID } from "../api/diagramInterchange/ids";
-import { isShape  } from '../api/diagramInterchange/is';
 import { adjustEdgeWaypoints } from './UmlEdgeProvider';
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
+import { translateDJShapeToUMLShape } from '../translations';
 
 class MoveShapeHandler {
-    constructor(umlWebClient, diagramContext, graphicsFactory, canvas, eventBus, diagramEmitter, elementRegistry) {
+    constructor(umlWebClient, diagramContext, graphicsFactory, canvas, eventBus, diagramEmitter, elementRegistry, diManager) {
         this.umlWebClient = umlWebClient;
         this.diagramContext = diagramContext;
         this.graphicsFactory = graphicsFactory;
@@ -13,26 +13,26 @@ class MoveShapeHandler {
         this.eventBus = eventBus;
         this.diagramEmitter = diagramEmitter;
         this.elementRegistry = elementRegistry;
+        this.diManager = diManager;
     }
     async doLater(shape) {
-        const shapeInstance = await this.umlWebClient.get(shape.id);
-        for (const classifierID of shapeInstance.classifiers.ids()) {
-            if (isShape(classifierID)) {
-                await adjustShape(shape, shapeInstance, this.umlWebClient);
-                for (const child of shape.children) {
-                    if (child.elementType === 'compartment') {
-                        for (const compartmentChild of child.children) {
-                            await this.doLater(compartmentChild);
-                        }
+        const shapeInstance = await this.diManager.get(shape.id);
+        if (shapeInstance.is('Shape')) {
+            await translateDJShapeToUMLShape(shape, shapeInstance, this.diManager, this.diagramContext.umlDiagram);
+            for (const child of shape.children) {
+                if (child.elementType === 'compartment') {
+                    for (const compartmentChild of child.children) {
+                        await this.doLater(compartmentChild);
                     }
-                    await this.doLater(child);
                 }
-                await adjustAttachedEdges(shape, this.umlWebClient);
-            } else if (classifierID === EDGE_ID) {
-                await adjustEdgeWaypoints(shape, this.umlWebClient);
+                await this.doLater(child);
             }
+            await adjustAttachedEdges(shape, this.diManager, this.diagramContext.umlDiagram);
+        } else if (shapeInstance.is('Edge')) {
+            //TODO
+            await adjustEdgeWaypoints(shape, this.diManager, this.diagramContext.umlDiagram);
         }
-        this.umlWebClient.put(this.diagramContext.diagram);
+        await this.diManager.put(this.diagramContext.umlDiagram);
     }
 
     moveElementChildrenAndEdges(element, context, direction) {
@@ -97,7 +97,7 @@ class MoveShapeHandler {
     }
 }
 
-MoveShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory', 'canvas', 'eventBus', 'diagramEmitter', 'elementRegistry'];
+MoveShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory', 'canvas', 'eventBus', 'diagramEmitter', 'elementRegistry', 'diManager'];
 
 class ResizeShapeHandler {
     constructor(umlWebClient, diagramContext, graphicsFactory, canvas, diagramEmitter, elementRegistry) {
@@ -117,7 +117,7 @@ class ResizeShapeHandler {
             const childInstance = await this.umlWebClient.get(child.id);
             await adjustShape(child, childInstance, this.umlWebClient);
         }
-        await adjustAttachedEdges(context.shape, this.umlWebClient);
+        await adjustAttachedEdges(context.shape, this.diManager, this.diagramContext.umlDiagram);
         this.umlWebClient.put(this.diagramContext.diagram);
     }
 
@@ -303,15 +303,15 @@ export async function adjustShape(shape, shapeInstance, umlWebClient) {
     umlWebClient.put(shapeInstance);
 }
 
-async function adjustListOfEdges(listOfEdges, umlWebClient) {
+async function adjustListOfEdges(listOfEdges, diManager, umlDiagram) {
     for (const edge of listOfEdges) {
-        await adjustEdgeWaypoints(edge, umlWebClient); 
+        await adjustEdgeWaypoints(edge, diManager, umlDiagram); 
     } 
 }
 
-export async function adjustAttachedEdges(shape, umlWebClient) {
-    await adjustListOfEdges(shape.incoming, umlWebClient);
-    await adjustListOfEdges(shape.outgoing, umlWebClient); 
+export async function adjustAttachedEdges(shape, diManager, umlDiagram) {
+    await adjustListOfEdges(shape.incoming, diManager, umlDiagram);
+    await adjustListOfEdges(shape.outgoing, diManager, umlDiagram); 
 }
 
 function checkIfInselectableAndChange(context, property) {

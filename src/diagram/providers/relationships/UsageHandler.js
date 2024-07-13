@@ -16,7 +16,7 @@ export default class UsageHandler extends RuleProvider {
                         modelElement: {
                             id: randomID(),
                             elementType() {
-                                'usage'
+                                'Usage'
                             }
                         },
                         createModelElement: true,
@@ -48,7 +48,7 @@ export default class UsageHandler extends RuleProvider {
             if (context.connectType === 'usage') {
                 const client = context.connection.source.modelElement,
                 supplier = context.connection.target.modelElement;
-                const usage = umlWebClient.post('usage', {id:context.connection.modelElement.id});
+                const usage = umlWebClient.post('Usage', {id:context.connection.modelElement.id});
                 context.connection.modelElement = usage;
                 usage.clients.add(client);
                 usage.suppliers.add(supplier);
@@ -111,14 +111,14 @@ function canConnectHelper(context) {
         if (!context.source.modelElement) {
             return false;
         }
-        if (!context.source.modelElement.isSubClassOf('namedElement')) { 
+        if (!context.source.modelElement.is('NamedElement')) { 
             return false;
         }
         if (context.target) {
             if (!context.target.modelElement) {
                 return false;
             }
-            if (!context.target.modelElement.isSubClassOf('namedElement')) {
+            if (!context.target.modelElement.is('NamedElement')) {
                 return false;
             }
         }

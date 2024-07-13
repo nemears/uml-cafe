@@ -9,7 +9,7 @@ export default class DataTypeHandler {
             const element = event.element;
             if (element.modelElement.elementType() === 'dataType') {
                 const dataTypeID = element.modelElement.id;
-                let clazz = umlWebClient.post('dataType', {id:dataTypeID});
+                let clazz = umlWebClient.post('DataType', {id:dataTypeID});
                 diagramContext.context.packagedElements.add(clazz);
                 umlWebClient.put(clazz);
                 umlWebClient.put(diagramContext.context);

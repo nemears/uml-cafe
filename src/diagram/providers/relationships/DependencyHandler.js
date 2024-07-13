@@ -15,7 +15,7 @@ export default class DependencyHandler extends RuleProvider {
                         modelElement: {
                             id: randomID(),
                             elementType() {
-                                'dependency'
+                                'Dependency'
                             }
                         },
                         createModelElement: true,
@@ -30,10 +30,10 @@ export default class DependencyHandler extends RuleProvider {
             }
         });
         eventBus.on('edge.connect.create', (context) => {
-            if (context.connectType === 'dependency') {
+            if (context.connectType === 'Dependency') {
                 const client = context.connection.source.modelElement,
                 supplier = context.connection.target.modelElement;
-                const dependency = umlWebClient.post('dependency', {id:context.connection.modelElement.id});
+                const dependency = umlWebClient.post('Dependency', {id:context.connection.modelElement.id});
                 context.connection.modelElement = dependency;
                 dependency.clients.add(client);
                 dependency.suppliers.add(supplier);
@@ -95,14 +95,14 @@ function canConnectHelper(context) {
         if (!context.source.modelElement) {
             return false;
         }
-        if (!context.source.modelElement.isSubClassOf('namedElement')) { 
+        if (!context.source.modelElement.is('NamedElement')) { 
             return false;
         }
         if (context.target) {
             if (!context.target.modelElement) {
                 return false;
             }
-            if (!context.target.modelElement.isSubClassOf('namedElement')) {
+            if (!context.target.modelElement.is('NamedElement')) {
                 return false;
             }
         }

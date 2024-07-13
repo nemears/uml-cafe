@@ -9,7 +9,7 @@ export default class PrimitiveTypeHandler {
             const element = event.element;
             if (element.modelElement.elementType() === 'PrimitiveType') {
                 const primitiveTypeID = element.modelElement.id;
-                let clazz = umlWebClient.post('primitiveType', {id:primitiveTypeID});
+                let clazz = umlWebClient.post('PrimitiveType', {id:primitiveTypeID});
                 diagramContext.context.packagedElements.add(clazz);
                 umlWebClient.put(clazz);
                 umlWebClient.put(diagramContext.context);

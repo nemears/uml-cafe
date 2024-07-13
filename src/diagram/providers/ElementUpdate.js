@@ -1,8 +1,6 @@
-import { getUmlDiagramElement, deleteUmlDiagramElement } from '../api/diagramInterchange/util';
-
 export default class ElementUpdate {
 
-    constructor(diagramEmitter, umlWebClient, elementRegistry, modelElementMap, eventBus, diagramContext) {
+    constructor(diagramEmitter, elementRegistry, modelElementMap, eventBus, diagramContext, diManager) {
         const eventQueue = [];
         diagramEmitter.on('elementUpdate', (event) => {
             const handleUpdate = async () => {
@@ -20,7 +18,8 @@ export default class ElementUpdate {
                                     eventBus.fire('server.delete', {
                                         element: diagramElement
                                     });
-                                    await removeShapeAndEdgeFromServer(diagramElement, umlWebClient);
+
+                                    await removeShapeAndEdgeFromServer(diagramElement, diManager);
                                 }
                             } else {
                                 const diagramElement = elementRegistry.get(oldElement.id);
@@ -36,8 +35,11 @@ export default class ElementUpdate {
                             // update
                             if (newElement.is('InstanceSpecification')) {
                                 // could be a diagram element
-                                const serverElement = await getUmlDiagramElement(oldElement.id, umlWebClient);
+                                const serverElement = await diManager.get(oldElement.id);
                                 if (serverElement) {
+                                    if (serverElement.modelElement) {
+                                       await serverElement.modelElement.front();
+                                    }
                                     const localElement = elementRegistry.get(oldElement.id);
                                     if (localElement) {
                                         eventBus.fire('server.update', {
@@ -56,21 +58,24 @@ export default class ElementUpdate {
                                 }
                             }
                             
-                            await updateDiagramElement(newElement, modelElementMap, elementRegistry, eventBus, umlWebClient);
+                            await updateDiagramElement(newElement, modelElementMap, elementRegistry, eventBus, diManager);
                         }
                     } else {
                         if (newElement) {
                             // new
                             if (newElement.is('InstanceSpecification')) {
-                                const serverElement = await getUmlDiagramElement(newElement.id, umlWebClient);
+                                const serverElement = await diManager.get(newElement.id);
                                 if (serverElement && newElement.owner.id() === diagramContext.diagram.id) {
+                                    if (serverElement.modelElement) {
+                                        await serverElement.modelElement.front();
+                                    }
                                     eventBus.fire('server.create', {
                                         serverElement: serverElement,
                                     });
                                 }
                             }
 
-                            await updateDiagramElement(newElement, modelElementMap, elementRegistry, eventBus, umlWebClient);
+                            await updateDiagramElement(newElement, modelElementMap, elementRegistry, eventBus, diManager);
                         }
                     }
                 }
@@ -102,16 +107,19 @@ export default class ElementUpdate {
     }
 }
 
-ElementUpdate.$inject = ['diagramEmitter', 'umlWebClient', 'elementRegistry', 'modelElementMap', 'eventBus', 'diagramContext'];
+ElementUpdate.$inject = ['diagramEmitter', 'elementRegistry', 'modelElementMap', 'eventBus', 'diagramContext', 'diManager'];
 
-async function updateDiagramElement(newElement, modelElementMap, elementRegistry, eventBus, umlWebClient) {
+async function updateDiagramElement(newElement, modelElementMap, elementRegistry, eventBus, diManager) {
     const diagramElementIDs = modelElementMap.get(newElement.id);
     if (diagramElementIDs) {
         // element is represented within the diagram
         for (const shapeID of diagramElementIDs) {
             const diagramElement = elementRegistry.get(shapeID);
-            const serverElement = await getUmlDiagramElement(shapeID, umlWebClient);
+            const serverElement = await diManager.get(shapeID);
             if (diagramElement && serverElement) { // workaround / not optimal
+                if (serverElement.modelElement) {
+                    await serverElement.modelElement.front();
+                }
                 eventBus.fire('server.update', {
                     localElement: diagramElement,
                     serverElement: serverElement,
@@ -124,16 +132,16 @@ async function updateDiagramElement(newElement, modelElementMap, elementRegistry
     }
 }
 
-export async function removeShapeAndEdgeFromServer(shape, umlWebClient) {
+export async function removeShapeAndEdgeFromServer(shape, diManager) {
     if (shape.incoming) {
         for (const incomingEdge of shape.incoming) {
-            await deleteUmlDiagramElement(incomingEdge.id, umlWebClient);
+            await diManager.delete(await diManager.get(incomingEdge.id));
         }
     }
     if (shape.outgoing) {
         for (const outgoingEdge of shape.outgoing) {
-            await deleteUmlDiagramElement(outgoingEdge.id, umlWebClient);
+            await diManager.delete(await diManager.get(outgoingEdge.id));
         }
     }
-    await deleteUmlDiagramElement(shape.id, umlWebClient);
+    await diManager.delete(await diManager.get(shape.id));
 }

@@ -1,9 +1,9 @@
 import { createElementUpdate } from '../../umlUtil';
-import { updateLabel } from '../api/diagramInterchange/label';
 import { getTextDimensions, getTypedElementText } from './ClassDiagramPaletteProvider';
 import { placeEdgeLabel } from './EdgeConnect';
+import { translateDJLabelToUMLLabel } from '../translations';
 
-function revertLabelChange(context, diagramEmitter, umlWebClient) {
+function revertLabelChange(context, diagramEmitter, umlWebClient, diagramContext, diManager) {
     const oldBounds = context.oldBounds;
     const element = context.element;
     const oldText = context.oldText;
@@ -19,22 +19,32 @@ function revertLabelChange(context, diagramEmitter, umlWebClient) {
     diagramEmitter.fire('elementUpdate', createElementUpdate(element.modelElement));
     umlWebClient.put(element.modelElement);
 
-    updateLabel(element, umlWebClient);
+    updateLabel(element, diagramContext, diManager);
+}
+
+async function updateLabel(element, diagramContext, diManager) {
+    const umlLabel = await diManager.get(element.id);
+    await translateDJLabelToUMLLabel(element, umlLabel, diManager, diagramContext.umlDiagram);
+
 }
 
 class UpdateNameLabelHandler {
-    constructor(diagramEmitter, umlWebClient) {
+    constructor(diagramEmitter, umlWebClient, diManager, diagramContext) {
         this._diagramEmitter = diagramEmitter;
         this._umlWebClient = umlWebClient;
+        this._diManager = diManager;
+        this._diagramContext = diagramContext;
     }
     execute(context) {
         const diagramEmitter = this._diagramEmitter,
-        umlWebClient = this._umlWebClient;
+        umlWebClient = this._umlWebClient,
+        diManager = this._diManager,
+        diagramContext = this._diagramContext;
 
         // take care of proxy comand
         if (context.proxy) {
             delete context.proxy;
-            return context.element;
+            return [];//context.element;
         }
         
         // fire command for app
@@ -63,8 +73,8 @@ class UpdateNameLabelHandler {
         element.height = bounds.height;
        
         // update to server
-        updateLabel(element, umlWebClient);
-
+        updateLabel(element, diagramContext, diManager);
+        
         // return element to commandStack
         return element;
     }
@@ -74,22 +84,26 @@ class UpdateNameLabelHandler {
             delete context.proxy;
             return;
         }
-        revertLabelChange(context, this._diagramEmitter, this._umlWebClient);
+        revertLabelChange(context, this._diagramEmitter, this._umlWebClient, this._diagramContext, this._diManager);
         return context.element;
     }
 }
 
-UpdateNameLabelHandler.$inject = ['diagramEmitter', 'umlWebClient'];
+UpdateNameLabelHandler.$inject = ['diagramEmitter', 'umlWebClient', 'diManager', 'diagramContext'];
 
 class UpdateTypedElementLabelHandler {
-    constructor(diagramEmitter, umlWebClient) {
+    constructor(diagramEmitter, umlWebClient, diagramContext, diManager) {
         this._diagramEmitter = diagramEmitter;
         this._umlWebClient = umlWebClient;
+        this._diagramContext = diagramContext;
+        this._diagramManager = diManager;
     }
 
     execute(context) {
         const diagramEmitter = this._diagramEmitter,
-        umlWebClient = this._umlWebClient;
+        umlWebClient = this._umlWebClient,
+        diagramContext = this._diagramContext,
+        diManager = this._diManager;
 
         // take care of proxy comand
         if (context.proxy) {
@@ -110,8 +124,8 @@ class UpdateTypedElementLabelHandler {
         context.oldText = element.text;
         diagramEmitter.fire('command', {name: 'typedElementLabel.update', context: {
             element: {
-                                id: element.id,
-                            },
+                id: element.id,
+            },
             bounds: bounds,
             newName: newName,
             oldBounds: context.oldBounds,
@@ -130,19 +144,19 @@ class UpdateTypedElementLabelHandler {
         element.height = bounds.height;
        
         // update to server
-        updateLabel(element, umlWebClient);
+        updateLabel(element, diagramContext, diManager);
 
         // return element to commandStack
         return element; 
     }
 
     revert(context) {
-        revertLabelChange(context, this._diagramEmitter, this._umlWebClient);
+        revertLabelChange(context, this._diagramEmitter, this._umlWebClient,this._diagramContext, this._diManager);
         return context.element;
     }
 }
 
-UpdateTypedElementLabelHandler.$inject = ['diagramEmitter', 'umlWebClient'];
+UpdateTypedElementLabelHandler.$inject = ['diagramEmitter', 'umlWebClient', 'diagramContext', 'diManager'];
 
 class UpdateAssociationEndLabelHandler {
     constructor(diagramEmitter, umlWebClient, umlRenderer) {

@@ -9,7 +9,7 @@ export default class SignalHandler {
             const element = event.element;
             if (element.modelElement.elementType() === 'signal') {
                 const signalID = element.modelElement.id;
-                let clazz = umlWebClient.post('signal', {id:signalID});
+                let clazz = umlWebClient.post('Signal', {id:signalID});
                 diagramContext.context.packagedElements.add(clazz);
                 umlWebClient.put(clazz);
                 umlWebClient.put(diagramContext.context);

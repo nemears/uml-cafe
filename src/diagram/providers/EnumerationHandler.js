@@ -8,7 +8,7 @@ export default class EnumerationHandler {
             const element = event.element;
             if (element.modelElement.elementType() === 'enumeration') {
                 const enumerationID = element.modelElement.id;
-                let clazz = umlWebClient.post('enumeration', {id:enumerationID});
+                let clazz = umlWebClient.post('Enumeration', {id:enumerationID});
                 diagramContext.context.packagedElements.add(clazz);
                 umlWebClient.put(clazz);
                 umlWebClient.put(diagramContext.context);

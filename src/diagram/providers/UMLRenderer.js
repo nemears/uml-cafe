@@ -81,7 +81,7 @@ export default class UMLRenderer extends BaseRenderer {
 
     drawConnection(gfx, element, attrs) {
         
-        if (element.modelElement.elementType() === 'generalization') {
+        if (element.modelElement.elementType() === 'Generalization') {
             const arrow = createArrow(element.waypoints.slice(-2));
 
             var line = createLine(element.waypoints.slice(0,-1).concat([   
@@ -114,11 +114,11 @@ export default class UMLRenderer extends BaseRenderer {
             svgAppend(group, line);
             svgAppend(gfx, group);
             return group;
-        } else if (element.modelElement.elementType() === 'association') {
+        } else if (element.modelElement.elementType() === 'Association') {
             if (element.modelElement.memberEnds.size() > 2) {
                 throw new Error("not rendering association relating more than two elements currently, contact dev if you need this!");
             }
-            if (element.waypoints.size < 2) {
+            if (element.waypoints.length < 2) {
                 throw new Error("not enough waypoints to create edge!")
             }
             const group = svgCreate('g');
@@ -189,13 +189,13 @@ export default class UMLRenderer extends BaseRenderer {
             }
             svgAppend(gfx, group);
             return group;
-        } else if (element.modelElement.elementType() === 'comment') {
+        } else if (element.modelElement.elementType() === 'Comment') {
             const group = svgCreate('g');
             const line = createLine(element.waypoints, assign({}, this.ANCHOR_STYLE, attrs || {}));            
             svgAppend(group, line);
             svgAppend(gfx, group);
             return group;
-        } else if (element.modelElement.elementType() === 'dependency' || element.modelElement.elementType() === 'abstraction' || element.modelElement.elementType() === 'usage' || element.modelElement.elementType() === 'realization') {
+        } else if (element.modelElement.elementType() === 'Dependency' || element.modelElement.elementType() === 'Abstraction' || element.modelElement.elementType() === 'Usage' || element.modelElement.elementType() === 'Realization') {
             const group = svgCreate('g');
             const line = createLine(element.waypoints, assign({}, this.ANCHOR_STYLE, attrs || {}));
             const arrow = createArrow(element.waypoints.slice(-2));

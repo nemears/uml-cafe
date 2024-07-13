@@ -306,7 +306,7 @@ export default {
                     label: 'Create Property',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('property', 'ownedAttributes')
+                        createAndAddToSet('Property', 'ownedAttributes')
                     }
                 });
             }
@@ -323,7 +323,7 @@ export default {
                     label: 'Create Enumeration',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('enumeration', 'ownedLiterals')
+                        createAndAddToSet('Enumeration', 'ownedLiterals')
                     }
                 });
             }
@@ -335,7 +335,7 @@ export default {
                     label: 'Create Slot',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('slot', 'slots')
+                        createAndAddToSet('Slot', 'slots')
                     }
                 });
             }
@@ -347,56 +347,56 @@ export default {
                     label: 'Create Package',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('package', 'packagedElements')
+                        createAndAddToSet('Package', 'packagedElements')
                     }
                 });
                 createOption.children.push({
                     label: 'Create Class',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('class', 'packagedElements')
+                        createAndAddToSet('Class', 'packagedElements')
                     }
                 });
                 createOption.children.push({
                     label: 'Create Data Type',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('dataType', 'packagedElements')
+                        createAndAddToSet('DataType', 'packagedElements')
                     }
                 }); 
                 createOption.children.push({
                     label: 'Create Primitive Type',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('primitiveType', 'packagedElements')
+                        createAndAddToSet('PrimitiveType', 'packagedElements')
                     }
                 });
                 createOption.children.push({
                     label: 'Create Association',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('association', 'packagedElements');
+                        createAndAddToSet('Association', 'packagedElements');
                     }
                 });
                 createOption.children.push({
                     label: 'Create Instance Specification',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('instanceSpecification', 'packagedElements')
+                        createAndAddToSet('InstanceSpecification', 'packagedElements')
                     }
                 });
                 createOption.children.push({
                     label: 'Create Interface',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('interface', 'packagedElements')
+                        createAndAddToSet('Interface', 'packagedElements')
                     }
                 });
                 createOption.children.push({
                     label: 'Create Signal',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('signal', 'packagedElements')
+                        createAndAddToSet('Signal', 'packagedElements')
                     }
                 });
             }

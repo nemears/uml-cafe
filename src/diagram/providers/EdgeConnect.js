@@ -1,17 +1,17 @@
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { getMid } from "diagram-js/lib/layout/LayoutUtil";
-import { createAssociationEndLabel, createDiagramLabel, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel } from "../api/diagramInterchange/label";
 import { deleteUmlDiagramElement } from '../api/diagramInterchange/util';
-import { createDiagramEdge } from '../api/diagramInterchange/edge';
+import { translateDJEdgeToUMLEdge, translateDJLabelToUMLLabel } from "../translations";
 
 class EdgeConnectHandler {
-    constructor(diagramEmitter, elementFactory, canvas, eventBus, umlWebClient, diagramContext) {
+    constructor(diagramEmitter, elementFactory, canvas, eventBus, umlWebClient, diagramContext, diManager) {
         this._diagramEmitter = diagramEmitter;
         this._elementFactory = elementFactory;
         this._canvas = canvas;
         this._eventBus = eventBus;
         this._umlWebClient = umlWebClient;
         this._diagramContext = diagramContext;
+        this._diManager = diManager;
     }
     /**
      * Context:
@@ -41,7 +41,8 @@ class EdgeConnectHandler {
         canvas = this._canvas,
         eventBus = this._eventBus,
         umlWebClient = this._umlWebClient,
-        diagramContext = this._diagramContext;
+        diagramContext = this._diagramContext,
+        diManager = this._diManager;
         
         diagramEmitter.fire('command', {
             name: 'edge.connect',
@@ -82,31 +83,38 @@ class EdgeConnectHandler {
         }
 
         const doLater = async () => {
-            await createDiagramEdge(context.connection, umlWebClient, diagramContext);
+            const edgeInstance = diManager.post('UML DI.UMLEdge', { id : context.connection.id });
+            await translateDJEdgeToUMLEdge(context.connection, edgeInstance, diManager, diagramContext.umlDiagram);
             for (const child of context.children) {
+                const createLabel = async (type) => {
+                    const labelInstance = diManager.post(type);
+                    await translateDJLabelToUMLLabel(child, labelInstance, diManager, diagramContext.umlDiagram);
+                    await diManager.put(labelInstance);
+                };
                 switch (child.elementType) {
-                    case 'label':
-                        await createDiagramLabel(child, umlWebClient, diagramContext);
+                    case 'label': 
+                        await createLabel('UML DI.UMLLabel');
                         break;
                     case 'nameLabel':
-                        await createNameLabel(child, umlWebClient, diagramContext);
+                        await createLabel('UML DI.UMLNameLabel');
                         break;
                     case 'typedElementLabel':
-                        await createTypedElementLabel(child, umlWebClient, diagramContext);
+                        await createLabel('UML DI.UMLTypedElementLabel');
                         break;
                     case 'keywordLabel':
-                        await createKeywordLabel(child, umlWebClient, diagramContext);
+                        await createLabel('UML DI.UMLKeywordLabel');
                         break;
                     case 'associationEndLabel':
-                        await createAssociationEndLabel(child, umlWebClient, diagramContext);
+                        await createLabel('UML DI.UMLAssociationEndLabel');
                         break;
                     case 'multiplicityLabel':
-                        await createMultiplicityLabel(child, umlWebClient, diagramContext);
+                        await createLabel('UML DI.UMLMultiplicityLabel');
                         break;
                     default:
                         throw Error('Bad state! contact dev with stacktrace!');
                 }
             }
+            await diManager.put(edgeInstance);
             context.children = [];
             context.connectionData.children = []; // weird 
         };
@@ -157,7 +165,15 @@ class EdgeConnectHandler {
     }
 }
 
-EdgeConnectHandler.$inject = ['diagramEmitter', 'elementFactory', 'canvas', 'eventBus', 'umlWebClient', 'diagramContext']; 
+EdgeConnectHandler.$inject = [
+    'diagramEmitter', 
+    'elementFactory', 
+    'canvas', 
+    'eventBus', 
+    'umlWebClient', 
+    'diagramContext',
+    'diManager'
+]; 
 
 function getOrientation(waypoint, middleOfShape) {
     if (waypoint.x > middleOfShape.x) {

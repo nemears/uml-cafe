@@ -9,7 +9,7 @@ export default class InterfaceHandler {
             const element = event.element;
             if (element.modelElement.elementType() === 'interface') {
                 const interfaceID = element.modelElement.id;
-                let clazz = umlWebClient.post('interface', {id:interfaceID});
+                let clazz = umlWebClient.post('Interface', {id:interfaceID});
                 diagramContext.context.packagedElements.add(clazz);
                 umlWebClient.put(clazz);
                 umlWebClient.put(diagramContext.context);

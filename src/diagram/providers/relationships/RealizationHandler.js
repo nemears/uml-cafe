@@ -16,7 +16,7 @@ export default class RealizationHandler extends RuleProvider {
                         modelElement: {
                             id: randomID(),
                             elementType() {
-                                'realization'
+                                'Realization'
                             }
                         },
                         createModelElement: true,
@@ -48,7 +48,7 @@ export default class RealizationHandler extends RuleProvider {
             if (context.connectType === 'realization') {
                 const client = context.connection.source.modelElement,
                 supplier = context.connection.target.modelElement;
-                const realization = umlWebClient.post('realization', {id:context.connection.modelElement.id});
+                const realization = umlWebClient.post('Realization', {id:context.connection.modelElement.id});
                 context.connection.modelElement = realization;
                 realization.clients.add(client);
                 realization.suppliers.add(supplier);
@@ -111,14 +111,14 @@ function canConnectHelper(context) {
         if (!context.source.modelElement) {
             return false;
         }
-        if (!context.source.modelElement.isSubClassOf('namedElement')) { 
+        if (!context.source.modelElement.is('NamedElement')) { 
             return false;
         }
         if (context.target) {
             if (!context.target.modelElement) {
                 return false;
             }
-            if (!context.target.modelElement.isSubClassOf('namedElement')) {
+            if (!context.target.modelElement.is('NamedElement')) {
                 return false;
             }
         }

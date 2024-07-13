@@ -298,29 +298,34 @@ export default {
                         }
                     } else if (umlDiagramElement.elementType() === 'UMLEdge') {
                         const umlEdge = umlDiagramElement;
-                        if (!umlEdge.modelElement) {
+                        if (!umlEdge.modelElement.size() === 0) {
                             // model element has been deleted
-                            await deleteUmlDiagramElement(umlEdge.id, this.$umlWebClient);
+                            await DIManager.delete(umlEdge);
                             return undefined;
                         }
 
-                        let source = elementRegistry.get(umlEdge.source);
-                        let target = elementRegistry.get(umlEdge.target);
+                        let source = elementRegistry.get(umlEdge.source.id());
+                        let target = elementRegistry.get(umlEdge.target.id());
                         if (!source) {
-                            source = await drawDiagramElement(await getUmlDiagramElement(umlEdge.source, this.$umlWebClient));
+                            source = await drawDiagramElement(await umlEdge.source.get());
                         }
                         if (!target) {
-                            target = await drawDiagramElement(await getUmlDiagramElement(umlEdge.target, this.$umlWebClient));
+                            target = await drawDiagramElement(await umlEdge.target.get());
                         }
-                        if (umlEdge.modelElement.isSubClassOf('association')) {
-                            for await (const memberEnd of umlEdge.modelElement.memberEnds) {
+                        const modelElement = await this.$umlWebClient.get((await umlEdge.modelElement.front()).modelElementID);
+                        if (modelElement.is('Association')) {
+                            for await (const memberEnd of modelElement.memberEnds) {
                                 await memberEnd.type.get()
                             }
                         }
+                        const waypoints = [];
+                        for await (const point of umlEdge.waypoints) {
+                            waypoints.push({x : point.x, y: point.y});
+                        }
                         var relationship = elementFactory.createConnection({
-                            waypoints: umlEdge.waypoints,
+                            waypoints: waypoints,
                             id: umlEdge.id,
-                            modelElement: await umlEdge.modelElement.front(),
+                            modelElement: modelElement,
                             source: source,
                             target: target,
                             children: [],

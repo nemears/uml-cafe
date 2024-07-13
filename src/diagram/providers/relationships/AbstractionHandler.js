@@ -16,7 +16,7 @@ export default class AbstractionHandler extends RuleProvider {
                         modelElement: {
                             id: randomID(),
                             elementType() {
-                                'abstraction'
+                                'Abstraction'
                             }
                         },
                         createModelElement: true,
@@ -48,7 +48,7 @@ export default class AbstractionHandler extends RuleProvider {
             if (context.connectType === 'abstraction') {
                 const client = context.connection.source.modelElement,
                 supplier = context.connection.target.modelElement;
-                const abstraction = umlWebClient.post('abstraction', {id:context.connection.modelElement.id});
+                const abstraction = umlWebClient.post('Abstraction', {id:context.connection.modelElement.id});
                 context.connection.modelElement = abstraction;
                 abstraction.clients.add(client);
                 abstraction.suppliers.add(supplier);
@@ -68,7 +68,7 @@ export default class AbstractionHandler extends RuleProvider {
                 await umlWebClient.deleteElement(connection.modelElement);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
             }
-            if (context.connectType === 'abstraction') {
+            if (context.connectType === 'Abstraction') {
                 deleteModelElement(); 
             }
         });
@@ -111,14 +111,14 @@ function canConnectHelper(context) {
         if (!context.source.modelElement) {
             return false;
         }
-        if (!context.source.modelElement.isSubClassOf('namedElement')) { 
+        if (!context.source.modelElement.is('NamedElement')) { 
             return false;
         }
         if (context.target) {
             if (!context.target.modelElement) {
                 return false;
             }
-            if (!context.target.modelElement.isSubClassOf('namedElement')) {
+            if (!context.target.modelElement.is('NamedElement')) {
                 return false;
             }
         }

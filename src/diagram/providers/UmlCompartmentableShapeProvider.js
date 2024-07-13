@@ -3,15 +3,17 @@ import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout';
 import { getTextDimensions, PROPERTY_GAP } from './ClassDiagramPaletteProvider';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { adjustAttachedEdges, adjustShape } from './UmlShapeProvider';
+import { translateDJLabelToUMLLabel, translateDJSCompartmentableShapeToUmlCompartmentableShape } from '../translations';
 
 export const CLASSIFIER_SHAPE_GAP_HEIGHT = 5;
 
 class ResizeCompartmentableShapeHandler {
-    constructor(diagramEmitter, umlWebClient, diagramContext, umlRenderer, eventBus, graphicsFactory, canvas) {
+    constructor(diagramEmitter, umlWebClient, diagramContext, umlRenderer, eventBus, graphicsFactory, canvas, diManager) {
         this.diagramEmitter = diagramEmitter;
         this.umlWebClient = umlWebClient;
         this.diagramContext = diagramContext,
         this.umlRenderer = umlRenderer;
+        this.diManager = diManager;
         eventBus.on('compartmentableShape.resize', (context) => {
             const shape = context.shape,
             newBounds = context.newBounds;
@@ -40,20 +42,32 @@ class ResizeCompartmentableShapeHandler {
     }
 
     async resize(context) {
-        const shapeInstance = await this.umlWebClient.get(context.shape.id);
-        await adjustShape(context.shape, shapeInstance, this.umlWebClient);
+        const shapeInstance = await this.diManager.get(context.shape.id);
+        await translateDJSCompartmentableShapeToUmlCompartmentableShape(context.shape, shapeInstance, this.diManager, this.diagramContext.umlDiagram);
         for (const child of context.shape.children) {
             if (context.shape.compartments.includes(child)) {
                 for (const compartmentChild of child.children) {
-                    adjustShape(compartmentChild, await this.umlWebClient.get(compartmentChild.id), this.umlWebClient);
+                    const compartmentChildInstance = await this.diManager.get(compartmentChild.id);
+                    if (compartmentChildInstance.is('UMLLabel')) {
+                        await translateDJLabelToUMLLabel(compartmentChild, compartmentChildInstance, this.diManager, this.diagramContext.umlDiagram);
+                    } else {
+                        throw Error('TODO');
+                    }
                 }
                 continue;
             }
-            const childInstance = await this.umlWebClient.get(child.id);
-            await adjustShape(child, childInstance, this.umlWebClient);
+            const childInstance = await this.diManager.get(child.id);
+            if (childInstance.is('UMLLabel')) {
+                await translateDJLabelToUMLLabel(child, childInstance, this.diManager, this.diagramContext.umlDiagram);
+            } else if (childInstance.is('UMLCompartment')) {
+                // no need to update
+                continue;
+            } else {
+                throw Error('TODO element type for classifierShape child not handled ' + childInstance.elementType());
+            }
         }
         await adjustAttachedEdges(context.shape, this.umlWebClient);
-        this.umlWebClient.put(this.diagramContext.diagram);
+        await this.diManager.put(this.diagramContext.umlDiagram);
     }
 
     allChildren(element) {
@@ -126,7 +140,16 @@ class ResizeCompartmentableShapeHandler {
     }
 }
 
-ResizeCompartmentableShapeHandler.$inject = ['diagramEmitter', 'umlWebClient', 'diagramContext', 'umlRenderer', 'eventBus', 'graphicsFactory', 'canvas']; 
+ResizeCompartmentableShapeHandler.$inject = [
+    'diagramEmitter', 
+    'umlWebClient', 
+    'diagramContext', 
+    'umlRenderer', 
+    'eventBus', 
+    'graphicsFactory', 
+    'canvas', 
+    'diManager'
+]; 
 
 function adjustCompartmentsAndEdges(shape, oldBounds, umlRenderer) {
     // these are all in the "header" of the shape kind of (above the first compartment) (only in class diagrams)
