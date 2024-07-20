@@ -105,7 +105,7 @@ export function Editor(options) {
   }
 
   class DIManager {
-      manager = diManager;
+    manager = diManager;
     post(type, options) {
       return diManager.post(type, options);
     }

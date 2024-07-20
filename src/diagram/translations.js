@@ -75,7 +75,6 @@ export async function translateDJSCompartmentableShapeToUmlCompartmentableShape(
         const diCompartment = diManager.post('UML DI.UMLCompartment', {id:compartment.id});
         await umlShape.compartment.add(diCompartment);
         await diManager.put(diCompartment);
-
     }
     for (const umlCompartment of elementsToRemove) {
         await umlShape.compartment.remove(umlCompartment);

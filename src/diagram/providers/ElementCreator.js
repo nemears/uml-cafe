@@ -1,9 +1,6 @@
-import { createAssociationEndLabel, createDiagramLabel, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel } from '../api/diagramInterchange/label';
-import { createDiagramEdge } from '../api/diagramInterchange/edge';
-import { createDiagramShape } from '../api/diagramInterchange/shape'; 
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { placeEdgeLabel } from './EdgeConnect';
-import { translateDJEdgeToUMLEdge, translateDJLabelToUMLLabel, translateDJSCompartmentableShapeToUmlCompartmentableShape, translateDJShapeToUMLShape } from '../translations';
+import { translateDJEdgeToUMLEdge, translateDJElementToUMLDiagramElement, translateDJLabelToUMLLabel, translateDJSCompartmentableShapeToUmlCompartmentableShape, translateDJShapeToUMLShape } from '../translations';
 /**
  * context for this commandHandler looks like this
  * {
@@ -21,10 +18,9 @@ import { translateDJEdgeToUMLEdge, translateDJLabelToUMLLabel, translateDJSCompa
  * }
  **/
 class ElementCreationHandler {
-    constructor(eventBus, canvas, umlWebClient, diagramContext, diagramEmitter, diManager) {
+    constructor(eventBus, canvas, diagramContext, diagramEmitter, diManager) {
         this._eventBus = eventBus;
         this._canvas = canvas;
-        this._umlWebClient = umlWebClient;
         this._diagramContext = diagramContext;
         this._diagramEmitter = diagramEmitter;
         this._diManager = diManager;
@@ -32,7 +28,6 @@ class ElementCreationHandler {
     execute(context) {
         const eventBus = this._eventBus,
         canvas = this._canvas,
-        umlWebClient = this._umlWebClient,
         diagramContext = this._diagramContext,
         diagramEmitter = this._diagramEmitter,
         diManager = this._diManager;
@@ -148,6 +143,9 @@ class ElementCreationHandler {
                         const classifierShape = diManager.post('UML DI.UMLClassifierShape', { id : element.id });
                         await translateDJSCompartmentableShapeToUmlCompartmentableShape(element, classifierShape, diManager, diagramContext.umlDiagram);
                         await diManager.put(classifierShape);
+                        for await (const compartment of classifierShape.compartment) {
+                            await diManager.put(compartment);
+                        }
                         break;
                     }
                     case 'nameLabel': {
@@ -199,8 +197,8 @@ class ElementCreationHandler {
         const diagramEmitter = this._diagramEmitter,
         eventBus = this._eventBus,
         canvas = this._canvas,
-        umlWebClient = this._umlWebClient,
-        diManager = this._diManager;
+        diManager = this._diManager,
+        diagramContext = this._diagramContext;
         diagramEmitter.fire('command', {undo: {
                        // TODO
         }});
@@ -265,13 +263,20 @@ class ElementCreationHandler {
                         break;
                 }
             }
+            await diManager.put(diagramContext.umlDiagram);
         };
         doLater();
         return context.elements;
     }
 }
 
-ElementCreationHandler.$inject = ['eventBus', 'canvas', 'umlWebClient', 'diagramContext', 'diagramEmitter', 'diManager'];
+ElementCreationHandler.$inject = [
+    'eventBus', 
+    'canvas', 
+    'diagramContext', 
+    'diagramEmitter', 
+    'diManager'
+];
 
 export default class ElementCreator {
     constructor(eventBus, commandStack) {

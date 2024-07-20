@@ -1,9 +1,6 @@
 import { createElementUpdate, deleteElementElementUpdate } from "../../umlUtil";
-import { createAssociationEndLabel, createDiagramLabel, createKeywordLabel, createMultiplicityLabel, createNameLabel, createTypedElementLabel } from "../api/diagramInterchange/label";
-import { createClassifierShape, createComparment, createCompartmentableShape } from '../api/diagramInterchange/compartmentableShape';
-import { createDiagramEdge } from '../api/diagramInterchange/edge';
-import { createDiagramShape } from '../api/diagramInterchange/shape';
 import { deleteUmlDiagramElement } from '../api/diagramInterchange/util';
+import { translateDJEdgeToUMLEdge, translateDJElementToUMLDiagramElement, translateDJLabelToUMLLabel, translateDJSCompartmentableShapeToUmlCompartmentableShape, translateDJShapeToUMLShape } from "../translations";
 
 export default class RemoveDiagramElement {
     constructor(commandStack) {
@@ -14,7 +11,7 @@ export default class RemoveDiagramElement {
 RemoveDiagramElement.$inject = ['commandStack'];
 
 class RemoveDiagramElementHandler {
-    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext, elementFactory, eventBus) {
+    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext, elementFactory, eventBus, diManager) {
         this._canvas = canvas;
         this._umlWebClient = umlWebClient;
         this._diagramEmitter = diagramEmitter;
@@ -22,9 +19,11 @@ class RemoveDiagramElementHandler {
         this._diagramContext = diagramContext;
         this._elementFactory = elementFactory;
         this._eventBus = eventBus;
+        this._diManager = diManager;
 
         eventBus.on('removeElement', (context) => {
             this.removeElement(context.element, context);
+            diManager.put(diagramContext.umlDiagram);
         });
         eventBus.on('removeElement.undo', (context) => {
             this.addElement(context.element, context.parent, context);
@@ -35,7 +34,8 @@ class RemoveDiagramElementHandler {
         const canvas = this._canvas,
         umlWebClient = this._umlWebClient,
         eventBus = this._eventBus,
-        diagramEmitter = this._diagramEmitter;
+        diagramEmitter = this._diagramEmitter,
+        diManager = this._diManager;
 
         context.elementContext[diagramElement.id] = {
             children: [...diagramElement.children],
@@ -47,7 +47,7 @@ class RemoveDiagramElementHandler {
             for (const child of [...diagramElement.children]) {
                 await this.removeElement(child, context);
             }
-            await deleteUmlDiagramElement(diagramElement.id, umlWebClient);
+            await diManager.delete(await diManager.get(diagramElement.id));
             canvas.removeConnection(diagramElement);
             eventBus.fire('uml.remove', {
                 element: diagramElement,
@@ -64,7 +64,7 @@ class RemoveDiagramElementHandler {
             for (const edge of [...diagramElement.outgoing]) {
                 await this.removeElement(edge, context);
             }
-            await deleteUmlDiagramElement(diagramElement.id, umlWebClient);
+            await diManager.delete(await diManager.get(diagramElement.id));
             const parent = diagramElement.parent;
             if (diagramElement.labelTarget) {
                 if (diagramElement.placement === 'source') {
@@ -90,9 +90,9 @@ class RemoveDiagramElementHandler {
 
         // delete modelElement if applicable
         if (context.deleteModelElement) {
-            for (const elementToRemove of context.elementsToRemove) {
-                await deleteUmlDiagramElement(elementToRemove.id, umlWebClient)
-            }
+            // for (const elementToRemove of context.elementsToRemove) {
+            //     await diManager.delete(await diManager.get(elementToRemove.id));
+            // }
             const owner = await context.element.modelElement.owner.get();
             await umlWebClient.deleteElement(context.element.modelElement);
             diagramEmitter.fire('elementUpdate', deleteElementElementUpdate(context.element.modelElement));
@@ -180,46 +180,80 @@ class RemoveDiagramElementHandler {
     async updateToServer(element, context) {
         const umlWebClient = this._umlWebClient,
         diagramContext = this._diagramContext,
-        eventBus = this._eventBus;
+        eventBus = this._eventBus,
+        diManager = this._diManager;
         const elementContext = context.elementContext[element.id];
         if (elementContext.modelElementID) {
             element.modelElement = await umlWebClient.get(elementContext.modelElementID);
             await element.modelElement.owner.get();
         }
         switch (element.elementType) {
-            case 'shape':
-                await createDiagramShape(element, umlWebClient, diagramContext);
+            case 'shape': {
+                const umlShape = await diManager.post('UML DI.UMLShape', { id : element.id });
+                await translateDJShapeToUMLShape(element, umlShape, diManager, diagramContext.umlDiagram);
+                await diManager.put(umlShape);
                 break;
-            case 'compartmentableShape':
-                await createCompartmentableShape(element, umlWebClient, diagramContext);
+            }
+            case 'compartmentableShape': {
+                const umlCompartmentableShape = diManager.post('UML DI.UMLCompartmentableShape', { id : element.id });
+                await translateDJSCompartmentableShapeToUmlCompartmentableShape(element, umlCompartmentableShape, diManager, diagramContext.umlDiagram);
+                await diManager.put(umlCompartmentableShape);
                 break;
-            case 'classifierShape':
-                await createClassifierShape(element, umlWebClient, diagramContext);
+            }
+            case 'classifierShape': {
+                const umlClassifierShape = diManager.post('UML DI.UMLClassifierShape',  { id : element.id });
+                await translateDJSCompartmentableShapeToUmlCompartmentableShape(element, umlClassifierShape, diManager, diagramContext.umlDiagram);
+                await diManager.put(umlClassifierShape);
                 break;
-            case 'compartment':
-                await createComparment(element, umlWebClient, diagramContext);
+            }
+            case 'compartment': {
+                const umlCompartment = diManager.post('UML DI.UMLCompartment', { id : element.id });
+                await translateDJElementToUMLDiagramElement(element, umlCompartment, diManager, diagramContext.umlDiagram);
+                await diManager.put(umlCompartment);
                 break;
-            case 'edge':
-                await createDiagramEdge(element, umlWebClient, diagramContext);
+            }
+            case 'edge': {
+                const umlEdge = diManager.post('UML DI.UMLEdge', { id : element.id });
+                await translateDJEdgeToUMLEdge(element, umlEdge, diManager, diagramContext.umlDiagram);
+                await diManager.put(umlEdge);
                 break;
-            case 'label':
-                await createDiagramLabel(element, umlWebClient, diagramContext);
+            }
+            case 'label': {
+                const umlLabel = diManager.post('UML DI.UMLLabel', { id : element.id });
+                await translateDJEdgeToUMLEdge(element, umlLabel, diManager, diagramContext.umlDiagram);
+                await diManager.put(umlLabel);
                 break;
-            case 'nameLabel':
-                await createNameLabel(element, umlWebClient, diagramContext);
+            }
+            case 'nameLabel': {
+                const umlNameLabel = diManager.post('UML DI.UMLNameLabel', { id : element.id });
+                await translateDJLabelToUMLLabel(element, umlNameLabel, diManager, diagramContext.umlDiagram);
+                await diManager.put(umlNameLabel);
                 break;
-            case 'keywordLabel':
-                await createKeywordLabel(element, umlWebClient, diagramContext);
+            }
+            case 'keywordLabel': {
+                const umlKeywordLabel = diManager.post('UML DI.UMLKeywordLabel', { id : element.id });
+                await translateDJLabelToUMLLabel(element, umlKeywordLabel, diManager, diagramContext.umlDiagram);
+                await diManager.put(umlKeywordLabel);
                 break;
-            case 'typedElementLabel':
-                await createTypedElementLabel(element, umlWebClient, diagramContext);
+            }
+            case 'typedElementLabel': {
+                const umlTypedElementLabel = diManager.post('UML DI.UMLTypedElementLabel', { id : element.id });
+                await translateDJLabelToUMLLabel(element, umlTypedElementLabel, diManager, diagramContext.umlDiagram);
+                await diManager.put(umlTypedElementLabel);
                 break;
-            case 'associationEndLabel':
-                await createAssociationEndLabel(element, umlWebClient, diagramContext);
+            }
+            case 'associationEndLabel': {
+                const umlAssociationElementLabel = diManager.post('UML DI.UMLAssociationEndLabel', { id : element.id });
+                await translateDJLabelToUMLLabel(element, umlAssociationElementLabel, diManager, diagramContext.umlDiagram);
+                await diManager.put(umlAssociationElementLabel);
                 break;
-            case 'multiplicityLabel':
-                await createMultiplicityLabel(element, umlWebClient, diagramContext);
+            }
+            case 'multiplicityLabel': {
+                const umlMultiplicityLabel = diManager.post('UML DI.UMLMultiplicityLabel', { id : element.id });
+                await translateDJLabelToUMLLabel(element, umlMultiplicityLabel, diManager, diagramContext.umlDiagram);
+                await diManager.put(umlMultiplicityLabel);
                 break;
+            }
             default:
                 throw Error('unhandled uml di element type: ' + element.elementType);
         }
@@ -279,4 +313,13 @@ class RemoveDiagramElementHandler {
     }
 }
 
-RemoveDiagramElementHandler.$inject = ['canvas', 'umlWebClient', 'diagramEmitter', 'elementRegistry', 'diagramContext', 'elementFactory', 'eventBus'];
+RemoveDiagramElementHandler.$inject = [
+    'canvas', 
+    'umlWebClient', 
+    'diagramEmitter', 
+    'elementRegistry', 
+    'diagramContext', 
+    'elementFactory', 
+    'eventBus',
+    'diManager',
+];

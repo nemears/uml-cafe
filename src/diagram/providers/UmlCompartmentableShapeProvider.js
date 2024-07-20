@@ -2,7 +2,7 @@ import { getMid, roundBounds } from 'diagram-js/lib/layout/LayoutUtil';
 import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout';
 import { getTextDimensions, PROPERTY_GAP } from './ClassDiagramPaletteProvider';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
-import { adjustAttachedEdges, adjustShape } from './UmlShapeProvider';
+import { adjustAttachedEdges } from './UmlShapeProvider';
 import { translateDJLabelToUMLLabel, translateDJSCompartmentableShapeToUmlCompartmentableShape } from '../translations';
 
 export const CLASSIFIER_SHAPE_GAP_HEIGHT = 5;
@@ -66,7 +66,8 @@ class ResizeCompartmentableShapeHandler {
                 throw Error('TODO element type for classifierShape child not handled ' + childInstance.elementType());
             }
         }
-        await adjustAttachedEdges(context.shape, this.umlWebClient);
+        await adjustAttachedEdges(context.shape, this.diManager, this.diagramContext.umlDiagram);
+        await this.diManager.put(shapeInstance);
         await this.diManager.put(this.diagramContext.umlDiagram);
     }
 
@@ -207,7 +208,7 @@ function adjustCompartmentsAndEdges(shape, oldBounds, umlRenderer) {
 }
 
 export default class UmlCompartmentableShapeProvider {
-    constructor(eventBus, commandStack, elementRegistry, elementFactory, canvas, diagramContext) {
+    constructor(eventBus, commandStack, elementRegistry, elementFactory, canvas, diagramContext, diManager) {
         let root = undefined;
         commandStack.registerHandler('resize.compartmentableShape.uml', ResizeCompartmentableShapeHandler);
         eventBus.on('resize.start', 1500, (event) => {
@@ -288,10 +289,9 @@ export default class UmlCompartmentableShapeProvider {
         });
 
         eventBus.on('server.create', (event) => {
-            const elementType = event.serverElement.elementType();
-            if (elementType === 'compartmentableShape' || elementType === 'classifierShape') {
+            if (event.serverElement.is('UMLCompartmentableShape')) {
                 const umlShape = event.serverElement;
-                let owner = elementRegistry.get(umlShape.owningElement);
+                let owner = elementRegistry.get(umlShape.owningElement.id());
 
                 // if owner is diagram, just add it to root instead (difference between omg DI and diagram-js)
                 if (owner && owner.id === diagramContext.umlDiagram.id) {
@@ -300,16 +300,17 @@ export default class UmlCompartmentableShapeProvider {
                     }
                     owner = root;
                 }
-
+                
+                const bounds = diManager.getLocal(umlShape.bounds.id());
                 const shape = elementFactory.createShape({
-                    x: umlShape.bounds.x,
-                    y: umlShape.bounds.y,
-                    width: umlShape.bounds.width,
-                    height: umlShape.bounds.height,
+                    x: bounds.x,
+                    y: bounds.y,
+                    width: bounds.width,
+                    height: bounds.height,
                     update: true,
                     id: umlShape.id,
                     modelElement: umlShape.modelElement,
-                    elementType: elementType,
+                    elementType: umlShape.elementType() === 'UMLClassifierShape' ? 'classifierShape' : 'compartmentableShape', // TODO capitalize all
                     compartments: [],
                 });
                 canvas.addShape(shape, owner);
@@ -317,14 +318,14 @@ export default class UmlCompartmentableShapeProvider {
         });
 
         eventBus.on('server.update', (event) => {
-            const elementType = event.serverElement.elementType();
-            if (elementType === 'compartmentableShape' || elementType === 'classifierShape') {
+            if (event.serverElement.is('UMLCompartmentableShape')) {
                 const umlShape = event.serverElement;
                 const localShape = event.localElement;
-                if (localShape.x != umlShape.bounds.x || localShape.y != umlShape.bounds.y || localShape.width != umlShape.bounds.width || localShape.height != umlShape.bounds.height){
+                const bounds = diManager.getLocal(umlShape.bounds.id()); // does unsafe() do getLocal?
+                if (localShape.x != bounds.x || localShape.y != bounds.y || localShape.width != bounds.width || localShape.height != bounds.height){
                     eventBus.fire('compartmentableShape.resize', {
                         shape: localShape,
-                        newBounds: umlShape.bounds,
+                        newBounds: bounds,
                         update: true,
                         oldBounds: {
                             x: localShape.x,
@@ -333,6 +334,7 @@ export default class UmlCompartmentableShapeProvider {
                             height: localShape.height,
                         }
                     });
+                    eventBus.fire('elements.changed', {elements: [localShape]});
                 }
             }
         });
@@ -347,4 +349,12 @@ export default class UmlCompartmentableShapeProvider {
     }
 }
 
-UmlCompartmentableShapeProvider.$inject = ['eventBus', 'commandStack', 'elementRegistry', 'elementFactory', 'canvas', 'diagramContext'];
+UmlCompartmentableShapeProvider.$inject = [
+    'eventBus', 
+    'commandStack', 
+    'elementRegistry', 
+    'elementFactory', 
+    'canvas', 
+    'diagramContext',
+    'diManager'
+];

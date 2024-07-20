@@ -40,7 +40,6 @@ class EdgeConnectHandler {
         elementFactory = this._elementFactory,
         canvas = this._canvas,
         eventBus = this._eventBus,
-        umlWebClient = this._umlWebClient,
         diagramContext = this._diagramContext,
         diManager = this._diManager;
         
@@ -67,19 +66,13 @@ class EdgeConnectHandler {
         if (context.connectionData.createModelElement) {
             eventBus.fire('edge.connect.create', context); // TODO
         }
-        canvas.addConnection(context.connection);
-
+        
         // place children
         context.connection.numTargetLabels = 0,
         context.connection.numSourceLabels = 0,
         context.connection.numCenterLabels = 0;
         for (const child of context.children) {
             placeEdgeLabel(child, context.connection);
-            if (child.parent) {
-                canvas.addShape(child, child.parent);
-            } else {
-                canvas.addShape(child);
-            }
         }
 
         const doLater = async () => {
@@ -87,10 +80,11 @@ class EdgeConnectHandler {
             await translateDJEdgeToUMLEdge(context.connection, edgeInstance, diManager, diagramContext.umlDiagram);
             for (const child of context.children) {
                 const createLabel = async (type) => {
-                    const labelInstance = diManager.post(type);
+                    const labelInstance = diManager.post(type, { id : child.id });
                     await translateDJLabelToUMLLabel(child, labelInstance, diManager, diagramContext.umlDiagram);
                     await diManager.put(labelInstance);
                 };
+                child.owningElement = context.connection
                 switch (child.elementType) {
                     case 'label': 
                         await createLabel('UML DI.UMLLabel');
@@ -115,12 +109,20 @@ class EdgeConnectHandler {
                 }
             }
             await diManager.put(edgeInstance);
+            canvas.addConnection(context.connection);
+            for (const child of context.children) {
+                if (child.parent) {
+                    canvas.addShape(child, child.parent);
+                } else {
+                    canvas.addShape(child);
+                }
+            }
             context.children = [];
             context.connectionData.children = []; // weird 
         };
         doLater();
-        const ret = [context.connection, ...context.children];
-        return ret;
+        // const ret = [context.connection, ...context.children];
+        // return ret;
     }
 
     revert(context) {
@@ -130,9 +132,9 @@ class EdgeConnectHandler {
         }
 
         const canvas = this._canvas,
-        umlWebClient = this._umlWebClient,
         eventBus = this._eventBus,
-        diagramEmitter = this._diagramEmitter;
+        diagramEmitter = this._diagramEmitter,
+        diManager = this._diManager;
 
         diagramEmitter.fire('command', {undo: {
                     // TODO
@@ -151,11 +153,11 @@ class EdgeConnectHandler {
 
         const doLater = async () => {
             for (const child of context.children) {
-                await deleteUmlDiagramElement(child.id, umlWebClient);
+                await diManager.delete(await diManager.get(child.id));
             }
-    
+
             // delete connection
-            await deleteUmlDiagramElement(context.connection.id, umlWebClient);
+            await diManager.delete(await diManager.get(context.connection.id));
 
             if (context.connectionData.createModelElement) {
                 eventBus.fire('edge.connect.undo', context); // TODO

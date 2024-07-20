@@ -3,16 +3,16 @@ import { randomID } from 'uml-client/lib/types/element';
 import { getMultiplicityText } from '../UMLRenderer';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { getTextDimensions } from '../ClassDiagramPaletteProvider';
-import { adjustShape } from '../UmlShapeProvider';
 import { placeEdgeLabel } from '../EdgeConnect';
 import { createAssociationEndLabel, createMultiplicityLabel, createNameLabel, updateLabel } from '../../api/diagramInterchange/label';
 import { deleteUmlDiagramElement } from '../../api/diagramInterchange/util';
 import { createAssociationNameLabel } from '../RelationshipEdgeCreator';
+import { translateDJLabelToUMLLabel } from '../../translations';
 
 export const OWNED_END_RADIUS = 5;
 
 export default class Association extends RuleProvider {
-    constructor(eventBus, umlWebClient, umlRenderer, canvas, graphicsFactory, commandStack, diagramContext, elementFactory, diagramEmitter, elementRegistry, modelElementMap) {
+    constructor(eventBus, umlWebClient, umlRenderer, canvas, graphicsFactory, commandStack, diagramContext, elementFactory, diagramEmitter, elementRegistry, diManager) {
         super(eventBus);
         commandStack.registerHandler('memberEnds.show', ShowMemberEndsHandler);
         eventBus.on('connect.end', 1100, (event) => {
@@ -248,10 +248,9 @@ export default class Association extends RuleProvider {
         });
 
         eventBus.on('server.update', 900, (event) => {
-            if (event.serverElement.modelElement.size() > 0 && 
-                event.serverElement.modelElement.unsafe().front().elementType() === 'association' && 
-                event.serverElement.is('UMLEdge')) 
-            {
+            if (event.serverElement.modelElement.size() > 0 && event.serverElement.is('UMLEdge')) {
+                const modelElement = umlWebClient.getLocal(diManager.getLocal(event.serverElement.modelElement.ids().front()).modelElementID);
+                if (modelElement && modelElement.is('Association')) {
                     // check if name has changed
                     const edge = elementRegistry.get(event.serverElement.id);
                     const association = edge.modelElement;
@@ -288,27 +287,29 @@ export default class Association extends RuleProvider {
                             graphicsFactory.update('shape', nameLabel, canvas.getGraphics(nameLabel));
                         }
                     }
+
                 }
+            }
         });
         eventBus.on('edge.move.end', (event) => {
-            checkConnectionEnds(event.connection, graphicsFactory, canvas, umlWebClient);
+            checkConnectionEnds(event.connection, graphicsFactory, canvas, diManager, diagramContext.umlDiagram);
         });
         eventBus.on('resize.end', (event) => {
             const shape = event.shape;
             for (const connection of shape.incoming) {
-                checkConnectionEnds(connection, graphicsFactory, canvas, umlWebClient);
+                checkConnectionEnds(connection, graphicsFactory, canvas, diManager, diagramContext.umlDiagram);
             }
             for (const connection of shape.outgoing) {
-                checkConnectionEnds(connection, graphicsFactory, canvas, umlWebClient);
+                checkConnectionEnds(connection, graphicsFactory, canvas, diManager, diagramContext.umlDiagram);
             }
         });
         eventBus.on('uml.shape.move', (context) => {
             const shape = context.shape;
             for (const connection of shape.incoming) {
-                checkConnectionEnds(connection, graphicsFactory, canvas, umlWebClient);
+                checkConnectionEnds(connection, graphicsFactory, canvas, diManager, diagramContext.umlDiagram);
             }
             for (const connection of shape.outgoing) {
-                checkConnectionEnds(connection, graphicsFactory, canvas, umlWebClient);
+                checkConnectionEnds(connection, graphicsFactory, canvas, diManager, diagramContext.umlDiagram);
             } 
         });
         eventBus.on('server.update', 1100, (context) => {
@@ -402,7 +403,19 @@ function canConnect(context) {
     return true;
 }
 
-Association.$inject = ['eventBus', 'umlWebClient', 'umlRenderer', 'canvas', 'graphicsFactory', 'commandStack', 'diagramContext', 'elementFactory', 'diagramEmitter', 'elementRegistry', 'modelElementMap'];
+Association.$inject = [
+    'eventBus', 
+    'umlWebClient', 
+    'umlRenderer', 
+    'canvas', 
+    'graphicsFactory', 
+    'commandStack', 
+    'diagramContext', 
+    'elementFactory', 
+    'diagramEmitter', 
+    'elementRegistry', 
+    'diManager'
+];
 
 class ShowMemberEndsHandler {
     constructor(elementFactory, canvas, umlWebClient, diagramContext, umlRenderer) {
@@ -582,7 +595,7 @@ export function getLabelBounds(property, association, umlRenderer) {
 
 
 
-async function checkConnectionEnds(connection, graphicsFactory, canvas, umlWebClient) {
+async function checkConnectionEnds(connection, graphicsFactory, canvas, diManager, umlDiagram) {
     // move label
     connection.numTargetLabels = 0;
     connection.numSourceLabels = 0;
@@ -593,7 +606,7 @@ async function checkConnectionEnds(connection, graphicsFactory, canvas, umlWebCl
         graphicsFactory.update('shape', label, canvas.getGraphics(label));
 
         // update it to server
-        if (umlWebClient) await adjustShape(label, await umlWebClient.get(label.id), umlWebClient);
+        await translateDJLabelToUMLLabel(label, await diManager.get(label.id), diManager, umlDiagram);
     }
 }
 

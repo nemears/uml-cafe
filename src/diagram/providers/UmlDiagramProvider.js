@@ -41,21 +41,21 @@ export default class UmlDiagramProvider extends RuleProvider {
     init() {
         this.addRule('elements.move', 1500, (context) => {
             // TODO alter this when drag property to show association
-            const shapes = context.shapes;
-            for (const shape of shapes) {
-                if (isDiagram(shape.elementType)) {
-                    return false;
-                }
-            }
+            // const shapes = context.shapes;
+            // for (const shape of shapes) {
+            //     if (isDiagram(shape.elementType)) {
+            //         return false;
+            //     }
+            // }
         });
         this.addRule('elements.move', 1000, (context) => {
-            const diagramContext = this._diagramContext;
-            if (context.target && context.target.id === diagramContext.umlDiagram.id) {
-                return false;
-            }
-            if (context.target && context.target.headedDiagram) {
-                return false;
-            }
+            // const diagramContext = this._diagramContext;
+            // if (context.target && context.target.id === diagramContext.umlDiagram.id) {
+            //     return false;
+            // }
+            // if (context.target && context.target.headedDiagram) {
+            //     return false;
+            // }
         })
     }
 

@@ -42,7 +42,7 @@ export default {
             undoStack: [],
             latestCommand: undefined,
             commandUndo: undefined,
-            theme: 'dark',
+            theme: 'light',
 		}
 	},
 	provide() {
@@ -63,7 +63,7 @@ export default {
         }
 		this.userUpdate();
 
-		this.$umlWebClient.onUpdate = async (element, oldElement) => {
+		this.$umlWebClient.updateHandlers.push(async (element, oldElement) => {
             this.elementUpdate = {
                 updatedElements: [
                     {
@@ -72,7 +72,7 @@ export default {
                     }
                 ]
             };
-		}
+		});
 		this.$umlWebClient.onClient = (client) => {
 			this.users.push({
 				id: client.id,

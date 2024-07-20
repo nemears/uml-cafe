@@ -389,110 +389,110 @@ export default class UMLRenderer extends BaseRenderer {
         // OLD BEHAVIOR
         // TODO override with styles
         // create shape
-        else if (element.modelElement.elementType() === 'class') {
-            const rect = createRectangle();
-            svgAttr(rect, assign({}, this.CLASS_STYLE), attrs || {});
+        // else if (element.modelElement.elementType() === 'class') {
+        //     const rect = createRectangle();
+        //     svgAttr(rect, assign({}, this.CLASS_STYLE), attrs || {});
 
-            // add name to shape directly
-            if (element.modelElement && element.modelElement.name) {
-                const options = {
-                    align: 'center-middle',
-                    box: {
-                        width: element.width - 5,
-                    }
-                };
-                var text = cropText(
-                    element.modelElement.name, 
-                    {
-                        height: CLASS_SHAPE_HEADER_HEIGHT,
-                        width: element.width
-                    }, 
-                    options
-                );
-                svgAppend(group, text);
-            }
-        } else if (element.modelElement.elementType() === 'comment') {
-            const rect = createRectangle();
-            svgAttr(rect, assign({}, this.COMMENT_STYLE), attrs || {});
-            
-            // add body to comment shape directly
-            if (element.modelElement && element.modelElement.body) {
-                const options = {
-                    align: 'center-middle',
-                    box: {
-                        width: element.width - 5,
-                    }
-                };
-                const text = this.textUtil.createText(element.modelElement.body || '', options);
-                svgAppend(group, text);
-            }
-        } else if (element.modelElement.elementType() === 'property') {
-            if (element.parent && element.parent.modelElement && element.parent.modelElement.elementType() === 'association') {
-                if (element.labelTarget) {
-                    // label
-                    const rect = createRectangle();
-                    svgAttr(rect, assign({}, this.LABEL_STYLE), attrs || {});
-                    const textString = element.text;
-                    const text = cropText(
-                        textString,
-                        element,
-                        {
-                            align: 'left',
-                            box : {
-                                width: element.width
-                            },
-                            padding: {
-                                left: 5
-                            },
-                            style: {
-                                fill: 'var(--vt-c-text-light-1)'
-                            }
-                        }
-                    );
-                    svgAppend(group, text);
-                } else {
-                    // TODO move
-                    // end shape
-                    const circle = svgCreate('circle');
-                    const options = {
-                        cx: 5,
-                        cy: 5,
-                        r: 5
-                    };
-                    if (element.parent.source.modelElement.id === element.modelElement.type.id()) {
-                        const leadingline = element.parent.waypoints.slice(0,2).reverse();
-                        moveEnd(leadingline, options);
-                    } else {
-                        const leadingLine = element.parent.waypoints.slice(-2);
-                        moveEnd(leadingLine, options);
-                    }
-                    svgAttr(circle, options); 
-                    svgAppend(group, circle);
-                    svgAttr(circle, assign({}, this.OWNED_ATTRIBUTE_STYLE), attrs || {});
-                }
-            } else if (element.parent && element.parent.modelElement && element.parent.modelElement.is('Classifier')) {
-                const rect = createRectangle();
-                svgAttr(rect, assign({}, this.PROPERTY_STYLE), attrs || {});
-                
-                // add property notation to shape
-                const textString = createPropertyLabel(element);
-                const text = cropText(
-                    textString, 
-                    element, 
-                    {
-                        align: 'left',
-                        padding: {
-                            left: 5
-                        },
-                        box: {
-                            width: element.width - 5,
-                        }
-                    }
-                );
+        //     // add name to shape directly
+        //     if (element.modelElement && element.modelElement.name) {
+        //         const options = {
+        //             align: 'center-middle',
+        //             box: {
+        //                 width: element.width - 5,
+        //             }
+        //         };
+        //         var text = cropText(
+        //             element.modelElement.name, 
+        //             {
+        //                 height: CLASS_SHAPE_HEADER_HEIGHT,
+        //                 width: element.width
+        //             }, 
+        //             options
+        //         );
+        //         svgAppend(group, text);
+        //     }
+        // } else if (element.modelElement.elementType() === 'comment') {
+        //     const rect = createRectangle();
+        //     svgAttr(rect, assign({}, this.COMMENT_STYLE), attrs || {});
+        //     
+        //     // add body to comment shape directly
+        //     if (element.modelElement && element.modelElement.body) {
+        //         const options = {
+        //             align: 'center-middle',
+        //             box: {
+        //                 width: element.width - 5,
+        //             }
+        //         };
+        //         const text = this.textUtil.createText(element.modelElement.body || '', options);
+        //         svgAppend(group, text);
+        //     }
+        // } else if (element.modelElement.elementType() === 'property') {
+        //     if (element.parent && element.parent.modelElement && element.parent.modelElement.elementType() === 'association') {
+        //         if (element.labelTarget) {
+        //             // label
+        //             const rect = createRectangle();
+        //             svgAttr(rect, assign({}, this.LABEL_STYLE), attrs || {});
+        //             const textString = element.text;
+        //             const text = cropText(
+        //                 textString,
+        //                 element,
+        //                 {
+        //                     align: 'left',
+        //                     box : {
+        //                         width: element.width
+        //                     },
+        //                     padding: {
+        //                         left: 5
+        //                     },
+        //                     style: {
+        //                         fill: 'var(--vt-c-text-light-1)'
+        //                     }
+        //                 }
+        //             );
+        //             svgAppend(group, text);
+        //         } else {
+        //             // TODO move
+        //             // end shape
+        //             const circle = svgCreate('circle');
+        //             const options = {
+        //                 cx: 5,
+        //                 cy: 5,
+        //                 r: 5
+        //             };
+        //             if (element.parent.source.modelElement.id === element.modelElement.type.id()) {
+        //                 const leadingline = element.parent.waypoints.slice(0,2).reverse();
+        //                 moveEnd(leadingline, options);
+        //             } else {
+        //                 const leadingLine = element.parent.waypoints.slice(-2);
+        //                 moveEnd(leadingLine, options);
+        //             }
+        //             svgAttr(circle, options); 
+        //             svgAppend(group, circle);
+        //             svgAttr(circle, assign({}, this.OWNED_ATTRIBUTE_STYLE), attrs || {});
+        //         }
+        //     } else if (element.parent && element.parent.modelElement && element.parent.modelElement.is('Classifier')) {
+        //         const rect = createRectangle();
+        //         svgAttr(rect, assign({}, this.PROPERTY_STYLE), attrs || {});
+        //         
+        //         // add property notation to shape
+        //         const textString = createPropertyLabel(element);
+        //         const text = cropText(
+        //             textString, 
+        //             element, 
+        //             {
+        //                 align: 'left',
+        //                 padding: {
+        //                     left: 5
+        //                 },
+        //                 box: {
+        //                     width: element.width - 5,
+        //                 }
+        //             }
+        //         );
 
-                svgAppend(group, text);
-            }
-        }
+        //         svgAppend(group, text);
+        //     }
+        // }
         svgAppend(gfx, group);
         return group;
     }

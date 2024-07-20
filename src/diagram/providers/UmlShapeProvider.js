@@ -32,6 +32,7 @@ class MoveShapeHandler {
             //TODO
             await adjustEdgeWaypoints(shape, this.diManager, this.diagramContext.umlDiagram);
         }
+        await this.diManager.put(shapeInstance);
         await this.diManager.put(this.diagramContext.umlDiagram);
     }
 

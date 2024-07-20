@@ -106,7 +106,7 @@ export default {
 
             // add root
             const root = elementFactory.createRoot({
-                id: randomID()
+                id: umlDiagram.id 
             });
 
             canvas.setRootElement(root);
@@ -445,46 +445,49 @@ export default {
                         canvas.addShape(label, labelTarget);
                         return label;
                     } else if (umlDiagramElement.elementType() === 'UMLAssociationEndLabel') {
-                        const labelTarget = elementRegistry.get(umlDiagramElement.owningElement);
+                        const labelTarget = elementRegistry.get(umlDiagramElement.owningElement.id());
+                        const modelElement = await this.$umlWebClient.get((await umlDiagramElement.modelElement.front()).modelElementID);
                         let placement;
                         let placementIndex;
                         if (labelTarget.waypoints) {
                             // setup alignment
                             placementIndex = 0; // always put it on top (Assumption) // get around this by having additional di
-                            if (umlDiagramElement.modelElement.type.id() === labelTarget.source.modelElement.id) {
+                            if (modelElement.type.id() === labelTarget.source.modelElement.id) {
                                 placement = 'source'
                                 labelTarget.numSourceLabels += 1;
-                            } else if (umlDiagramElement.modelElement.type.id() === labelTarget.target.modelElement.id) {
+                            } else if (modelElement.type.id() === labelTarget.target.modelElement.id) {
                                 placement = 'target';
                                 labelTarget.numTargetLabels += 1;
                             }
                         }
                         // update name 
                         let updatedName = false;
-                        if (umlDiagramElement.modelElement.name === '') {
+                        if (modelElement.name === '') {
                             // not valid, delete from diagram
-                            await deleteUmlDiagramElement(umlDiagramElement.id, this.$umlWebClient);
+                            await DIManager.delete(umlDiagramElement);
                             return undefined;
                         }
 
-                        if (umlDiagramElement.text != umlDiagramElement.modelElement.name) {
+                        if (umlDiagramElement.text != modelElement.name) {
                             updatedName = true;
-                            updateLabelTextAndBounds(umlDiagramElement.modelElement.name, labelTarget, placement);
+                            updateLabelTextAndBounds(modelElement.name, labelTarget, placement);
                         }
+                        const bounds = await umlDiagramElement.bounds.get();
                         const label = elementFactory.createLabel({
                             id: umlDiagramElement.id,
                             text: umlDiagramElement.text,
-                            modelElement: umlDiagramElement.modelElement,
+                            modelElement: modelElement,
                             labelTarget: labelTarget,
-                            x: umlDiagramElement.bounds.x,
-                            y: umlDiagramElement.bounds.y,
-                            width: umlDiagramElement.bounds.width,
-                            height: umlDiagramElement.bounds.height,
+                            x: bounds.x,
+                            y: bounds.y,
+                            width: bounds.width,
+                            height: bounds.height,
                             elementType: 'associationEndLabel',
                             placement: placement,
                             placementIndex: placementIndex,
                         });
                         if (updatedName) {
+                            console.warn('uh oh');
                             await updateLabel(label, this.$umlWebClient);
                         }
                         canvas.addShape(label, labelTarget);

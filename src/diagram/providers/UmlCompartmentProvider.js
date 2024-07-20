@@ -25,21 +25,25 @@ export default class UmlCompartmentProvider {
             checkIfCompartmentAndChangeToParent(event.context, 'source');
         });
         eventBus.on('server.create', (context) => {
-            if (context.serverElement.elementType() === 'compartment') {
+            if (context.serverElement.is('UMLCompartment')) {
                 // TODO
                 const umlCompartment = context.serverElement;
-                const owner = elementRegistry.get(umlCompartment.owningElement);
-                const compartment = elementFactory.createShape({
-                    id: umlCompartment.id,
-                    y: owner.y + CLASS_SHAPE_HEADER_HEIGHT,
-                    x: owner.x,
-                    width: owner.width,
-                    height: owner.height - CLASS_SHAPE_HEADER_HEIGHT,
-                    inselectable: true,
-                    elementType: context.serverElement.elementType(),
-                });
-                owner.compartments.push(compartment);
-                canvas.addShape(compartment, owner);
+                const owner = elementRegistry.get(umlCompartment.owningElement.id());
+                
+                // api puts us before our parent is made so just skip over for now
+                if (owner) {
+                    const compartment = elementFactory.createShape({
+                        id: umlCompartment.id,
+                        y: owner.y + CLASS_SHAPE_HEADER_HEIGHT,
+                        x: owner.x,
+                        width: owner.width,
+                        height: owner.height - CLASS_SHAPE_HEADER_HEIGHT,
+                        inselectable: true,
+                        elementType: 'compartment'//context.serverElement.elementType(),
+                    });
+                    owner.compartments.push(compartment);
+                    canvas.addShape(compartment, owner);
+                }
             }
         });
 
