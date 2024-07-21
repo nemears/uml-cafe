@@ -92,29 +92,33 @@ export default class UmlEdgeProvider {
         });
 
         eventBus.on('server.create', (event) => {
-            if (event.serverElement.elementType() === 'edge') {
+            if (event.serverElement.elementType() === 'UMLEdge') {
                 const umlEdge = event.serverElement;
                 const createEdge = async () => {
-                    const source = elementRegistry.get(umlEdge.source); 
-                    const target = elementRegistry.get(umlEdge.target);
-                    if (umlEdge.modelElement.is('Association')) { // TODO move to Association
-                        for await (const memberEnd of umlEdge.modelElement.memberEnds) {}
+                    const source = elementRegistry.get(umlEdge.source.id()); 
+                    const target = elementRegistry.get(umlEdge.target.id());
+                    const modelElement = await umlWebClient.get((await umlEdge.modelElement.front()).modelElementID)
+                    if (modelElement.is('Association')) { // TODO move to Association
+                        for await (const memberEnd of modelElement.memberEnds) {}
                     }
-                    
+                    const waypoints = [];
+                    for await (const point of umlEdge.waypoints) {
+                        waypoints.push({ x : point.x, y : point.y })
+                    }
                     // create connection
                     const connection = elementFactory.createConnection({
-                        waypoints: umlEdge.waypoints,
+                        waypoints: waypoints,
                         id: umlEdge.id,
                         target: target,
                         source: source,
-                        modelElement: umlEdge.modelElement,
+                        modelElement: modelElement,
                         children: [],
                         numSourceLabels: 0,
                         numCenterLabels: 0,
                         numTargetLabels: 0,
-                        elementType: 'edge',
+                        elementType: 'UMLEdge',
                     });
-                    const owner = elementRegistry.get(umlEdge.owningElement);
+                    const owner = elementRegistry.get(umlEdge.owningElement.id());
                     canvas.addConnection(connection, owner);
                 };
                 createEdge();
@@ -163,14 +167,23 @@ export default class UmlEdgeProvider {
         eventBus.on('server.delete', (event) => {
             const element = event.element,
             elementType = element.elementType;
-            if (elementType === 'edge') {
+            if (elementType === 'UMLEdge') {
                 canvas.removeShape(element);
             }
         });
     }
 }
 
-UmlEdgeProvider.$inject = ['eventBus', 'umlWebClient', 'diagramContext', 'elementRegistry', 'elementFactory', 'canvas', 'graphicsFactory', 'commandStack'];
+UmlEdgeProvider.$inject = [
+    'eventBus', 
+    'umlWebClient', 
+    'diagramContext', 
+    'elementRegistry', 
+    'elementFactory', 
+    'canvas', 
+    'graphicsFactory', 
+    'commandStack'
+];
 
 export async function adjustEdgeWaypoints(edge, diManager, umlDiagram) {
     const umlEdge = await diManager.get(edge.id);

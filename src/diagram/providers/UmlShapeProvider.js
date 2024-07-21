@@ -1,5 +1,4 @@
 import { getMid, roundBounds } from "diagram-js/lib/layout/LayoutUtil";
-import { EDGE_ID, SHAPE_BOUNDS_SLOT_ID } from "../api/diagramInterchange/ids";
 import { adjustEdgeWaypoints } from './UmlEdgeProvider';
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { translateDJShapeToUMLShape } from '../translations';
@@ -20,7 +19,7 @@ class MoveShapeHandler {
         if (shapeInstance.is('Shape')) {
             await translateDJShapeToUMLShape(shape, shapeInstance, this.diManager, this.diagramContext.umlDiagram);
             for (const child of shape.children) {
-                if (child.elementType === 'compartment') {
+                if (child.elementType === 'UMLCompartment') {
                     for (const compartmentChild of child.children) {
                         await this.doLater(compartmentChild);
                     }
@@ -98,7 +97,16 @@ class MoveShapeHandler {
     }
 }
 
-MoveShapeHandler.$inject = ['umlWebClient', 'diagramContext', 'graphicsFactory', 'canvas', 'eventBus', 'diagramEmitter', 'elementRegistry', 'diManager'];
+MoveShapeHandler.$inject = [
+    'umlWebClient', 
+    'diagramContext', 
+    'graphicsFactory', 
+    'canvas', 
+    'eventBus', 
+    'diagramEmitter', 
+    'elementRegistry', 
+    'diManager'
+];
 
 class ResizeShapeHandler {
     constructor(umlWebClient, diagramContext, graphicsFactory, canvas, diagramEmitter, elementRegistry) {

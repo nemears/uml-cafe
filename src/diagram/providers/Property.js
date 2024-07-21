@@ -1,7 +1,4 @@
 import { randomID } from "uml-client/lib/types/element";
-import { createTypedElementLabel, updateLabel } from "../api/diagramInterchange/label";
-import { OWNED_ELEMENTS_SLOT_ID } from '../api/diagramInterchange/ids';
-import { deleteUmlDiagramElement } from '../api/diagramInterchange/util';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { getTextDimensions, getTypedElementText, LABEL_HEIGHT, PROPERTY_GAP } from './ClassDiagramPaletteProvider';
@@ -229,15 +226,15 @@ export default class Property extends RuleProvider {
             // TODO alter this when drag property to show association
             const shapes = context.shapes;
             for (const shape of shapes) {
-                if (shape.modelElement && shape.modelElement.elementType() === 'property') {
-                    if (shape.labelTarget && shape.labelTarget.elementType === 'compartment') {
+                if (shape.modelElement && shape.modelElement.elementType() === 'Property') {
+                    if (shape.labelTarget && shape.labelTarget.elementType === 'UMLCompartment') {
                         return false;
                     }
                 }
             }
         });
         this.addRule('shape.resize', (context) => {
-            if (context.shape.modelElement && context.shape.modelElement.elementType() === 'property') {
+            if (context.shape.modelElement && context.shape.modelElement.elementType() === 'Property') {
                 return false;
             }
         });

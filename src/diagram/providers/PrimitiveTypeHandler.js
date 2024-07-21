@@ -45,7 +45,7 @@ export default class PrimitiveTypeHandler {
         });
 
         eventBus.on('selection.changed', 1100, (context) => {
-            const selectedCompartments = context.newSelection.filter(el => el.elementType === 'compartment');
+            const selectedCompartments = context.newSelection.filter(el => el.elementType === 'UMLCompartment');
             for (const compartment of selectedCompartments) {
                 // remove compartment from selection
                 context.newSelection.splice(context.newSelection.indexOf(compartment), 1);

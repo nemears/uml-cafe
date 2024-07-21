@@ -1,6 +1,5 @@
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
 import { getMid } from "diagram-js/lib/layout/LayoutUtil";
-import { deleteUmlDiagramElement } from '../api/diagramInterchange/util';
 import { translateDJEdgeToUMLEdge, translateDJLabelToUMLLabel } from "../translations";
 
 class EdgeConnectHandler {
@@ -78,6 +77,8 @@ class EdgeConnectHandler {
         const doLater = async () => {
             const edgeInstance = diManager.post('UML DI.UMLEdge', { id : context.connection.id });
             await translateDJEdgeToUMLEdge(context.connection, edgeInstance, diManager, diagramContext.umlDiagram);
+            await diManager.put(edgeInstance);
+            canvas.addConnection(context.connection);
             for (const child of context.children) {
                 const createLabel = async (type) => {
                     const labelInstance = diManager.post(type, { id : child.id });
@@ -86,30 +87,28 @@ class EdgeConnectHandler {
                 };
                 child.owningElement = context.connection
                 switch (child.elementType) {
-                    case 'label': 
+                    case 'UMLabel': 
                         await createLabel('UML DI.UMLLabel');
                         break;
-                    case 'nameLabel':
+                    case 'UMLNameLabel':
                         await createLabel('UML DI.UMLNameLabel');
                         break;
-                    case 'typedElementLabel':
+                    case 'UMLTypedElementLabel':
                         await createLabel('UML DI.UMLTypedElementLabel');
                         break;
-                    case 'keywordLabel':
+                    case 'UMLKeywordLabel':
                         await createLabel('UML DI.UMLKeywordLabel');
                         break;
-                    case 'associationEndLabel':
+                    case 'UMLAssociationEndLabel':
                         await createLabel('UML DI.UMLAssociationEndLabel');
                         break;
-                    case 'multiplicityLabel':
+                    case 'UMLMultiplicityLabel':
                         await createLabel('UML DI.UMLMultiplicityLabel');
                         break;
                     default:
                         throw Error('Bad state! contact dev with stacktrace!');
                 }
             }
-            await diManager.put(edgeInstance);
-            canvas.addConnection(context.connection);
             for (const child of context.children) {
                 if (child.parent) {
                     canvas.addShape(child, child.parent);
@@ -247,7 +246,14 @@ function placeSecondLabel(child, waypoint, orientation) {
 }
 
 export function placeEdgeLabel(child, connection) {
-    if (child.elementType === 'label' || child.elementType === 'nameLabel' || child.elementType === 'typedElementLabel' || child.elementType === 'keywordLabel' || child.elementType === 'associationEndLabel' || child.elementType === 'multiplicityLabel') {
+    if (
+        child.elementType === 'UMLLabel' || 
+        child.elementType === 'UMLNameLabel' || 
+        child.elementType === 'UMLTypedElementLabel' || 
+        child.elementType === 'UMLKeywordLabel' ||
+        child.elementType === 'UMLAssociationEndLabel' ||
+        child.elementType === 'UMLMultiplicityLabel'
+    ) {
                 child.labelTarget = connection;
         child.parent = connection;
         if (!child.width || !child.height) {

@@ -98,7 +98,7 @@ export default class ClassDiagramContextPadProvider {
         if (!element.modelElement) {
             return {};
         }
-        if (element.elementType === 'classDiagram') {
+        if (element.elementType === 'ClassDiagram') {
             return {};
         }
 
@@ -149,7 +149,7 @@ export default class ClassDiagramContextPadProvider {
             }
         };
 
-        if (element.modelElement.elementType() === 'class') {
+        if (element.modelElement.elementType() === 'Class') {
             ret.createGeneralization = {
                 group: 'edit',
                 className: 'context-pad-icon-connect',

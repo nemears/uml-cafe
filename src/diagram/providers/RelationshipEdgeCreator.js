@@ -27,7 +27,7 @@ export default class RelationshipEdgeCreator {
         modelElementMap = this._modelElementMap;
         const elementsToCreate = [];
         for (const element of context.elements) {
-            if (element.elementType() === 'association') {
+            if (element.elementType() === 'Association') {
                 const association = element;
                 let targets, sources;
                 for await (const end of association.memberEnds) {
@@ -49,12 +49,12 @@ export default class RelationshipEdgeCreator {
 
                 for (const sourceID of sources) {
                     const source = elementRegistry.get(sourceID);
-                    if (source.elementType !== 'classifierShape') {
+                    if (source.elementType !== 'UMLClassifierShape') {
                         continue;
                     }
                     for (const targetID of targets) {
                         const target = elementRegistry.get(targetID);
-                        if (target.elementType !== 'classifierShape') {
+                        if (target.elementType !== 'UMLClassifierShape') {
                             continue;
                         }
                         const associationEdge = elementFactory.createConnection({
@@ -63,7 +63,7 @@ export default class RelationshipEdgeCreator {
                             target: target,
                             waypoints: connectRectangles(source, target, getMid(source), getMid(target)),
                             modelElement: association,
-                            elementType: 'edge',
+                            elementType: 'UMLEdge',
                             children: [],
                             numCenterLabels: 0,
                             numTargetLabels: 0,
@@ -86,7 +86,7 @@ export default class RelationshipEdgeCreator {
                                         height: 24,
                                         modelElement: end,
                                         placement: placement,
-                                        elementType: 'associationEndLabel',
+                                        elementType: 'UMLAssociationEndLabel',
                                         labelTarget: associationEdge,
                                         owningElement: associationEdge,
                                     }));
@@ -127,7 +127,7 @@ export function createAssociationNameLabel(associationEdge, elementFactory, umlR
         width: Math.round(textDimensions.width) + 15,
         height: 24,
         placement: 'center',
-        elementType: 'nameLabel',
+        elementType: 'UMLNameLabel',
         modelElement: association,
         labelTarget: associationEdge,
         parent: associationEdge,

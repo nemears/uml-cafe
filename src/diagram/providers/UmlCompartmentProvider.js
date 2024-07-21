@@ -39,7 +39,7 @@ export default class UmlCompartmentProvider {
                         width: owner.width,
                         height: owner.height - CLASS_SHAPE_HEADER_HEIGHT,
                         inselectable: true,
-                        elementType: 'compartment'//context.serverElement.elementType(),
+                        elementType: context.serverElement.elementType(),
                     });
                     owner.compartments.push(compartment);
                     canvas.addShape(compartment, owner);

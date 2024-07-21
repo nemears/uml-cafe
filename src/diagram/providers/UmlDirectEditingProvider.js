@@ -262,7 +262,7 @@ export default class UmlDirecteEditingProvider{
         commandStack.registerHandler('associationEndLabel.update', UpdateAssociationEndLabelHandler);
     }
     activate(element) {
-        if (element.elementType === 'nameLabel') {
+        if (element.elementType === 'UMLNameLabel') {
             const ret = {
                 text: element.modelElement.name,
             };
@@ -297,7 +297,7 @@ export default class UmlDirecteEditingProvider{
             };
 
             return ret;
-        } else if (element.elementType === 'typedElementLabel') {
+        } else if (element.elementType === 'UMLTypedElementLabel') {
             const ret = {
                 text: element.modelElement.name,
             }; 
@@ -320,7 +320,7 @@ export default class UmlDirecteEditingProvider{
             };
 
             return ret;
-        } else if (element.elementType === 'associationEndLabel') {
+        } else if (element.elementType === 'UMLAssociationEndLabel') {
             const ret = {
                 text: element.modelElement.name,
             }; 
@@ -347,19 +347,19 @@ export default class UmlDirecteEditingProvider{
         const viewbox = this.canvas.viewbox();
         bounds.x += viewbox.x;
         bounds.y += viewbox.y;
-        if (element.elementType === 'nameLabel') {
+        if (element.elementType === 'UMLNameLabel') {
             this.commandStack.execute('nameLabel.update', {
                 element: element,
                 newName: newName,
                 bounds: bounds,
             });
-        } else if (element.elementType === 'typedElementLabel') {
+        } else if (element.elementType === 'UMLTypedElementLabel') {
             this.commandStack.execute('typedElementLabel.update', {
                 element: element,
                 newName: newName,
                 bounds: bounds,
             });
-        } else if (element.elementType === 'associationEndLabel') {
+        } else if (element.elementType === 'UMLAssociationEndLabel') {
             this.commandStack.execute('associationEndLabel.update', {
                 element: element,
                 newName: newName,

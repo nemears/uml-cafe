@@ -59,7 +59,7 @@ export default class ClassDiagramPaletteProvider {
                             id: classID,
                             name: '',
                             elementType() {
-                                return 'class';
+                                return 'Class';
                             }
                         }
 
@@ -80,7 +80,7 @@ export default class ClassDiagramPaletteProvider {
                         const proxyModelElement = {
                             id: dataTypeID,
                             elementType() {
-                                return 'dataType';
+                                return 'DataType';
                             }
                         }
                         const elsToCreate = createClassDiagramClassifierShape(elementFactory, umlRenderer, proxyModelElement, true);
@@ -100,7 +100,7 @@ export default class ClassDiagramPaletteProvider {
                         const proxyModelElement = {
                             id: enumerationID,
                             elementType() {
-                                return 'enumeration';
+                                return 'Enumeration';
                             }
                         }
 
@@ -121,7 +121,7 @@ export default class ClassDiagramPaletteProvider {
                         const proxyModelElement = {
                             id: primitiveTypeID,
                             elementType() {
-                                return 'primitiveType';
+                                return 'PrimitiveType';
                             }
                         }
 
@@ -142,7 +142,7 @@ export default class ClassDiagramPaletteProvider {
                         const proxyModelElement = {
                             id: interfaceID,
                             elementType() {
-                                return 'interface';
+                                return 'Interface';
                             }
                         }
 
@@ -163,7 +163,7 @@ export default class ClassDiagramPaletteProvider {
                         const proxyModelElement = {
                             id: signalID,
                             elementType() {
-                                return 'signal';
+                                return 'Signal';
                             }
                         }
                         
@@ -341,7 +341,7 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
         x: 0,
         y: CLASS_SHAPE_HEADER_HEIGHT,
         id: compartmentID,
-        elementType: 'compartment',
+        elementType: 'UMLCompartment',
         inselectable: true,
     });
 
@@ -354,13 +354,13 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
         modelElement : modelElement,
         compartments : [compartment],
         createModelElement: createModelElement,
-        elementType: 'classifierShape',
+        elementType: 'UMLClassifierShape',
     });
 
     let keywordLabel;
-    if (modelElement.elementType() !== 'class') {
+    if (modelElement.elementType() !== 'Class') {
         // create keyword label
-        if (modelElement.elementType() === 'stereotype') {
+        if (modelElement.elementType() === 'Stereotype') {
             throw Error('TODO stereotype shapes on class diagrams! contact dev');
         } else {
             keywordLabel = elementFactory.createLabel({
@@ -374,7 +374,7 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
                 id: randomID(),
                 modelElement: modelElement,
                 inselectable: true,
-                elementType: 'keywordLabel',
+                elementType: 'UMLKeywordLabel',
             });
         }
     }
@@ -390,7 +390,7 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
         owningElement: shape,
         id: nameLabelID,
         modelElement: modelElement,
-        elementType: 'nameLabel',
+        elementType: 'UMLNameLabel',
         inselectable: true,
     });
 
@@ -408,7 +408,7 @@ export function createClassDiagramClassifierShape(elementFactory, umlRenderer, m
                 width: Math.round(dimensions.width) + 15,
                 height: LABEL_HEIGHT,
                 modelElement: property,
-                elementType: 'typedElementLabel',
+                elementType: 'UMLTypedElementLabel',
                 labelTarget: compartment,
                 owningElement: compartment,
                 text: text,

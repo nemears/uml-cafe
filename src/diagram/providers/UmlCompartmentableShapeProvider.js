@@ -50,6 +50,7 @@ class ResizeCompartmentableShapeHandler {
                     const compartmentChildInstance = await this.diManager.get(compartmentChild.id);
                     if (compartmentChildInstance.is('UMLLabel')) {
                         await translateDJLabelToUMLLabel(compartmentChild, compartmentChildInstance, this.diManager, this.diagramContext.umlDiagram);
+                        await this.diManager.put(compartmentChildInstance);
                     } else {
                         throw Error('TODO');
                     }
@@ -59,6 +60,7 @@ class ResizeCompartmentableShapeHandler {
             const childInstance = await this.diManager.get(child.id);
             if (childInstance.is('UMLLabel')) {
                 await translateDJLabelToUMLLabel(child, childInstance, this.diManager, this.diagramContext.umlDiagram);
+                await this.diManager.put(childInstance);
             } else if (childInstance.is('UMLCompartment')) {
                 // no need to update
                 continue;
@@ -155,7 +157,7 @@ ResizeCompartmentableShapeHandler.$inject = [
 function adjustCompartmentsAndEdges(shape, oldBounds, umlRenderer) {
     // these are all in the "header" of the shape kind of (above the first compartment) (only in class diagrams)
     for (const child of shape.children) {
-        if (child.elementType === 'compartment') {
+        if (child.elementType === 'UMLCompartment') {
             continue;
         }
         child.x = shape.x;
@@ -182,7 +184,7 @@ function adjustCompartmentsAndEdges(shape, oldBounds, umlRenderer) {
 
         let childYPos = compartment.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
         for (const child of compartment.children) {
-            if (child.elementType === 'typedElementLabel') {
+            if (child.elementType === 'UMLTypedElementLabel') {
                 // resize typedElementLabel
                 child.x = compartment.x;
                 child.y = childYPos;
@@ -208,18 +210,18 @@ function adjustCompartmentsAndEdges(shape, oldBounds, umlRenderer) {
 }
 
 export default class UmlCompartmentableShapeProvider {
-    constructor(eventBus, commandStack, elementRegistry, elementFactory, canvas, diagramContext, diManager) {
+    constructor(eventBus, commandStack, elementRegistry, elementFactory, canvas, diagramContext, diManager, umlWebClient) {
         let root = undefined;
         commandStack.registerHandler('resize.compartmentableShape.uml', ResizeCompartmentableShapeHandler);
         eventBus.on('resize.start', 1500, (event) => {
             const shape = event.shape;
-            if (shape.elementType === 'compartmentableShape' || shape.elementType === 'classifierShape') {
+            if (shape.elementType === 'UMLCompartmentableShape' || shape.elementType === 'UMLClassifierShape') {
                 // overiding resize.start so that minSize is different
                 let totalHeight = CLASS_SHAPE_HEADER_HEIGHT;
                 for (const compartment of shape.compartments) {
                     totalHeight += CLASSIFIER_SHAPE_GAP_HEIGHT;
                     for (const child of compartment.children) {
-                        if (child.elementType === 'typedElementLabel') {
+                        if (child.elementType === 'UMLTypedElementLabel') {
                             totalHeight += PROPERTY_GAP;
                         } else {
                             throw Error('TODO handle minimum resize of compartmentable shape with child of type ' + child.elementType + ' in compartment');
@@ -281,7 +283,7 @@ export default class UmlCompartmentableShapeProvider {
         });
         eventBus.on('resize.end', 1100, (event) => {
             const shape = event.shape;
-            if (shape.elementType === 'compartmentableShape' || shape.elementType === 'classifierShape') {
+            if (shape.elementType === 'UMLCompartmentableShape' || shape.elementType === 'UMLClassifierShape') {
                 // adjust compartments
                 commandStack.execute('resize.compartmentableShape.uml', event.context);
                 event.context.canExecute = false;
@@ -300,8 +302,8 @@ export default class UmlCompartmentableShapeProvider {
                     }
                     owner = root;
                 }
-                
                 const bounds = diManager.getLocal(umlShape.bounds.id());
+                const modelElement = umlWebClient.getLocal(diManager.getLocal(umlShape.modelElement.ids().front()).modelElementID);
                 const shape = elementFactory.createShape({
                     x: bounds.x,
                     y: bounds.y,
@@ -309,8 +311,8 @@ export default class UmlCompartmentableShapeProvider {
                     height: bounds.height,
                     update: true,
                     id: umlShape.id,
-                    modelElement: umlShape.modelElement,
-                    elementType: umlShape.elementType() === 'UMLClassifierShape' ? 'classifierShape' : 'compartmentableShape', // TODO capitalize all
+                    modelElement: modelElement,
+                    elementType: umlShape.elementType(),
                     compartments: [],
                 });
                 canvas.addShape(shape, owner);
@@ -342,7 +344,7 @@ export default class UmlCompartmentableShapeProvider {
         eventBus.on('server.delete', (event) => {
             const element = event.element,
             elementType = element.elementType;
-            if (elementType === 'compartmentableShape' || elementType === 'classifierShape') {
+            if (elementType === 'UMLCompartmentableShape' || elementType === 'UMLClassifierShape') {
                 canvas.removeShape(element);
             }
         });
@@ -356,5 +358,6 @@ UmlCompartmentableShapeProvider.$inject = [
     'elementFactory', 
     'canvas', 
     'diagramContext',
-    'diManager'
+    'diManager',
+    'umlWebClient'
 ];

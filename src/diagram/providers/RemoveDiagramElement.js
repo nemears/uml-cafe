@@ -1,5 +1,4 @@
 import { createElementUpdate, deleteElementElementUpdate } from "../../umlUtil";
-import { deleteUmlDiagramElement } from '../api/diagramInterchange/util';
 import { translateDJEdgeToUMLEdge, translateDJElementToUMLDiagramElement, translateDJLabelToUMLLabel, translateDJSCompartmentableShapeToUmlCompartmentableShape, translateDJShapeToUMLShape } from "../translations";
 
 export default class RemoveDiagramElement {
@@ -188,67 +187,67 @@ class RemoveDiagramElementHandler {
             await element.modelElement.owner.get();
         }
         switch (element.elementType) {
-            case 'shape': {
+            case 'UMLShape': {
                 const umlShape = await diManager.post('UML DI.UMLShape', { id : element.id });
                 await translateDJShapeToUMLShape(element, umlShape, diManager, diagramContext.umlDiagram);
                 await diManager.put(umlShape);
                 break;
             }
-            case 'compartmentableShape': {
+            case 'UMLCompartmentableShape': {
                 const umlCompartmentableShape = diManager.post('UML DI.UMLCompartmentableShape', { id : element.id });
                 await translateDJSCompartmentableShapeToUmlCompartmentableShape(element, umlCompartmentableShape, diManager, diagramContext.umlDiagram);
                 await diManager.put(umlCompartmentableShape);
                 break;
             }
-            case 'classifierShape': {
+            case 'UMLClassifierShape': {
                 const umlClassifierShape = diManager.post('UML DI.UMLClassifierShape',  { id : element.id });
                 await translateDJSCompartmentableShapeToUmlCompartmentableShape(element, umlClassifierShape, diManager, diagramContext.umlDiagram);
                 await diManager.put(umlClassifierShape);
                 break;
             }
-            case 'compartment': {
+            case 'UMLCompartment': {
                 const umlCompartment = diManager.post('UML DI.UMLCompartment', { id : element.id });
                 await translateDJElementToUMLDiagramElement(element, umlCompartment, diManager, diagramContext.umlDiagram);
                 await diManager.put(umlCompartment);
                 break;
             }
-            case 'edge': {
+            case 'UMLEdge': {
                 const umlEdge = diManager.post('UML DI.UMLEdge', { id : element.id });
                 await translateDJEdgeToUMLEdge(element, umlEdge, diManager, diagramContext.umlDiagram);
                 await diManager.put(umlEdge);
                 break;
             }
-            case 'label': {
+            case 'UMLLabel': {
                 const umlLabel = diManager.post('UML DI.UMLLabel', { id : element.id });
                 await translateDJEdgeToUMLEdge(element, umlLabel, diManager, diagramContext.umlDiagram);
                 await diManager.put(umlLabel);
                 break;
             }
-            case 'nameLabel': {
+            case 'UMLNameLabel': {
                 const umlNameLabel = diManager.post('UML DI.UMLNameLabel', { id : element.id });
                 await translateDJLabelToUMLLabel(element, umlNameLabel, diManager, diagramContext.umlDiagram);
                 await diManager.put(umlNameLabel);
                 break;
             }
-            case 'keywordLabel': {
+            case 'UMLKeywordLabel': {
                 const umlKeywordLabel = diManager.post('UML DI.UMLKeywordLabel', { id : element.id });
                 await translateDJLabelToUMLLabel(element, umlKeywordLabel, diManager, diagramContext.umlDiagram);
                 await diManager.put(umlKeywordLabel);
                 break;
             }
-            case 'typedElementLabel': {
+            case 'UMLTypedElementLabel': {
                 const umlTypedElementLabel = diManager.post('UML DI.UMLTypedElementLabel', { id : element.id });
                 await translateDJLabelToUMLLabel(element, umlTypedElementLabel, diManager, diagramContext.umlDiagram);
                 await diManager.put(umlTypedElementLabel);
                 break;
             }
-            case 'associationEndLabel': {
+            case 'UMLAssociationEndLabel': {
                 const umlAssociationElementLabel = diManager.post('UML DI.UMLAssociationEndLabel', { id : element.id });
                 await translateDJLabelToUMLLabel(element, umlAssociationElementLabel, diManager, diagramContext.umlDiagram);
                 await diManager.put(umlAssociationElementLabel);
                 break;
             }
-            case 'multiplicityLabel': {
+            case 'UMLMultiplicityLabel': {
                 const umlMultiplicityLabel = diManager.post('UML DI.UMLMultiplicityLabel', { id : element.id });
                 await translateDJLabelToUMLLabel(element, umlMultiplicityLabel, diManager, diagramContext.umlDiagram);
                 await diManager.put(umlMultiplicityLabel);

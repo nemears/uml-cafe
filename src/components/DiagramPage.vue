@@ -2,9 +2,6 @@
 import { Editor } from '../diagram/editor';
 const EventEmitter = require('events');
 import { createElementUpdate } from '../umlUtil.js';
-import { updateLabel, createDiagramLabel } from '../diagram/api/diagramInterchange/label';
-import { updateClassDiagram } from '../diagram/api/diagramInterchange/classDiagram';
-import { getUmlDiagramElement, deleteUmlDiagramElement } from '../diagram/api/diagramInterchange/util';
 import { toRaw } from 'vue';
 import { CLASS_SHAPE_HEADER_HEIGHT } from '../diagram/providers/ClassHandler';
 import { getTypedElementText, getTextDimensions, LABEL_HEIGHT } from '../diagram/providers/ClassDiagramPaletteProvider';
@@ -180,7 +177,7 @@ export default {
                 }
                 const diagramHeading = elementFactory.createLabel({
                     id: headingID,
-                    elementType: 'label',
+                    elementType: 'UMLLabel',
                     modelElement: modelElement,
                     parent: diagramFrame,
                     labelTarget: diagramFrame,
@@ -247,7 +244,7 @@ export default {
                             height: umlShape.bounds.height,
                             id: umlShape.id,
                             modelElement: umlShape.modelElement,
-                            elementType: 'shape',
+                            elementType: 'UMLShape',
                         });
                         canvas.addShape(shape, parent);
                         return shape;
@@ -277,7 +274,7 @@ export default {
                                 width: bounds.width,
                                 height: bounds.height - CLASS_SHAPE_HEADER_HEIGHT,
                                 // modelElement: umlClassifierShape.modelElement,
-                                elementType: 'compartment',
+                                elementType: 'UMLCompartment',
                                 inselectable: true,
                             });
                             compartments.push(compartmentShape);
@@ -290,7 +287,7 @@ export default {
                             id: umlClassifierShape.id,
                             modelElement: modelElement,
                             compartments: compartments,
-                            elementType: 'classifierShape',
+                            elementType: 'UMLClassifierShape',
                         });
                         canvas.addShape(shape, parent);
                         for (const compartmentShape of compartments) {
@@ -329,7 +326,7 @@ export default {
                             source: source,
                             target: target,
                             children: [],
-                            elementType: 'edge',
+                            elementType: 'UMLEdge',
                             numTargetLabels: 0,
                             numSourceLabels: 0,
                             numCenterLabels: 0,
@@ -344,7 +341,7 @@ export default {
 
                         }
                         // TODO create label pointing to shape
-                        if ((await umlLabel.modelElement.front()).elementType() === 'property' && umlLabel.modelElement.association.has()) {
+                        if ((await umlLabel.modelElement.front()).elementType() === 'Property' && umlLabel.modelElement.association.has()) {
                             // it is a member end label
                             const labelTarget = elementRegistry.get(umlLabel.owningElement);
                             const label = elementFactory.createLabel({
@@ -356,7 +353,7 @@ export default {
                                     width: umlLabel.bounds.width,
                                     height: umlLabel.bounds.height,
                                     labelTarget: labelTarget,
-                                    elementType: 'label',
+                                    elementType: 'UMLLabel',
                                 });
                                 canvas.addShape(label, labelTarget);
                                 return label;
@@ -382,7 +379,7 @@ export default {
                             width: bounds.width,
                             height: bounds.height,
                             labelTarget: labelTarget,
-                            elementType: 'nameLabel',
+                            elementType: 'UMLNameLabel',
                             inselectable: !labelTarget.waypoints, // TODO determine this elsewhere
                         });
                         canvas.addShape(label, labelTarget);
@@ -393,11 +390,12 @@ export default {
                         return label;
                     } else if (umlDiagramElement.elementType() === 'UMLTypedElementLabel') {
                         const umlTypedElementLabel = umlDiagramElement;
-                        const labelTarget = elementRegistry.get(umlTypedElementLabel.owningElement);
+                        const labelTarget = elementRegistry.get(umlTypedElementLabel.owningElement.id());
 
                         // update text
-                        await umlTypedElementLabel.modelElement.type.get();
-                        let newText = getTypedElementText(umlTypedElementLabel.modelElement);
+                        const modelElement = await this.$umlWebClient.get((await umlTypedElementLabel.modelElement.front()).modelElementID);
+                        await modelElement.type.get();
+                        let newText = getTypedElementText(modelElement);
                         if (newText != umlTypedElementLabel.text) {
                             umlTypedElementLabel.text = newText;
                             umlTypedElementLabel.bounds.width = Math.round(getTextDimensions(newText, this.diagram.get('umlRenderer')).width) + 15;
@@ -406,20 +404,21 @@ export default {
                         if (labelTarget.waypoints) {
                             placement = 'center';
                         }
+                        const bounds = await umlTypedElementLabel.bounds.get();
                         const label = elementFactory.createLabel({
                             id: umlTypedElementLabel.id,
                             text: umlTypedElementLabel.text,
-                            modelElement: umlTypedElementLabel.modelElement,
-                            x: umlTypedElementLabel.bounds.x,
-                            y: umlTypedElementLabel.bounds.y,
-                            width: umlTypedElementLabel.bounds.width,
-                            height: umlTypedElementLabel.bounds.height,
+                            modelElement: modelElement,
+                            x: bounds.x,
+                            y: bounds.y,
+                            width: bounds.width,
+                            height: bounds.height,
                             labelTarget: labelTarget,
-                            elementType: 'typedElementLabel',
+                            elementType: 'UMLTypedElementLabel',
                             placement: placement,
                         });
                         if (newText) {
-                            await updateLabel(label, this.$umlWebClient);
+                            await DIManager.put(umlTypedElementLabel);
                         }
                         canvas.addShape(label, labelTarget);
                         return label;
@@ -438,7 +437,7 @@ export default {
                             y: bounds.y,
                             width: bounds.width,
                             height: bounds.height,
-                            elementType: 'keywordLabel',
+                            elementType: 'UMLKeywordLabel',
                             inselectable: true, // TODO determine this elsewhere
                             placement: placement,
                         });
@@ -482,18 +481,19 @@ export default {
                             y: bounds.y,
                             width: bounds.width,
                             height: bounds.height,
-                            elementType: 'associationEndLabel',
+                            elementType: 'UMLAssociationEndLabel',
                             placement: placement,
                             placementIndex: placementIndex,
                         });
                         if (updatedName) {
-                            console.warn('uh oh');
-                            await updateLabel(label, this.$umlWebClient);
+                            throw Error('uh oh');
                         }
                         canvas.addShape(label, labelTarget);
                         return label;
                     } else if (umlDiagramElement.elementType() === 'UMLMultiplicityLabel') {
                         const labelTarget = elementRegistry.get(umlDiagramElement.owningElement);
+                        const modelElement = await this.$umlWebClient.get((await umlDiagramElement.modelElement.front()).modelElementID);
+                        const bounds = await umlDiagramElement.bounds.get();
                         let placement;
                         let placementIndex;
                         if (labelTarget.waypoints) {
@@ -509,10 +509,9 @@ export default {
                         }
 
                         // TODO update label if changed
-                        const modelElement = umlDiagramElement.modelElement;
                         if (!(await isPropertyValidForMultiplicityLabel(modelElement))) {
                             // not valid, delete from diagram
-                            await deleteUmlDiagramElement(umlDiagramElement.id, this.$umlWebClient);
+                            await DIManager.delete(umlDiagramElement);
                             return undefined;
                         }
 
@@ -526,35 +525,19 @@ export default {
                         const label = elementFactory.createLabel({
                             id: umlDiagramElement.id,
                             text: umlDiagramElement.text,
-                            modelElement: umlDiagramElement.modelElement,
+                            modelElement: modelElement,
                             labelTarget: labelTarget,
-                            x: umlDiagramElement.bounds.x,
-                            y: umlDiagramElement.bounds.y,
-                            width: umlDiagramElement.bounds.width,
-                            height: umlDiagramElement.bounds.height,
-                            elementType: 'multiplicityLabel',
+                            x: bounds.x,
+                            y: bounds.y,
+                            width: bounds.width,
+                            height: bounds.height,
+                            elementType: 'UMLMultiplicityLabel',
                             placement: placement,
                             placementIndex: placementIndex,
                         });
                         if (updateMultiplictyLabel) {
-                            await updateLabel(label, this.$umlWebClient);
+                            await DIManager.put(umlDiagramElement);
                         }
-                        canvas.addShape(label, labelTarget);
-                        return label;
-                    } else if (umlDiagramElement.elementType() === 'UMLTypedElementLabel') {
-                        const umlTypedElementLabel = umlDiagramElement;
-                        const labelTarget = elementRegistry.get(umlTypedElementLabel.owningElement);
-                        const label = elementFactory.createLabel({
-                            id: umlTypedElementLabel.id,
-                            text: umlTypedElementLabel.text,
-                            modelElement: umlTypedElementLabel.modelElement,
-                            x: umlTypedElementLabel.bounds.x,
-                            y: umlTypedElementLabel.bounds.y,
-                            width: umlTypedElementLabel.bounds.width,
-                            height: umlTypedElementLabel.bounds.height,
-                            labelTarget: labelTarget,
-                            elementType: 'typedElementLabel',
-                        });
                         canvas.addShape(label, labelTarget);
                         return label;
                     } else {

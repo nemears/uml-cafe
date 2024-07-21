@@ -1,5 +1,3 @@
-import { createDiagramEdge } from "../api/diagramInterchange/edge";
-import { deleteUmlDiagramElement } from '../api/diagramInterchange/util';
 import { h } from "vue";
 import { getMid } from "diagram-js/lib/layout/LayoutUtil";
 import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
@@ -28,9 +26,9 @@ export default class UmlContextMenu {
             const x = event.originalEvent.clientX,
             y = event.originalEvent.clientY;
             if (!event.originalEvent.ctrlKey) {
-                if (event.element.elementType === 'compartment') {
+                if (event.element.elementType === 'UMLCompartment') {
                     me.show(x, y, event.element.parent);
-                } else if (event.element.elementType === 'nameLabel' && event.element.parent != canvas.findRoot(event.element)) {
+                } else if (event.element.elementType === 'UMLNameLabel' && event.element.parent != canvas.findRoot(event.element)) {
                     me.show(x,y, event.element.parent);
                 } else if (event.element.modelElement) {
                     me.show(x, y, event.element);
@@ -66,7 +64,7 @@ export default class UmlContextMenu {
                     const findNameLabel = (elThatOwnsNameLabel) => {
                         let nameLabel;
                         for (const child of elThatOwnsNameLabel.children) {
-                            if (child.elementType === 'nameLabel') {
+                            if (child.elementType === 'UMLNameLabel') {
                                 nameLabel = child;
                                 break;
                             }
@@ -76,11 +74,11 @@ export default class UmlContextMenu {
                         }
                         return nameLabel;
                     };
-                    if (element.elementType === 'classifierShape') {
+                    if (element.elementType === 'UMLClassifierShape') {
                         // find nameLabel
                         let nameLabel = findNameLabel(element);
                         directEditing.activate(nameLabel);
-                    } else if (element.elementType === 'keywordLabel') {
+                    } else if (element.elementType === 'UMLKeywordLabel') {
                         const nameLabel = findNameLabel(element.labelTarget);
                         directEditing.activate(nameLabel);
                     } else {

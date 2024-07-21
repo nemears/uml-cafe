@@ -1,7 +1,6 @@
 import { randomID } from 'uml-client/lib/types/element';
 import { getMid } from 'diagram-js/lib/layout/LayoutUtil';
 import { connectRectangles } from 'diagram-js/lib/layout/ManhattanLayout'
-import { createDiagramEdge } from '../api/diagramInterchange/edge';
 import { createElementUpdate } from '../../umlUtil';
 
 export default class CommentHandler {

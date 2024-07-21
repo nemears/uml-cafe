@@ -7,7 +7,7 @@ export default class ClassHandler {
     constructor(eventBus, modeling, umlWebClient, diagramContext, diagramEmitter, canvas) {
         eventBus.on('elementCreated', (event) => {
             const element = event.element;
-            if (element.modelElement.elementType() === 'class') {
+            if (element.modelElement.elementType() === 'Class') {
                 const classID = element.modelElement.id;
                 let clazz = umlWebClient.post('Class', {id:classID});
                 let owner = umlWebClient.getLocal(diagramContext.context.id);
@@ -32,7 +32,7 @@ export default class ClassHandler {
         });
         eventBus.on('elementDeleted', (event) => {
             const element = event.element;
-            if (element.modelElement.elementType() === 'class') {
+            if (element.modelElement.elementType() === 'Class') {
                 const doLater = async (element) => {
                     const modelElement = await umlWebClient.get(element.modelElement.id);
                     const owner = await modelElement.owner.get();
@@ -85,7 +85,7 @@ export default class ClassHandler {
             } 
         });**/
         eventBus.on('selection.changed', 1100, (context) => {
-            const selectedCompartments = context.newSelection.filter(el => el.elementType === 'compartment');
+            const selectedCompartments = context.newSelection.filter(el => el.elementType === 'UMLCompartment');
             for (const compartment of selectedCompartments) {
                 // remove compartment from selection
                 context.newSelection.splice(context.newSelection.indexOf(compartment), 1);

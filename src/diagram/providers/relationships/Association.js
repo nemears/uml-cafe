@@ -4,8 +4,6 @@ import { getMultiplicityText } from '../UMLRenderer';
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { getTextDimensions } from '../ClassDiagramPaletteProvider';
 import { placeEdgeLabel } from '../EdgeConnect';
-import { createAssociationEndLabel, createMultiplicityLabel, createNameLabel, updateLabel } from '../../api/diagramInterchange/label';
-import { deleteUmlDiagramElement } from '../../api/diagramInterchange/util';
 import { createAssociationNameLabel } from '../RelationshipEdgeCreator';
 import { translateDJLabelToUMLLabel } from '../../translations';
 
@@ -47,7 +45,7 @@ export default class Association extends RuleProvider {
                     modelElement: property,
                     labelTarget: context.connection,
                     parent: context.connection,
-                    elementType: 'associationEndLabel',
+                    elementType: 'UMLAssociationEndLabel',
                     text: property.name,
                     placement: placement,
                 });
@@ -257,7 +255,7 @@ export default class Association extends RuleProvider {
                     if (association.name === '') {
                         // check to make sure that there is no name label for us
                         for (const label of edge.labels) {
-                            if (label.elementType === 'nameLabel' && label.modelElement.id === association.id) {
+                            if (label.elementType === 'UMLNameLabel' && label.modelElement.id === association.id) {
                                 canvas.removeShape(label);
                                 deleteUmlDiagramElement(label.id, umlWebClient);
                                 edge.labels.splice(edge.labels.indexOf(label),1);
@@ -268,7 +266,7 @@ export default class Association extends RuleProvider {
                     } else {
                         let nameLabel;
                         for (const label of edge.labels) {
-                            if (label.elementType === 'nameLabel' && label.modelElement.id === association.id) {
+                            if (label.elementType === 'UMLNameLabel' && label.modelElement.id === association.id) {
                                 nameLabel = label;
                                 break;
                             }
@@ -351,7 +349,7 @@ export default class Association extends RuleProvider {
                 }
             }
 
-            if (elementType === 'multiplicityLabel') {
+            if (elementType === 'UMLMultiplicityLabel') {
                 const doLater = async () => {
                     // TODO should be easier when guarenteed lower and upper work
                     const lowerValue = await serverLabel.modelElement.lowerValue.get();
@@ -359,10 +357,10 @@ export default class Association extends RuleProvider {
                     if (!lowerValue || !upperValue) {
                         return;
                     }
-                    if (lowerValue.elementType() !== 'literalInt') {
+                    if (lowerValue.elementType() !== 'LiteralInt') {
                         return;
                     }
-                    if (upperValue.elementType() !== 'literalInt' || upperValue.elementType() !== 'literalUnlimitedNatural') {
+                    if (upperValue.elementType() !== 'LiteralInt' || upperValue.elementType() !== 'LiteralUnlimitedNatural') {
                         return;
                     }
                     const multiplicityText = lowerValue.value + '..' + upperValue.value;
@@ -463,10 +461,10 @@ class ShowMemberEndsHandler {
                     placeEdgeLabel(ret, edge);
                     canvas.addShape(ret, edge);
                     switch (labelType) {
-                        case 'associationEndLabel':
+                        case 'UMLAssociationEndLabel':
                             await createAssociationEndLabel(ret, umlWebClient, diagramContext);
                             break;
-                        case 'multiplicityLabel':
+                        case 'UMLMultiplicityLabel':
                             await createMultiplicityLabel(ret, umlWebClient, diagramContext);
                             break;
                         default:
@@ -478,7 +476,7 @@ class ShowMemberEndsHandler {
                 // determine if we need to update a the associationEndLabel associated with this property being updated
                 let associationEndLabel = undefined;
                 for (const label of edge.labels) {
-                    if (label.elementType === 'associationEndLabel' && label.modelElement.id === property.id) {
+                    if (label.elementType === 'UMLAssociationEndLabel' && label.modelElement.id === property.id) {
                         associationEndLabel = label;
                         break;
                     }
@@ -486,12 +484,12 @@ class ShowMemberEndsHandler {
                 
                 if (!associationEndLabel && property.name !== '') {
                     // create it since the name has been updated to not be empty
-                    context.associationEndLabel = await createPropertyLabelOfType('associationEndLabel', property.name);
+                    context.associationEndLabel = await createPropertyLabelOfType('UMLAssociationEndLabel', property.name);
                 }
 
                 let multiplicityLabel = undefined;
                 for (const label of edge.labels) {
-                    if (label.elementType === 'multiplicityLabel' && label.modelElement.id === property.id) {
+                    if (label.elementType === 'UMLMultiplicityLabel' && label.modelElement.id === property.id) {
                         multiplicityLabel = label;
                         break;
                     }
@@ -499,7 +497,7 @@ class ShowMemberEndsHandler {
 
                 if (!multiplicityLabel && (await isPropertyValidForMultiplicityLabel(property))) {
                     let multiplicityText = (await property.lowerValue.get()).value + '..' + (await property.upperValue.get()).value;
-                    context.multiplicityLabel = await createPropertyLabelOfType('multiplicityLabel', multiplicityText);
+                    context.multiplicityLabel = await createPropertyLabelOfType('UMLMultiplicityLabel', multiplicityText);
                 }
             }
         }
@@ -606,7 +604,9 @@ async function checkConnectionEnds(connection, graphicsFactory, canvas, diManage
         graphicsFactory.update('shape', label, canvas.getGraphics(label));
 
         // update it to server
-        await translateDJLabelToUMLLabel(label, await diManager.get(label.id), diManager, umlDiagram);
+        const umlLabel = await diManager.get(label.id); 
+        await translateDJLabelToUMLLabel(label, umlLabel, diManager, umlDiagram);
+        await diManager.put(umlLabel);
     }
 }
 

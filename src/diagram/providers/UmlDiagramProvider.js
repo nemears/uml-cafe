@@ -1,6 +1,8 @@
 import RuleProvider from "diagram-js/lib/features/rules/RuleProvider";
-import { isDiagram } from "../api/diagramInterchange/is";
-import { updateLabel  } from '../api/diagramInterchange/label';
+
+function isDiagram(type) {
+    return type === 'ClassDiagram';
+}
 
 export default class UmlDiagramProvider extends RuleProvider {
     constructor(eventBus, canvas, diagramContext, graphicsFactory, umlWebClient) {
@@ -20,7 +22,7 @@ export default class UmlDiagramProvider extends RuleProvider {
         });
         eventBus.on('resize.start', 1500, (context) => {
             const shape = context.shape;
-            if (isDiagram(shape.elementType)) {
+            if (isDiagram(shape.elementType)) { // TODO replace isDiagram
                 context.context.minBounds = this.getDiagramMinBounds(context.context.direction);
                 context.context.childrenBoxPadding = 25;
             }
