@@ -40,67 +40,19 @@ export default class ElementUpdate {
                             if (diagramElementIDs) {
                                 // element was deleted that is represented in this diagram
                                 for (const diagramElementID of diagramElementIDs) {
-                                    const diagramElement = elementRegistry.get(diagramElementID);
+                                    const diagramElement = await diManager.get(diagramElementID);
                                     eventBus.fire('server.delete', {
                                         element: diagramElement
                                     });
 
                                     await removeShapeAndEdgeFromServer(diagramElement, diManager);
                                 }
-                            }// else {
-                            //     const diagramElement = elementRegistry.get(oldElement.id);
-                            //     if (diagramElement) {
-                            //         // a shape was deleted
-                            //         eventBus.fire('server.delete', {
-                            //             element: diagramElement
-                            //         });
-                            //         // await removeShapeAndEdgeFromServer(diagramElement, umlWebClient);
-                            //     }
-                            // }
+                            }
                         } else {
-                            // update
-                            // if (newElement.is('InstanceSpecification')) {
-                            //     // could be a diagram element
-                            //     const serverElement = await diManager.get(oldElement.id);
-                            //     if (serverElement) {
-                            //         if (serverElement.modelElement) {
-                            //            await serverElement.modelElement.front();
-                            //         }
-                            //         const localElement = elementRegistry.get(oldElement.id);
-                            //         if (localElement) {
-                            //             eventBus.fire('server.update', {
-                            //                 localElement: localElement,
-                            //                 serverElement: serverElement,
-                            //             });
-                            //             eventBus.fire('elements.changed', {
-                            //                 elements: [localElement],
-                            //             });
-                            //         } else {
-                            //             console.warn('got update from server but element ' + oldElement.id + ' was not already being tracked!');
-                            //             // eventBus.fire('server.create', {
-                            //             //     serverElement: serverElement,
-                            //             // });
-                            //         }
-                            //     }
-                            // }
-                            
                             await updateDiagramElement(newElement, modelElementMap, elementRegistry, eventBus, diManager);
                         }
                     } else {
                         if (newElement) {
-                            // new
-                            // if (newElement.is('InstanceSpecification')) {
-                            //     const serverElement = await diManager.get(newElement.id);
-                            //     if (serverElement && newElement.owner.id() === diagramContext.diagram.id) {
-                            //         if (serverElement.modelElement) {
-                            //             await serverElement.modelElement.front();
-                            //         }
-                            //         eventBus.fire('server.create', {
-                            //             serverElement: serverElement,
-                            //         });
-                            //     }
-                            // }
-
                             await updateDiagramElement(newElement, modelElementMap, elementRegistry, eventBus, diManager);
                         }
                     }

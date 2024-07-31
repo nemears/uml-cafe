@@ -3,7 +3,7 @@ import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { getTextDimensions, getTypedElementText, LABEL_HEIGHT, PROPERTY_GAP } from './ClassDiagramPaletteProvider';
 import { CLASSIFIER_SHAPE_GAP_HEIGHT } from "./UmlCompartmentableShapeProvider";
-import { adjustShape } from "./UmlShapeProvider";
+import { translateDJElementToUMLDiagramElement, translateDJLabelToUMLLabel, translateDJSCompartmentableShapeToUmlCompartmentableShape } from "../translations";
 
 export const PROPERTY_COMPARTMENT_HEIGHT = 15;
 
@@ -28,7 +28,7 @@ export async function createProperty(property, clazzShape, umlWebClient, umlRend
         width: Math.round(dimensions.width) + 15,
         height: LABEL_HEIGHT,
         modelElement: property,
-        elementType: 'typedElementLabel',
+        elementType: 'UMLTypedElementLabel',
         labelTarget: compartment,
         parent: compartment,
         text: text,
@@ -48,7 +48,7 @@ export async function createProperty(property, clazzShape, umlWebClient, umlRend
 }
 
 class CreatePropertyHandler {
-    constructor(umlWebClient, umlRenderer, elementFactory, canvas, diagramContext, eventBus, diagramEmitter) {
+    constructor(umlWebClient, umlRenderer, elementFactory, canvas, diagramContext, eventBus, diagramEmitter, diManager) {
         this.umlWebClient = umlWebClient;
         this.umlRenderer = umlRenderer;
         this.elementFactory = elementFactory;
@@ -56,6 +56,7 @@ class CreatePropertyHandler {
         this.diagramContext = diagramContext;
         this.eventBus = eventBus;
         this.diagramEmitter = diagramEmitter;
+        this.diManager = diManager;
     }
 
     execute(context) {
@@ -63,6 +64,10 @@ class CreatePropertyHandler {
             delete context.proxy;
             return;
         }
+
+        const diManager = this.diManager,
+            diagramContext = this.diagramContext;
+
         const clazzShape = context.clazzShape;
         context.oldBounds = {
             x: clazzShape.x,
@@ -85,32 +90,21 @@ class CreatePropertyHandler {
                 property = this.umlWebClient.getLocal(property.id); // upate if it was deleted
                 await createProperty(property, clazzShape, this.umlWebClient, this.umlRenderer, this.elementFactory, this.canvas);
             } 
-            // first adjust shape
-            await adjustShape(clazzShape, await this.umlWebClient.get(clazzShape.id), this.umlWebClient);
-            
-            // adjust compartment, basically just adjusting UmlDiagramElement features
-            const compartmentInstance = await this.umlWebClient.get(compartment.id);
-            let ownedElementsSlot;
-            for await (const compartmentSlot of compartmentInstance.slots) {
-                if (compartmentSlot.definingFeature.id() === OWNED_ELEMENTS_SLOT_ID) {
-                    ownedElementsSlot = compartmentSlot;
-                }
-            }
-            if (!ownedElementsSlot) {
-                // create it
-                ownedElementsSlot = this.umlWebClient.post('slot');
-                ownedElementsSlot.definingFeature.set(OWNED_ELEMENTS_SLOT_ID);
-                this.umlWebClient.put(ownedElementsSlot);
-            }
 
             for (const property of context.properties) {
                 const propertyLabel = compartment.labels[compartment.labels.findIndex(el => el.modelElement.id === property.id)];
-
-                // finally add typedElementLabel
-                await createTypedElementLabel(propertyLabel, this.umlWebClient, this.diagramContext);
+                const umlPropertyLabel = diManager.post('UML DI.UMLTypedElementLabel', { id: propertyLabel.id });
+                await translateDJLabelToUMLLabel(propertyLabel, umlPropertyLabel, diManager, diagramContext.umlDiagram);
+                await diManager.put(umlPropertyLabel);
             }
 
-            this.umlWebClient.put(compartmentInstance);
+            const umlClazzShape = await diManager.get(clazzShape.id);
+            await translateDJSCompartmentableShapeToUmlCompartmentableShape(clazzShape, umlClazzShape, diManager, diagramContext.umlDiagram);
+            const umlCompartment = await diManager.get(compartment.id);
+            await translateDJElementToUMLDiagramElement(compartment, umlCompartment, diManager, diagramContext.umlDiagram);
+            await diManager.put(umlCompartment);
+            await diManager.put(umlClazzShape);
+
             this.eventBus.fire('compartmentableShape.resize', {
                 shape: clazzShape,
                 newBounds: clazzShape,
@@ -145,7 +139,10 @@ class CreatePropertyHandler {
                 compartment.labels.splice(labelIndex, 1);
             }
             this.canvas.removeShape(el);
-            deleteUmlDiagramElement(el.id, this.umlWebClient); //async
+            const doLater = async () => {
+                await this.diManager.delete(await this.diManager.get(el.id));
+            };
+            doLater();
         }
         this.eventBus.fire('compartmentableShape.resize', {
             shape: context.clazzShape,
@@ -161,36 +158,53 @@ class CreatePropertyHandler {
     }
 }
 
-CreatePropertyHandler.$inject = ['umlWebClient', 'umlRenderer', 'elementFactory', 'canvas', 'diagramContext', 'eventBus', 'diagramEmitter'];
+CreatePropertyHandler.$inject = [
+    'umlWebClient', 
+    'umlRenderer', 
+    'elementFactory', 
+    'canvas', 
+    'diagramContext', 
+    'eventBus', 
+    'diagramEmitter',
+    'diManager'
+];
 
 export default class Property extends RuleProvider {
-    constructor(eventBus, commandStack, graphicsFactory, canvas, umlWebClient) {
+    constructor(eventBus, commandStack, graphicsFactory, canvas, umlWebClient, diManager, diagramContext) {
         super(eventBus)
         commandStack.registerHandler('propertyLabel.create', CreatePropertyHandler);
         eventBus.on('server.update', (event) => {
-            if (event.serverElement.elementType() === 'typedElementLabel' && event.serverElement.modelElement.elementType() === 'property') {
-                const serverLabel = event.serverElement,
-                localLabel = event.localElement;
-                const doLater = async () => {
-                    const textSplit = localLabel.text.split(' : '); 
-                    if (serverLabel.modelElement.name != textSplit[0]) {
-                        // update name
-                        localLabel.text = serverLabel.modelElement.name + ' : ' + textSplit[1];
-                        updateLabel(localLabel, umlWebClient);
-                        graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
+            if (event.serverElement.elementType() === 'UMLTypedElementLabel') {
+                const modelElement = umlWebClient.getLocal(diManager.getLocal(event.serverElement.modelElement.ids().front()).modelElementID);
+                if (modelElement.is('Property')) {
+                    const serverLabel = event.serverElement,
+                    localLabel = event.localElement;
+                    const updateLabel = async () => {
+                        // this is a bit dubious
+                        await translateDJLabelToUMLLabel(localLabel, serverLabel, diManager, diagramContext.umlDiagram);
+                        await diManager.put(serverLabel);
+                    };
+                    const doLater = async () => {
+                        const textSplit = localLabel.text.split(' : '); 
+                        if (modelElement.name != textSplit[0]) {
+                            // update name
+                            localLabel.text = modelElement.name + ' : ' + textSplit[1];
+                            await updateLabel();        
+                            graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
+                        }
+                        if (modelElement.type.has() && (await modelElement.type.get()).name != textSplit[1]) {
+                            localLabel.text = modelElement.name + ' : ' + (await modelElement.type.get()).name;
+                            await updateLabel();
+                            graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
+                        }
                     }
-                    if (serverLabel.modelElement.type.has() && (await serverLabel.modelElement.type.get()).name != textSplit[1]) {
-                        localLabel.text = serverLabel.modelElement.name + ' : ' + (await serverLabel.modelElement.type.get()).name;
-                        updateLabel(localLabel, umlWebClient);
-                        graphicsFactory.update('shape', localLabel, canvas.getGraphics(localLabel));
-                    }
+                    doLater();
                 }
-                doLater();
             }
         });
         eventBus.on('uml.remove', (context) => {
-            if (context.element.modelElement && context.element.modelElement.elementType() === 'property') {
-                if (context.parent.elementType === 'compartment') {
+            if (context.element.modelElement && context.element.modelElement.elementType() === 'Property') {
+                if (context.parent.elementType === 'UMLCompartment') {
                     // TODO readjust compartment children
                     let yPos = context.parent.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
                     for (const child of context.parent.children) {
@@ -207,10 +221,9 @@ export default class Property extends RuleProvider {
         eventBus.on('uml.remove.undo', (context) => {
             const element = context.element,
             parentContext = context.parentContext;
-            if (element.parent.elementType === 'compartment') {
+            if (element.parent.elementType === 'UMLCompartment') {
                 // update compartment contents
                 let yPos = element.parent.y + CLASSIFIER_SHAPE_GAP_HEIGHT;
-                let adjust = false;
                 for (const child of parentContext.children) {
                     // adjust shape by shifting
                     child.y = yPos;
@@ -241,4 +254,12 @@ export default class Property extends RuleProvider {
     } 
 }
 
-Property.$inject = ['eventBus', 'commandStack', 'graphicsFactory', 'canvas', 'umlWebClient'];
+Property.$inject = [
+    'eventBus', 
+    'commandStack', 
+    'graphicsFactory', 
+    'canvas', 
+    'umlWebClient',
+    'diManager',
+    'diagramContext',
+];

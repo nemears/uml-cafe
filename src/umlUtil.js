@@ -174,7 +174,7 @@ export function getProjectLoginObject(wholeProjectName, serverAddress) {
     }
 }
 export function isTypedElement(elementType) {
-    return elementType === 'property';
+    return elementType === 'Property';
 }
 
 export class UmlCafeModule {

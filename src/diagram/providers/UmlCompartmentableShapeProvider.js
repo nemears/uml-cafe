@@ -316,6 +316,7 @@ export default class UmlCompartmentableShapeProvider {
                     compartments: [],
                 });
                 canvas.addShape(shape, owner);
+                modelElement.owner.get(); // async loading for future operations
             }
         });
 
@@ -342,9 +343,8 @@ export default class UmlCompartmentableShapeProvider {
         });
         
         eventBus.on('server.delete', (event) => {
-            const element = event.element,
-            elementType = element.elementType;
-            if (elementType === 'UMLCompartmentableShape' || elementType === 'UMLClassifierShape') {
+            const element = event.element;
+            if (element.is('UMLCompartmentableShape')) {
                 canvas.removeShape(element);
             }
         });

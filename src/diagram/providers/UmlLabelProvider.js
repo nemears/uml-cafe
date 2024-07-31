@@ -1,6 +1,14 @@
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
 import { translateDJLabelToUMLLabel } from '../translations';
 
+function isLabel(type) {
+    return type === 'UMLLabel' ||
+        type === 'UMLKeywordLabel' ||
+        type === 'UMLNameLabel' ||
+        type === 'UMLAssociationEndLabel' ||
+        type === 'UMLMultiplicityLabel';
+}
+
 export default class UmlLabelProvider extends RuleProvider {
     constructor(eventBus, elementRegistry, elementFactory, canvas, graphicsFactory, umlWebClient, diManager, diagramContext) {
         super(eventBus);
@@ -98,9 +106,8 @@ export default class UmlLabelProvider extends RuleProvider {
         });
 
         eventBus.on('server.delete', (event) => {
-            const element = event.element,
-            elementType = element.elementType;
-            if (isLabel(elementType)) { // TODO
+            const element = event.element;
+            if (element.is('UMLLabel')) { // TODO
                 canvas.removeShape(element);
             }
         });

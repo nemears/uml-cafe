@@ -1,9 +1,5 @@
 import { h } from "vue";
-import { getMid } from "diagram-js/lib/layout/LayoutUtil";
-import { connectRectangles } from "diagram-js/lib/layout/ManhattanLayout";
-import { randomID } from "uml-client/lib/types/element";
 import { createCommentClick } from "../../umlUtil";
-import { getTextDimensions } from './ClassDiagramPaletteProvider';
 import { isPropertyValidForMultiplicityLabel } from "./relationships/Association";
 
 export default class UmlContextMenu {
@@ -17,8 +13,6 @@ export default class UmlContextMenu {
         this._elementFactory = elementFactory;
         this._commandStack = commandStack;
         this._relationshipEdgeCreator = relationshipEdgeCreator;
-
-        commandStack.registerHandler('edgeCreation', EdgeCreationHandler);
 
         const me = this;
         
@@ -192,24 +186,27 @@ export default class UmlContextMenu {
                     label: 'Show All',
                     disabled: umlWebClient.readonly,
                     onClick: async () => {
+                        const edgesToCreate = [];
                         for await (const generalization of element.modelElement.generalizations) {
                             if (!modelElementMap.get(generalization.id)) {
-                                await drawGeneralization(element, generalization, commandStack);
+                                edgesToCreate.push(generalization);
                             }
                         }
                         for await (const dependency of element.modelElement.clientDependencies) {
                             if (!modelElementMap.get(dependency.id)) {
-                                await drawDependency(element, dependency, commandStack);
+                                edgesToCreate.push(dependency);
                             }
                         }
                         for (const association of associations) {
                             if (!modelElementMap.get(association.id)) {
-                                relationshipEdgeCreator.create({
-                                    elements: [association]
-                                });
+                                edgesToCreate.push(association);
                             }
                         }
-                    }
+                        relationshipEdgeCreator.create({
+                            elements: edgesToCreate,
+                            source: element
+                        });
+}
                 });
                 for await (const generalization of element.modelElement.generalizations) {
                     showRelationshipsOption.children.push({
@@ -219,7 +216,9 @@ export default class UmlContextMenu {
                         }),
                         disabled: umlWebClient.readonly || modelElementMap.get(generalization.id) !== undefined,
                         onClick: () => {
-                            drawGeneralization(element, generalization, commandStack);
+                            relationshipEdgeCreator.create({
+                                elements: [generalization]
+                            });
                         }
                     });
                 }
@@ -245,7 +244,9 @@ export default class UmlContextMenu {
                         }),
                         disabled: umlWebClient.readonly || modelElementMap.get(dependency.id) !== undefined,
                         onClick: () => {
-                            drawDependency(element, dependency, commandStack);
+                            relationshipEdgeCreator.create({
+                                elements: [dependency]
+                            });
                         }
                     });
                 }
@@ -329,127 +330,16 @@ export default class UmlContextMenu {
         diagramEmitter.fire('contextmenu', menu);
     }
 }
-UmlContextMenu.$inject = ['eventBus', 'diagramEmitter', 'umlWebClient', 'modelElementMap', 'directEditing', 'create', 'elementFactory', 'commandStack', 'canvas', 'relationshipEdgeCreator'];
 
-class EdgeCreationHandler {
-    constructor(modelElementMap, elementRegistry, diagramEmitter, elementFactory, canvas, umlWebClient, diagramContext) {
-        this._modelElementMap = modelElementMap;
-        this._elementRegistry = elementRegistry;
-        this._diagramEmitter = diagramEmitter;
-        this._elementFactory = elementFactory;
-        this._canvas = canvas;
-        this._umlWebClient = umlWebClient;
-        this._diagramContext = diagramContext;
-    }
-    execute(context) {
-        const modelElementMap = this._modelElementMap,
-        elementRegistry = this._elementRegistry,
-        elementFactory = this._elementFactory,
-        canvas = this._canvas,
-        umlWebClient = this._umlWebClient,
-        diagramContext = this._diagramContext,
-        diagramEmitter = this._diagramEmitter;
-        if (context.proxy) {
-            delete context.proxy;
-            context.source = elementRegistry.get(context.source.id);
-            const connections = [];
-            for (const connection of context.connections) {
-                connections.push(elementRegistry.get(connection.id));
-            }
-            context.connections = connections;
-            context.modelElement = umlWebClient.getLocal(context.modelElement);
-            return context.source;
-        }
-        const targetShapeIds = modelElementMap.get(context.targetID);
-        let oldConnections = context.connections;
-        if (!oldConnections) {
-            oldConnections = [];    
-        }
-        context.connections = [];
-        let index = 0;
-        for (const targetShapeID of targetShapeIds) {
-            const target = elementRegistry.get(targetShapeID);
-            if (target.inselectable) {
-                continue;
-            }
-            if (oldConnections.length <= index) {
-                oldConnections.push({id: randomID()});
-            }
-            const connection = elementFactory.createConnection(
-                {
-                    source: context.source,
-                    target: target,
-                    waypoints: connectRectangles(context.source, target, getMid(context.source), getMid(target)), 
-                    id: oldConnections[index].id,
-                    modelElement: context.modelElement,
-                    children: []
-                }
-            );
-            canvas.addConnection(connection, canvas.findRoot(target));
-            context.connections.push(connection);
-            createDiagramEdge(connection, umlWebClient, diagramContext); // async
-            index++;
-        }
-        const connections = [];
-        for (const connection of context.connections) {
-            connections.push(
-                {
-                    id: connection.id
-                }
-            )
-        }
-        diagramEmitter.fire('command', {name: 'edgeCreation', context: {
-            source: {
-                id: context.source.id
-            },
-            targetID: context.targetID,
-            modelElement: context.modelElement.id,
-            connections: connections,
-        }});
-        return context.connections;
-    }
-    revert(context) {
-        if (context.proxy) {
-            delete context.proxy;
-            return;
-        }
-        const canvas = this._canvas,
-        umlWebClient = this._umlWebClient,
-        diagramContext = this._diagramContext,
-        diagramEmitter = this._diagramEmitter;
-        diagramEmitter.fire('command', {undo: {
-            // TODO
-        }});
-        for (const connection of context.connections) {
-            deleteUmlDiagramElement(connection.id, umlWebClient, diagramContext);
-            canvas.removeConnection(connection);
-        }
-    }
-}
-
-EdgeCreationHandler.$inject = ['modelElementMap', 'elementRegistry', 'diagramEmitter', 'elementFactory', 'canvas', 'umlWebClient', 'diagramContext'];
-
-export function deleteModelElement(element, commandStack) {
-    commandStack.execute('deleteModelElement', {
-        elements: [{element: element}]
-    });
-    
-}
-
-async function drawGeneralization(element, generalization, commandStack) {
-    commandStack.execute('edgeCreation', {
-        targetID : generalization.general.id(),
-        source: element,
-        modelElement: generalization,
-        id: randomID(),
-    });
-}
-
-async function drawDependency(element, dependency, commandStack) {
-    commandStack.execute('edgeCreation', {
-        targetID : dependency.suppliers.ids().front(),
-        source: element,
-        modelElement: dependency,
-        id: randomID(),
-    });
-}
+UmlContextMenu.$inject = [
+    'eventBus', 
+    'diagramEmitter', 
+    'umlWebClient', 
+    'modelElementMap', 
+    'directEditing', 
+    'create', 
+    'elementFactory', 
+    'commandStack', 
+    'canvas', 
+    'relationshipEdgeCreator'
+];

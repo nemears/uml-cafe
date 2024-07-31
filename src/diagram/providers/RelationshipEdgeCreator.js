@@ -26,6 +26,7 @@ export default class RelationshipEdgeCreator {
         umlRenderer = this._umlRenderer,
         modelElementMap = this._modelElementMap;
         const elementsToCreate = [];
+        const sourceElement = context.source;
         for (const element of context.elements) {
             if (element.elementType() === 'Association') {
                 const association = element;
@@ -101,10 +102,67 @@ export default class RelationshipEdgeCreator {
                                 createEndLabels(end, 'target');
                             }
                         }
+
+                        if (sourceElement && target.id === sourceElement.id) {
+                            break;
+                        }
+                    }
+                    if (sourceElement && source.id === sourceElement.id) {
+                        break;
                     }
                 }
-
-                
+            } else if (element.elementType() === 'Generalization') {
+                const sources = modelElementMap.get(element.specific.id());
+                const targets = modelElementMap.get(element.general.id());
+                for (const sourceID of sources) {
+                    const sourceShape = elementRegistry.get(sourceID);
+                    if (sourceShape.elementType === 'UMLClassifierShape') {
+                        for (const targetID of targets) {
+                            const targetShape = elementRegistry.get(targetID);
+                            if (targetShape.elementType === 'UMLClassifierShape') {
+                                const generalizationEdge = elementFactory.createConnection({
+                                    id: randomID(),
+                                    source: sourceShape,
+                                    target: targetShape,
+                                    waypoints: connectRectangles(sourceShape, targetShape, getMid(sourceShape), getMid(targetShape)),
+                                    modelElement: element,
+                                    elementType: 'UMLEdge',
+                                    children: [],
+                                    numCenterLabels: 0,
+                                    numTargetLabels: 0,
+                                    numSourceLabels: 0,
+                                });
+                                elementsToCreate.push(generalizationEdge);
+                            }
+                        }
+                    }
+                }
+            } else if (element.is('Dependency')) {
+                const sources = modelElementMap.get(element.clients.ids().front());
+                const targets = modelElementMap.get(element.suppliers.ids().front());
+                for (const sourceID of sources) {
+                    const sourceShape = elementRegistry.get(sourceID);
+                    if (sourceShape.elementType === 'UMLClassifierShape') {
+                        for (const targetID of targets) {
+                            const targetShape = elementRegistry.get(targetID);
+                            if (targetShape.elementType === 'UMLClassifierShape') {
+                                const dependencyEdge =elementFactory.createConnection({
+                                    id: randomID(),
+                                    source: sourceShape,
+                                    target: targetShape,
+                                    waypoints: connectRectangles(sourceShape, targetShape, getMid(sourceShape), getMid(targetShape)),
+                                    modelElement: element,
+                                    elementType: 'UMLEdge',
+                                    children: [],
+                                    numCenterLabels: 0,
+                                    numTargetLabels: 0,
+                                    numSourceLabels: 0,
+                                });
+                                elementsToCreate.push(dependencyEdge);
+                            }
+                        }
+                    }
+                }
             } else {
                 throw Error('TODO modelElementEdgeCreator create ' + element.elementType() + '!');
             }

@@ -394,11 +394,10 @@ function canConnect(context) {
         if (!context.source.modelElement) {
             return false;
         }
-        if (!context.source.modelElement.isSubClassOf('classifier')) {
+        if (!context.source.modelElement.is('Classifier')) {
             return false;
         }
     }
-    return true;
 }
 
 Association.$inject = [

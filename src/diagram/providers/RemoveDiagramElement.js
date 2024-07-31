@@ -10,7 +10,7 @@ export default class RemoveDiagramElement {
 RemoveDiagramElement.$inject = ['commandStack'];
 
 class RemoveDiagramElementHandler {
-    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext, elementFactory, eventBus, diManager) {
+    constructor(canvas, umlWebClient, diagramEmitter, elementRegistry, diagramContext, elementFactory, eventBus, diManager, editorActions) {
         this._canvas = canvas;
         this._umlWebClient = umlWebClient;
         this._diagramEmitter = diagramEmitter;
@@ -19,14 +19,9 @@ class RemoveDiagramElementHandler {
         this._elementFactory = elementFactory;
         this._eventBus = eventBus;
         this._diManager = diManager;
-
-        eventBus.on('removeElement', (context) => {
-            this.removeElement(context.element, context);
-            diManager.put(diagramContext.umlDiagram);
-        });
-        eventBus.on('removeElement.undo', (context) => {
-            this.addElement(context.element, context.parent, context);
-            this.updateToServer(context.element, context);
+        
+        eventBus.on('editorActions.init', () => {
+            editorActions.unregister('removeSelection');
         });
     }
     async removeElement(diagramElement, context) {
@@ -63,8 +58,8 @@ class RemoveDiagramElementHandler {
             for (const edge of [...diagramElement.outgoing]) {
                 await this.removeElement(edge, context);
             }
-            await diManager.delete(await diManager.get(diagramElement.id));
             const parent = diagramElement.parent;
+            const umlDiagramElement = await diManager.get(diagramElement.id);
             if (diagramElement.labelTarget) {
                 if (diagramElement.placement === 'source') {
                     diagramElement.labelTarget.numSourceLabels -= 1;   
@@ -85,26 +80,16 @@ class RemoveDiagramElementHandler {
                 element: diagramElement,
                 parent: parent,
             });
+            await diManager.delete(umlDiagramElement);
         }
 
-        // delete modelElement if applicable
-        if (context.deleteModelElement) {
-            // for (const elementToRemove of context.elementsToRemove) {
-            //     await diManager.delete(await diManager.get(elementToRemove.id));
-            // }
-            const owner = await context.element.modelElement.owner.get();
-            await umlWebClient.deleteElement(context.element.modelElement);
-            diagramEmitter.fire('elementUpdate', deleteElementElementUpdate(context.element.modelElement));
-            if (owner) {
-                umlWebClient.put(owner);
-                diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
-            }
-        }
+
     }
     execute(context) {
         const diagramEmitter = this._diagramEmitter,
         elementRegistry = this._elementRegistry,
-        eventBus = this._eventBus;
+        diManager = this._diManager,
+        diagramContext = this._diagramContext;
         if (context.proxy) {
             delete context.proxy;
             return context.element;
@@ -148,8 +133,34 @@ class RemoveDiagramElementHandler {
             elementContext.elementContext[elementContext.parent.id] = {
                 children: elementContext.parent.children, // TODO incoming outgoing
             };
-            eventBus.fire('removeElement', elementContext);
+ 
+            // eventBus.fire('removeElement', elementContext);
         }
+        const doLater = async () => {
+            for (const elementContext of context.elements) {
+                const owner = elementContext.element.parent;
+                await this.removeElement(elementContext.element, elementContext);
+                if (!owner) {
+                    await diManager.put(diagramContext.umlDiagram);
+                } else {
+                    const umlOwner = await diManager.get(owner.id);
+                    await diManager.put(umlOwner);
+                }
+                
+                // delete modelElement if applicable
+                if (elementContext.deleteModelElement) {
+                    const owner = await elementContext.element.modelElement.owner.get();
+                    await this._umlWebClient.deleteElement(elementContext.element.modelElement);
+                    diagramEmitter.fire('elementUpdate', deleteElementElementUpdate(elementContext.element.modelElement));
+                    if (owner) {
+                        this._umlWebClient.put(owner);
+                        diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
+                    }
+                }
+
+            }
+        }
+        doLater();
 
         return context.elements.map((elContext) => elContext.element);
     }
@@ -206,9 +217,9 @@ class RemoveDiagramElementHandler {
                 break;
             }
             case 'UMLCompartment': {
-                const umlCompartment = diManager.post('UML DI.UMLCompartment', { id : element.id });
-                await translateDJElementToUMLDiagramElement(element, umlCompartment, diManager, diagramContext.umlDiagram);
-                await diManager.put(umlCompartment);
+                // const umlCompartment = diManager.post('UML DI.UMLCompartment', { id : element.id });
+                // await translateDJElementToUMLDiagramElement(element, umlCompartment, diManager, diagramContext.umlDiagram);
+                // await diManager.put(umlCompartment);
                 break;
             }
             case 'UMLEdge': {
@@ -263,6 +274,13 @@ class RemoveDiagramElementHandler {
         for (const child of element.children) {
             await this.updateToServer(child, context);
         }
+
+        // have to do this because translateCompartmentableElement function isn't perfect (think about ways to fix)
+        if (element.compartments) {
+            for (const compartment of element.compartments) {
+                await diManager.put(await diManager.get(compartment.id));
+            }
+        }
         if (!element.waypoints) {
             for (const edge of element.incoming) {
                 await this.updateToServer(edge, context);
@@ -271,6 +289,7 @@ class RemoveDiagramElementHandler {
                 await this.updateToServer(edge, context);
             }
         }
+        await diManager.put(diManager.getLocal(element.parent.id));
     }
 
     revert(context) {
@@ -286,28 +305,37 @@ class RemoveDiagramElementHandler {
         diagramEmitter.fire('command', {undo: {
             // TODO
         }});
-
-        const elementsToUpdate = [];
-        for (const elementContext of context.elements) {
-            if (elementContext.deleteModelElement) {
-                for (const rawData of Object.values(elementContext.rawData)) {
-                    const parseData = umlWebClient.parse(rawData);
-                    const remadeElement = parseData.newElement;
-                    elementsToUpdate.push(remadeElement);
-                }
-                const queue = [elementContext.element.modelElement];
-                while (queue.length > 0) {
-                    const front = queue.shift();
-                    umlWebClient.put(front);
-                    for (const ownedEl of front.ownedElements.unsafe()) {
-                        queue.push(ownedEl);
+        const doLater = async () => {
+            const elementsToUpdate = [];
+            for (const elementContext of context.elements) {
+                if (elementContext.deleteModelElement) {
+                    for (const rawData of Object.values(elementContext.rawData)) {
+                        const parseData = await umlWebClient.parse(rawData);
+                        const remadeElement = parseData.newElement;
+                        elementsToUpdate.push(remadeElement);
+                        if (remadeElement.id === elementContext.element.modelElement.id) {
+                            elementContext.element.modelElement = remadeElement;
+                        }
                     }
+                    const queue = [elementContext.element.modelElement];
+                    while (queue.length > 0) {
+                        const front = queue.shift();
+                        umlWebClient.put(front);
+                        for await (const ownedEl of front.ownedElements) {
+                            queue.push(ownedEl);
+                        }
+                    }
+                    umlWebClient.put(await elementContext.element.modelElement.owner.get());
                 }
-                umlWebClient.put(elementContext.element.modelElement.owner.unsafe());
+                this.addElement(elementContext.element, elementContext.parent, elementContext);
+                eventBus.fire('removeElement.undo', elementContext);
             }
-            eventBus.fire('removeElement.undo', elementContext);
+            diagramEmitter.fire('elementUpdate', createElementUpdate(...elementsToUpdate));
+            for (const elementContext of context.elements) {
+                await this.updateToServer(elementContext.element, elementContext);
+            }
         }
-        diagramEmitter.fire('elementUpdate', createElementUpdate(...elementsToUpdate));
+        doLater();
         return context.elements.map((elContext) => elContext.element);
     }
 }
@@ -321,4 +349,5 @@ RemoveDiagramElementHandler.$inject = [
     'elementFactory', 
     'eventBus',
     'diManager',
+    'editorActions'
 ];

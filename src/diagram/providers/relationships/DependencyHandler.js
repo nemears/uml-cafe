@@ -108,5 +108,4 @@ function canConnectHelper(context) {
         }
         return true;
     }
-    return false;
 } 

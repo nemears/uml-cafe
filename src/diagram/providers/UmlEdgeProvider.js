@@ -165,9 +165,8 @@ export default class UmlEdgeProvider {
         });
 
         eventBus.on('server.delete', (event) => {
-            const element = event.element,
-            elementType = element.elementType;
-            if (elementType === 'UMLEdge') {
+            const element = event.element;
+            if (element.is('UMLEdge')) {
                 canvas.removeShape(element);
             }
         });
