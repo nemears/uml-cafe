@@ -49,7 +49,7 @@
                 let upperValue = await el.upperValue.get();
                 const checkAndCreateLowerValue = () => {
                     if (!lowerValue) {
-                        lowerValue = this.$umlWebClient.post('literalInt');
+                        lowerValue = this.$umlWebClient.post('LiteralInt');
                         el.lowerValue.set(lowerValue);
                     }
                 };
@@ -60,7 +60,7 @@
                         upperValue = undefined;
                     }
                     if (!upperValue) {
-                        upperValue = this.$umlWebClient.post('literalInt');
+                        upperValue = this.$umlWebClient.post('LiteralInt');
                         el.upperValue.set(upperValue);
                     }
                     upperValue.value = 1;
@@ -72,7 +72,7 @@
                         upperValue = undefined;
                     }
                     if (!upperValue) {
-                        upperValue = await this.$umlWebClient.post('literalUnlimitedNatural');
+                        upperValue = await this.$umlWebClient.post('LiteralUnlimitedNatural');
                         el.upperValue.set(upperValue);
                     }
                     upperValue.value = '*';
