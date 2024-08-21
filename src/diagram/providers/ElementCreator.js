@@ -89,6 +89,7 @@ class ElementCreationHandler {
                     } else {
                         assignPosition(element);
                     }
+
                     canvas.addShape(element, context.target);
                     for (const compartment of element.compartments) {
                         compartment.x = element.x;

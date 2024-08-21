@@ -1062,12 +1062,14 @@ export default {
                     :creatable="{
                         types:[
                             'InstanceValue',
+                            'LiteralBool',
                             'LiteralInt', 
                             'LiteralNull', 
                             'LiteralReal', 
                             'LiteralString', 
                             'LiteralUnlimitedNatural'
-                        ], 
+                        ],
+                        set: 'values'
                     }"
                     :set-data="{
                                     setName: 'values',

@@ -254,7 +254,7 @@ export default {
                     label: 'Remove',
                     onClick: async () => {
                         const el = await this.$umlWebClient.get(this.umlID);
-                        el.sets[this.singletonData.setName].set(undefined);
+                        el.sets.get(this.singletonData.setName).set(undefined);
                         this.$umlWebClient.put(el);
                         this.$umlWebClient.put(await this.$umlWebClient.get(this.valID));
                         this.$emit('elementUpdate', createElementUpdate(el));

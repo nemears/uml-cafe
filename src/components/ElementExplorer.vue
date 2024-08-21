@@ -315,6 +315,15 @@ export default {
                     this.children.push(propertyID);
                 }
             }
+            if (el.is('Extension')) {
+                createOption.children.push({
+                    label: 'Create Extension End',
+                    disabled: this.$umlWebClient.readonly,
+                    onClick: () => {
+                        createAndAddToSet('ExtensionEnd', 'ownedEnd')
+                    }
+                });
+            }
             if (el.is('Enumeration')) {
                 for (const literalID of el.ownedLiterals.ids()) {
                     this.children.push(literalID);
@@ -347,28 +356,28 @@ export default {
                     label: 'Create Package',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('Package', 'packagedElements')
+                        createAndAddToSet('Package', 'packagedElements');
                     }
                 });
                 createOption.children.push({
                     label: 'Create Class',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('Class', 'packagedElements')
+                        createAndAddToSet('Class', 'packagedElements');
                     }
                 });
                 createOption.children.push({
                     label: 'Create Data Type',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('DataType', 'packagedElements')
+                        createAndAddToSet('DataType', 'packagedElements');
                     }
                 }); 
                 createOption.children.push({
                     label: 'Create Primitive Type',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('PrimitiveType', 'packagedElements')
+                        createAndAddToSet('PrimitiveType', 'packagedElements');
                     }
                 });
                 createOption.children.push({
@@ -382,21 +391,35 @@ export default {
                     label: 'Create Instance Specification',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('InstanceSpecification', 'packagedElements')
+                        createAndAddToSet('InstanceSpecification', 'packagedElements');
                     }
                 });
                 createOption.children.push({
                     label: 'Create Interface',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('Interface', 'packagedElements')
+                        createAndAddToSet('Interface', 'packagedElements');
                     }
                 });
                 createOption.children.push({
                     label: 'Create Signal',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('Signal', 'packagedElements')
+                        createAndAddToSet('Signal', 'packagedElements');
+                    }
+                });
+                createOption.children.push({
+                   label: 'Create Stereotype',
+                    disabled: this.$umlWebClient.readonly,
+                    onClick: () => {
+                        createAndAddToSet('Stereotype', 'ownedStereotypes');
+                    }
+                });
+                createOption.children.push({
+                    label: 'Create Extension',
+                    disabled: this.$umlWebClient.readonly,
+                    onClick: () => {
+                        createAndAddToSet('Extension', 'packagedElements');
                     }
                 });
             }
