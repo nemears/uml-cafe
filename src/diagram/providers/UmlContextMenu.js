@@ -119,6 +119,17 @@ export default class UmlContextMenu {
                 });
             }
         });
+        // styles
+        if (element.elementType === 'UMLClassifierShape') {
+            menu.items.push({
+                label: 'Edit Shape Properties',
+                disabled: umlWebClient.readonly,
+                onClick: () => {
+                    // TODO
+                    throw Error('TODO');
+                }
+            });
+        }
         menu.items.push({
             label: 'Create Comment',
             disabled: umlWebClient.readonly,
@@ -327,6 +338,7 @@ export default class UmlContextMenu {
 
             menu.items.push(showMemberEndsOption);
         }
+        menu.theme = 'flat';
         diagramEmitter.fire('contextmenu', menu);
     }
 }

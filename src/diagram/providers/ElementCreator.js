@@ -90,6 +90,8 @@ class ElementCreationHandler {
                         assignPosition(element);
                     }
 
+                    element.sharedStyle = diagramContext.umlDiagram.classifierShapeStyle.unsafe();
+
                     canvas.addShape(element, context.target);
                     for (const compartment of element.compartments) {
                         compartment.x = element.x;

@@ -283,7 +283,8 @@ export default {
             this.$contextmenu({
                 x: evt.x,
                 y: evt.y,
-                items: items
+                items: items,
+                theme: 'flat'
             });
         },
         select(modifier) {

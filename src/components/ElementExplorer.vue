@@ -214,7 +214,9 @@ export default {
             this.elementType = el.elementType();
             if (el.appliedStereotypes.size() > 0) {
                 for await (let stereotypeInst of el.appliedStereotypes) {
-                    if (stereotypeInst.classifiers.contains('Diagram_nuc1IC2Cavgoa4zMBlVq')) {
+                    if (stereotypeInst.classifiers.contains('Diagram_nuc1IC2Cavgoa4zMBlVq') || 
+                        stereotypeInst.classifiers.contains('6MxLNYJVEp8Cjd5vw_8pXlCxGcGg') // class diagram
+                    ) {
                         this.diagram = true;
                         this.image = classDiagramImage;
                     }
@@ -534,7 +536,8 @@ export default {
             this.$contextmenu({
                 x: evt.x,
                 y: evt.y,
-                items: this.options
+                items: this.options,
+                theme: 'flat'
             });
         },
         propogateSpecification(spec) {

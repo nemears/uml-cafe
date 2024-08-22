@@ -83,6 +83,9 @@ export default {
             await this.$umlCafeModule.initialization;
             const DIManager = new this.$umlCafeModule.module.UMLManager(diagramPackage, this.$umlWebClient);
             const umlDiagram = await DIManager.get(this.umlID);
+            const classifierShapeStyle = await umlDiagram.classifierShapeStyle.get();
+            await classifierShapeStyle.fillColor.get();
+            await classifierShapeStyle.fontColor.get();
             this.diagram = new Editor({
                 container: this.$refs.diagram,
                 umlWebClient: this.$umlWebClient,
