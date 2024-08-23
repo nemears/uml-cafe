@@ -1,7 +1,9 @@
 <script>
-import getImage from '../../GetUmlImage.vue';
+import DragArea from './DragArea.vue';
+import ElementPanel from './ElementPanel.vue';
 import CreationPopUp from './CreationPopUp.vue';
-import { createElementUpdate, mapColor, mapClientColor, getPanelClass } from '../../umlUtil.js';
+import { createElementUpdate } from '../../umlUtil.js';
+import { nullID } from 'uml-client/lib/types/element';
 export default {
     props: [
         'label', 
@@ -26,34 +28,12 @@ export default {
     ],
     data() {
         return {
-            img: undefined,
             valID: undefined,
-            valLabel: '',
-            drag: false,
-            badDrag: false,
             creationPopUp: false,
-            dragCounter: 0,
-            selected: false,
-            hover: false,
-            currentUsers: [],
         }
-    },
-    computed: {
-        panelClass() {
-            let computedPanelClass = getPanelClass(this.selected, this.hover, this.currentUsers || [], this.$umlWebClient, this.theme); 
-            computedPanelClass = computedPanelClass.replace('elementExplorerPanel', 'singletonElement');
-            let ret = {
-                singletonBadDrag : this.drag && this.badDrag,
-                singletonGoodDrag : this.drag,
-            };
-            ret[computedPanelClass] = true;
-            return ret;
-        },
     },
     mounted() {
-        if (this.initialData !== undefined) {
-            this.setData(this.initialData);
-        }
+        this.valID = this.initialData;
     },
     watch: {
         initialData(newInitialData) {
@@ -67,98 +47,26 @@ export default {
                 const newElement = update.newElement;
                 if (newElement) {
                     if (newElement.id === this.umlID) {
-                        const asyncSetData = async () => {
-                            const el = await newElement.sets.get(me.singletonData.setName).get();
-                            const currentUsers = this.getCurrentUsers(el);
-                            me.setData({
-                                img: getImage(el),
-                                id: el.id,
-                                label: el.name !== undefined ? el.name : '',
-                                currentUsers: currentUsers,
-                            });
-                        };
                         if (this.valID) {
-                            if (newElement.sets.get(this.singletonData.setName).id() !== this.valID) {
+                            const newID = newElement.sets.get(this.singletonData.setName).id();
+                            if (newID !== this.valID) {
                                 if (!newElement.sets.get(this.singletonData.setName).has()) {
-                                    this.setData({
-                                        id: undefined,
-                                        img: undefined,
-                                        label: undefined,
-                                    });
+                                    this.valID = nullID();
                                 } else {
-                                    asyncSetData();
+                                    this.valID = newID;
                                 }
                             }
                         } else {
                             if (newElement.sets.get(this.singletonData.setName).has()) {
-                                asyncSetData();
-                            }
-                        }
-                    }
-                    if (newElement.id === this.valID) {
-                        if (newElement.is('NamedElement')) {
-                            if (newElement.name !== this.valLabel) {
-                                this.valLabel = newElement.name;
+                                this.valID = newElement.sets.get(me.singletonData.setName).id();
                             }
                         }
                     }
                 } 
             }
-        },
-        selectedElements(newSelectedElements) {
-            if (this.valID) {
-                if (this.selected) {
-                    if (!newSelectedElements.includes(this.valID)) {
-                        this.selected = false;
-                    }
-                } else {
-                    if (newSelectedElements.includes(this.valID)) {
-                        this.selected = true;
-                    }
-                }
-            }
-        },
-        userSelected(newUserSelected) {
-            if (this.valID) {
-                if (newUserSelected.id === this.valID) {
-                    this.currentUsers.push(mapColor(newUserSelected.color))
-                }
-            }
-        },
-        userDeselected(newUserDeselcted) {
-            if (this.valID) {
-                for (const element of newUserDeselcted.elements) {
-                    if (element === this.valID && this.currentUsers.includes(mapColor(newUserDeselcted.color))) {
-                        this.currentUsers.splice(this.currentUsers.indexOf(mapColor(newUserDeselcted.color)), 1);
-                    }
-                }
-            }
         }
     },
     methods: {
-        setData(data) {
-            this.img = data.img;
-            this.valID = data.id;
-            this.valLabel = data.label;
-
-            // TODO some better handling for this, so that it is always lit up, rn has some weird states
-            if (this.valID && !this.currentUsers) {
-                this.currentUsers = this.getCurrentUsers({id:this.valID});
-            } else {
-                this.currentUsers = data.currentUsers;
-            }
-        },
-        getCurrentUsers(el) {
-            return Array.from(this.$umlWebClient.otherClients.values())
-                .filter((other_client) => other_client.selectedElements.has(el.id))
-                .map(other_client => mapClientColor(other_client.color));
-        },
-        async specification() {
-            if (this.valID === undefined) {
-                return;
-            }
-            this.$emit('specification', await this.$umlWebClient.get(this.valID));
-        },
         async drop(recentDragInfo) {
             const me = await this.$umlWebClient.get(this.umlID);
             const el = recentDragInfo.selectedElements[0];
@@ -171,17 +79,11 @@ export default {
             if (myOldOwner) {
                 owners.push(myOldOwner);
             }
-            me[this.singletonData.setName].set(el);
+            await me[this.singletonData.setName].set(el);
             this.$umlWebClient.put(me);
             this.$umlWebClient.put(el);
             this.$emit('elementUpdate', createElementUpdate(me, el, ...owners));
-            this.setData({
-                img: getImage(el),
-                id: el.id,
-                label: el.name !== undefined ? el.name : '' ,
-                currentUsers: [] // does this need to be calculated
-            });
-            this.selected = true;
+            this.valID = el.id;
         },
         createElement() {
             this.creationPopUp = true;
@@ -191,16 +93,11 @@ export default {
             if (el === undefined) {
                 return;
             }
-            this.setData({
-                img: getImage(el),
-                id: el.id,
-                label: el.name !== undefined ? el.name : '',
-                currentUsers: this.getCurrentUsers(el),
-            });
+            this.valID = el.id;
         },
-        onContextMenu(evt) {
-            //prevent the browser's default menu
-            evt.preventDefault();
+        onContextMenu(data) {
+            const evt = data.evt;
+            const val = data.el;
 
             // determine items
             let items = [];
@@ -217,7 +114,7 @@ export default {
                 items.push({
                     label: 'Specification',
                     onClick: async () => {
-                        this.$emit('specification', await this.$umlWebClient.get(this.valID));
+                        this.$emit('specification', val);
                     }
                 });
                 items.push({
@@ -226,25 +123,20 @@ export default {
                         const el = await this.$umlWebClient.get(this.umlID);
                         el.sets.get(this.singletonData.setName).set(undefined);
                         this.$umlWebClient.put(el);
-                        this.$umlWebClient.put(await this.$umlWebClient.get(this.valID));
+                        this.$umlWebClient.put(val);
                         this.$emit('elementUpdate', createElementUpdate(el));
-                        this.valID = undefined;
-                        this.img = undefined;
-                        this.valLabel = '';
- 
+                        this.valID = nullID();
                     }
                 });
                 items.push({
                     label: 'Delete',
                     onClick: async () => {
-                        const el = await this.$umlWebClient.get(this.valID);
+                        const el = val;
                         const owner = await el.owner.get();
                         this.$umlWebClient.deleteElement(el);
                         this.$emit('elementUpdate', createElementUpdate(owner));
                         this.$umlWebClient.put(owner);
-                        this.valID = undefined;
-                        this.img = undefined;
-                        this.valLabel = '';
+                        this.valID = nullID();
                     } 
                 });
             }
@@ -257,34 +149,17 @@ export default {
                 theme: 'flat'
             });
         },
-        select(modifier) {
-            if (this.valID) {
-                this.selected = !this.selected;
-                if (this.selected) {
-                    this.$emit('select', {
-                        el: this.valID,
-                        modifier: modifier,
-                    });
-                } else {
-                    this.$emit('deselect', {
-                        el: this.valID,
-                        modifier: modifier,
-                    });
-                }
-            }
+        propogateSpecification(el) {
+            this.$emit('specification', el);
         },
-        mouseEnter() {
-            if (!this.hover) {
-                this.hover = true;
-            }
+        propogateSelect(data) {
+            this.$emit('select', data);
         },
-        mouseLeave() {
-            if (this.hover) {
-                this.hover = false;
-            }
+        propogateDeselect(data) {
+            this.$emit('deselect', data);
         }
     },
-    components: { CreationPopUp }
+    components: { CreationPopUp, DragArea, ElementPanel }
 }
 </script>
 <template>
@@ -293,19 +168,13 @@ export default {
             {{ label }}
         </div>
         <DragArea :readonly="singletonData.readonly" :type="singletonData.type" :size="1" @drop="drop">
-            <div class="singletonElement" 
-                :class="panelClass"
-                @click.exact="select('none')"
-                @click.ctrl="select('ctrl')"
-                @click.shift="select('shift')"
-                @dblclick="specification"
-                @mouseenter="mouseEnter"
-                @mouseleave="mouseLeave"
-                @contextmenu="onContextMenu($event)">
-                <img v-bind:src="img" v-if="img !== undefined" />
-                <div>
-                    {{ valLabel }}
-                </div>
+            <ElementPanel :umlid="valID"
+                          :theme="theme"
+                          :selected-elements="selectedElements"
+                          @select="propogateSelect"
+                          @deselect="propogateDeselect"
+                          @specification="propogateSpecification"
+                          @menu="onContextMenu">
                 <div class="createButton" v-if="createable" @click="createElement">
                     +
                 </div>
@@ -315,7 +184,7 @@ export default {
                                 :umlid="umlID"
                                 :theme="theme"
                                 @closePopUp="closePopUp"></CreationPopUp>
-            </div>
+            </ElementPanel>
         </DragArea>
     </div>
 </template>
@@ -326,82 +195,6 @@ export default {
 }
 .singletonLabel {
     min-width: 200px;
-}
-.singletonElement {
-    width: 700px;
-    min-height: 30px;
-    display: flex;
-    padding-left: 5px;
-}
-.singletonElementDark {
-    background-color: var(--open-uml-selection-dark-1);
-}
-.singletonElementDarkHover {
-    background-color: var(--open-uml-selection-dark-2);
-}
-.singletonElementLight {
-    background-color: var(--uml-cafe-selection-light-1);
-    color: var(--vt-c-dark-dark);
-}
-.singletonElementLightHover {
-    background-color: var(--uml-cafe-selection-light-2);
-    color: var(--vt-c-dark-dark);
-}
-.redUserPanel {
-    background-color: var(--uml-cafe-red-user);
-}
-.redUserPanelLight {
-    background-color: var(--uml-cafe-red-user-light);
-}
-.blueUserPanel {
-    background-color: var(--uml-cafe-blue-user);
-}
-.blueUserPanelLight {
-    background-color: var(--uml-cafe-blue-user-light);
-}
-.greenUserPanel {
-    background-color: var(--uml-cafe-green-user);
-}
-.greenUserPanelLight {
-    background-color: var(--uml-cafe-green-user-light);
-}
-.yellowUserPanel {
-    background-color: var(--uml-cafe-yellow-user);
-}
-.yellowUserPanelLight {
-    background-color: var(--uml-cafe-yellow-user-light);
-}
-.magentaUserPanel {
-    background-color: var(--uml-cafe-magenta-user);
-}
-.magentaUserPanelLight {
-    background-color: var(--uml-cafe-magenta-user-light);
-}
-.orangeUserPanel {
-    background-color: var(--uml-cafe-orange-user);
-}
-.orangeUserPanelLight {
-    background-color: var(--uml-cafe-orange-user-light);
-}
-.cyanUserPanel {
-    background-color: var(--uml-cafe-cyan-user);
-}
-.cyanUserPanelLight {
-    background-color: var(--uml-cafe-cyan-user-light);
-}
-.limeUserPanel {
-    background-color: var(--uml-cafe-lime-user);
-}
-.limeUserPanelLight {
-    background-color: var(--uml-cafe-lime-user-light);
-}
-.singletonBadDrag {
-    border: 1px solid;
-    border-color: var(--uml-cafe-selected-error);
-}
-.singletonGoodDrag {
-    border: 1px solid;
-    border-color: var(--uml-cafe-selected-hover);
 }
 .createButton {
     margin-left: auto;

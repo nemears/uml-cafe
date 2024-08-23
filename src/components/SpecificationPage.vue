@@ -68,48 +68,33 @@ export default {
             this.elementImage = getImage(el);
             
             // helper lambdas
-            const reloadSingleton = async (elementTypeData, singleton, singletonName) => {
-                const singletonValue = await singleton.get();
-                if (singletonValue !== undefined) {
-                    elementTypeData[singletonName] = {
-                        img: getImage(singletonValue),
-                        label: singletonValue.name !== undefined ? singletonValue.name : '',
-                        id: singletonValue.id,
-                        currentUsers: this.users.filter(user => user.selectedElements.includes(singletonValue.id)),
-                    }
-                } else {
-                    elementTypeData[singletonName] = undefined;
-                }
+            const reloadSingleton = (elementTypeData, singleton, singletonName) => {
+                elementTypeData[singletonName] = singleton.id();
                 return elementTypeData;
             };
 
-            const reloadSet = async (elementTypeData, set, setName) => {
+            const reloadSet = (elementTypeData, set, setName) => {
                 elementTypeData[setName] = [];
-                for await (let element of set) {
+                for (const elID of set.ids()) {
                     elementTypeData[setName].push({
-                        img: getImage(element),
-                        label: await assignTabLabel(element),
-                        id: element.id,
-                        selected: this.selectedElements.includes(element.id),
-                        currentUsers: this.users.filter(user => user.selectedElements.includes(element.id)),
-                        hover: false,
+                        id: elID
                     });
                 }
                 return elementTypeData;
             };
 
-            await reloadSet(this.elementData, el.ownedElements, 'ownedElements');
-            await reloadSingleton(this.elementData, el.owner, 'owner');
-            await reloadSet(this.elementData, el.appliedStereotypes, 'appliedStereotypes');
-            await reloadSet(this.elementData, el.ownedComments, 'ownedComments');
+            reloadSet(this.elementData, el.ownedElements, 'ownedElements');
+            reloadSingleton(this.elementData, el.owner, 'owner');
+            reloadSet(this.elementData, el.appliedStereotypes, 'appliedStereotypes');
+            reloadSet(this.elementData, el.ownedComments, 'ownedComments');
             // TODO rest of ELEMENT
 
             if (el.is('NamedElement')) {
                 this.namedElementData = {
                     name: el.name
                 };
-                await reloadSingleton(this.namedElementData, el.namespace, 'namespace');
-                await reloadSet(this.namedElementData, el.clientDependencies, 'clientDependencies');
+                reloadSingleton(this.namedElementData, el.namespace, 'namespace');
+                reloadSet(this.namedElementData, el.clientDependencies, 'clientDependencies');
             } else {
                 this.namedElementData = undefined;
             }
@@ -117,39 +102,39 @@ export default {
             if (el.is('RedefinableElement')) {
                 this.redefinableElementData = {};
                 this.redefinableElementData.isLeaf = el.isLeaf;
-                await reloadSet(this.redefinableElementData, el.redefinedElements, 'redefinedElements');
-                await reloadSet(this.redefinableElementData, el.redefinitionContexts, 'redefinitionContexts');
+                reloadSet(this.redefinableElementData, el.redefinedElements, 'redefinedElements');
+                reloadSet(this.redefinableElementData, el.redefinitionContexts, 'redefinitionContexts');
             } else {
                 this.redefinableElementData = undefined;
             }
 
             if (el.is('Relationship')) {
                 this.relationshipData = {};
-                await reloadSet(this.relationshipData, el.relatedElements, 'relatedElements');
+                reloadSet(this.relationshipData, el.relatedElements, 'relatedElements');
             } else {
                 this.relationshipData = undefined;
             }
 
             if (el.is('DirectedRelationship')) {
                 this.directedRelationshipData = {};
-                await reloadSet(this.directedRelationshipData, el.targets, 'targets');
-                await reloadSet(this.directedRelationshipData, el.sources, 'sources');
+                reloadSet(this.directedRelationshipData, el.targets, 'targets');
+                reloadSet(this.directedRelationshipData, el.sources, 'sources');
             } else {
                 this.directedRelationshipData = undefined;
             }
 
             if (el.is('Generalization')) {
                 this.generalizationData = {};
-                await reloadSingleton(this.generalizationData, el.specific, 'specific');
-                await reloadSingleton(this.generalizationData, el.general, 'general');
+                reloadSingleton(this.generalizationData, el.specific, 'specific');
+                reloadSingleton(this.generalizationData, el.general, 'general');
             } else {
                 this.generalizationData = undefined;
             }
 
             if (el.is('Namespace')) {
                 this.namespaceData = {};
-                await reloadSet(this.namespaceData, el.members, 'members');
-                await reloadSet(this.namespaceData, el.ownedMembers, 'ownedMembers');
+                reloadSet(this.namespaceData, el.members, 'members');
+                reloadSet(this.namespaceData, el.ownedMembers, 'ownedMembers');
             } else {
                 this.namespaceData = undefined;
             }
@@ -163,14 +148,14 @@ export default {
 
             if (el.is('Enumeration')) {
                 this.enumerationData = {};
-                await reloadSet(this.enumerationData, el.ownedLiterals, 'ownedLiterals');
+                reloadSet(this.enumerationData, el.ownedLiterals, 'ownedLiterals');
             } else {
                 this.enumerationData = undefined;
             }
 
             if (el.is('EnumerationLiteral')) {
                 this.enumerationLiteralData = {};
-                await reloadSingleton(this.enumerationLiteralData, el.enumeration, 'enumeration');
+                reloadSingleton(this.enumerationLiteralData, el.enumeration, 'enumeration');
             } else {
                 this.enumerationLiteralData = undefined;
             }
@@ -219,23 +204,23 @@ export default {
 
             if (el.is('Dependency')) {
                 this.dependencyData = {};
-                await reloadSet(this.dependencyData, el.clients, 'clients');
-                await reloadSet(this.dependencyData, el.suppliers, 'suppliers');
+                reloadSet(this.dependencyData, el.clients, 'clients');
+                reloadSet(this.dependencyData, el.suppliers, 'suppliers');
             } else {
                 this.dependencyData = undefined;
             }
 
             if (el.is('Package')) {
                 this.packageData = {};
-                await reloadSet(this.packageData, el.packagedElements, 'packagedElements');
+                reloadSet(this.packageData, el.packagedElements, 'packagedElements');
             } else {
                 this.packageData = undefined;
             }
 
             if (el.is('InstanceSpecification')) {
                 this.instanceSpecificationData = {};
-                await reloadSet(this.instanceSpecificationData, el.classifiers, 'classifiers');
-                await reloadSet(this.instanceSpecificationData, el.slots, 'slots');
+                reloadSet(this.instanceSpecificationData, el.classifiers, 'classifiers');
+                reloadSet(this.instanceSpecificationData, el.slots, 'slots');
                 // TODO specifications
             } else {
                 this.instanceSpecificationData = undefined;
@@ -243,16 +228,16 @@ export default {
 
             if (el.is('InstanceValue')) {
                 this.instanceValueData = {};
-                await reloadSingleton(this.instanceValueData, el.instance, 'instance');                
+                reloadSingleton(this.instanceValueData, el.instance, 'instance');                
             } else {
                 this.instanceValueData = undefined;
             }
 
             if (el.is('Slot')) {
                 this.slotData = {};
-                await reloadSingleton(this.slotData, el.owningInstance, 'owningInstance');
-                await reloadSet(this.slotData, el.values, 'values');
-                await reloadSingleton(this.slotData, el.definingFeature, 'definingFeature');
+                reloadSingleton(this.slotData, el.owningInstance, 'owningInstance');
+                reloadSet(this.slotData, el.values, 'values');
+                reloadSingleton(this.slotData, el.definingFeature, 'definingFeature');
             } else {
                 this.slotData = undefined;
             }
@@ -270,52 +255,52 @@ export default {
             if (el.is('Property')) {
                 this.propertyData = {};
                 this.propertyData.aggregation = el.aggregation;
-                await reloadSingleton(this.propertyData, el.clazz, 'clazz');
-                await reloadSingleton(this.propertyData, el.dataType, 'dataType');
-                await reloadSingleton(this.propertyData, el.owningAssociation, 'owningAssociation');
-                await reloadSingleton(this.propertyData, el.association, 'association');
-                await reloadSingleton(this.propertyData, el.defaultValue, 'defaultValue');
-                await reloadSet(this.propertyData, el.subsettedProperties, 'subsettedProperties');
-                await reloadSet(this.propertyData, el.redefinedProperties, 'redefinedProperties');
+                reloadSingleton(this.propertyData, el.clazz, 'clazz');
+                reloadSingleton(this.propertyData, el.dataType, 'dataType');
+                reloadSingleton(this.propertyData, el.owningAssociation, 'owningAssociation');
+                reloadSingleton(this.propertyData, el.association, 'association');
+                reloadSingleton(this.propertyData, el.defaultValue, 'defaultValue');
+                reloadSet(this.propertyData, el.subsettedProperties, 'subsettedProperties');
+                reloadSet(this.propertyData, el.redefinedProperties, 'redefinedProperties');
             } else {
                 this.propertyData = undefined;
             }
 
             if (el.is('Classifier')) {
                 this.classifierData = {};
-                await reloadSet(this.classifierData, el.generalizations, 'generalizations');
-                await reloadSet(this.classifierData, el.features, 'features');
-                await reloadSet(this.classifierData, el.attributes, 'attributes');
+                reloadSet(this.classifierData, el.generalizations, 'generalizations');
+                reloadSet(this.classifierData, el.features, 'features');
+                reloadSet(this.classifierData, el.attributes, 'attributes');
             } else {
                 this.classifierData = undefined;
             }
 
             if (el.is('DataType')) {
                 this.dataTypeData = {};
-                await reloadSet(this.dataTypeData, el.ownedAttributes, 'ownedAttributes');
+                reloadSet(this.dataTypeData, el.ownedAttributes, 'ownedAttributes');
             } else {
                 this.dataTypeData = undefined;
             }
 
             if (el.is('StructuredClassifier')) {
                 this.structuredClassifierData = {};
-                await reloadSet(this.structuredClassifierData, el.ownedAttributes, 'ownedAttributes');
+                reloadSet(this.structuredClassifierData, el.ownedAttributes, 'ownedAttributes');
             } else {
                 this.structuredClassifierData = undefined;
             }
 
             if (el.is('Class')) {
                 this.classData = {};
-                await reloadSet(this.classData, el.ownedAttributes, 'ownedAttributes');
+                reloadSet(this.classData, el.ownedAttributes, 'ownedAttributes');
             } else {
                 this.classData = undefined;
             }
 
             if (el.is('Association')) {
                 this.associationData = {};
-                await reloadSet(this.associationData, el.memberEnds, 'memberEnds');
-                await reloadSet(this.associationData, el.ownedEnds, 'ownedEnds');
-                await reloadSet(this.associationData, el.navigableOwnedEnds, 'navigableOwnedEnds');
+                reloadSet(this.associationData, el.memberEnds, 'memberEnds');
+                reloadSet(this.associationData, el.ownedEnds, 'ownedEnds');
+                reloadSet(this.associationData, el.navigableOwnedEnds, 'navigableOwnedEnds');
             } else {
                 this.associationData = undefined;
             }
@@ -324,28 +309,28 @@ export default {
                 this.commentData = {
                     body: el.body
                 };
-                await reloadSet(this.commentData, el.annotatedElements, 'annotatedElements');
+                reloadSet(this.commentData, el.annotatedElements, 'annotatedElements');
             } else {
                 this.commentData = undefined;
             }
 
             if (el.is('Interface')) {
                 this.interfaceData = {};
-                await reloadSet(this.interfaceData, el.ownedAttributes, 'ownedAttributes');
+                reloadSet(this.interfaceData, el.ownedAttributes, 'ownedAttributes');
             } else {
                 this.interfaceData = undefined;
             }
 
             if (el.is('Signal')) {
                 this.signalData = {};
-                await reloadSet(this.signalData, el.ownedAttributes, 'ownedAttributes');
+                reloadSet(this.signalData, el.ownedAttributes, 'ownedAttributes');
             } else {
                 this.signalData = undefined;
             }
             if (el.is('Feature')) {
                 this.featureData = {};
                 this.featureData.isStatic = el.isStatic;
-                await reloadSingleton(this.featureData, el.featuringClassifier, 'featuringClassifier');
+                reloadSingleton(this.featureData, el.featuringClassifier, 'featuringClassifier');
             } else {
                 this.featureData = undefined;
             }

@@ -2,7 +2,9 @@
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
 import DragArea from './DragArea.vue';
-import { createElementUpdate, assignTabLabel, mapColor, getPanelClass } from '../../umlUtil.js';
+import ElementPanel from './ElementPanel.vue';
+import { createElementUpdate, assignTabLabel } from '../../umlUtil.js';
+import { nullID } from 'uml-client/lib/types/element';
 export default {
     props: [
         'label', 
@@ -24,12 +26,8 @@ export default {
         return {
             data: [],
             createPopUp: false,
-            drag: false,
-            badDrag: false,
             dummy: false,
-            emptyData: {
-                hover:false,
-            },
+            nullID: nullID(),
         };
     },
     mounted() {
@@ -39,7 +37,7 @@ export default {
         initialData(newInitialData) {
             this.data = newInitialData;
         },
-        async elementUpdate(newElementUpdate) {
+        elementUpdate(newElementUpdate) {
             for (const update of newElementUpdate.updatedElements) {
                 const newElement = update.newElement;
                 if (newElement) {
@@ -52,14 +50,8 @@ export default {
                         for (const elementID of newElement.sets.get(this.setData.setName).ids()) {
                             if (!this.data.find((el) => el.id === elementID)) {
                                 // add the data
-                                const element = await this.$umlWebClient.get(elementID);
                                 this.data.push({
                                     id: elementID,
-                                    label: element.name !== undefined ? element.name : '',
-                                    img: getImage(element),
-                                    selected: false,
-                                    currentUsers: [],
-                                    hover: false,
                                 });
                             }
                         }
@@ -71,71 +63,15 @@ export default {
                                 this.data = this.data.filter((el) => el.id !== existingID);
                             }
                         }
-                    } else {
-                        const foundData = this.data.find((el) => el.id === newElement.id);
-                        if (foundData) {
-                            foundData.label = await assignTabLabel(newElement);
-                        }
                     }
                 }
  
             }
-        },
-        selectedElements(newSelectedElements) {
-            for (const elData of this.data) {
-                if (elData.selected) {
-                    if (!newSelectedElements.includes(elData.id)) {
-                        elData.selected = false;
-                    }
-                } else {
-                    if (newSelectedElements.includes(elData.id)) {
-                        elData.selected = true;
-                    }
-                }
-            }
-        }, userSelected(newUserSelected) {
-            let reRender = false;
-            for (const elData of this.data) {
-                if (elData.id === newUserSelected.id) {
-                    elData.currentUsers.push(mapColor(newUserSelected.color));
-                    reRender = true;
-                }
-            }
-            if (reRender) {
-                this.dummy = !this.dummy; 
-            }
-        }, userDeselected(newUserDeselcted) {
-            let reRender = false;
-            for (const elData of this.data) {
-                for (const deselectedEl of newUserDeselcted.elements) {
-                    if (elData.id === deselectedEl && elData.currentUsers.includes(mapColor(newUserDeselcted.color))) {
-                        elData.currentUsers.splice(elData.currentUsers.indexOf(mapColor(newUserDeselcted.color)), 1);
-                        reRender = true;
-                        break;
-                    }
-                }
-            }
-            if (reRender) {
-                this.dummy = !this.dummy;
-            }
-        }
-    },
-    computed : {
-        blankPanelClass() {
-            return this.panelClass({
-                selected: false,
-                hover: this.emptyData.hover, 
-                currentUsers: []
-            });
         }
     },
     methods: {
-        panelClass(elementData) {
-            const ret = getPanelClass(elementData.selected, elementData.hover, elementData.currentUsers, this.$umlWebClient, this.theme).replace('elementExplorerPanel', 'setElement');
-            return ret;
-        },
-        async specification(id) {
-            this.$emit('specification', await this.$umlWebClient.get(id));
+        async propogateSpecification(el) {
+            this.$emit('specification', el);
         },
         createElement() {
             this.createPopUp = true;
@@ -174,9 +110,9 @@ export default {
             this.$umlWebClient.put(me);
             this.$emit('elementUpdate', createElementUpdate(me, ...recentDragInfo.selectedElements, ...oldOwners))
         },
-        async elementContextMenu(evt, el) {
-            evt.preventDefault();
-            
+        async elementContextMenu(data) {
+            const evt = data.evt;
+            const el = data.el;
             let items = [];
             let element = await this.$umlWebClient.get(el.id);
             items.push({
@@ -218,32 +154,14 @@ export default {
                 theme: 'flat'
             });
         },
-        select(element, modifier) {
-            this.selected = !this.selected;
-            if (this.selected) {
-                this.$emit('select', {
-                    el: element.id,
-                    modifier: modifier,
-                });
-            } else {
-                this.$emit('deselect', {
-                    el: element.id,
-                    modifier: modifier,
-                });
-            }
+        propogateSelect(data) {
+            this.$emit('select', data);
         },
-        mouseEnter(elementData) {
-            if (!elementData.hover) {
-                elementData.hover = true;
-            }
-        },
-        mouseLeave(elementData) {
-            if (elementData.hover) {
-                elementData.hover = false;
-            }
+        propogateDeselect(data) {
+            this.$emit('deselect', data);
         },
     },
-    components: { CreationPopUp, DragArea }
+    components: { CreationPopUp, DragArea, ElementPanel }
 }
 </script>
 <template>
@@ -252,36 +170,22 @@ export default {
             {{  label }}
         </div>
         <DragArea :readonly="setData.readonly" :type="setData.type" @drop="drop">
-            <div    class="setElement" 
-                    v-for="el in data" 
-                    :key="el.id" 
-                    :class="panelClass(el)"
-                    @click.exact="select(el, 'none')"
-                    @click.ctrl="select(el, 'ctrl')"
-                    @click.shift="select(el, 'shift')"
-                    @dblclick="specification(el.id)"
-                    @mouseenter="mouseEnter(el)"
-                    @mouseleave="mouseLeave(el)"
-                    @contextmenu="elementContextMenu($event, el)">
-                <img v-if="el.img !== undefined" :src="el.img"/>
-                <div>
-                    {{ el.label }}
-                </div>
-            </div>
+            <ElementPanel v-for="el in data"
+                          :key="el.id"
+                          :umlid="el.id"
+                          :theme="theme"
+                          :selected-elements="selectedElements"
+                          @specification="propogateSpecification"
+                          @select="propogateSelect"
+                          @deselect="propogateDeselect"
+                          @menu="elementContextMenu">
+            </ElementPanel>
             <div v-if="creatable || data.length === 0">
-                <div class="setElement" 
-                     :class="blankPanelClass"
-                     @mouseenter="mouseEnter(emptyData)"
-                     @mouseleave="mouseLeave(emptyData)"
-                     @dblclick="createElement">
+                <ElementPanel :umlid="nullID"
+                              :theme="theme"
+                              :selected-elements="selectedElements"
+                              @dblclick="createElement">
                     <div    class="createToolTip" 
-                            :class="{
-                                readOnlyToolTip : $umlWebClient.readonly,
-                                setElementDark : theme === 'dark' && !emptyData.hover,
-                                setElementLight : theme === 'light' && !emptyData.hover,
-                                setElementDarkHover : theme === 'dark' && emptyData.hover,
-                                setElementLightHover : theme === 'light' && emptyData.hover
-                            }"
                             v-if="creatable">
                         double click to create an element
                     </div>
@@ -291,7 +195,7 @@ export default {
                          @click="createElement">
                         +
                     </div>
-                </div>
+                </ElementPanel>
                 <CreationPopUp v-if="createPopUp && !$umlWebClient.readonly" 
                                :types="creatable.types" 
                                :set="creatable.set" 
@@ -309,74 +213,6 @@ export default {
 }
 .setLabel {
     min-width: 200px;
-}
-.setElement, .selectedSetElement{
-    width: 700px;
-    min-height: 30px;
-    display: flex;
-    padding-left: 5px;
-}
-.setElementDark {
-    background-color: var(--open-uml-selection-dark-1);
-}
-.setElementDarkHover {
-    background-color: var(--open-uml-selection-dark-2);
-}
-.setElementLight {
-    background-color: var(--uml-cafe-selection-light-1);
-    color: var(--vt-c-dark-dark);
-}
-.setElementLightHover {
-    background-color: var(--uml-cafe-selection-light-2);
-    color: var(--vt-c-dark-dark);
-}
-.redUserPanel {
-    background-color: var(--uml-cafe-red-user);
-}
-.redUserPanelLight {
-    background-color: var(--uml-cafe-red-user-light);
-}
-.blueUserPanel {
-    background-color: var(--uml-cafe-blue-user);
-}
-.blueUserPanelLight {
-    background-color: var(--uml-cafe-blue-user-light);
-}
-.greenUserPanel {
-    background-color: var(--uml-cafe-green-user);
-}
-.greenUserPanelLight {
-    background-color: var(--uml-cafe-green-user-light);
-}
-.yellowUserPanel {
-    background-color: var(--uml-cafe-yellow-user);
-}
-.yellowUserPanelLight {
-    background-color: var(--uml-cafe-yellow-user-light);
-}
-.magentaUserPanel {
-    background-color: var(--uml-cafe-magenta-user);
-}
-.magentaUserPanelLight {
-    background-color: var(--uml-cafe-magenta-user-light);
-}
-.orangeUserPanel {
-    background-color: var(--uml-cafe-orange-user);
-}
-.orangeUserPanelLight {
-    background-color: var(--uml-cafe-orange-user-light);
-}
-.cyanUserPanel {
-    background-color: var(--uml-cafe-cyan-user);
-}
-.cyanUserPanelLight {
-    background-color: var(--uml-cafe-cyan-user-light);
-}
-.limeUserPanel {
-    background-color: var(--uml-cafe-lime-user);
-}
-.limeUserPanelLight {
-    background-color: var(--uml-cafe-lime-user-light);
 }
 .createButton {
     margin-left: auto;
@@ -400,7 +236,7 @@ export default {
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
-    width: 700px;
+    /* width: 700px; */
 }
 .readOnlyToolTip {
     color: var(--vt-c-divider-dark-1);
