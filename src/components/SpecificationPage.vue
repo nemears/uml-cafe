@@ -99,17 +99,16 @@ export default {
             };
 
             await reloadSet(this.elementData, el.ownedElements, 'ownedElements');
-            reloadSingleton(this.elementData, el.owner, 'owner');
-            reloadSet(this.elementData, el.appliedStereotypes, 'appliedStereotypes');
+            await reloadSingleton(this.elementData, el.owner, 'owner');
+            await reloadSet(this.elementData, el.appliedStereotypes, 'appliedStereotypes');
             await reloadSet(this.elementData, el.ownedComments, 'ownedComments');
             // TODO rest of ELEMENT
-
 
             if (el.is('NamedElement')) {
                 this.namedElementData = {
                     name: el.name
                 };
-                reloadSingleton(this.namedElementData, el.namespace, 'namespace');
+                await reloadSingleton(this.namedElementData, el.namespace, 'namespace');
                 await reloadSet(this.namedElementData, el.clientDependencies, 'clientDependencies');
             } else {
                 this.namedElementData = undefined;

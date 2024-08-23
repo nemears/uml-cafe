@@ -1,6 +1,7 @@
 <script>
 import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
+import DragArea from './DragArea.vue';
 import { createElementUpdate, assignTabLabel, mapColor, getPanelClass } from '../../umlUtil.js';
 export default {
     props: [
@@ -15,7 +16,6 @@ export default {
     ],
     inject: [
         'elementUpdate',
-        'draginfo',
         'userSelected',
         'userDeselected'
     ],
@@ -26,8 +26,6 @@ export default {
             createPopUp: false,
             drag: false,
             badDrag: false,
-            recentDragInfo: undefined,
-            dragCounter: 0,
             dummy: false,
             emptyData: {
                 hover:false,
@@ -83,9 +81,7 @@ export default {
  
             }
         },
-        draginfo(newDragInfo) {
-            this.recentDragInfo = newDragInfo;
-        }, selectedElements(newSelectedElements) {
+        selectedElements(newSelectedElements) {
             for (const elData of this.data) {
                 if (elData.selected) {
                     if (!newSelectedElements.includes(elData.id)) {
@@ -158,34 +154,10 @@ export default {
             });
             this.$emit('elementUpdate', createElementUpdate(await this.$umlWebClient.get(this.umlid)));
         },
-        dragenter(event) {
-            event.preventDefault();
-            this.dragCounter++;
-            this.drag = true;
-            this.badDrag = this.setData.readonly || this.$umlWebClient.readonly;
-            if (!this.badDrag) {
-                for (const el of this.recentDragInfo.selectedElements) {
-                    if (!el.is(this.setData.type)) {
-                        this.badDrag = true;
-                        break;
-                    }
-                }
-            }
-        },
-        dragleave() {
-            this.dragCounter--;
-            if (this.dragCounter === 0) {
-                this.drag = false;
-            }
-        },
-        async drop() {
-            this.drag = false;
-            if (this.badDrag) {
-                return;
-            }    
+        async drop(recentDragInfo) {
             const me = await this.$umlWebClient.get(this.umlid);
             const oldOwners = [];
-            for (const element of this.recentDragInfo.selectedElements) {
+            for (const element of recentDragInfo.selectedElements) {
                 if (element.owner.has()) {
                     oldOwners.push(await element.owner.get());
                 }
@@ -200,7 +172,7 @@ export default {
                 this.$umlWebClient.put(element);
             }
             this.$umlWebClient.put(me);
-            this.$emit('elementUpdate', createElementUpdate(me, ...this.recentDragInfo.selectedElements, ...oldOwners))
+            this.$emit('elementUpdate', createElementUpdate(me, ...recentDragInfo.selectedElements, ...oldOwners))
         },
         async elementContextMenu(evt, el) {
             evt.preventDefault();
@@ -271,7 +243,7 @@ export default {
             }
         },
     },
-    components: { CreationPopUp }
+    components: { CreationPopUp, DragArea }
 }
 </script>
 <template>
@@ -279,11 +251,7 @@ export default {
         <div class="setLabel">
             {{  label }}
         </div>
-        <div :class="drag ? badDrag ? 'badDrag' : 'dragElement' : 'noDrag'"
-             @dragenter="dragenter"
-             @dragleave="dragleave"
-             @drop="drop($event)"
-             @dragover.prevent>
+        <DragArea :readonly="setData.readonly" :type="setData.type" @drop="drop">
             <div    class="setElement" 
                     v-for="el in data" 
                     :key="el.id" 
@@ -331,7 +299,7 @@ export default {
                                :theme="theme"
                                @closePopUp="closePopUp"></CreationPopUp>
             </div>
-        </div>
+        </DragArea>
     </div>
 </template>
 <style>
@@ -422,17 +390,6 @@ export default {
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
-}
-.noDrag {
-    border: none;
-}
-.dragElement {
-    border: 1px solid;
-    border-color: var(--uml-cafe-selected-hover);
-}
-.badDrag {
-    border: 1px solid;
-    border-color: var(--uml-cafe-selected-error);
 }
 .createButton:hover {
     background-color: var(--vt-c-off-white);

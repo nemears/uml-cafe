@@ -21,7 +21,6 @@ export default {
     ],
     inject: [
         'elementUpdate', 
-        'draginfo',
         'userSelected',
         'userDeselected'
     ],
@@ -34,7 +33,6 @@ export default {
             badDrag: false,
             creationPopUp: false,
             dragCounter: 0,
-            recentDragInfo: undefined,
             selected: false,
             hover: false,
             currentUsers: [],
@@ -107,9 +105,6 @@ export default {
                 } 
             }
         },
-        draginfo(newDragInfo) {
-            this.recentDragInfo = newDragInfo;
-        },
         selectedElements(newSelectedElements) {
             if (this.valID) {
                 if (this.selected) {
@@ -164,34 +159,9 @@ export default {
             }
             this.$emit('specification', await this.$umlWebClient.get(this.valID));
         },
-        dragenter() {
-            this.dragCounter++;
-            this.drag = true;
-            this.badDrag = this.singletonData.readonly || this.$umlWebClient.readonly;
-            if (!this.badDrag) {
-                if (this.recentDragInfo.selectedElements.length !== 1) {
-                    this.badDrag = true;
-                }
-                const el = this.recentDragInfo.selectedElements[0];
-                if (!el.is(this.singletonData.type)) {
-                    this.badDrag = true;
-                }
-            }
-        },
-        dragleave() {
-            this.dragCounter--;
-            if (this.dragCounter === 0) {
-                this.drag = false;
-                this.badDrag = false;
-            }
-        },
-        async drop() {
-            this.drag = false;
-            if (this.badDrag) {
-                return;
-            }    
+        async drop(recentDragInfo) {
             const me = await this.$umlWebClient.get(this.umlID);
-            const el = this.recentDragInfo.selectedElements[0];
+            const el = recentDragInfo.selectedElements[0];
             const owners = [];
             const oldOwner = await el.owner.get();
             if (oldOwner) {
@@ -322,33 +292,31 @@ export default {
         <div class="singletonLabel">
             {{ label }}
         </div>
-        <div class="singletonElement" 
-            :class="panelClass"
-            @click.exact="select('none')"
-            @click.ctrl="select('ctrl')"
-            @click.shift="select('shift')"
-            @dblclick="specification"
-            @dragenter="dragenter"
-            @dragleave="dragleave"
-            @drop="drop"
-            @dragover.prevent
-            @mouseenter="mouseEnter"
-            @mouseleave="mouseLeave"
-            @contextmenu="onContextMenu($event)">
-            <img v-bind:src="img" v-if="img !== undefined" />
-            <div>
-                {{ valLabel }}
+        <DragArea :readonly="singletonData.readonly" :type="singletonData.type" :size="1" @drop="drop">
+            <div class="singletonElement" 
+                :class="panelClass"
+                @click.exact="select('none')"
+                @click.ctrl="select('ctrl')"
+                @click.shift="select('shift')"
+                @dblclick="specification"
+                @mouseenter="mouseEnter"
+                @mouseleave="mouseLeave"
+                @contextmenu="onContextMenu($event)">
+                <img v-bind:src="img" v-if="img !== undefined" />
+                <div>
+                    {{ valLabel }}
+                </div>
+                <div class="createButton" v-if="createable" @click="createElement">
+                    +
+                </div>
+                <CreationPopUp  v-if="creationPopUp && !$umlWebClient.readonly" 
+                                :types="createable.types" 
+                                :set="singletonData.setName" 
+                                :umlid="umlID"
+                                :theme="theme"
+                                @closePopUp="closePopUp"></CreationPopUp>
             </div>
-            <div class="createButton" v-if="createable" @click="createElement">
-                +
-            </div>
-            <CreationPopUp  v-if="creationPopUp && !$umlWebClient.readonly" 
-                            :types="createable.types" 
-                            :set="singletonData.setName" 
-                            :umlid="umlID"
-                            :theme="theme"
-                            @closePopUp="closePopUp"></CreationPopUp>
-        </div>
+        </DragArea>
     </div>
 </template>
 <style>
