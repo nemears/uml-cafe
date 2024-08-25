@@ -411,6 +411,13 @@ export default {
                     }
                 });
                 createOption.children.push({
+                    label: 'Create Profile',
+                    disabled: this.$umlWebClient.readonly,
+                    onClick: ()=> {
+                        createAndAddToSet('Profile', 'packagedElements');
+                    }
+                });
+                createOption.children.push({
                    label: 'Create Stereotype',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {

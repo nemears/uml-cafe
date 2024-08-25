@@ -6,8 +6,8 @@ import SingletonData from './specComponents/SingletonData.vue';
 import InputData from './specComponents/InputData.vue';
 import EnumerationData from './specComponents/EnumerationData.vue';
 import MultiplicitySelector from './specComponents/MultiplicitySelector.vue';
-import { assignTabLabel } from '../umlUtil';
 import LiteralUnlimitedNaturalData from './specComponents/LiteralUnlimitedNaturalData.vue';
+import StereotypeApplicator from './specComponents/StereotypeApplicator.vue';
 export default {
     props: [
         'umlID', 
@@ -380,7 +380,16 @@ export default {
             }
         },
     },
-    components: { ElementType, SetData, SingletonData, InputData, EnumerationData, LiteralUnlimitedNaturalData, MultiplicitySelector }
+    components: { 
+        ElementType, 
+        SetData, 
+        SingletonData, 
+        InputData, 
+        EnumerationData, 
+        LiteralUnlimitedNaturalData, 
+        MultiplicitySelector, 
+        StereotypeApplicator 
+    }
 }
 </script>
 <template>
@@ -430,21 +439,15 @@ export default {
                         @select="propogateSelect"
                         @deselect="propogateDeselect"
                         ></SingletonData>
-        <SetData :label="'Applied Stereotypes'" 
-                 :initial-data="elementData.appliedStereotypes" 
-                 :umlid="umlID" 
-                 :selected-elements="selectedElements"
-                 :theme="theme"
-                 @specification="propogateSpecification"
-                 @select="propogateSelect"
-                 @deselect="propogateDeselect"
-                 :set-data="{
-                    readonly: false,
-                    setName: 'appliedStereotypes',
-                    type: 'InstanceSpecification'
-                 }"
-                 @element-update="propogateElementUpdate"
-                 ></SetData>
+        <StereotypeApplicator :umlid="umlID" 
+                              :initial-data="elementData.appliedStereotypes"
+                              :theme="theme" 
+                              :selected-elements="selectedElements"
+                              @specification="propogateSpecification"
+                              @element-update="propogateElementUpdate"
+                              @select="propogateSelect"
+                              @deselect="propogateDeselect">
+        </StereotypeApplicator>
         <SetData :label="'Owned Comments'" 
                  :initial-data="elementData.ownedComments" 
                  :umlid="umlID" 
