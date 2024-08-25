@@ -13,7 +13,8 @@
                 hover: false,
                 selected: false,
                 currentUsers: [],
-                dummy: false
+                dummy: false,
+                hidden: false
             }
         },
         async mounted() {
@@ -76,6 +77,13 @@
             async setData(id) {
                 if (id && id !== nullID()) {
                     const el = await this.$umlWebClient.get(this.umlid);
+                    for await (const appliedStereotype of el.appliedStereotypes) {
+                        for (const classifierID of appliedStereotype.classifiers.ids()) {
+                            if (classifierID === 'O6KKRb5g0f2Aidq2B8j8RZqkDWzy') { // hidden package
+                                this.hidden = true;
+                            }
+                        }
+                    }
                     this.img = getUmlImage(el);
                     this.label = await assignTabLabel(el);
                 } else {
@@ -130,7 +138,8 @@
     }
 </script>
 <template>
-    <div    class="setElement" 
+    <div    v-if="!hidden"
+            class="setElement" 
             :class="panelClass"
             @click.exact="select('none')"
             @click.ctrl="select('ctrl')"

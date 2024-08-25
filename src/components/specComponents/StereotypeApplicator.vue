@@ -12,8 +12,9 @@
                 nullID: nullID()
             }
         },
-        mounted() {
-            for (const el of this.initialData) {
+        async mounted() {
+            for (const id of this.initialData) {
+                const el = await this.$umlWebClient.get(id.id);
                 this.data.push({
                     id: el.classifiers.ids().front()
                 });

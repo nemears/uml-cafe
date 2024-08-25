@@ -53,7 +53,8 @@ export default {
             typedElementLabel: "",
             stereotypedLabel: [],
             propertyLabel: "",
-            generalizationLabel: ""
+            generalizationLabel: "",
+            hidden: false
         };
     },
     components: [
@@ -219,6 +220,10 @@ export default {
                     ) {
                         this.diagram = true;
                         this.image = classDiagramImage;
+                    }
+                    if (stereotypeInst.classifiers.contains('O6KKRb5g0f2Aidq2B8j8RZqkDWzy')) { // hidden package
+                        this.hidden = true;
+                        return;
                     }
                 }
             }
@@ -736,7 +741,7 @@ export default {
 }
 </script>
 <template>
-    <div class="elementExplorerBlock" v-if="!isFetching" :class="{notFirstBlock: depth !== 0}" draggable="false">
+    <div class="elementExplorerBlock" v-if="!isFetching && !hidden" :class="{notFirstBlock: depth !== 0}" draggable="false">
         <div draggable="true"
              class="elementExplorerPanel"
              :class="panelClass"
