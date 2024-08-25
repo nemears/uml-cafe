@@ -37,12 +37,6 @@ if (location.pathname != "/") {
         sessionStorage.setItem('user', loginObject.user);
         sessionStorage.setItem('password', loginObject.password);
         mountApp();
-
-        // preload uml api for later
-        const doLater = async () => {
-            await generate(await umlWebClient.get('UML_r67OnwwyTHCtCmWnZsd8ePh5'), umlWebClient);
-        };
-        doLater();
     }).catch((err) => {
         console.error(err);
         const errObj = JSON.parse(err);

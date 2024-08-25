@@ -624,6 +624,8 @@ export default {
                             }
                         }
                         this.stereotypedLabel = newStereotypeLabels;
+                    } else {
+                        this.stereotypedLabel = [];
                     }
                     if (newElement.elementType() === 'Property' && newElement.defaultValue.has()) {
                         const defaultValue = await newElement.defaultValue.get();

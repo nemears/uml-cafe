@@ -179,11 +179,15 @@ export function isTypedElement(elementType) {
 }
 
 export class UmlCafeModule {
+    // module = UML module
+    // metaClient = Manager based on Model
     constructor(umlClient) {
         const initializationPromise = async () => {
             await umlClient.initialization;
             const uml = await umlClient.get('UML_r67OnwwyTHCtCmWnZsd8ePh5');
             this.module = await generate(uml, umlClient);
+            const metaModule = await generate(await umlClient.head(), umlClient);
+            this.metaClient = new metaModule.ModelManager(await umlClient.get('YtPOIKBNW7KLXWz5DPHM9AQoz20u'));
         };
         this.initialization = initializationPromise();
     }
