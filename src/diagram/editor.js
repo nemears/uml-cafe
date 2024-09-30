@@ -74,8 +74,8 @@ export function Editor(options) {
     async head() {
       return await this.client.head();
     }
-    async deleteElement(el) {
-      await this.client.deleteElement(el);
+    async delete(el) {
+      await this.client.delete(el);
     }
     select(el) {
       this.client.select(el);

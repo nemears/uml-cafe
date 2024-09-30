@@ -47,7 +47,7 @@ export default {
                         const existingIDs = this.data.map((el) => el.id);
 
                         // check if we need to add children
-                        for (const elementID of newElement.sets.get(this.setData.setName).ids()) {
+                        for (const elementID of newElement[this.setData.setName].ids()) {
                             if (!this.data.find((el) => el.id === elementID)) {
                                 // add the data
                                 this.data.push({

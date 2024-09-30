@@ -150,7 +150,7 @@ class RemoveDiagramElementHandler {
                 // delete modelElement if applicable
                 if (elementContext.deleteModelElement) {
                     const owner = await elementContext.element.modelElement.owner.get();
-                    await this._umlWebClient.deleteElement(elementContext.element.modelElement);
+                    await this._umlWebClient.delete(elementContext.element.modelElement);
                     diagramEmitter.fire('elementUpdate', deleteElementElementUpdate(elementContext.element.modelElement));
                     if (owner) {
                         this._umlWebClient.put(owner);

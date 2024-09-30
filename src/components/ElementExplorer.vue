@@ -164,7 +164,7 @@ export default {
     methods: {
         async createElementAndAddToSet(id, type, set, parent) {
             const createdEl = await this.$umlWebClient.post(type, {id:id});
-            await parent.sets.get(set).add(createdEl);
+            await parent[set].add(createdEl);
             this.$umlWebClient.put(createdEl);
             this.$umlWebClient.put(parent);
             this.children.push(createdEl.id);
@@ -180,12 +180,12 @@ export default {
         async deleteElement(el) {
             const owner = await el.owner.get();
             this.$emit('elementUpdate', deleteElementElementUpdate(el));
-            await this.$umlWebClient.deleteElement(el);
+            await this.$umlWebClient.delete(el);
             this.$umlWebClient.put(owner);
             this.$emit('elementUpdate', createElementUpdate(owner));
         },
         async createNewClassDiagram(el, diagramID) {
-            const diagramPackage = await createUmlClassDiagram(diagramID, el, this.$umlWebClient);
+            const diagramPackage = await createUmlClassDiagram(diagramID, el, this.$umlWebClient, this.$umlCafeModule);
             this.expanded = true;
             this.children.push(diagramPackage.id);
             this.$emit('updateTree', {
