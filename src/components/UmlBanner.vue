@@ -43,7 +43,7 @@ export default {
             projectExplorerEnabled: false,
             recentProjects: undefined,
             userProjects: undefined,
-            isDark: true,
+            isDark: false,
         }
     },
     emits: [
@@ -809,7 +809,7 @@ hr {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: var(--uml-cafe-light-dark-2);
   -webkit-transition: .4s;
   transition: .4s;
   border-radius: 24px;
@@ -829,7 +829,7 @@ hr {
 }
 
 input:checked + .slider {
-  background-color: var(--uml-cafe-light-dark-2);
+  background-color: #ccc;
 }
 
 input:focus + .slider {
