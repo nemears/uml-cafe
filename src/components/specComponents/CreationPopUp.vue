@@ -2,17 +2,23 @@
 import CloseSymbol from '../../assets/icons/general/close_symbol.svg';
 import getImage from '../../GetUmlImage.vue';
 export default {
-    props: ['types', 'umlid', 'set', 'theme'],
+    props: ['type', 'umlid', 'setid', 'theme'],
     emits: ['closePopUp'],
     data() {
         return {
             closeSymbol: CloseSymbol,
+            types: [], 
             images: {}
         }
     },
     mounted() {
-        for (let type of this.types) {
-            this.images[type] = getImage(type);
+        for (const type of this.$umlWebClient._types) {
+            if (type.is(this.type)) {
+                this.types.push({
+                    type: type.elementType(),
+                    image: getImage(type.elementType())
+                });
+            }
         }
     },
     methods: {
@@ -22,7 +28,7 @@ export default {
         async createElement(elementType) {
             const elCreated = await this.$umlWebClient.post(elementType);
             const contextEl = await this.$umlWebClient.get(this.umlid);
-            await contextEl[this.set].add(elCreated);
+            await contextEl.typeInfo.getSet(this.setid).add(elCreated);
             this.$umlWebClient.put(contextEl);
             this.$umlWebClient.put(elCreated);
             this.$emit('closePopUp', elCreated);
@@ -49,11 +55,11 @@ export default {
                         optionDark : theme === 'dark',
                     }"
                     v-for="elementType in types" 
-                    :key="elementType" 
-                    @dblclick="createElement(elementType)">
-                <img v-bind:src="images[elementType]"/>
+                    :key="elementType.id" 
+                    @dblclick="createElement(elementType.type)">
+                <img v-bind:src="elementType.image"/>
                 <div style="padding-left:5px" class="notEditable">
-                    {{ elementType }}
+                    {{ elementType.type }}
                 </div>
             </div>
         </div>

@@ -6,7 +6,6 @@ import { createElementUpdate } from '../../umlUtil.js';
 import { nullID } from 'uml-client/lib/types/element';
 export default {
     props: [
-        'label', 
         'umlID', 
         'initialData', 
         'readonly', 
@@ -42,23 +41,23 @@ export default {
             }
         },
         elementUpdate(newElementUpdate) {
-            const me = this;
             for (const update of newElementUpdate.updatedElements) {
                 const newElement = update.newElement;
                 if (newElement) {
+                    const newElementSingleton = newElement.typeInfo.getSet(this.singletonData.id);
                     if (newElement.id === this.umlID) {
                         if (this.valID) {
-                            const newID = newElement.sets.get(this.singletonData.setName).id();
+                            const newID = newElementSingleton.id();
                             if (newID !== this.valID) {
-                                if (!newElement.sets.get(this.singletonData.setName).has()) {
+                                if (!newElementSingleton.has()) {
                                     this.valID = nullID();
                                 } else {
                                     this.valID = newID;
                                 }
                             }
                         } else {
-                            if (newElement.sets.get(this.singletonData.setName).has()) {
-                                this.valID = newElement.sets.get(me.singletonData.setName).id();
+                            if (newElementSingleton.has()) {
+                                this.valID = newElementSingleton.id();
                             }
                         }
                     }
@@ -165,7 +164,7 @@ export default {
 <template>
     <div class="singletonDiv">
         <div class="singletonLabel">
-            {{ label }}
+            {{ singletonData.name }}
         </div>
         <DragArea :readonly="singletonData.readonly" :type="singletonData.type" :size="1" @drop="drop">
             <ElementPanel :umlid="valID"
@@ -175,12 +174,14 @@ export default {
                           @deselect="propogateDeselect"
                           @specification="propogateSpecification"
                           @menu="onContextMenu">
-                <div class="createButton" v-if="createable" @click="createElement">
+                <div    class="createButton" 
+                        v-if="singletonData.composition === 'composite' && !singletonData.readonly" 
+                        @click="createElement">
                     +
                 </div>
                 <CreationPopUp  v-if="creationPopUp && !$umlWebClient.readonly" 
-                                :types="createable.types" 
-                                :set="singletonData.setName" 
+                                :type="singletonData.type" 
+                                :setid="singletonData.id" 
                                 :umlid="umlID"
                                 :theme="theme"
                                 @closePopUp="closePopUp"></CreationPopUp>

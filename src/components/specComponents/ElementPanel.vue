@@ -92,12 +92,12 @@
                 } 
             },
             async specification() {
-                if (this.umlid && !this.umlid !== nullID()) {
+                if (this.umlid && this.umlid !== nullID()) {
                     this.$emit('specification', await this.$umlWebClient.get(this.umlid));
                 }
             },
             select(modifier) {
-                if (this.umlid && this.umlid === nullID()) {
+                if (!this.umlid || this.umlid === nullID()) {
                     return;
                 }
                 this.selected = !this.selected;

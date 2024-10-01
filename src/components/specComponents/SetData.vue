@@ -7,10 +7,8 @@ import { createElementUpdate, assignTabLabel } from '../../umlUtil.js';
 import { nullID } from 'uml-client/lib/types/element';
 export default {
     props: [
-        'label', 
         'initialData', 
         'umlid', 
-        'subsets', 
         'creatable', 
         'setData',
         'selectedElements',
@@ -42,25 +40,24 @@ export default {
                 const newElement = update.newElement;
                 if (newElement) {
                     // check that the new element is us
+                    const newElementSet = newElement.typeInfo.getSet(this.setData.id); 
                     if (newElement.id === this.umlid) {
                         // keep track of original children
                         const existingIDs = this.data.map((el) => el.id);
 
                         // check if we need to add children
-                        for (const elementID of newElement[this.setData.setName].ids()) {
-                            if (!this.data.find((el) => el.id === elementID)) {
+                        for (const elementID of newElementSet.ids()) {
+                            if (!this.data.find((el) => el === elementID)) {
                                 // add the data
-                                this.data.push({
-                                    id: elementID,
-                                });
+                                this.data.push(elementID);
                             }
                         }
 
                         // check if we need remove an element
                         for (const existingID of existingIDs) {
-                            if (!newElement.sets.get(this.setData.setName).contains(existingID)) {
+                            if (!newElementSet.contains(existingID)) {
                                 // remove the element
-                                this.data = this.data.filter((el) => el.id !== existingID);
+                                this.data = this.data.filter((el) => el !== existingID);
                             }
                         }
                     }
@@ -81,13 +78,7 @@ export default {
             if (element === undefined) {
                 return;
             }
-            this.data.push({
-                img: getImage(element),
-                id: element.id,
-                label: await assignTabLabel(element),
-                selected: false,
-                currentUsers: [],
-            });
+            this.data.push(element.id);
             this.$emit('elementUpdate', createElementUpdate(await this.$umlWebClient.get(this.umlid)));
         },
         async drop(recentDragInfo) {
@@ -97,7 +88,7 @@ export default {
                 if (element.owner.has()) {
                     oldOwners.push(await element.owner.get());
                 }
-                me[this.setData.setName].add(element);
+                await me.typeInfo.getSet(this.setData.id).add(element);
                 this.data.push({
                     img: getImage(element),
                     id: element.id,
@@ -127,7 +118,7 @@ export default {
                     label: 'Remove',
                     onClick: async () => {
                         const owner = await this.$umlWebClient.get(this.umlid);
-                        owner.sets.get(this.setData.setName).remove(element);
+                        owner.typeInfo.getSet(this.setData.id).remove(element);
                         this.$umlWebClient.put(owner);
                         this.$umlWebClient.put(element);
                         this.$emit('elementUpdate', createElementUpdate(owner));
@@ -167,12 +158,12 @@ export default {
 <template>
     <div class="setInputContainer">
         <div class="setLabel">
-            {{  label }}
+            {{  setData.name }}
         </div>
         <DragArea :readonly="setData.readonly" :type="setData.type" @drop="drop">
             <ElementPanel v-for="el in data"
-                          :key="el.id"
-                          :umlid="el.id"
+                          :key="el"
+                          :umlid="el"
                           :theme="theme"
                           :selected-elements="selectedElements"
                           @specification="propogateSpecification"
@@ -180,25 +171,25 @@ export default {
                           @deselect="propogateDeselect"
                           @menu="elementContextMenu">
             </ElementPanel>
-            <div v-if="creatable || data.length === 0">
+            <div v-if="(setData.composition === 'composite' && !setData.readonly) || data.length === 0">
                 <ElementPanel :umlid="nullID"
                               :theme="theme"
                               :selected-elements="selectedElements"
                               @dblclick="createElement">
                     <div    class="createToolTip" 
-                            v-if="creatable">
+                            v-if="setData.composition === 'composite' && !setData.readonly">
                         double click to create an element
                     </div>
                     <div class="createButton" 
                          :class="{ readOnlyButton : $umlWebClient.readonly}" 
-                         v-if="creatable" 
+                         v-if="setData.composition === 'composite' && !setData.readonly" 
                          @click="createElement">
                         +
                     </div>
                 </ElementPanel>
                 <CreationPopUp v-if="createPopUp && !$umlWebClient.readonly" 
-                               :types="creatable.types" 
-                               :set="creatable.set" 
+                               :type="setData.type" 
+                               :setid="setData.id" 
                                :umlid="umlid"
                                :theme="theme"
                                @closePopUp="closePopUp"></CreationPopUp>
