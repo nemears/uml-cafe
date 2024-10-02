@@ -240,9 +240,15 @@ export default {
             } 
             if (metaFilter && (metaFilter.enabled || allFilter.enabled)) {
                 populateKernelTypes = false;
-                const metaEl = await this.$umlCafeModule.metaClient.get(this.umlID);
-                this.elementType = metaEl.elementType();
-                await fillData(metaEl, metaEl.typeInfo);
+                try {
+                    const metaEl = await this.$umlCafeModule.metaClient.get(this.umlID);
+                    this.elementType = metaEl.elementType();
+                    await fillData(metaEl, metaEl.typeInfo);
+                } catch (exception) {
+                    this.filters.pop();
+                    this.filters.pop();
+                    this.filters[0].enabled = true;
+                }
             }
 
             this.isFetching = false;
@@ -324,6 +330,9 @@ export default {
             </h1>
             <img v-bind:src="elementImage" v-if="elementImage !== undefined" class="headerImage"/>
         </div>
+        <div style="color: gray;">
+            Filters:
+        </div>
         <div style="display:flex;margin-bottom:15px;">
             <div    v-for="elFilter in filters"
                     :key="elFilter.name"
@@ -360,7 +369,8 @@ export default {
                 </EnumerationData>
                 <MultiplicitySelector   v-if="specialData.type === 'multiplicity'"
                                         :umlid="umlID"
-                                        :theme="theme"/>
+                                        :theme="theme"
+                                        @element-update="propogateElementUpdate"/>
                 <LiteralUnlimitedNaturalData    v-if="specialData.type === 'unlimitedNatural'"
                                                 :umlid="umlID"
                                                 :initial-data="specialData.val"
@@ -400,8 +410,7 @@ export default {
                                         @specification="propogateSpecification"
                                         @element-update="propogateElementUpdate"
                                         @select="propogateSelect"
-                                        @deselect="propogateDeselect"
-                                        >
+                                        @deselect="propogateDeselect">
                 </StereotypeApplicator>
             </div>
         </ElementType>
