@@ -25,6 +25,11 @@ export async function translateDJElementToUMLDiagramElement(djElement, umlElemen
             await diManager.put(modelElement);
         }
     }
+    if (djElement.sharedStyle) {
+        if (!umlElement.sharedStyle.has()) {
+            await umlElement.sharedStyle.set(djElement.sharedStyle);
+        }
+    }
 }
 
 export async function translateDJShapeToUMLShape(djShape, umlShape, diManager, umlDiagram) {

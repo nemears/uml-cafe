@@ -3,7 +3,19 @@ import { createCommentClick } from "../../umlUtil";
 import { isPropertyValidForMultiplicityLabel } from "./relationships/Association";
 
 export default class UmlContextMenu {
-    constructor(eventBus, diagramEmitter, umlWebClient, modelElementMap, directEditing, create, elementFactory, commandStack, canvas, relationshipEdgeCreator) {    
+    constructor(
+        eventBus, 
+        diagramEmitter, 
+        umlWebClient, 
+        modelElementMap, 
+        directEditing, 
+        create, 
+        elementFactory, 
+        commandStack, 
+        canvas, 
+        relationshipEdgeCreator,
+        diManager
+    ) {
         this._eventBus = eventBus;
         this._diagramEmitter = diagramEmitter;
         this._umlWebClient = umlWebClient;
@@ -13,6 +25,7 @@ export default class UmlContextMenu {
         this._elementFactory = elementFactory;
         this._commandStack = commandStack;
         this._relationshipEdgeCreator = relationshipEdgeCreator;
+        this._diManager = diManager;
 
         const me = this;
         
@@ -122,10 +135,53 @@ export default class UmlContextMenu {
         // styles
         if (element.elementType === 'UMLClassifierShape') {
             menu.items.push({
-                label: 'Edit Shape Properties',
+                label: 'Customize Shape',
                 disabled: umlWebClient.readonly,
-                onClick: () => {
+                onClick: async () => {
                     // TODO
+                    const diManager = this._diManager;
+                    const diElement = await diManager.get(element.id);
+                    
+                    // check for a local style, if not create one by copying the shared style
+                    if (!diElement.localStyle.has()) {
+                        const sharedStyle = await diElement.sharedStyle.get();
+                        const newStyle = diManager.post('Diagram Interchange.Style');
+                        
+                        const copyColor = (color) => {
+                            const newColor = diManager.post('Diagram Common.Color');
+                            newColor.blue = color.blue;
+                            newColor.red = color.red;
+                            newColor.green = color.green;
+                            return newColor;
+                        };
+                        // fill color
+                        const newFillColor = copyColor(await sharedStyle.fillColor.get());
+                        await newStyle.fillColor.set(newFillColor);
+                        newStyle.fillOpacity = sharedStyle.fillOpacity;
+                        const newStrokeColor = copyColor(await sharedStyle.strokeColor.get());
+                        await newStyle.strokeColor.set(newStrokeColor);
+                        newStyle.strokeWidth = sharedStyle.strokeWidth;
+                        newStyle.strokeOpacity = sharedStyle.strokeOpacity;
+                        newStyle.strokeDashLength = sharedStyle.strokeDashLength;
+                        const newFontColor = copyColor(await sharedStyle.fontColor.get());
+                        await newStyle.fontColor.set(newFontColor);
+                        newStyle.fontSize = sharedStyle.fontSize;
+                        newStyle.fontName = sharedStyle.fontName;
+                        newStyle.fontItalic = sharedStyle.fontItalic;
+                        newStyle.fontBold = sharedStyle.fontBold;
+                        newStyle.fontUnderline = sharedStyle.fontUnderline;
+                        newStyle.fontStrikeThrough = sharedStyle.fontStrikeThrough;
+
+                        await diElement.localStyle.set(newStyle);
+                        diManager.put(diElement);
+                        diManager.put(newStyle);
+                        diManager.put(newFillColor);
+                        diManager.put(newStrokeColor);
+                        diManager.put(newFontColor);
+                    }
+
+                    // emit specification, but we need it to be to only the meta info
+                    
                     throw Error('TODO');
                 }
             });
@@ -353,5 +409,6 @@ UmlContextMenu.$inject = [
     'elementFactory', 
     'commandStack', 
     'canvas', 
-    'relationshipEdgeCreator'
+    'relationshipEdgeCreator',
+    'diManager'
 ];
