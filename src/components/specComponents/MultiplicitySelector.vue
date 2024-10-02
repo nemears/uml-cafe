@@ -56,7 +56,7 @@
                 const checkAndCreateSingletonUpper = async () => {
                     if (upperValue && !upperValue.is('LiteralInt')) {
                         el.upperValue.set(undefined);
-                        await this.$umlWebClient.deleteElement(upperValue);
+                        await this.$umlWebClient.delete(upperValue);
                         upperValue = undefined;
                     }
                     if (!upperValue) {
@@ -68,7 +68,7 @@
                 const checkAndCreateSetUpper = async () => {
                     if (upperValue && !upperValue.is('LiteralUnlimitedNatural')) {
                         el.upperValue.set(undefined);
-                        await this.$umlWebClient.deleteElement(upperValue);
+                        await this.$umlWebClient.delete(upperValue);
                         upperValue = undefined;
                     }
                     if (!upperValue) {
@@ -81,12 +81,12 @@
                     case 'unspecified': {
                         if (upperValue) {
                             el.upperValue.set(undefined);
-                            await this.$umlWebClient.deleteElement(upperValue);
+                            await this.$umlWebClient.delete(upperValue);
                             upperValue = undefined;
                         }
                         if (lowerValue) {
                             el.lowerValue.set(undefined);
-                            await this.$umlWebClient.deleteElement(lowerValue);
+                            await this.$umlWebClient.delete(lowerValue);
                             lowerValue = undefined;
                         }
                         break;

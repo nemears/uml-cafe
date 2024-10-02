@@ -78,7 +78,7 @@ export default {
             if (myOldOwner) {
                 owners.push(myOldOwner);
             }
-            await me[this.singletonData.setName].set(el);
+            await me.typeInfo.getSet(this.singletonData.id).set(el);
             this.$umlWebClient.put(me);
             this.$umlWebClient.put(el);
             this.$emit('elementUpdate', createElementUpdate(me, el, ...owners));

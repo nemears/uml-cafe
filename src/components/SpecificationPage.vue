@@ -8,7 +8,16 @@ import EnumerationData from './specComponents/EnumerationData.vue';
 import MultiplicitySelector from './specComponents/MultiplicitySelector.vue';
 import LiteralUnlimitedNaturalData from './specComponents/LiteralUnlimitedNaturalData.vue';
 import StereotypeApplicator from './specComponents/StereotypeApplicator.vue';
-import { ELEMENT_ID, ELEMENT_APPLIED_STEREOTYPES_ID, MULTIPLICITY_ELEMENT_ID } from 'uml-client/lib/modelIds';
+import { 
+    ELEMENT_ID, 
+    ELEMENT_APPLIED_STEREOTYPES_ID, 
+    INSTANCE_SPECIFICATION_ID, 
+    MULTIPLICITY_ELEMENT_ID, 
+    NAMED_ELEMENT_ID,
+    KERNEL_TYPES
+} from 'uml-client/lib/modelIds';
+import { randomID } from 'uml-client/lib/types/element';
+
 export default {
     props: [
         'umlID', 
@@ -28,14 +37,28 @@ export default {
             elementType: '',
             elementImage: undefined,
             types: [],
-            isFetching: true
+            isFetching: true,
+            filters: [
+                {
+                    name: 'uml',
+                    enabled: true
+                } 
+            ]
         }
     },
     mounted() {
+        this.filters = [{
+            name: 'uml',
+            enabled: true
+        }];
         this.reloadSpec();
     },
     watch: {
         umlID() {
+            this.filters = [{
+                name: 'uml',
+                enabled: true
+            }];
             this.reloadSpec();
         },
         elementUpdate(newElementUpdate) {
@@ -44,54 +67,61 @@ export default {
                 // const oldElement = newElementUpdate.oldElement;
                 if (newElement) {
                     if (newElement.id === this.umlID) {
-                        if (newElement.is('NamedElement')) {
-                            if (newElement.name !== this.namedElementData.name) {
-                                this.namedElementData.name = newElement.name;
+                        for (const type of this.types) {
+                            for (const specialData of type.specialData) {
+                                const typeInfoSpecialData = newElement.typeInfo.getSpecialData(specialData.name);
+                                if (typeInfoSpecialData) {
+                                    const newValue = typeInfoSpecialData.getData();
+                                    if (newValue !== specialData.val) {
+                                        specialData.val = newValue;
+                                    }
+                                }
                             }
                         }
                     }
                 } 
             }
-            
         },
     },
     methods: {
         async reloadSpec() {
             this.isFetching = true;
-            const el = await this.$umlWebClient.get(this.umlID);
-            this.elementType = el.elementType();
-            this.elementImage = getImage(el);
-          
             this.types = [];
-
-            // base element doesn't have a typeInfo, but
-            // we will add it as a proxy element type to 
-            // hold the id property
-            this.types.push({
-                name: 'BaseElement',
-                sets: [],
-                specialData : [
-                    {
-                        name: 'ID',
-                        type: 'string',
-                        val: el.id,
-                        readonly: true
-                    }
-                ]
-            });
-
+            const umlEl = await this.$umlWebClient.get(this.umlID);
+            if (this.filters.length === 1){
+                if (umlEl.is(INSTANCE_SPECIFICATION_ID) || umlEl.appliedStereotypes.size() > 0) {
+                    this.filters[0].enabled = false;
+                    this.filters.push({
+                        name: 'meta',
+                        enabled: false
+                    });
+                    this.filters.push({
+                        name: 'all',
+                        enabled: true
+                    });
+                }
+            }
+            
             const visited = new Map();
-            const fillData = async (typeInfo) => {
+            let populateKernelTypes = true;
+            const fillData = async (el, typeInfo) => {
                 const visitedMatch = visited.get(typeInfo.id);
                 if (visitedMatch) {
                     return visitedMatch;
                 }
                 // visit children first for dfs visit
                 for (const base of typeInfo.base) {
-                    await fillData(base);
+                    if (!populateKernelTypes) {
+                        if (KERNEL_TYPES.has(base.id)) {
+                            continue;
+                        }
+                    }
+                    await fillData(el, base);
                 }
                 const typeToFill = {
                     name: typeInfo.name,
+                    id: typeInfo.id,
+                    manager: populateKernelTypes ? this.$umlWebClient.id : this.$umlCafeModule.metaClient.id,
                     specialData: [],
                     sets: []
                 }
@@ -150,28 +180,69 @@ export default {
                 visited.set(typeInfo.id, typeToFill);
                 return typeToFill;
             }
-
-            await fillData(el.typeInfo);
-
-
-            // special handling
-            const elementData = visited.get(ELEMENT_ID)
-            if (elementData) {
-                for (const setData of elementData.sets) {
-                    if (setData.id === ELEMENT_APPLIED_STEREOTYPES_ID) {
-                        setData.setType = 'stereotypes';
-                        break;
-                    }
+            let umlFilter;
+            let metaFilter;
+            let allFilter;
+            for (const filter of this.filters) {
+                if (filter.name === 'uml') {
+                    umlFilter = filter;
+                } else if (filter.name === 'meta') {
+                    metaFilter = filter;
+                } else if (filter.name === 'all') {
+                    allFilter = filter;
                 }
             }
+            if (umlFilter.enabled || (allFilter && allFilter.enabled)) {
+                const el = umlEl;
+                this.elementType = el.elementType();
+                this.elementImage = getImage(el);
+              
 
-            const multiplicityData = visited.get(MULTIPLICITY_ELEMENT_ID);
-            if (multiplicityData) {
-                const multiplicityQuickSelectData = {
-                    name: 'multiplicity quick select',
-                    type: 'multiplicity'
+                // base element doesn't have a typeInfo, but
+                // we will add it as a proxy element type to 
+                // hold the id property
+                this.types.push({
+                    name: 'BaseElement',
+                    id: randomID(),
+                    manager: this.$umlWebClient.id,
+                    sets: [],
+                    specialData : [
+                        {
+                            name: 'ID',
+                            type: 'string',
+                            val: el.id,
+                            readonly: true
+                        }
+                    ]
+                });
+
+                await fillData(el, el.typeInfo);
+
+                // special handling
+                const elementData = visited.get(ELEMENT_ID)
+                if (elementData) {
+                    for (const setData of elementData.sets) {
+                        if (setData.id === ELEMENT_APPLIED_STEREOTYPES_ID) {
+                            setData.setType = 'stereotypes';
+                            break;
+                        }
+                    }
                 }
-                multiplicityData.specialData.push(multiplicityQuickSelectData);
+
+                const multiplicityData = visited.get(MULTIPLICITY_ELEMENT_ID);
+                if (multiplicityData) {
+                    const multiplicityQuickSelectData = {
+                        name: 'multiplicity quick select',
+                        type: 'multiplicity'
+                    }
+                    multiplicityData.specialData.push(multiplicityQuickSelectData);
+                } 
+            } 
+            if (metaFilter && (metaFilter.enabled || allFilter.enabled)) {
+                populateKernelTypes = false;
+                const metaEl = await this.$umlCafeModule.metaClient.get(this.umlID);
+                this.elementType = metaEl.elementType();
+                await fillData(metaEl, metaEl.typeInfo);
             }
 
             this.isFetching = false;
@@ -185,13 +256,12 @@ export default {
                 const newElement = update.newElement;
                 if (newElement) {
                     if (newElement.id === this.umlID) {
-                        if (newElement.is('NamedElement')) {
-                            if (this.namedElementData.name !== newElement.name) {
-                                this.namedElementData.name = newElement.name;
-                            }
-                        } 
+                        // if (newElement.is('NamedElement')) {
+                        //     if (this.namedElementData.name !== newElement.name) {
+                        //         this.namedElementData.name = newElement.name;
+                        //     }
+                        // } 
                     }
-                    
                 } 
             }
             
@@ -202,10 +272,30 @@ export default {
         },
         propogateDeselect(newDeselect) {
             this.$emit('deselect', newDeselect);
+        },
+        toggle(filter) {
+            for (const currFilter of this.filters) {
+                currFilter.enabled = false;
+            }
+            filter.enabled = true;
+            this.reloadSpec();
         }
     },
     computed: {
         elementLabel() {
+            for (const type of this.types) {
+                if (type.id === NAMED_ELEMENT_ID) {
+                    for (const specialData of type.specialData) {
+                        if (specialData.name === 'name') {
+                            if (specialData.val !== "") {
+                                return specialData.val;
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
             if (this.namedElementData !== undefined && this.namedElementData.name !== '') {
                 return this.namedElementData.name;
             } else {
@@ -234,20 +324,30 @@ export default {
             </h1>
             <img v-bind:src="elementImage" v-if="elementImage !== undefined" class="headerImage"/>
         </div>
+        <div style="display:flex;margin-bottom:15px;">
+            <div    v-for="elFilter in filters"
+                    :key="elFilter.name"
+                    class="infoToggle"
+                    :class="{ toggled : elFilter.enabled}"
+                    @click="toggle(elFilter)">
+                {{ elFilter.name }}
+            </div>
+        </div>
         <ElementType    v-for="elType in types"
                         :key="elType"
                         :element-type="elType.name"
                         :theme="theme">
             <div    v-for="specialData in elType.specialData"
                     :key="specialData">
-                <InputData  v-if="specialData.type === 'string' || specialData.type === 'number'"
+                <InputData  v-if="specialData.type === 'string' || specialData.type === 'number' || specialData.type === 'bool'"
                             :label="specialData.name"
                             :type="specialData.name"
                             :read-only="specialData.readonly"
-                            :input-type="specialData.type"
+                            :input-type="specialData.type === 'bool' ? 'checkbox' : specialData.type"
                             :initial-data="specialData.val"
                             :umlid="umlID"
                             :theme="theme"
+                            :manager="elType.manager"
                             @element-update="propogateElementUpdate">
                 </InputData>
                 <EnumerationData    v-if="specialData.type === 'enumeration'"
@@ -328,5 +428,15 @@ export default {
     height: 50px;
     width: 50px;
     padding-left: 10px;
+}
+.infoToggle {
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 5px;
+    user-select: none;
+}
+.toggled {
+    background-color: var(--uml-cafe-selected);
+    color: azure;
 }
 </style>

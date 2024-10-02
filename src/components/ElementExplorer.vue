@@ -426,7 +426,7 @@ export default {
                    label: 'Create Stereotype',
                     disabled: this.$umlWebClient.readonly,
                     onClick: () => {
-                        createAndAddToSet('Stereotype', 'ownedStereotypes');
+                        createAndAddToSet('Stereotype', 'packagedElements');
                     }
                 });
                 createOption.children.push({

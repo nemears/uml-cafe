@@ -1,7 +1,16 @@
 <script>
 import { createElementUpdate } from '../../umlUtil.js'
 export default {
-    props: ['label', 'inputType', 'initialData', 'readOnly', 'type', 'umlid', 'theme'],
+    props: [
+        'label', 
+        'inputType', 
+        'initialData', 
+        'readOnly', 
+        'type', 
+        'umlid', 
+        'theme',
+        'manager'
+    ],
     data() {
         return {
             data: undefined
@@ -19,9 +28,19 @@ export default {
     methods: {
         async submitDataChange() {
             this.data = this.inputType === 'checkbox' ? this.$refs.numberInput.checked : this.$refs.numberInput.value;
-            const el = await this.$umlWebClient.get(this.umlid);
+
+            let currClient;
+            if (this.manager === this.$umlWebClient.id) {
+                currClient = this.$umlWebClient;
+            } else if (this.manager === this.$umlCafeModule.metaClient.id) {
+                currClient = this.$umlCafeModule.metaClient;
+            } else {
+                // TODO assume it is a umldimanager
+                throw Error('TODO');
+            }
+            const el = await currClient.get(this.umlid);
             el[this.type] = this.data; // this may be dangerous in the future
-            this.$umlWebClient.put(el);
+            currClient.put(el);
             this.$emit('elementUpdate', createElementUpdate(el));
         }
     }

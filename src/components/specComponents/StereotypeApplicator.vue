@@ -15,7 +15,7 @@
         },
         async mounted() {
             for (const id of this.initialData) {
-                const el = await this.$umlWebClient.get(id.id);
+                const el = await this.$umlWebClient.get(id);
                 this.data.push({
                     id: el.classifiers.ids().front()
                 });
