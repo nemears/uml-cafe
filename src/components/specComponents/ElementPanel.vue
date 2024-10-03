@@ -4,7 +4,7 @@
     import { nullID } from 'uml-client/lib/types/element';
     export default {
         props: ['umlid', 'theme', 'selectedElements'],
-        emits: ['specification', 'select', 'deselect', 'menu'],
+        emits: ['focus', 'select', 'deselect', 'menu'],
         inject: ['userSelected', 'userDeselected', 'elementUpdate'],
         data() {
             return {
@@ -91,9 +91,11 @@
                     this.label = '';
                 } 
             },
-            async specification() {
+            async focus() {
                 if (this.umlid && this.umlid !== nullID()) {
-                    this.$emit('specification', await this.$umlWebClient.get(this.umlid));
+                    this.$emit('focus', {
+                        el: await this.$umlWebClient.get(this.umlid)
+                    });
                 }
             },
             select(modifier) {
@@ -144,7 +146,7 @@
             @click.exact="select('none')"
             @click.ctrl="select('ctrl')"
             @click.shift="select('shift')"
-            @dblclick="specification"
+            @dblclick="focus"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave"
             @contextmenu="menu">

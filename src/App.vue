@@ -10,6 +10,7 @@ import { computed } from 'vue';
 import { assignTabLabel } from './umlUtil';
 import TabContainer from './components/TabContainer.vue';
 import { nullID } from 'uml-client/lib/types/element';
+import { ELEMENT_ID } from 'uml-client/lib/modelIds';
 </script>
 <script>
 export default {
@@ -175,19 +176,33 @@ export default {
 				this.isFetching = false;
 			}
 		},
-		async specification(el) {
+		async focus(data) {
+            if (data.el) {
+                const el = data.el;
+                this.focusTab = {
+                    label: await assignTabLabel(el),
+                    id: el.id,
+                    isActive: true,
+                    type: 'Specification',
+                    img: getImage(el)
+                };
+            }
+		},
+        diagram(diagramClass) {
+            document.removeEventListener('keydown', this.keypress);
             this.focusTab = {
-				label: await assignTabLabel(el),
-				id: el.id,
+				label: diagramClass.name !== undefined && diagramClass.name !== '' ? diagramClass.name : diagramClass.id,
+				id: diagramClass.id,
 				isActive: true,
-				type: 'Specification',
-				img: getImage(el)
+				type: 'Diagram',
+				img: classDiagramImage
 			};
 		},
         async elementUpdateHandler(newElementUpdate) {
 			for (const update of newElementUpdate.updatedElements) {
                 const newElement = update.newElement;
-                if (newElement) {
+                // only run element if it is a kernel type
+                if (newElement && newElement.is(ELEMENT_ID)) {
                     // helper function
                     const createTreeNode = (treeNode, id) => {
                         const newTreeNode = {
@@ -228,16 +243,7 @@ export default {
             }
             this.elementUpdate = newElementUpdate;
         },
-		diagram(diagramClass) {
-            document.removeEventListener('keydown', this.keypress);
-            this.focusTab = {
-				label: diagramClass.name !== undefined && diagramClass.name !== '' ? diagramClass.name : diagramClass.id,
-				id: diagramClass.id,
-				isActive: true,
-				type: 'Diagram',
-				img: classDiagramImage
-			};
-		},
+		
 		async dragInfo(info) {
 			const draggedElements = [];
 			for (const id of this.selectedElements) {
@@ -655,7 +661,7 @@ export default {
                     :selected-elements="selectedElements"
                     :tree-graph="treeGraph"
                     :theme="theme"
-					@specification="specification" 
+					@focus="focus" 
 					@element-update="elementUpdateHandler" 
 					@diagram="diagram"
 					@draginfo="dragInfo"
@@ -671,7 +677,7 @@ export default {
                         :selected-elements="selectedElements"
                         :users="users"
                         :theme="theme"
-						@specification="specification" 
+						@focus="focus" 
 						@element-update="elementUpdateHandler"
                         @select="select"
                         @deselect="deselect"
@@ -680,7 +686,7 @@ export default {
 						:uml-i-d="specificationTab" 
                         :command-stack="commandStack"
                         :undo-stack="undoStack"
-						@specification="specification"
+						@focus="focus"
 						@element-update="elementUpdateHandler"
                         @command="command"
 						></DiagramPage>

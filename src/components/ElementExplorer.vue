@@ -23,7 +23,7 @@ export default {
         'commandUndo',
     ],
     emits: [
-        'specification',
+        'focus',
         'elementUpdate',
         'diagram',
         'draginfo',
@@ -231,11 +231,13 @@ export default {
                 this.image = getImage(el);
             }
             this.options.push({ 
-                        label: "Specification", 
-                        onClick: async () => {
-                            this.$emit('specification', await this.$umlWebClient.get(this.umlID));
-                        }
+                label: "Specification", 
+                onClick: async () => {
+                    this.$emit('focus', {
+                        el: await this.$umlWebClient.get(this.umlID)
                     });
+                }
+            });
             if (el.is('NamedElement')) {
                 this.options.push({
                     label: 'Rename',
@@ -552,8 +554,8 @@ export default {
                 theme: 'flat'
             });
         },
-        propogateSpecification(spec) {
-            this.$emit('specification', spec);
+        propogateFocus(spec) {
+            this.$emit('focus', spec);
         },
         async handleElementUpdate(newElementUpdate) { //add data here
             for (const update of newElementUpdate.updatedElements) {
@@ -676,11 +678,13 @@ export default {
         propogateDiagram(diagramClass) {
             this.$emit('diagram', diagramClass);
         },
-        async specification() {
+        async focus() {
             if (this.diagram) {
                 this.$emit('diagram', await this.$umlWebClient.get(this.umlID));
             } else {
-                this.$emit('specification', await this.$umlWebClient.get(this.umlID));
+                this.$emit('focus', {
+                    el: await this.$umlWebClient.get(this.umlID)
+                });
             }
         },
         async startDrag(modifier, event) {
@@ -750,7 +754,7 @@ export default {
              @click.exact="select('none')"
              @click.ctrl="select('ctrl')"
              @click.shift="select('shift')"
-             @dblclick="specification"
+             @dblclick="focus"
              @dragstart.exact="startDrag('none', $event)"
              @dragstart.ctrl="startDrag('ctrl', $event)"
              @dragstart.shift="startDrag('shift', $event)"
@@ -786,7 +790,7 @@ export default {
                     :tree-graph="treeGraph"
                     :theme="theme"
                     :key="child"
-                    @specification="propogateSpecification" 
+                    @focus="propogateFocus" 
                     @element-update="propogateElementUpdate"
                     @diagram="propogateDiagram"
                     @draginfo="propogateDraginfo"

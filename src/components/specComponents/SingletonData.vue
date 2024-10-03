@@ -15,7 +15,7 @@ export default {
         'theme',
     ],
     emits: [
-        'specification',
+        'focus',
         'elementUpdate',
         'select',
         'deselect',    
@@ -113,7 +113,9 @@ export default {
                 items.push({
                     label: 'Specification',
                     onClick: async () => {
-                        this.$emit('specification', val);
+                        this.$emit('focus', {
+                            el: val
+                        });
                     }
                 });
                 items.push({
@@ -148,8 +150,8 @@ export default {
                 theme: 'flat'
             });
         },
-        propogateSpecification(el) {
-            this.$emit('specification', el);
+        propogateFocus(el) {
+            this.$emit('focus', el);
         },
         propogateSelect(data) {
             this.$emit('select', data);
@@ -172,7 +174,7 @@ export default {
                           :selected-elements="selectedElements"
                           @select="propogateSelect"
                           @deselect="propogateDeselect"
-                          @specification="propogateSpecification"
+                          @focus="propogateFocus"
                           @menu="onContextMenu">
                 <div    class="createButton" 
                         v-if="singletonData.composition === 'composite' && !singletonData.readonly" 

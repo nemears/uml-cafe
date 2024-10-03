@@ -18,7 +18,7 @@ export default {
         };
     },
     props: ['umlID', 'commandStack', 'undoStack'],
-    emits: ['specification', 'elementUpdate', 'command'],
+    emits: ['focus', 'elementUpdate', 'command'],
     inject: ['draginfo', 'elementUpdate', 'userSelected', 'userDeselected', 'latestCommand', 'commandUndo'],
     watch : {
         draginfo(newDraginfo) {
@@ -64,11 +64,11 @@ export default {
         this.diagram.get('keyboard').unbind(document);
     },
     methods: {
-        specification(event) {
-            if (event.currentTarget == this.$refs.diagram) {
-                this.$emit('specification', event);
-            }
-        },
+        // specification(event) {
+        //     if (event.currentTarget == this.$refs.diagram) {
+        //         this.$emit('specification', event);
+        //     }
+        // },
         async reloadDiagram() {
             this.loading = true;
             if (this.diagram) {
@@ -619,8 +619,8 @@ export default {
             scopedEmitter.on('shape.added', async () => {
                 diagramPage.$emit('elementUpdate', createElementUpdate(await diagramPackage.owningPackage.get()));
             });
-            scopedEmitter.on('specification', (event) => {
-                diagramPage.$emit('specification', event);
+            scopedEmitter.on('focus', (event) => {
+                diagramPage.$emit('focus', event);
             });
             scopedEmitter.on('contextmenu', (event) => {
                 diagramPage.$contextmenu(event);

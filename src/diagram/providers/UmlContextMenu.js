@@ -61,7 +61,9 @@ export default class UmlContextMenu {
         menu.items.push({
             label: 'Specification',
             onClick: () => {
-                diagramEmitter.fire('specification', element.modelElement);
+                diagramEmitter.fire('focus', {
+                    el: element.modelElement
+                });
             }
         });
         if (element.modelElement.is('NamedElement')) {

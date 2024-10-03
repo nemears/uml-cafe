@@ -6,7 +6,7 @@
     import { createElementUpdate } from '../../umlUtil.js';
     export default {
         props: ['initialData', 'umlid', 'theme', 'selectedElements'],
-        emits: ['elementUpdate', 'specification'],
+        emits: ['elementUpdate', 'focus'],
         data() {
             return {
                 data: [],
@@ -43,7 +43,9 @@
                 items.push({
                     label: 'Specification',
                     onClick: () => {
-                        this.$emit('specification', element);
+                        this.$emit('focus', {
+                            el: element
+                        });
                     }
                 });
                 items.push({
@@ -76,8 +78,8 @@
                     theme: 'flat'
                 });
             },
-            propogateSpecification(el) {
-                this.$emit('specification', el);
+            propogateFocus(el) {
+                this.$emit('focus', el);
             },
             propogateSelect(data) {
                 this.$emit('select', data);
@@ -100,7 +102,7 @@
                           :umlid="el.id"
                           :theme="theme"
                           :slected-elements="selectedElements"
-                          @specification="propogateSpecification"
+                          @focus="propogateFocus"
                           @select="propogateSelect"
                           @deselect="propogateDeselect"
                           @menu="contextMenu">

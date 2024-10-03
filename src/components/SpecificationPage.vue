@@ -26,7 +26,7 @@ export default {
         'theme',
     ],
     emits: [
-        'specification', 
+        'focus', 
         'elementUpdate',
         'select',
         'deselect',
@@ -253,8 +253,8 @@ export default {
 
             this.isFetching = false;
         },
-        propogateSpecification(spec) {
-            this.$emit('specification', spec);
+        propogateFocus(spec) {
+            this.$emit('focus', spec);
         },
         propogateElementUpdate(newElementUpdate) {
             // TODO update generally
@@ -386,7 +386,7 @@ export default {
                             :umlid="umlID"
                             :selected-elements="selectedElements"
                             :theme="theme"
-                            @specification="propogateSpecification"
+                            @focus="propogateFocus"
                             @element-update="propogateElementUpdate"
                             @select="propogateSelect"
                             @deselect="propogateDeselect">
@@ -397,7 +397,7 @@ export default {
                                 :uml-i-d="umlID"
                                 :selected-elements="selectedElements"
                                 :theme="theme"
-                                @specification="propogateSpecification"
+                                @focus="propogateFocus"
                                 @element-update="propogateElementUpdate"
                                 @select="propogateSelect"
                                 @deselect="propogateDeselect">
@@ -407,7 +407,7 @@ export default {
                                         :initial-data="set.data"
                                         :theme="theme" 
                                         :selected-elements="selectedElements"
-                                        @specification="propogateSpecification"
+                                        @focus="propogateFocus"
                                         @element-update="propogateElementUpdate"
                                         @select="propogateSelect"
                                         @deselect="propogateDeselect">

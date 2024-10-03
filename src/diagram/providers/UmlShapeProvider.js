@@ -267,7 +267,9 @@ export default class UmlShapeProvider {
         });
         eventBus.on('element.dblclick', (event) => {
             if (event.element.inselectable) {
-                diagramEmitter.fire('specification', event.element.parent.modelElement);
+                diagramEmitter.fire('focus', {
+                    el: event.element.parent.modelElement
+                });
             }
         });
     }

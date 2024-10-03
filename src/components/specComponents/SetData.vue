@@ -19,7 +19,7 @@ export default {
         'userSelected',
         'userDeselected'
     ],
-    emits: ['specification', 'elementUpdate', 'select', 'deselect'],
+    emits: ['focus', 'elementUpdate', 'select', 'deselect'],
     data() {
         return {
             data: [],
@@ -67,8 +67,8 @@ export default {
         }
     },
     methods: {
-        async propogateSpecification(el) {
-            this.$emit('specification', el);
+        async propogateFocus(el) {
+            this.$emit('focus', el);
         },
         createElement() {
             this.createPopUp = true;
@@ -109,7 +109,9 @@ export default {
             items.push({
                 label: 'Specification',
                 onClick: () => {
-                    this.$emit('specification', element);
+                    this.$emit('focus', {
+                        el: element
+                    });
                 }
             });
            
@@ -166,7 +168,7 @@ export default {
                           :umlid="el"
                           :theme="theme"
                           :selected-elements="selectedElements"
-                          @specification="propogateSpecification"
+                          @focus="propogateFocus"
                           @select="propogateSelect"
                           @deselect="propogateDeselect"
                           @menu="elementContextMenu">
