@@ -13,6 +13,7 @@ export default {
         'setData',
         'selectedElements',
         'theme',
+        'manager',
     ],
     inject: [
         'elementUpdate',
@@ -168,6 +169,7 @@ export default {
                           :umlid="el"
                           :theme="theme"
                           :selected-elements="selectedElements"
+                          :manager="manager"
                           @focus="propogateFocus"
                           @select="propogateSelect"
                           @deselect="propogateDeselect"

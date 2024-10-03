@@ -13,6 +13,7 @@ export default {
         'singletonData',
         'selectedElements',
         'theme',
+        'manager',
     ],
     emits: [
         'focus',
@@ -172,6 +173,7 @@ export default {
             <ElementPanel :umlid="valID"
                           :theme="theme"
                           :selected-elements="selectedElements"
+                          :manager="manager"
                           @select="propogateSelect"
                           @deselect="propogateDeselect"
                           @focus="propogateFocus"

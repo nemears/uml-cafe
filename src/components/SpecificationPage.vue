@@ -24,6 +24,7 @@ export default {
         'selectedElements',
         'users',
         'theme',
+        'manager',
     ],
     emits: [
         'focus', 
@@ -90,15 +91,23 @@ export default {
             const umlEl = await this.$umlWebClient.get(this.umlID);
             if (this.filters.length === 1){
                 if (umlEl.is(INSTANCE_SPECIFICATION_ID) || umlEl.appliedStereotypes.size() > 0) {
-                    this.filters[0].enabled = false;
-                    this.filters.push({
-                        name: 'meta',
-                        enabled: false
-                    });
-                    this.filters.push({
-                        name: 'all',
-                        enabled: true
-                    });
+                    if (this.manager !== this.$umlWebClient.id && this.manager !== this.$umlCafeModule.metaClient.id) {
+                        // only show meta info if it is an internal manager
+                        this.filters = [{
+                            name : 'meta',
+                            enabled: true
+                        }];
+                    } else {
+                        this.filters[0].enabled = false;
+                        this.filters.push({
+                            name: 'meta',
+                            enabled: false
+                        });
+                        this.filters.push({
+                            name: 'all',
+                            enabled: true
+                        });
+                    }
                 }
             }
             
@@ -192,7 +201,7 @@ export default {
                     allFilter = filter;
                 }
             }
-            if (umlFilter.enabled || (allFilter && allFilter.enabled)) {
+            if ((umlFilter && umlFilter.enabled) || (allFilter && allFilter.enabled)) {
                 const el = umlEl;
                 this.elementType = el.elementType();
                 this.elementImage = getImage(el);
@@ -238,7 +247,7 @@ export default {
                     multiplicityData.specialData.push(multiplicityQuickSelectData);
                 } 
             } 
-            if (metaFilter && (metaFilter.enabled || allFilter.enabled)) {
+            if ((metaFilter && metaFilter.enabled) || (allFilter && allFilter.enabled)) {
                 populateKernelTypes = false;
                 try {
                     const metaEl = await this.$umlCafeModule.metaClient.get(this.umlID);
@@ -386,6 +395,7 @@ export default {
                             :umlid="umlID"
                             :selected-elements="selectedElements"
                             :theme="theme"
+                            :manager="manager"
                             @focus="propogateFocus"
                             @element-update="propogateElementUpdate"
                             @select="propogateSelect"
@@ -397,6 +407,7 @@ export default {
                                 :uml-i-d="umlID"
                                 :selected-elements="selectedElements"
                                 :theme="theme"
+                                :manager="manager"
                                 @focus="propogateFocus"
                                 @element-update="propogateElementUpdate"
                                 @select="propogateSelect"

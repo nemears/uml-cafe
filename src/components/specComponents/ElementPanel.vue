@@ -3,7 +3,7 @@
     import getUmlImage from '../../GetUmlImage.vue';
     import { nullID } from 'uml-client/lib/types/element';
     export default {
-        props: ['umlid', 'theme', 'selectedElements'],
+        props: ['umlid', 'theme', 'selectedElements', 'manager'],
         emits: ['focus', 'select', 'deselect', 'menu'],
         inject: ['userSelected', 'userDeselected', 'elementUpdate'],
         data() {
@@ -94,7 +94,8 @@
             async focus() {
                 if (this.umlid && this.umlid !== nullID()) {
                     this.$emit('focus', {
-                        el: await this.$umlWebClient.get(this.umlid)
+                        el: await this.$umlWebClient.get(this.umlid),
+                        manager: this.manager
                     });
                 }
             },

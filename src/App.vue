@@ -44,6 +44,7 @@ export default {
             latestCommand: undefined,
             commandUndo: undefined,
             theme: 'light',
+            manager: this.$umlWebClient.id
 		}
 	},
 	provide() {
@@ -184,8 +185,14 @@ export default {
                     id: el.id,
                     isActive: true,
                     type: 'Specification',
-                    img: getImage(el)
+                    img: getImage(el),
+                    manager: data.manager,
                 };
+                if (data.manager) {
+                    this.manager = data.manager;
+                } else {
+                    this.manager = this.$umlWebClient.id;
+                }
             }
 		},
         diagram(diagramClass) {
@@ -279,6 +286,11 @@ export default {
             } else {
                 this.specificationTab = tab.id;
                 this.editorType = tab.type;
+                if (tab.manager) {
+                    this.manager = tab.manager;
+                } else {
+                    this.manager = this.$umlWebClient.id;
+                }
             }
         },
         shiftClickAction(event, fn) {
@@ -677,6 +689,7 @@ export default {
                         :selected-elements="selectedElements"
                         :users="users"
                         :theme="theme"
+                        :manager="manager"
 						@focus="focus" 
 						@element-update="elementUpdateHandler"
                         @select="select"

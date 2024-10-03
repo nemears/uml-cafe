@@ -183,8 +183,13 @@ export default class UmlContextMenu {
                     }
 
                     // emit specification, but we need it to be to only the meta info
-                    
-                    throw Error('TODO');
+                   
+                    diagramEmitter.fire('focus', {
+                        el: await diElement.localStyle.get(),
+                        manager: diManager.manager.apiLocation.id
+                    });
+
+                    // throw Error('TODO');
                 }
             });
         }
