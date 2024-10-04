@@ -311,11 +311,7 @@ export default {
                     break;
                 }
             }
-            if (this.namedElementData !== undefined && this.namedElementData.name !== '') {
-                return this.namedElementData.name;
-            } else {
-                return this.umlID;
-            }
+            return this.umlID;
         },
     },
     components: { 
