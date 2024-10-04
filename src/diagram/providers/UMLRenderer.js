@@ -232,10 +232,57 @@ export default class UMLRenderer extends BaseRenderer {
     }
 
     drawShape(gfx, element, attrs) {
+        // get style info
+        let elementStyle = undefined;
+        let currElement = element;
+        while (elementStyle === undefined && currElement !== undefined) {
+            if (currElement.localStyle) {
+                elementStyle = currElement.localStyle;
+            } else if (currElement.sharedStyle) {
+                elementStyle = currElement.sharedStyle;
+            } else {
+                // check parents
+                currElement = element.parent;
+            }
+        }
+       
+        let renderedStyle;
+        let customTextUtil;
+        if (elementStyle) {
+            const fillColor = elementStyle.fillColor.unsafe();
+            const strokeColor = elementStyle.strokeColor.unsafe();
+
+            const translateToRGBA = (color, opacity) => 'rgba(' + color.red + ' ,' + color.green + ' ,' + color.blue + ' ,' + opacity + ')'; 
+                
+            renderedStyle = {
+                fill: translateToRGBA(fillColor, elementStyle.fillOpacity),
+                stroke: translateToRGBA(strokeColor, elementStyle.strokeOpacity),
+                strokWidth: elementStyle.strokeWidth,
+                strokeOpacity: elementStyle.strokeOpacity,
+                // TODO the rest
+            };
+            const customTextStyle = {
+                fill: translateToRGBA(elementStyle.fontColor.unsafe()),
+                stroke: translateToRGBA(elementStyle.fontColor.unsafe()),
+                fontFamily: elementStyle.fontName,
+                fontSize: elementStyle.fontSize,
+                fontWeight: elementStyle.fontBold ? 'bold' : 'normal',
+                fontStyle: elementStyle.fontItalic ? 'italic' : 'normal',
+
+            };
+            customTextUtil = new TextUtil({
+                style: customTextStyle,
+                align: 'center'
+            });
+        } else {
+            renderedStyle = this.CLASS_STYLE;
+            customTextUtil = this.textUtil;
+        }
+
         const cropText = (textString, bounds, options) => {
             let text = undefined;
             do {
-                text = this.textUtil.layoutText(textString, options);
+                text = customTextUtil.layoutText(textString, options);
                 textString = textString.slice(0, -4) + '...';
             } while (textString.length > 4 && (text.dimensions.width > bounds.width || text.dimensions.height > bounds.height));
             return text.element;
@@ -299,7 +346,7 @@ export default class UMLRenderer extends BaseRenderer {
             } 
         } else if (element.elementType === 'UMLClassifierShape') {
             const rect = createRectangle();
-            svgAttr(rect, assign({}, this.CLASS_STYLE), attrs || {});
+            svgAttr(rect, assign({}, renderedStyle), attrs || {});
         } else if (element.elementType === 'UMLTypedElementLabel') {
             const rect = createRectangle();
             svgAttr(rect, this.LABEL_STYLE);

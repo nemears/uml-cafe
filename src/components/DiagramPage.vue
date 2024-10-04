@@ -85,6 +85,7 @@ export default {
             const umlDiagram = await DIManager.get(this.umlID);
             const classifierShapeStyle = await umlDiagram.classifierShapeStyle.get();
             await classifierShapeStyle.fillColor.get();
+            await classifierShapeStyle.strokeColor.get();
             await classifierShapeStyle.fontColor.get();
             this.diagram = new Editor({
                 container: this.$refs.diagram,
@@ -282,6 +283,22 @@ export default {
                             });
                             compartments.push(compartmentShape);
                         }
+
+                        // styles
+                        let sharedStyle;
+                        let localStyle;
+                        if (umlClassifierShape.sharedStyle.has()) {
+                            sharedStyle = await umlClassifierShape.sharedStyle.get();
+                            await sharedStyle.fillColor.get();
+                            await sharedStyle.strokeColor.get();
+                        }
+                        if (umlClassifierShape.localStyle.has()) {
+                            localStyle = await umlClassifierShape.localStyle.get();
+                            await localStyle.fillColor.get();
+                            await localStyle.strokeColor.get();
+                            await localStyle.fontColor.get();
+                        }
+
                         const shape = elementFactory.createShape({
                             x: bounds.x,
                             y: bounds.y,
@@ -290,6 +307,8 @@ export default {
                             id: umlClassifierShape.id,
                             modelElement: modelElement,
                             compartments: compartments,
+                            sharedStyle: sharedStyle,
+                            localStyle: localStyle,
                             elementType: 'UMLClassifierShape',
                         });
                         canvas.addShape(shape, parent);

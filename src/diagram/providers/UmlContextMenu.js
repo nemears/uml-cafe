@@ -175,11 +175,13 @@ export default class UmlContextMenu {
                         newStyle.fontStrikeThrough = sharedStyle.fontStrikeThrough;
 
                         await diElement.localStyle.set(newStyle);
-                        diManager.put(diElement);
-                        diManager.put(newStyle);
-                        diManager.put(newFillColor);
-                        diManager.put(newStrokeColor);
-                        diManager.put(newFontColor);
+                        await diManager.put(diElement);
+                        await diManager.put(newStyle);
+                        await diManager.put(newFillColor);
+                        await diManager.put(newStrokeColor);
+                        await diManager.put(newFontColor);
+
+                        element.localStyle = newStyle; // set djs element localStyle
                     }
 
                     // emit specification, but we need it to be to only the meta info

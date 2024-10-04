@@ -30,6 +30,12 @@ export async function translateDJElementToUMLDiagramElement(djElement, umlElemen
             await umlElement.sharedStyle.set(djElement.sharedStyle);
         }
     }
+
+    if (djElement.localStyle) {
+        if (!umlElement.localStyle.has()) {
+            await umlElement.localStyle.set(djElement.localStyle);
+        }
+    }
 }
 
 export async function translateDJShapeToUMLShape(djShape, umlShape, diManager, umlDiagram) {
