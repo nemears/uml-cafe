@@ -4,8 +4,9 @@ import './assets/main.css';
 import { randomID } from 'uml-client/lib/types/element';
 import '@imengyu/vue3-context-menu/lib/vue3-context-menu.css'
 import ContextMenu from '@imengyu/vue3-context-menu'
+import Vue3ColorPicker from "vue3-colorpicker";
+import "vue3-colorpicker/style.css";
 import { UmlWebClient } from 'uml-client';
-import { generate } from 'uml-client/lib/generate';
 import { getProjectLoginObject, UmlCafeModule } from './umlUtil';
 import config from '../config.json';
 
@@ -31,6 +32,7 @@ if (location.pathname != "/") {
         app.config.unwrapInjectedRef = true;
         app.mount('#app');
         app.use(ContextMenu);
+        app.use(Vue3ColorPicker);
     }
 
     umlWebClient.initialization.then(() => {

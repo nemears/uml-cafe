@@ -8,6 +8,7 @@ import EnumerationData from './specComponents/EnumerationData.vue';
 import MultiplicitySelector from './specComponents/MultiplicitySelector.vue';
 import LiteralUnlimitedNaturalData from './specComponents/LiteralUnlimitedNaturalData.vue';
 import StereotypeApplicator from './specComponents/StereotypeApplicator.vue';
+import ColorData from './specComponents/ColorData.vue';
 import { 
     ELEMENT_ID, 
     ELEMENT_APPLIED_STEREOTYPES_ID, 
@@ -183,6 +184,9 @@ export default {
                             setData.data = set.id();
                         }
                     }
+                    if (setData.type === '&5o9ZnljHgKF9lt&AP3yMjz1HKSr') { // Color id
+                        setData.setType  = setData.setType + ' color';
+                    }
                     typeToFill.sets.push(setData);
                 }
                 this.types.push(typeToFill);
@@ -252,6 +256,10 @@ export default {
                 try {
                     const metaEl = await this.$umlCafeModule.metaClient.get(this.umlID);
                     this.elementType = metaEl.elementType();
+                    const possibleImage = getImage(metaEl);
+                    if (possibleImage) {
+                        this.elementImage = possibleImage;
+                    }
                     await fillData(metaEl, metaEl.typeInfo);
                 } catch (exception) {
                     this.filters.pop();
@@ -322,7 +330,8 @@ export default {
         EnumerationData, 
         LiteralUnlimitedNaturalData, 
         MultiplicitySelector, 
-        StereotypeApplicator 
+        StereotypeApplicator,
+        ColorData
     }
 }
 </script>
@@ -419,6 +428,17 @@ export default {
                                         @select="propogateSelect"
                                         @deselect="propogateDeselect">
                 </StereotypeApplicator>
+                <ColorData  v-if="set.setType === 'singleton color'"
+                            :umlid="umlID"
+                            :initial-val="set.data"
+                            :set-data="set"
+                            :theme="theme"
+                            :selected-elements="selectedElements"
+                            :manager="manager"
+                            @focus="propogateFocus"
+                            @select="propogateSelect"
+                            @deselect="propogateDeselect">
+                </ColorData>
             </div>
         </ElementType>
     </div> 

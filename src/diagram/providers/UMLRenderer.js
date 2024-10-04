@@ -257,13 +257,13 @@ export default class UMLRenderer extends BaseRenderer {
             renderedStyle = {
                 fill: translateToRGBA(fillColor, elementStyle.fillOpacity),
                 stroke: translateToRGBA(strokeColor, elementStyle.strokeOpacity),
-                strokWidth: elementStyle.strokeWidth,
+                strokeWidth: elementStyle.strokeWidth,
                 strokeOpacity: elementStyle.strokeOpacity,
                 // TODO the rest
             };
             const customTextStyle = {
-                fill: translateToRGBA(elementStyle.fontColor.unsafe()),
-                stroke: translateToRGBA(elementStyle.fontColor.unsafe()),
+                fill: translateToRGBA(elementStyle.fontColor.unsafe(), 1),
+                stroke: translateToRGBA(elementStyle.fontColor.unsafe(), 1),
                 fontFamily: elementStyle.fontName,
                 fontSize: elementStyle.fontSize,
                 fontWeight: elementStyle.fontBold ? 'bold' : 'normal',
@@ -306,7 +306,7 @@ export default class UMLRenderer extends BaseRenderer {
         if (element.elementType === 'UMLCompartment') {
             // TODO
             const rect = createRectangle();
-            svgAttr(rect, assign({}, this.COMPARTMENT_STYLE), attrs || {});
+            svgAttr(rect, assign({}, renderedStyle), attrs || {});
         } else if (element.elementType === 'UMLNameLabel') {
             const rect = createRectangle();
             svgAttr(rect, assign({}, this.LABEL_STYLE), attrs || {});

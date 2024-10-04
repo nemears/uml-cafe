@@ -24,6 +24,7 @@ import EnumerationSVG from './assets/icons/general/enumeration.svg';
 import InterfaceSVG from './assets/icons/general/interface.svg';
 import PrimitiveTypeSVG from './assets/icons/general/primitive_type.svg';
 import SignalSVG from './assets/icons/general/signal.svg';
+import StyleSVG from './assets/icons/general/style.svg';
 
 export default function getImage(el) {
     let elementType = typeof el === 'string' ? el : el.elementType();
@@ -108,6 +109,9 @@ export default function getImage(el) {
         }
         case 'Stereotype': {
             return StereotypeSVG;
+        }
+        case 'Style': {
+            return StyleSVG;
         }
         case 'Usage': {
             return UsageSVG;
