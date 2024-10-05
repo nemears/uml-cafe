@@ -1,5 +1,9 @@
 export default class ElementUpdate {
+    
+    _styles = new Map();
+
     constructor(diagramEmitter, elementRegistry, modelElementMap, eventBus, diagramContext, diManager, umlWebClient) {
+        const me = this;
         diManager.manager.updateHandlers.push(async (newElement, oldElement) => {
             if (oldElement) {
                 if (!newElement) {
@@ -10,9 +14,23 @@ export default class ElementUpdate {
                             // do nothing, just loading
                             await umlWebClient.get(proxyElement.modelElementID);
                         }
+                        if (newElement.localStyle.has()) {
+                            me._styles.set(newElement.localStyle.id(), newElement.id);
+                        }
                     }
-                    const localElement = elementRegistry.get(newElement.id);
-                    if (localElement) {
+                    let localElement = elementRegistry.get(newElement.id);
+                    if (!localElement && newElement.is('Style')) {
+                        localElement = elementRegistry.get(me._styles.get(newElement.id));
+                        if (!localElement) {
+                            console.warn('could not find element corresponding to style');
+                        } else {
+                            const serverElement = await diManager.get(localElement.id);
+                            eventBus.fire('server.update', {
+                                localElement: localElement,
+                                serverElement: serverElement
+                            });
+                        }
+                    } else if (localElement) {
                         eventBus.fire('server.update', {
                             localElement: localElement,
                             serverElement: newElement,

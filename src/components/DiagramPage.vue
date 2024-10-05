@@ -102,6 +102,7 @@ export default {
             const commandStack = this.diagram.get('commandStack');
             const umlRenderer = this.diagram.get('umlRenderer');
             const diagramContext = this.diagram.get('diagramContext');
+            const elementUpdater = this.diagram.get('elementUpdate');
             
             this.diagram.get('keyboard').bind(document);
 
@@ -298,6 +299,7 @@ export default {
                             await localStyle.fillColor.get();
                             await localStyle.strokeColor.get();
                             await localStyle.fontColor.get();
+                            elementUpdater._styles.set(localStyle.id, umlClassifierShape.id);
                         }
 
                         const shape = elementFactory.createShape({

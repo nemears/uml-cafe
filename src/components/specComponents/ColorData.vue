@@ -35,6 +35,7 @@
                 color.green = rgbSplit[1];
                 color.blue = rgbSplit[2];
                 await this.$umlCafeModule.metaClient.put(color);
+                await this.$umlCafeModule.metaClient.put(await this.$umlCafeModule.metaClient.get(this.umlid));
             },
             propogateFocus(data) {
                 this.$emit('focus', data);

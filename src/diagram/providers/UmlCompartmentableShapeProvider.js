@@ -304,6 +304,7 @@ export default class UmlCompartmentableShapeProvider {
                 }
                 const bounds = diManager.getLocal(umlShape.bounds.id());
                 const modelElement = umlWebClient.getLocal(diManager.getLocal(umlShape.modelElement.ids().front()).modelElementID);
+                
                 const shape = elementFactory.createShape({
                     x: bounds.x,
                     y: bounds.y,
@@ -315,6 +316,33 @@ export default class UmlCompartmentableShapeProvider {
                     elementType: umlShape.elementType(),
                     compartments: [],
                 });
+                const doLater = async () => {
+                    if (umlShape.sharedStyle.has()) {
+                        const sharedStyle = await umlShape.sharedStyle.get();
+                        await sharedStyle.fillColor.get();
+                        await sharedStyle.fontColor.get();
+                        await sharedStyle.strokeColor.get();
+                        shape.sharedStyle = sharedStyle;
+                    }
+                    if (umlShape.localStyle.has()) {
+                        const localStyle = await umlShape.localStyle.get();
+                        await localStyle.fillColor.get();
+                        await localStyle.fontColor.get();
+                        await localStyle.strokColor.get();
+                        shape.localStyle = localStyle;
+                    }
+                    // force rerender
+                    const elsToUpdate = [];
+                    const addElAndAllChildren = (elToAdd) => {
+                        elsToUpdate.push(elToAdd);
+                        for (const child of elToAdd.children) {
+                            addElAndAllChildren(child);
+                        }
+                    };
+                    addElAndAllChildren(shape);
+                    eventBus.fire('elements.changed', {elements: elsToUpdate});
+                };
+                doLater();
                 canvas.addShape(shape, owner);
                 modelElement.owner.get(); // async loading for future operations
             }
@@ -338,6 +366,27 @@ export default class UmlCompartmentableShapeProvider {
                         }
                     });
                     eventBus.fire('elements.changed', {elements: [localShape]});
+                }
+                if (umlShape.localStyle.has()) {
+                    const doLater = async () => {
+                        const localStyle = await umlShape.localStyle.get();
+                        await localStyle.fillColor.get();
+                        await localStyle.fontColor.get();
+                        await localStyle.strokeColor.get();
+                        localShape.localStyle = localStyle;
+
+                        // force rerender
+                        const elsToUpdate = [];
+                        const addElAndAllChildren = (elToAdd) => {
+                            elsToUpdate.push(elToAdd);
+                            for (const child of elToAdd.children) {
+                                addElAndAllChildren(child);
+                            }
+                        };
+                        addElAndAllChildren(localShape);
+                        eventBus.fire('elements.changed', {elements: elsToUpdate});
+                    };
+                    doLater();
                 }
             }
         });
