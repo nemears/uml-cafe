@@ -7,7 +7,6 @@ import {
 import { createLine } from 'diagram-js/lib/util/RenderUtil';
 import { assign } from 'min-dash';
 import TextUtil from 'diagram-js/lib/util/Text';
-import { CLASS_SHAPE_HEADER_HEIGHT } from './ClassHandler';
 import { OWNED_END_RADIUS } from './relationships/Association';
 
 export function createArrow(line) {
@@ -259,17 +258,25 @@ export default class UMLRenderer extends BaseRenderer {
                 stroke: translateToRGBA(strokeColor, elementStyle.strokeOpacity),
                 strokeWidth: elementStyle.strokeWidth,
                 strokeOpacity: elementStyle.strokeOpacity,
-                // TODO the rest
+                // TODO the rest (stroke dash length)
             };
             const customTextStyle = {
                 fill: translateToRGBA(elementStyle.fontColor.unsafe(), 1),
-                stroke: translateToRGBA(elementStyle.fontColor.unsafe(), 1),
+                // stroke: translateToRGBA(elementStyle.fontColor.unsafe(), 1),
                 fontFamily: elementStyle.fontName,
                 fontSize: elementStyle.fontSize,
                 fontWeight: elementStyle.fontBold ? 'bold' : 'normal',
                 fontStyle: elementStyle.fontItalic ? 'italic' : 'normal',
 
             };
+            if (elementStyle.fontBold) {
+                customTextStyle.stroke = customTextStyle.fill;
+            }
+            if (elementStyle.fontUnderline) {
+                customTextStyle.textDecoration = 'underline';
+            } else if (elementStyle.fontStrikeThrough) {
+                customTextStyle.textDecoration = 'line-through';
+            }
             customTextUtil = new TextUtil({
                 style: customTextStyle,
                 align: 'center'
@@ -315,9 +322,9 @@ export default class UMLRenderer extends BaseRenderer {
             } else {
                 const text = cropText(element.text, element, {
                     align: 'center-middle',
-                    style: {
-                        fontWeight: 'Bold',
-                    },
+                    // style: {
+                    //     fontWeight: 'Bold',
+                    // },
                     box: {
                         width: element.width - 5,
                         height: element.height,
