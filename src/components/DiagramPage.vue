@@ -260,6 +260,7 @@ export default {
                             return undefined;
                         }
                         const modelElement = await this.$umlWebClient.get((await umlClassifierShape.modelElement.front()).modelElementID);
+                        await modelElement.owner.get();
                         let parent = elementRegistry.get(umlClassifierShape.owningElement.id());
                         if (!parent) {
                             parent = await drawDiagramElement(await DIManager.get(umlClassifierShape.owningElement.id()));
