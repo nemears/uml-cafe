@@ -1,12 +1,12 @@
 <script>
-import packageImage from '../assets/icons/general/package.svg';
-import getImage from '../GetUmlImage.vue';
-import classDiagramImage from '../assets/icons/general/class_diagram.svg';
-import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createUmlClassDiagram, mapColor, getPanelClass, isTypedElement } from '../umlUtil.js'
+import packageImage from '../../assets/icons/general/package.svg';
+import getImage from '../../GetUmlImage.vue';
+import classDiagramImage from '../../assets/icons/general/class_diagram.svg';
+import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createUmlClassDiagram, mapColor, getPanelClass, isTypedElement } from '../../umlUtil.js'
 import { randomID } from 'uml-client/lib/types/element';
 
 export default {
-    name: "ElementExplorer",
+    name: "ElementExplorerPanel",
     props: [
         "umlID",
         "depth",
@@ -58,7 +58,7 @@ export default {
         };
     },
     components: [
-        "ElementExplorer"
+        "ElementExplorerPanel"
     ],
     computed: {
         indent() {
@@ -783,7 +783,7 @@ export default {
             </div>
         </div>
         <div v-if="expanded && !isFetching">
-            <ElementExplorer v-for="child in children" 
+            <ElementExplorerPanel v-for="child in children" 
                     :umlID="child" 
                     :depth="depth + 1"
                     :selected-elements="selectedElements"
@@ -797,7 +797,7 @@ export default {
                     @select="propogateSelect"
                     @deselect="propogateDeselect"
                     @update-tree="propogateUpdateTree"
-                    @command="propogateCommand"></ElementExplorer>
+                    @command="propogateCommand"></ElementExplorerPanel>
         </div>
     </div>
 </template>

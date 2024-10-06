@@ -1,6 +1,6 @@
 <script setup>
 import UmlBanner from './components/UmlBanner.vue';
-import ElementExplorer from './components/ElementExplorer.vue';
+import ElementExplorer from './components/elementExplorer/ElementExplorer.vue';
 import SpecificationPage from './components/SpecificationPage.vue';
 import WelcomePage from './components/WelcomePage.vue';
 import DiagramPage from './components/DiagramPage.vue';
@@ -16,8 +16,6 @@ import { ELEMENT_ID } from 'uml-client/lib/modelIds';
 export default {
 	data() {
 		return {
-			headID: '',
-			isFetching: true,
 			focusTab: {
                 label: 'Welcome!',
                 id: 'VQvHG72Z_FjNQlEeeFEcrX1v6RRy',
@@ -34,8 +32,6 @@ export default {
 			elementExplorerButtonTitle: 'Collapse',
 			editorType: 'Welcome',
             selectedElements: [],
-            treeUpdate: undefined,
-            treeGraph: new Map(),
 			users: [],
 			userSelected: undefined,
 			userDeselected: undefined,
@@ -44,19 +40,23 @@ export default {
             latestCommand: undefined,
             commandUndo: undefined,
             theme: 'light',
-            manager: this.$umlWebClient.id
+            manager: this.$umlWebClient.id,
+            reload: 0,
+            elementExplorerCommand: undefined,
+            elementExplorerUndo: undefined,
+            treeGraph: new Map()
 		}
 	},
 	provide() {
 		return {
 			draginfo: computed(() => this.recentDraginfo),
             elementUpdate: computed(() => this.elementUpdate),
-            treeUpdate: computed(() => this.treeUpdate),
 			userSelected: computed(() => this.userSelected),
 			userDeselected: computed(() => this.userDeselected),
             latestCommand: computed(() => this.latestCommand),
             commandUndo: computed(() => this.commandUndo),
             theme: computed(() => this.theme),
+            reload: computed(() => this.reload)
 		}
 	},
 	mounted() {
@@ -85,8 +85,6 @@ export default {
 		}
 
         document.addEventListener('keypress', this.keypress);
-
-		this.getHeadFromServer();
 
 		this.$umlWebClient.onDropClient = (clientID) => {
 			const userIndex = this.users.findIndex(user => user.id === clientID);
@@ -154,29 +152,6 @@ export default {
                 this.redo();
             }
         },
-		async getHeadFromServer() {
-			this.isFetching = true;
-			if (this.$umlWebClient.initialized) {
-				const head = await this.$umlWebClient.head();
-				this.headID = head.id;
-				const usersSelecting = [];
-				for (const user of this.users) {
-					if (user.selectedElements.includes(this.headID)) {
-						usersSelecting.unshift(user)
-					}
-				}
-                this.treeUpdate = {
-                    id: this.headID,
-                    expanded: false,
-                    children: {},
-                    childOrder: [],
-                    parent: undefined,
-					usersSelecting: usersSelecting,
-                };
-                this.treeGraph.set(this.headID, this.treeUpdate);
-				this.isFetching = false;
-			}
-		},
 		async focus(data) {
             if (data.el) {
                 const el = data.el;
@@ -251,20 +226,8 @@ export default {
             this.elementUpdate = newElementUpdate;
         },
 		
-		async dragInfo(info) {
-			const draggedElements = [];
-			for (const id of this.selectedElements) {
-				if (this.treeGraph.get(id)) {
-					draggedElements.push(await this.$umlWebClient.get(id));
-				} else {
-					// TODO
-					throw Error("dragging can only be handled from element explorer to other windows. Need to implement eventually!")
-				}
-			}
-			this.recentDraginfo = {
-				selectedElements: draggedElements,
-				event: info.event
-			};
+		dragInfo(info) {
+			this.recentDraginfo = info;
 		},
 		closeTab(id) {
 			if (this.specificationTab === id) {
@@ -456,62 +419,6 @@ export default {
                 this.selectedElements = [...this.selectedElements];
             }
         },
-        updateTree(event) {
-            const treeNode = this.treeGraph.get(event.id);
-            if (!treeNode) {
-                throw Error('bad update emited by element explorer panel not being tracked of by App! ' + event.id);
-            }
-            const newTreeNode = {
-                id: event.id,
-                expanded: event.expanded,
-                childOrder: [],
-                children: {},
-                parent: treeNode.parent,
-				usersSelecting: treeNode.usersSelecting,
-            };
-            let it = event.childOrder;
-            if (!it) {
-                it = event.children;
-            }
-            if (!it) {
-                throw Error('Bad state could not find valid children to iterate');
-            }
-            for (const id of it) {
-                const oldChildNode = treeNode.children[id];
-                if (oldChildNode) {
-                    oldChildNode.parent = newTreeNode;
-                    newTreeNode.children[id] = oldChildNode;
-                    newTreeNode.childOrder.push(id);
-                } else {
-                    const childNode = {
-                        id: id,
-                        expanded: false,
-                        children: {},
-                        childOrder: [],
-                        parent: newTreeNode,
-						usersSelecting: [],
-                    };
-                    newTreeNode.children[id] = childNode;
-                    newTreeNode.childOrder.push(id);
-					for (const user of this.users) {
-						for (const userSelectedID of user.selectedElements) {
-							if (id === userSelectedID) {
-								childNode.usersSelecting.unshift(user);
-							}
-						}
-					}
-                    this.treeGraph.set(id, childNode);
-                }
-            }
-            if (treeNode.parent) {
-                treeNode.parent.children[event.id] = newTreeNode;
-            }
-            this.treeGraph.set(event.id, newTreeNode);
-            this.treeUpdate = newTreeNode;
-            if (newTreeNode.id === this.headID) {
-                this.rootofTree = newTreeNode;
-            }
-        },
         command(event) {
             if (event.undo) {
                 // TODO do some handling
@@ -521,17 +428,18 @@ export default {
                 this.undoStack = [];
                 if (event.element !== this.specificationTab) {
                     if (event.name === 'elementExplorerCreate' || event.name === 'diagramCreate' || event.name === 'elementExplorerRename') {
-                        const treeNode = this.treeGraph.get(event.element);
-                        let currNode = treeNode;
-                        const stack = [];
-                        while (currNode) {
-                            currNode.expanded = true;
-                            stack.unshift(currNode);
-                            currNode = currNode.parent;
-                        }
-                        for (const stackCurrNode of stack) {
-                            this.updateTree(stackCurrNode);
-                        }
+                        this.elementExplorerCommand = event;
+                        // const treeNode = this.treeGraph.get(event.element);
+                        // let currNode = treeNode;
+                        // const stack = [];
+                        // while (currNode) {
+                        //     currNode.expanded = true;
+                        //     stack.unshift(currNode);
+                        //     currNode = currNode.parent;
+                        // }
+                        // for (const stackCurrNode of stack) {
+                        //     this.updateTree(stackCurrNode);
+                        // }
                     }
                 }
                 this.latestCommand = event;
@@ -543,21 +451,22 @@ export default {
                 this.undoStack.unshift(undoneCommand);
                 if (undoneCommand !== this.specificationTab) {
                     if (undoneCommand.name === 'elementExplorerCreate' || undoneCommand.name === 'diagramCreate' || undoneCommand.name === 'elementExplorerRename') {
-                        // make sure the parent of the element is shown in the element explorer
-                        const treeNode = this.treeGraph.get(undoneCommand.context.element);
-                        let currNode = treeNode;
-                        if (currNode) {
-                            currNode = currNode.parent;
-                        }
-                        const stack = [];
-                        while (currNode) {
-                            currNode.expanded = true;
-                            stack.unshift(currNode);
-                            currNode = currNode.parent;
-                        }
-                        for (const stackCurrNode of stack) {
-                            this.updateTree(stackCurrNode);
-                        }
+                        this.elementExplorerUndo = undoneCommand;
+                        // // make sure the parent of the element is shown in the element explorer
+                        // const treeNode = this.treeGraph.get(undoneCommand.context.element);
+                        // let currNode = treeNode;
+                        // if (currNode) {
+                        //     currNode = currNode.parent;
+                        // }
+                        // const stack = [];
+                        // while (currNode) {
+                        //     currNode.expanded = true;
+                        //     stack.unshift(currNode);
+                        //     currNode = currNode.parent;
+                        // }
+                        // for (const stackCurrNode of stack) {
+                        //     this.updateTree(stackCurrNode);
+                        // }
                     }
                 }
                 this.commandUndo = undoneCommand;
@@ -569,6 +478,10 @@ export default {
                 redoCommand.redo = true;
                 this.commandStack.unshift(redoCommand);
                 this.latestCommand = redoCommand;
+                if (redoCommand.name === 'elementExplorerCreate' || redoCommand.name === 'diagramCreate' || redoCommand.name === 'elementExplorerRename') {
+                    this.elementExplorerCommand = redoCommand;
+                }
+
             }
         },
         getColor(color) {
@@ -620,6 +533,9 @@ export default {
         changeTheme(theme) {
             this.theme = theme;
         },
+        reloadModel() {
+            this.reload = this.reload + 1;
+        }
 	}
 }
 </script>
@@ -628,7 +544,7 @@ export default {
 		<UmlBanner 
 			:users="users"
             :theme="theme"
-			@new-model-loaded="getHeadFromServer"
+			@new-model-loaded="reloadModel"
             @user-update="userUpdate"
 			@diagram="diagram" 
 			@element-update="elementUpdateHandler"
@@ -660,28 +576,25 @@ export default {
                 :theme="theme"
                 @tab-selected="updateTab"></TabContainer>
 		</div>
-		<div    class="parent"
-                :class="{
-                    parentLight: theme === 'light',
-                    parentDark: theme === 'dark',
-                }">
-			<div class="elementExplorer" v-if="!elementExplorerHide" draggable="false">
-				<ElementExplorer 
-					v-if="!isFetching && headID !== undefined"
-					:umlID="headID" 
-					:depth="0"
-                    :selected-elements="selectedElements"
-                    :tree-graph="treeGraph"
-                    :theme="theme"
-					@focus="focus" 
-					@element-update="elementUpdateHandler" 
-					@diagram="diagram"
-					@draginfo="dragInfo"
-                    @select="select"
-                    @deselect="deselect"
-                    @update-tree="updateTree"
-                    @command="command"></ElementExplorer>
-			</div>
+            <div    class="parent"
+                    :class="{
+                        parentLight: theme === 'light',
+                        parentDark: theme === 'dark',
+                    }">
+            <ElementExplorer    :hidden="elementExplorerHide"
+                                :theme="theme"
+                                :selected-elements="selectedElements"
+                                :users="users"
+                                :new-command="elementExplorerCommand"
+                                :new-undo="elementExplorerUndo"
+                                :tree-graph="treeGraph"
+                                @focus="focus"
+                                @command="command"
+                                @select="select"
+                                @deselect="deselect"
+                                @drag-info="dragInfo"
+                                @element-update="elementUpdateHandler">
+            </ElementExplorer>
 			<div class="editor">
 				<WelcomePage v-if="editorType==='Welcome'"></WelcomePage>
 				<SpecificationPage v-if="editorType=='Specification'" 
@@ -711,7 +624,6 @@ export default {
     </div>
 </template>
 <style>
-
 .backgroundPanel {
 	flex: 0 1 auto;
 	display: flex;
@@ -765,14 +677,6 @@ export default {
 }
 .parentDark {
     background-color: var(--vt-c-dark);
-}
-.elementExplorer{
-	width: 300px;
-	flex-shrink: 0;
-	display: flex;
-	flex-direction: column;
-	overflow: auto;
-	resize: horizontal; 
 }
 .editor {
 	flex: 1 1 auto;
