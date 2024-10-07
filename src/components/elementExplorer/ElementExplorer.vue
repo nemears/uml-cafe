@@ -4,7 +4,6 @@
     import SearchSVG from '../../assets/icons/general/search_symbol.svg';
     import { computed } from 'vue';
     import { NAMED_ELEMENT_ID } from 'uml-client/lib/modelIds';
-    import { nullID } from 'uml-client/lib/types/element';
     export default {
         props: [
             'hidden',
@@ -32,6 +31,8 @@
                 headID: undefined,
                 treeUpdate: [],
                 highlightedNodes: [],
+                showFilters: false,
+                treeOrder: 'id'
             };
         },
         provide() {
@@ -101,7 +102,7 @@
                     this.isFetching = false;
                 }
             },
-            updateTree(event) {
+            async updateTree(event) {
                 const treeNode = this.treeGraph.get(event.id);
                 if (!treeNode) {
                     throw Error('bad update emited by element explorer panel not being tracked of by App! ' + event.id);
@@ -148,6 +149,7 @@
                         this.treeGraph.set(id, childNode);
                     }
                 }
+                await this.sortChildren(newTreeNode);
                 if (treeNode.parent) {
                     treeNode.parent.children[event.id] = newTreeNode;
                 }
@@ -193,6 +195,7 @@
                     for (const match of matches) {
                         let treeMatch = this.treeGraph.get(match.id);
                         if (!treeMatch) {
+                            // expand tree nodes to reveal
                             let currEl = match;
                             let existingParentNode;
                             const elsToCreate = [];
@@ -234,6 +237,7 @@
                                     }
                                     this.treeGraph.set(id, childNode);
                                 }
+                                await this.sortChildren(newTreeNode);
                                 this.treeGraph.set(currEl.id, newTreeNode);
                                 existingParentNode = newTreeNode;
                                 if (currEl.id === match.id) {
@@ -258,8 +262,109 @@
                     this.highlightedNodes = newHighlightedNodes;
                 }
             },
+            async sortChildren(front) {
+                const currEl = await this.$umlWebClient.get(front.id);
+                if (this.treeOrder === 'id') {
+                    const newChildOrder = []
+                    for (const id of currEl.ownedElements.ids()) {
+                        newChildOrder.push(id);
+                    }
+                    front.childOrder = newChildOrder;
+                } else if (this.treeOrder === 'name') {
+                    const newChildren = [];
+                    for await (const child of currEl.ownedElements) {
+                        newChildren.push(child);
+                    }
+                    newChildren.sort((a,b) => {
+                        if (a.is(NAMED_ELEMENT_ID)) {
+                            if (b.is(NAMED_ELEMENT_ID)) {
+                                if (a.name < b.name) {
+                                    return -1;
+                                } else if (a.name === b.name) {
+                                    return 0;
+                                } else {
+                                    return 1;
+                                }
+                            } else {
+                                return -1;
+                            }
+                        } else {
+                            if (b.is(NAMED_ELEMENT_ID)) {
+                                return 1;
+                            } else {
+                                return 0;
+                            }
+                        }
+                    });
+                    const newChildOrder = [];
+                    for (const child of newChildren) {
+                        newChildOrder.push(child.id);
+                    }
+                    front.childOrder = newChildOrder;
+                } else if (this.treeOrder === 'type') {
+                    const newChildren = [];
+                    for await (const child of currEl.ownedElements) {
+                        newChildren.push(child);
+                    }
+                    newChildren.sort((a,b) => {
+                        if (a.elementType() < b.elementType()) {
+                            return -1;
+                        } else if (a.elementType() === b.elementType()) {
+                            return 0;
+                        } else {
+                            return 1;
+                        }
+                    });
+                    const newChildOrder = [];
+                    for (const child of newChildren) {
+                        newChildOrder.push(child.id)
+                    }
+                    front.childOrder = newChildOrder;
+                } else if (this.treeOrder === 'typeAndName') {
+                    const newChildren = [];
+                    for await (const child of currEl.ownedElements) {
+                        newChildren.push(child);
+                    }
+                    newChildren.sort((a,b) => {
+                        if (a.elementType() < b.elementType) {
+                            return -1;
+                        } else if (a.elementType() === b.elementType()) {
+                            if (a.is(NAMED_ELEMENT_ID)) {
+                                if (a.name < b.name) {
+                                    return -1;
+                                } else if (a.name === b.name) {
+                                    return 0;
+                                } else {
+                                    return 1;
+                                }
+                            }        
+                            return 0;
+                        } else {
+                            return 1;
+                        } 
+                    });
+                }
+            },
+            async setOrder() {
+                const orderVal = this.$refs.orderInput.value;
+                this.treeOrder = orderVal;
+                const queue = [this.treeGraph.get(this.headID)];
+                const newTreeUpdate = [];
+                while (queue.length > 0) {
+                    const front = queue.shift();
+                    await this.sortChildren(front)
+                    newTreeUpdate.push(front);
+                    for (const child of Object.values(front.children)) {
+                        queue.push(child);
+                    }
+                }
+                this.treeUpdate = newTreeUpdate;
+            },
             focusSearchBar() {
                 this.$refs.searchInput.select();
+            },
+            toggleFilters() {
+                this.showFilters = !this.showFilters;
             },
             command(cmd) {
                 this.$emit('command', cmd);
@@ -318,9 +423,24 @@
                         style="height:13px;flex: 0 1;margin-right:3px;margin-top:3px;"
                         @click="search"/>
             </div>
-            <div style="flex: 0 1;border: 2px solid var(--uml-cafe-light-light-1);border-radius:5px;margin:3px;">
+            <div    style="flex: 0 1;border: 2px solid var(--uml-cafe-light-light-1);border-radius:5px;margin:3px;"
+                    @click="toggleFilters">
                 <img v-bind:src="filterSymbol" style="height:13px;margin-left:3px;margin-right:3px;margin-bottom:1px;"/>
             </div>
+        </div>
+        <div v-if="showFilters"
+                style="border-bottom: 2px solid var(--uml-cafe-light-light-1);">
+            <label for="explorerOrder" style="margin-left: 5px;">Element Order</label>
+            <select name="explorerOrder" 
+                    id="explorerOrder"
+                    style="margin-left: 5px;outline: none;border: 1px solid var(--uml-cafe-light-light-1);background-color: var(--vt-c-white-soft);border-radius: 5px;"
+                    ref="orderInput"
+                    @change="setOrder">
+                <option value="id" :selected="treeOrder === 'id'">ID</option>
+                <option value="name" :selected="treeOrder === 'name'">Name</option>
+                <option value="type" :selected="treeOrder === 'type'">Type</option>
+                <option value="typeAndName" :selected="treeOrder === 'typeAndName'">Type and Name</option>
+            </select>
         </div>
         <ElementExplorerPanel 
             v-if="!isFetching && headID !== undefined"
@@ -358,9 +478,12 @@
     outline:none;
     /*background-color: var(--uml-cafe-light-dark);*/
 }
+.searchInputDark {
+    background-color: var(--open-uml-selection-dark-1);
+    color: var(--vt-c-azure);
+}
 .searchInputDark:focus {
     border: none;
     outline: none;
-    background-color: var(--open-uml-selection-dark-1);
 }
 </style>
