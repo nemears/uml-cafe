@@ -3,6 +3,8 @@
     import FilterSVG from '../../assets/icons/general/filter_symbol.svg';
     import SearchSVG from '../../assets/icons/general/search_symbol.svg';
     import { computed } from 'vue';
+    import { NAMED_ELEMENT_ID } from 'uml-client/lib/modelIds';
+    import { nullID } from 'uml-client/lib/types/element';
     export default {
         props: [
             'hidden',
@@ -28,7 +30,8 @@
                 searchSymbol: SearchSVG,
                 isFetching: true,
                 headID: undefined,
-                treeUpdate: undefined,
+                treeUpdate: [],
+                highlightedNodes: [],
             };
         },
         provide() {
@@ -86,15 +89,15 @@
                             usersSelecting.unshift(user)
                         }
                     }
-                    this.treeUpdate = {
+                    this.treeUpdate = [{
                         id: this.headID,
                         expanded: false,
                         children: {},
                         childOrder: [],
                         parent: undefined,
                         usersSelecting: usersSelecting,
-                    };
-                    this.treeGraph.set(this.headID, this.treeUpdate);
+                    }];
+                    this.treeGraph.set(this.headID, this.treeUpdate[0]);
                     this.isFetching = false;
                 }
             },
@@ -150,13 +153,113 @@
                 }
 
                 this.treeGraph.set(event.id, newTreeNode);
-                this.treeUpdate = newTreeNode;
+                this.treeUpdate = [newTreeNode];
                 if (newTreeNode.id === this.headID) {
                     this.rootofTree = newTreeNode;
                 }
             },
-            search(data) {
+            async search() {
+                const searchVal = this.$refs.searchInput.value;
+                if (searchVal.length === 0) {
+                    return;
+                } 
+                                
+                // search the model
+                const matches = [];
+                const queue = [await this.$umlWebClient.get(this.headID)];
+                while (queue.length > 0) {
+                    const front = queue.shift();
+                    if (front.id === searchVal) {
+                        matches.push(front);
+                    }
+                    if (front.is(NAMED_ELEMENT_ID)) {
+                        if (front.name === searchVal) {
+                            matches.push(front);
+                        }
+                    }
+                    for await (const ownedEl of front.ownedElements) {
+                        queue.push(ownedEl);
+                    }
+                }
 
+                if (matches.length > 0) {
+                    const elsToExpand = [];
+                    for (const node of this.highlightedNodes) {
+                        node.highlight = false;
+                        elsToExpand.push(node);
+                    }
+                    const newHighlightedNodes = [];
+                    
+                    for (const match of matches) {
+                        let treeMatch = this.treeGraph.get(match.id);
+                        if (!treeMatch) {
+                            let currEl = match;
+                            let existingParentNode;
+                            const elsToCreate = [];
+                            elsToCreate.unshift(currEl);
+                            while (!(existingParentNode = this.treeGraph.get(currEl.owner.id()))) {
+                                currEl = await currEl.owner.get();
+                                elsToCreate.unshift(currEl);
+                            }
+                            while (elsToCreate.length > 0) {
+                                currEl = elsToCreate.shift();
+                                const newTreeNode = {
+                                    id: currEl.id,
+                                    expanded: currEl.id !== match.id,
+                                    children: {},
+                                    childOrder: [],
+                                    parent: existingParentNode,
+                                    usersSelecting: [],
+                                    highlight: currEl.id === match.id
+                                };
+                                const owner = await currEl.owner.get();
+                                for (const id of owner.ownedElements.ids()) {
+                                    let childNode;
+                                    if (id === currEl.id) {
+                                        childNode = newTreeNode;
+                                    } else {
+                                        childNode = {
+                                            id: id,
+                                            expanded: false,
+                                            children: {},
+                                            childOrder: [],
+                                            parent: existingParentNode,
+                                            usersSelecting: [],
+                                            highlight: false
+                                        };
+                                    }
+                                    if (!existingParentNode.children[id]) {
+                                        existingParentNode.children[id] = childNode;
+                                        existingParentNode.childOrder.push(id);
+                                    }
+                                    this.treeGraph.set(id, childNode);
+                                }
+                                this.treeGraph.set(currEl.id, newTreeNode);
+                                existingParentNode = newTreeNode;
+                                if (currEl.id === match.id) {
+                                    treeMatch = newTreeNode;
+                                }
+                            }
+                        } else {
+                            treeMatch.highlight = true;
+                        }
+
+                        newHighlightedNodes.push(treeMatch);
+
+                        elsToExpand.push(treeMatch);
+                        treeMatch = treeMatch.parent;
+                        while (treeMatch) {
+                            treeMatch.expanded = true;
+                            elsToExpand.unshift(treeMatch);
+                            treeMatch = treeMatch.parent;
+                        }
+                    }
+                    this.treeUpdate = elsToExpand;
+                    this.highlightedNodes = newHighlightedNodes;
+                }
+            },
+            focusSearchBar() {
+                this.$refs.searchInput.select();
             },
             command(cmd) {
                 this.$emit('command', cmd);
@@ -207,14 +310,16 @@
                                 searchInputLight: theme === 'light',
                                 searchInputDark: theme === 'dark',
                             }"
-                            @submit="search">
+                           ref="searchInput"
+                           @keyup.enter="search"
+                           @focus="focusSearchBar">
                 </div>
                 <img    v-bind:src="searchSymbol" 
                         style="height:13px;flex: 0 1;margin-right:3px;margin-top:3px;"
                         @click="search"/>
             </div>
             <div style="flex: 0 1;border: 2px solid var(--uml-cafe-light-light-1);border-radius:5px;margin:3px;">
-                <img v-bind:src="filterSymbol" style="height:13px;margin-left:3px;margin-right:3px;margin-bottom:2px;"/>
+                <img v-bind:src="filterSymbol" style="height:13px;margin-left:3px;margin-right:3px;margin-bottom:1px;"/>
             </div>
         </div>
         <ElementExplorerPanel 
@@ -251,7 +356,7 @@
 .searchInputLight:focus {
     border: none;
     outline:none;
-    background-color: var(--uml-cafe-light-dark);
+    /*background-color: var(--uml-cafe-light-dark);*/
 }
 .searchInputDark:focus {
     border: none;

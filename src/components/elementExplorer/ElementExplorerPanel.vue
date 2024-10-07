@@ -54,7 +54,8 @@ export default {
             stereotypedLabel: [],
             propertyLabel: "",
             generalizationLabel: "",
-            hidden: false
+            hidden: false,
+            highlight: {},
         };
     },
     components: [
@@ -79,6 +80,7 @@ export default {
           await this.handleElementUpdate(newElementUpdate);  
         },
         selectedElements(newSelectedElements) {
+            this.highlight = {};
             if (this.selected) {
                 if (!newSelectedElements.includes(this.umlID)) {
                     this.selected = false;
@@ -89,15 +91,18 @@ export default {
                 }
             }
         },
-        treeUpdate(newTreeNode) {
-            if (this.umlID === newTreeNode.id) {
-                this.expanded = newTreeNode.expanded;
-                if (this.expanded) {
-                    this.expandSymbol = '-';
-                } else {
-                    this.expandSymbol = '+';
-                } 
-                this.children = newTreeNode.childOrder;
+        treeUpdate(treeNodes) {
+            for (const newTreeNode of treeNodes) {
+                if (this.umlID === newTreeNode.id) {
+                    this.expanded = newTreeNode.expanded;
+                    this.highlightTreeNode(newTreeNode);    
+                    if (this.expanded) {
+                        this.expandSymbol = '-';
+                    } else {
+                        this.expandSymbol = '+';
+                    } 
+                    this.children = newTreeNode.childOrder;
+                }
             }
         },
         userSelected(newUserSelected) {
@@ -162,6 +167,50 @@ export default {
         }
     },
     methods: {
+        highlightTreeNode(newTreeNode) {
+            if (newTreeNode.highlight) {
+                const colorBorder = '2px solid ' + 'var(--uml-cafe-' + this.$umlWebClient.color.toLowerCase() + '-user-light)'; 
+                this.highlight = {
+                    borderLeft: colorBorder,
+                    borderRight: colorBorder,
+                    borderRadius: '5px'
+                }
+                if (newTreeNode.parent) {
+                    const parentIndex = newTreeNode.parent.childOrder.indexOf(this.umlID);
+                    if (parentIndex > 0) {
+                        if (!newTreeNode.parent.children[newTreeNode.parent.childOrder[parentIndex - 1]].highlight) {
+                            this.highlight.borderTop = colorBorder;
+                        }
+                    } else {
+                        if (!newTreeNode.parent.highlight) {
+                            this.highlight.borderTop = colorBorder;
+                        }
+                    }
+                    if (newTreeNode.expanded && newTreeNode.childOrder.length > 0) {
+                        if (!newTreeNode.children[newTreeNode.childOrder[0]].highlight) {
+                            this.highlight.borderBottom = colorBorder;
+                        }
+                    } else {
+                        if (parentIndex < newTreeNode.parent.childOrder.length - 1) {
+                            if (!newTreeNode.parent.children[newTreeNode.parent.childOrder[parentIndex + 1]].highlight) {
+                                this.highlight.borderBottom = colorBorder;
+                            }
+                        }
+                    }
+                } else {
+                    this.highlight.borderTop = colorBorder;
+                    if (this.expanded) {
+                        if (!(newTreeNode.childOrder.length > 0 && newTreeNode.children[newTreeNode.childOrder[0]].highlight)) {
+                            this.highlight.borderBottom = colorBorder;
+                        }
+                    } else {
+                        this.highlight.borderBottom = colorBorder;
+                    }
+                }
+            } else {
+                this.highlight = {};
+            }
+        },
         async createElementAndAddToSet(id, type, set, parent) {
             const createdEl = await this.$umlWebClient.post(type, {id:id});
             await parent[set].add(createdEl);
@@ -204,6 +253,7 @@ export default {
             } else {
                 this.expandSymbol = '+';
             }
+            this.highlightTreeNode(treeNode);
 
             // check if other users have selected this
             this.currentUsers = treeNode.usersSelecting.map(user => mapColor(user.color));
@@ -751,6 +801,7 @@ export default {
         <div draggable="true"
              class="elementExplorerPanel"
              :class="panelClass"
+             :style="highlight"
              @click.exact="select('none')"
              @click.ctrl="select('ctrl')"
              @click.shift="select('shift')"
