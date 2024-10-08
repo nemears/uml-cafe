@@ -9,7 +9,7 @@
             </p>
             <div style="text-align: center;">
                 <video controls width="80%">
-                    <source src="@/assets/demo_video_uml_cafe.webm" type="video/mp4">
+                    <source src="https://share.uml.cafe/demo_video_0_5_0.webm" type="video/mp4">
                 </video>
             </div>
             <br/>
