@@ -54,7 +54,7 @@ export default {
     padding-bottom: 10px;
 }
 .enumInputContainer > select {
-    min-width: 700px;
+    flex: 1 0;
     border: none;
     font-size: 18px;
 }

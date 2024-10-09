@@ -340,7 +340,7 @@ export default {
     <div class="horizontalScroll">
         <div class="headerDiv">
             <h1>
-            Specification of {{ elementType }} {{ elementLabel }}
+                Specification of {{ elementType }} {{ elementLabel }}
             </h1>
             <img v-bind:src="elementImage" v-if="elementImage !== undefined" class="headerImage"/>
         </div>
@@ -451,9 +451,10 @@ export default {
     /* border: solid #525258; */
     border-width: 2px;
     overflow: auto;
+    display: block;
 }
 .horizontalScroll{
-    width: 1000px;
+    max-width: 920px;
     margin: auto;
 }
 .headerDiv {

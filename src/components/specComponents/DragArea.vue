@@ -53,11 +53,12 @@
     }
 </script>
 <template>
-     <div :class="drag ? badDrag ? 'badDrag' : 'dragElement' : 'noDrag'"
-             @dragenter="dragenter"
-             @dragleave="dragleave"
-             @drop="drop($event)"
-             @dragover.prevent>
+     <div   :class="drag ? badDrag ? 'badDrag' : 'dragElement' : 'noDrag'"
+            style="flex: 1 0;"
+            @dragenter="dragenter"
+            @dragleave="dragleave"
+            @drop="drop($event)"
+            @dragover.prevent>
         <slot>
         </slot>
     </div>

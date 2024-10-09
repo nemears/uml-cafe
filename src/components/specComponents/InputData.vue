@@ -72,7 +72,7 @@ export default {
     padding-bottom: 10px;
 }
 .numberInputContainer > input {
-    min-width: 700px;
+    flex: 1 0;
     border: none;
     font-size: 18px;
 }

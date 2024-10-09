@@ -226,11 +226,14 @@ export default {
     background-color: var(--vt-c-off-white);
 }
 .createToolTip {
-    padding-left: 150px;
+    /*padding-left: 150px;*/
+    flex: 1 0;
+    text-align: center;
     -webkit-user-select: none; /* Safari */        
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
+    white-space: nowrap;
     /* width: 700px; */
 }
 .readOnlyToolTip {

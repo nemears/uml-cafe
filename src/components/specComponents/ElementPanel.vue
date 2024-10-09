@@ -161,7 +161,8 @@
 </template>
 <style>
 .setElement, .selectedSetElement{
-    width: 700px;
+    /**width: 700px;**/
+    flex: 1 0;
     min-height: 30px;
     display: flex;
     padding-left: 5px;
