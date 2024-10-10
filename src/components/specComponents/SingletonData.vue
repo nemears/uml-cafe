@@ -135,7 +135,7 @@ export default {
                     onClick: async () => {
                         const el = val;
                         const owner = await el.owner.get();
-                        this.$umlWebClient.deleteElement(el);
+                        this.$umlWebClient.delete(el);
                         this.$emit('elementUpdate', createElementUpdate(owner));
                         this.$umlWebClient.put(owner);
                         this.valID = nullID();

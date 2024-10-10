@@ -133,7 +133,7 @@ export default {
                     label: 'Delete',
                     onClick: async () => {
                         const owner = await this. $umlWebClient.get(this.umlid);
-                        await this.$umlWebClient.deleteElement(element);
+                        await this.$umlWebClient.delete(element);
                         this.$umlWebClient.put(owner);
                         this.$emit('elementUpdate', createElementUpdate(owner));
                     }
