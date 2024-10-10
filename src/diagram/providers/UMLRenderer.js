@@ -241,7 +241,7 @@ export default class UMLRenderer extends BaseRenderer {
                 elementStyle = currElement.sharedStyle;
             } else {
                 // check parents
-                currElement = element.parent;
+                currElement = currElement.parent;
             }
         }
        

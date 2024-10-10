@@ -593,7 +593,8 @@ export default {
                                 @select="select"
                                 @deselect="deselect"
                                 @drag-info="dragInfo"
-                                @element-update="elementUpdateHandler">
+                                @element-update="elementUpdateHandler"
+                                @diagram="diagram">
             </ElementExplorer>
 			<div class="editor">
 				<WelcomePage v-if="editorType==='Welcome'"></WelcomePage>

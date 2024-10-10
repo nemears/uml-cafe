@@ -53,9 +53,10 @@
                     stack.unshift(currNode);
                     currNode = currNode.parent;
                 }
-                for (const stackCurrNode of stack) {
-                    this.updateTree(stackCurrNode);
-                } 
+                this.treeUpdate = stack;
+                // for (const stackCurrNode of stack) {
+                //     this.updateTree(stackCurrNode);
+                // } 
             },
             newUndo(undoneCommand) {
                 // make sure the parent of the element is shown in the element explorer

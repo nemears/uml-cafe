@@ -152,8 +152,8 @@ export function getPanelClass(selected, hover, currentUsers, umlWebClient, theme
 
 export function getProjectLoginObject(wholeProjectName, serverAddress) {
     const projectNameSplit = wholeProjectName.split('/');
-    const groupName = projectNameSplit[projectNameSplit.length - 2];
-    const projectName = projectNameSplit[projectNameSplit.length - 1];
+    const groupName = projectNameSplit[1];
+    const projectName = projectNameSplit[2];
 
     // check for stashed user and passwordHash
     let user = sessionStorage.getItem('user');
