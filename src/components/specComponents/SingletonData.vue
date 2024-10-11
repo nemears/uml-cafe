@@ -68,7 +68,11 @@ export default {
         },
         async latestCommand(newCommand) {
             if (newCommand && newCommand.redo && newCommand.element === this.umlID && newCommand.context.set === this.singletonData.id) {
-                await this.deleteElement(await this.$umlWebClient.get(newCommand.context.elementDirectlyDeleted));
+                if (newCommand.name === 'specificationPageDelete') {
+                    await this.deleteElement(await this.$umlWebClient.get(newCommand.context.elementDirectlyDeleted));
+                } else if (newCommand.name === 'singletonSpecPageRemove') {
+                    await this.removeElement(await this.$umlWebClient.get(newCommand.context.elementRemoved));
+                }
             }
         },
         async commandUndo(undoneCommand) {
@@ -80,9 +84,17 @@ export default {
                     }
                     const element = await this.$umlWebClient.get(undoneCommand.context.elementDirectlyDeleted);
                     this.valID = element.id;
-                    const ourElement = await this.$umlWebClient.get(this.umlid);
+                    const ourElement = await this.$umlWebClient.get(this.umlID);
                     this.$emit('elementUpdate', createElementUpdate(element, ourElement));
                     this.$umlWebClient.put(ourElement);            
+                } else if (undoneCommand.name === 'singletonSpecPageRemove') {
+                    // add el back
+                    const ourElement = await this.$umlWebClient.get(this.umlID);
+                    const val = await this.$umlWebClient.get(undoneCommand.context.elementRemoved);
+                    await ourElement.typeInfo.getSet(this.singletonData.id).set(val);
+                    this.$emit('elementUpdate', createElementUpdate(ourElement, val));
+                    this.$umlWebClient.put(ourElement);
+                    this.$umlWebClient.put(val);
                 }
             }
         }
@@ -144,12 +156,15 @@ export default {
                     items.push({
                         label: 'Remove',
                         onClick: async () => {
-                            const el = await this.$umlWebClient.get(this.umlID);
-                            el.sets.get(this.singletonData.setName).set(undefined);
-                            this.$umlWebClient.put(el);
-                            this.$umlWebClient.put(val);
-                            this.$emit('elementUpdate', createElementUpdate(el));
-                            this.valID = nullID();
+                            this.$emit('command', {
+                                name: 'singletonSpecPageRemove',
+                                element: this.umlID,
+                                context: {
+                                    set: this.singletonData.id,
+                                    elementRemoved: this.valID
+                                }
+                            });
+                            await this.removeElement(val);
                         }
                     });
                     items.push({
@@ -189,6 +204,14 @@ export default {
             this.$emit('elementUpdate', createElementUpdate(owner));
             this.$umlWebClient.put(owner);
             this.valID = nullID(); 
+        },
+        async removeElement(val) {
+            const el = await this.$umlWebClient.get(this.umlID);
+            el.typeInfo.getSet(this.singletonData.id).set(undefined);
+            this.$umlWebClient.put(el);
+            this.$umlWebClient.put(val);
+            this.$emit('elementUpdate', createElementUpdate(el));
+            this.valID = nullID();
         },
         propogateFocus(el) {
             this.$emit('focus', el);
