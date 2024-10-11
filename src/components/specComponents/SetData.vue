@@ -77,7 +77,7 @@ export default {
         async latestCommand(newCommand) {
             if (newCommand && newCommand.element === this.umlid && newCommand.redo) {
                 if (newCommand.name === 'specificationPageDelete' && newCommand.context.set === this.setData.id) {
-                    await this.deleteElement(await this.$umlWebClient.get(this.umlid));
+                    await this.deleteElement(await this.$umlWebClient.get(newCommand.context.elementDirectlyDeleted));
                 }
             }
         },
