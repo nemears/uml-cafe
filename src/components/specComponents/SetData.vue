@@ -78,6 +78,13 @@ export default {
             if (newCommand && newCommand.element === this.umlid && newCommand.redo) {
                 if (newCommand.name === 'specificationPageDelete' && newCommand.context.set === this.setData.id) {
                     await this.deleteElement(await this.$umlWebClient.get(newCommand.context.elementDirectlyDeleted));
+                } else if (newCommand.name === 'setElementCreation' && newCommand.context.set === this.setData.id) {
+                    const el = this.$umlWebClient.post(newCommand.context.elementType, { id: newCommand.context.elementID });
+                    const ourElement = await this.$umlWebClient.get(this.umlid);
+                    await ourElement.typeInfo.getSet(this.setData.id).add(el);
+                    this.$emit('elementUpdate', createElementUpdate(ourElement, el));
+                    this.$umlWebClient.put(ourElement);
+                    this.$umlWebClient.put(el);
                 }
             }
         },
@@ -92,6 +99,13 @@ export default {
                     this.data.push(element.id);
                     const ourElement = await this.$umlWebClient.get(this.umlid);
                     this.$emit('elementUpdate', createElementUpdate(element, ourElement));
+                    this.$umlWebClient.put(ourElement);
+                } else if (undoneCommand.name === 'setElementCreation') {
+                    // delete the element created
+                    const element = await this.$umlWebClient.get(undoneCommand.context.elementID);
+                    const ourElement = await this.$umlWebClient.get(this.umlid);
+                    await this.$umlWebClient.delete(element);
+                    this.$emit('elementUpdate', createElementUpdate(ourElement));
                     this.$umlWebClient.put(ourElement);
                 }
             }
@@ -110,6 +124,15 @@ export default {
                 return;
             }
             this.data.push(element.id);
+            this.$emit('command', {
+                name: 'setElementCreation',
+                element: this.umlid,
+                context: {
+                    set: this.setData.id,
+                    elementID: element.id,
+                    elementType: element.elementType()
+                }
+            });
             this.$emit('elementUpdate', createElementUpdate(await this.$umlWebClient.get(this.umlid)));
         },
         async drop(recentDragInfo) {
