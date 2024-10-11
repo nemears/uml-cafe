@@ -75,22 +75,29 @@ export default {
             }
         },
         async latestCommand(newCommand) {
-            if (newCommand && newCommand.element === this.umlid && newCommand.redo) {
-                if (newCommand.name === 'specificationPageDelete' && newCommand.context.set === this.setData.id) {
+            if (newCommand && newCommand.element === this.umlid && newCommand.redo && newCommand.context.set === this.setData.id) {
+                if (newCommand.name === 'specificationPageDelete') {
                     await this.deleteElement(await this.$umlWebClient.get(newCommand.context.elementDirectlyDeleted));
-                } else if (newCommand.name === 'setElementCreation' && newCommand.context.set === this.setData.id) {
+                } else if (newCommand.name === 'setElementCreation') {
                     const el = this.$umlWebClient.post(newCommand.context.elementType, { id: newCommand.context.elementID });
                     const ourElement = await this.$umlWebClient.get(this.umlid);
                     await ourElement.typeInfo.getSet(this.setData.id).add(el);
                     this.$emit('elementUpdate', createElementUpdate(ourElement, el));
                     this.$umlWebClient.put(ourElement);
                     this.$umlWebClient.put(el);
+                } else if (newCommand.name === 'setSpecPageRemove') {
+                    const element =  await this.$umlWebClient.get(newCommand.context.elementID);
+                    const ourElement = await this.$umlWebClient.get(this.umlid);
+                    await ourElement.typeInfo.getSet(this.setData.id).remove(element);
+                    this.$emit('elementUpdate', createElementUpdate(element, ourElement));
+                    this.$umlWebClient.put(ourElement);
+                    this.$umlWebClient.put(element);
                 }
             }
         },
         async commandUndo(undoneCommand) {
-            if (undoneCommand.element === this.umlid) {
-                if (undoneCommand.name === 'specificationPageDelete' && undoneCommand.context.set === this.setData.id) {
+            if (undoneCommand.element === this.umlid && undoneCommand.context.set === this.setData.id) {
+                if (undoneCommand.name === 'specificationPageDelete') {
                     for (const data of undoneCommand.context.elementsData) {
                         const el = await this.$umlWebClient.parse(data);
                         this.$umlWebClient.put(el);
@@ -107,6 +114,13 @@ export default {
                     await this.$umlWebClient.delete(element);
                     this.$emit('elementUpdate', createElementUpdate(ourElement));
                     this.$umlWebClient.put(ourElement);
+                } else if (undoneCommand.name === 'setSpecPageRemove') {
+                    const element =  await this.$umlWebClient.get(undoneCommand.context.elementID);
+                    const ourElement = await this.$umlWebClient.get(this.umlid);
+                    await ourElement.typeInfo.getSet(this.setData.id).add(element);
+                    this.$emit('elementUpdate', createElementUpdate(element, ourElement));
+                    this.$umlWebClient.put(ourElement);
+                    this.$umlWebClient.put(element);
                 }
             }
         }
@@ -178,6 +192,14 @@ export default {
                         this.$umlWebClient.put(owner);
                         this.$umlWebClient.put(element);
                         this.$emit('elementUpdate', createElementUpdate(owner, element));
+                        this.$emit('command', {
+                            element: this.umlid,
+                            name: 'setSpecPageRemove',
+                            context: {
+                                elementID: element.id,
+                                set: this.setData.id
+                            }
+                        });
                         this.data = this.data.filter(dataEl => dataEl !== el.id);
                     }
                 });
