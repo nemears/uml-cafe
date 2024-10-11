@@ -2,14 +2,12 @@
 import DragArea from './DragArea.vue';
 import ElementPanel from './ElementPanel.vue';
 import CreationPopUp from './CreationPopUp.vue';
-import { createElementUpdate } from '../../umlUtil.js';
+import { createElementUpdate, getElementAndChildrenString } from '../../umlUtil.js';
 import { nullID } from 'uml-client/lib/types/element';
 export default {
     props: [
         'umlID', 
         'initialData', 
-        'readonly', 
-        'createable', 
         'singletonData',
         'selectedElements',
         'theme',
@@ -19,12 +17,15 @@ export default {
         'focus',
         'elementUpdate',
         'select',
-        'deselect',    
+        'deselect',
+        'command'
     ],
     inject: [
         'elementUpdate', 
         'userSelected',
-        'userDeselected'
+        'userDeselected',
+        'latestCommand',
+        'commandUndo'
     ],
     data() {
         return {
@@ -64,6 +65,26 @@ export default {
                     }
                 } 
             }
+        },
+        async latestCommand(newCommand) {
+            if (newCommand && newCommand.redo && newCommand.element === this.umlID && newCommand.context.set === this.singletonData.id) {
+                await this.deleteElement(await this.$umlWebClient.get(newCommand.context.elementDirectlyDeleted));
+            }
+        },
+        async commandUndo(undoneCommand) {
+            if (undoneCommand.element === this.umlID && undoneCommand.context.set === this.singletonData.id) {
+                if (undoneCommand.name === 'specificationPageDelete') {
+                    for (const data of undoneCommand.context.elementsData) {
+                        const el = await this.$umlWebClient.parse(data);
+                        this.$umlWebClient.put(el);
+                    }
+                    const element = await this.$umlWebClient.get(undoneCommand.context.elementDirectlyDeleted);
+                    this.valID = element.id;
+                    const ourElement = await this.$umlWebClient.get(this.umlid);
+                    this.$emit('elementUpdate', createElementUpdate(element, ourElement));
+                    this.$umlWebClient.put(ourElement);            
+                }
+            }
         }
     },
     methods: {
@@ -102,7 +123,7 @@ export default {
             // determine items
             let items = [];
             if (!this.valID) {
-                if (this.createable) {
+                if (this.singletonData.composition === 'composite') {
                     items.push({
                         label: 'Create Element',
                         onClick: () => {
@@ -119,37 +140,55 @@ export default {
                         });
                     }
                 });
-                items.push({
-                    label: 'Remove',
-                    onClick: async () => {
-                        const el = await this.$umlWebClient.get(this.umlID);
-                        el.sets.get(this.singletonData.setName).set(undefined);
-                        this.$umlWebClient.put(el);
-                        this.$umlWebClient.put(val);
-                        this.$emit('elementUpdate', createElementUpdate(el));
-                        this.valID = nullID();
-                    }
-                });
-                items.push({
-                    label: 'Delete',
-                    onClick: async () => {
-                        const el = val;
-                        const owner = await el.owner.get();
-                        this.$umlWebClient.delete(el);
-                        this.$emit('elementUpdate', createElementUpdate(owner));
-                        this.$umlWebClient.put(owner);
-                        this.valID = nullID();
-                    } 
-                });
+                if (!this.singletonData.readonly) {
+                    items.push({
+                        label: 'Remove',
+                        onClick: async () => {
+                            const el = await this.$umlWebClient.get(this.umlID);
+                            el.sets.get(this.singletonData.setName).set(undefined);
+                            this.$umlWebClient.put(el);
+                            this.$umlWebClient.put(val);
+                            this.$emit('elementUpdate', createElementUpdate(el));
+                            this.valID = nullID();
+                        }
+                    });
+                    items.push({
+                        label: 'Delete',
+                        onClick: async () => {
+                            const element = val;
+                            const elementsData = await getElementAndChildrenString(element); 
+                            this.$emit('command', {
+                                name: 'specificationPageDelete',
+                                element: this.umlID,
+                                redo: false,
+                                context: {
+                                    elementDirectlyDeleted: element.id,
+                                    elementsData: elementsData,
+                                    set: this.singletonData.id
+                                }
+                            });
+                            await this.deleteElement(element);
+                        } 
+                    });
+                }
             }
 
-            //show our menu
-            this.$contextmenu({
-                x: evt.x,
-                y: evt.y,
-                items: items,
-                theme: 'flat'
-            });
+            if (items.length > 0) {
+                //show our menu
+                this.$contextmenu({
+                    x: evt.x,
+                    y: evt.y,
+                    items: items,
+                    theme: 'flat'
+                });
+            }
+        },
+        async deleteElement(element) {
+            const owner = await element.owner.get();
+            await this.$umlWebClient.delete(element);
+            this.$emit('elementUpdate', createElementUpdate(owner));
+            this.$umlWebClient.put(owner);
+            this.valID = nullID(); 
         },
         propogateFocus(el) {
             this.$emit('focus', el);

@@ -421,7 +421,8 @@ export default {
                                 @focus="propogateFocus"
                                 @element-update="propogateElementUpdate"
                                 @select="propogateSelect"
-                                @deselect="propogateDeselect">
+                                @deselect="propogateDeselect"
+                                @command="propogateCommand">
                 </SingletonData>
                 <StereotypeApplicator   v-if="set.setType === 'stereotypes'"
                                         :umlid="umlID" 
