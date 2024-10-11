@@ -192,3 +192,17 @@ export class UmlCafeModule {
         this.initialization = initializationPromise();
     }
 }
+
+export async function getElementAndChildrenString(el) {
+    const owner = await el.owner.get();
+    const queue = [el];
+    const elementsData = [owner.emit()];
+    while (queue.length > 0) {
+        const front = queue.shift();
+        elementsData.push(front.emit());
+        for await (const ownedEl of front.ownedElements) {
+            queue.push(ownedEl);
+        }
+    }
+    return elementsData;
+}

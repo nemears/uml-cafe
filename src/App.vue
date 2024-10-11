@@ -608,7 +608,7 @@ export default {
 						@element-update="elementUpdateHandler"
                         @select="select"
                         @deselect="deselect"
-						></SpecificationPage>
+						@command="command"></SpecificationPage>
 				<DiagramPage v-if="editorType=='Diagram'" 
 						:uml-i-d="specificationTab" 
                         :command-stack="commandStack"

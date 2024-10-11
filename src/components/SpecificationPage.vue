@@ -32,6 +32,7 @@ export default {
         'elementUpdate',
         'select',
         'deselect',
+        'command',
     ],
     inject: ['elementUpdate'],
     data() {
@@ -302,6 +303,9 @@ export default {
             }
             filter.enabled = true;
             this.reloadSpec();
+        },
+        propogateCommand(cmd) {
+            this.$emit('command', cmd);
         }
     },
     computed: {
@@ -404,7 +408,8 @@ export default {
                             @focus="propogateFocus"
                             @element-update="propogateElementUpdate"
                             @select="propogateSelect"
-                            @deselect="propogateDeselect">
+                            @deselect="propogateDeselect"
+                            @command="propogateCommand">
                 </SetData>
                 <SingletonData  v-if="set.setType === 'singleton'"
                                 :singleton-data="set"

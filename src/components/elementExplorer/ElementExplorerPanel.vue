@@ -2,7 +2,16 @@
 import packageImage from '../../assets/icons/general/package.svg';
 import getImage from '../../GetUmlImage.vue';
 import classDiagramImage from '../../assets/icons/general/class_diagram.svg';
-import { assignTabLabel, createElementUpdate, deleteElementElementUpdate, createUmlClassDiagram, mapColor, getPanelClass, isTypedElement } from '../../umlUtil.js'
+import { 
+    assignTabLabel, 
+    createElementUpdate, 
+    deleteElementElementUpdate, 
+    createUmlClassDiagram, 
+    mapColor, 
+    getPanelClass, 
+    isTypedElement,
+    getElementAndChildrenString    
+} from '../../umlUtil.js'
 import { randomID } from 'uml-client/lib/types/element';
 
 export default {
@@ -497,22 +506,13 @@ export default {
                 disabled: this.$umlWebClient.readonly,
                 onClick: async () => {
                     const el = await this.$umlWebClient.get(this.umlID);
-                    const owner = await el.owner.get();
-                    const queue = [el];
-                    const elementsData = [owner.emit()];
-                    while (queue.length > 0) {
-                        const front = queue.shift();
-                        elementsData.push(front.emit());
-                        for await (const ownedEl of front.ownedElements) {
-                            queue.push(ownedEl);
-                        }
-                    }
-                    if (!owner) {
+                    if (!el.owner.has()) {
                         throw Error('Cannot delete root of model sorry!');
                     }
+                    const elementsData = await getElementAndChildrenString(el); 
                     this.$emit('command', {
                         name: 'elementExplorerDelete',
-                        element: owner.id,
+                        element: el.owner.id(),
                         redo: false,
                         context: {
                             elementDirectlyDeleted: this.umlID,

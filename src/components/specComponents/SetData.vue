@@ -3,7 +3,7 @@ import getImage from '../../GetUmlImage.vue';
 import CreationPopUp from './CreationPopUp.vue';
 import DragArea from './DragArea.vue';
 import ElementPanel from './ElementPanel.vue';
-import { createElementUpdate, assignTabLabel } from '../../umlUtil.js';
+import { createElementUpdate, getElementAndChildrenString } from '../../umlUtil.js';
 import { nullID } from 'uml-client/lib/types/element';
 export default {
     props: [
@@ -18,9 +18,17 @@ export default {
     inject: [
         'elementUpdate',
         'userSelected',
-        'userDeselected'
+        'userDeselected',
+        'latestCommand',
+        'commandUndo'
     ],
-    emits: ['focus', 'elementUpdate', 'select', 'deselect'],
+    emits: [
+        'focus', 
+        'elementUpdate', 
+        'select', 
+        'deselect',
+        'command'
+    ],
     data() {
         return {
             data: [],
@@ -44,7 +52,7 @@ export default {
                     const newElementSet = newElement.typeInfo.getSet(this.setData.id); 
                     if (newElement.id === this.umlid) {
                         // keep track of original children
-                        const existingIDs = this.data.map((el) => el.id);
+                        const existingIDs = this.data.map((el) => el);
 
                         // check if we need to add children
                         for (const elementID of newElementSet.ids()) {
@@ -64,6 +72,28 @@ export default {
                     }
                 }
  
+            }
+        },
+        async latestCommand(newCommand) {
+            if (newCommand && newCommand.element === this.umlid && newCommand.redo) {
+                if (newCommand.name === 'specificationPageDelete' && newCommand.context.set === this.setData.id) {
+                    await this.deleteElement(await this.$umlWebClient.get(this.umlid));
+                }
+            }
+        },
+        async commandUndo(undoneCommand) {
+            if (undoneCommand.element === this.umlid) {
+                if (undoneCommand.name === 'specificationPageDelete' && undoneCommand.context.set === this.setData.id) {
+                    for (const data of undoneCommand.context.elementsData) {
+                        const el = await this.$umlWebClient.parse(data);
+                        this.$umlWebClient.put(el);
+                    }
+                    const element = await this.$umlWebClient.get(undoneCommand.context.elementDirectlyDeleted);
+                    this.data.push(element.id);
+                    const ourElement = await this.$umlWebClient.get(this.umlid);
+                    this.$emit('elementUpdate', createElementUpdate(element, ourElement));
+                    this.$umlWebClient.put(ourElement);
+                }
             }
         }
     },
@@ -124,18 +154,26 @@ export default {
                         owner.typeInfo.getSet(this.setData.id).remove(element);
                         this.$umlWebClient.put(owner);
                         this.$umlWebClient.put(element);
-                        this.$emit('elementUpdate', createElementUpdate(owner));
-                        this.data = this.data.filter(dataEl => dataEl.id !== el.id);
+                        this.$emit('elementUpdate', createElementUpdate(owner, element));
+                        this.data = this.data.filter(dataEl => dataEl !== el.id);
                     }
                 });
 
                 items.push({
                     label: 'Delete',
                     onClick: async () => {
-                        const owner = await this. $umlWebClient.get(this.umlid);
-                        await this.$umlWebClient.delete(element);
-                        this.$umlWebClient.put(owner);
-                        this.$emit('elementUpdate', createElementUpdate(owner));
+                        const elementsData = await getElementAndChildrenString(element); 
+                        this.$emit('command', {
+                            name: 'specificationPageDelete',
+                            element: this.umlid,
+                            redo: false,
+                            context: {
+                                elementDirectlyDeleted: element.id,
+                                elementsData: elementsData,
+                                set: this.setData.id
+                            }
+                        });
+                        await this.deleteElement(element);
                     }
                 });
             } 
@@ -147,6 +185,13 @@ export default {
                 items: items,
                 theme: 'flat'
             });
+        },
+        async deleteElement(element) {
+            const owner = await this. $umlWebClient.get(this.umlid);
+            this.data = this.data.filter(dataEl => dataEl !== element.id);
+            await this.$umlWebClient.delete(element);
+            this.$umlWebClient.put(owner);
+            this.$emit('elementUpdate', createElementUpdate(owner));
         },
         propogateSelect(data) {
             this.$emit('select', data);
