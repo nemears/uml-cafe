@@ -76,6 +76,8 @@ export default {
                     const ourElement = await this.$umlWebClient.get(this.umlID);
                     const newElement = this.$umlWebClient.post(newCommand.context.elementType, { id: newCommand.context.elementID });
                     ourElement.typeInfo.getSet(this.singletonData.id).set(newElement);
+                } else if (newCommand.name === 'singletonDropElement') {
+                    await this.drop(newCommand.context.dragInfo);
                 }
             }
         },
@@ -106,12 +108,25 @@ export default {
                     await ourElement.typeInfo.getSet(this.singletonData.id).set(undefined);
                     this.$umlWebClient.delete(val);
                     this.$emit('elementUpdate', createElementUpdate(ourElement));
+                } else if (undoneCommand.name === 'singletonDropElement') {
+                    const me = await this.$umlWebClient.get(this.umlID);
+                    const val = await this.$umlWebClient.get(this.valID);
+                    let oldVal = undefined;
+                    let elsChanged = [me, val];
+                    if (undoneCommand.context.oldVal !== nullID()){
+                        oldVal = await this.$umlWebClient.get(undoneCommand.context.oldVal);
+                        elsChanged.push(oldVal);
+                    }
+                    await me.typeInfo.getSet(this.singletonData.id).set(oldVal);
+                    // TODO check composite
+                    this.valID = oldVal ? oldVal.id : nullID();
+                    this.$emit('elementUpdate', createElementUpdate(...elsChanged));
                 }
             }
         }
     },
     methods: {
-        async drop(recentDragInfo) {
+        async dropNoCommand(recentDragInfo) {
             const me = await this.$umlWebClient.get(this.umlID);
             const el = recentDragInfo.selectedElements[0];
             const owners = [];
@@ -128,6 +143,21 @@ export default {
             this.$umlWebClient.put(el);
             this.$emit('elementUpdate', createElementUpdate(me, el, ...owners));
             this.valID = el.id;
+ 
+        },
+        async drop(recentDragInfo) {
+            const oldVal = this.valID;
+            await this.dropNoCommand(recentDragInfo);
+            this.$emit('command', {
+                name: 'singletonDropElement',
+                element: this.umlID,
+                specification: this.umlID,
+                context: {
+                    set: this.singletonData.id,
+                    dragInfo: recentDragInfo,
+                    oldVal: oldVal
+                }
+            });
         },
         createElement() {
             this.creationPopUp = true;
@@ -254,7 +284,11 @@ export default {
         <div class="singletonLabel">
             {{ singletonData.name }}
         </div>
-        <DragArea :readonly="singletonData.readonly" :type="singletonData.type" :size="1" @drop="drop">
+        <DragArea   :readonly="singletonData.readonly" 
+                    :type="singletonData.type" 
+                    :size="1"
+                    :composition="singletonData.composition"
+                    @drop="drop">
             <ElementPanel :umlid="valID"
                           :theme="theme"
                           :selected-elements="selectedElements"

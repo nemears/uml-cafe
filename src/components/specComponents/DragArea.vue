@@ -1,6 +1,11 @@
 <script>
     export default {
-        props: ['type', 'readonly', 'size'],
+        props: [
+            'type', 
+            'readonly', 
+            'size',
+            'composition'
+        ],
         emits: ['drop'],
         inject: ['draginfo'],
         data() {
@@ -41,11 +46,52 @@
                     this.drag = false;
                 }
             },
-            drop() {
+            async drop() {
                 this.drag = false;
                 if (this.badDrag) {
                     return;
                 }
+
+                const oldOwners = [];
+                const oldOwnersData = [];
+                for (const element of this.recentDragInfo.selectedElements) {
+                    if (element.owner.has()) {
+                        const oldOwner = await element.owner.get();
+                        oldOwners.push(oldOwner);
+                        const visited = new Set();
+                        let compositeSet;
+                        if (this.composition === 'composite') {
+                            // see what composite set to keep track of incase of undo
+                            const queue = [oldOwner.typeInfo];
+                            while (queue.length > 0 && !compositeSet) {
+                                const front = queue.shift();
+                                if (visited.has(front)) {
+                                    continue;
+                                }
+                                visited.add(front);
+                                for (const setPair of front.sets) {
+                                    const set = setPair[1];
+                                    if (set.composition === 'composite' && set.contains(element) && !set.subSetContains(element.id)) {
+                                        compositeSet = set.definingFeature;
+                                        break;
+                                    }
+                                }
+                                for (const base of front.base) {
+                                    queue.push(base);
+                                }
+                            }
+                        }
+
+                        oldOwnersData.push(
+                            {
+                                element: element.id,
+                                owner: oldOwner.id,
+                                compositeSet: compositeSet
+                            }
+                        );
+                    }
+                }
+                this.recentDragInfo.oldOwners = oldOwnersData;
                 this.$emit('drop', this.recentDragInfo);
             },
             

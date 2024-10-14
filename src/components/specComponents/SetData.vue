@@ -93,7 +93,7 @@ export default {
                     this.$umlWebClient.put(ourElement);
                     this.$umlWebClient.put(element);
                 } else if (newCommand.name === 'setDropElements') {
-                    await this.drop(newCommand.context.dragInfo);
+                    await this.dropNoCommand(newCommand.context.dragInfo);
                 }
             }
         },
@@ -126,7 +126,7 @@ export default {
                 } else if (undoneCommand.name === 'setDropElements') {
                     const ourElement = await this.$umlWebClient.get(this.umlid);
                     const elementsChanged = [];
-                    for (const oldOwnerData of undoneCommand.context.oldOwners) {
+                    for (const oldOwnerData of undoneCommand.context.dragInfo.oldOwners) {
                         const element = await this.$umlWebClient.get(oldOwnerData.element);
                         elementsChanged.push(element);
                         await ourElement.typeInfo.getSet(this.setData.id).remove(element);
@@ -169,54 +169,24 @@ export default {
             });
             this.$emit('elementUpdate', createElementUpdate(await this.$umlWebClient.get(this.umlid)));
         },
-        async drop(recentDragInfo) {
+        async dropNoCommand(recentDragInfo) {
             const me = await this.$umlWebClient.get(this.umlid);
-            const oldOwners = [];
-            const oldOwnersData = [];
             for (const element of recentDragInfo.selectedElements) {
-                if (element.owner.has()) {
-                    const oldOwner = await element.owner.get();
-                    oldOwners.push(oldOwner);
-                    const visited = new Set();
-                    let compositeSet;
-                    if (this.setData.composition === 'composite') {
-                        // see what composite set to keep track of incase of undo
-                        const queue = [oldOwner.typeInfo];
-                        while (queue.length > 0 && !compositeSet) {
-                            const front = queue.shift();
-                            if (visited.has(front)) {
-                                continue;
-                            }
-                            visited.add(front);
-                            for (const setPair of front.sets) {
-                                const set = setPair[1];
-                                if (set.composition === 'composite' && set.contains(element) && !set.subSetContains(element.id)) {
-                                    compositeSet = set.definingFeature;
-                                    break;
-                                }
-                            }
-                            for (const base of front.base) {
-                                queue.push(base);
-                            }
-                        }
-                    }
-                    oldOwnersData.push(
-                        {
-                            element: element.id,
-                            owner: oldOwner.id,
-                            compositeSet: compositeSet
-                        }
-                    );
-                }
                 await me.typeInfo.getSet(this.setData.id).add(element);
                 this.data.push(element.id);
                 this.$umlWebClient.put(element);
             }
-            for (const oldOwner of oldOwners) {
-                this.$umlWebClient.put(oldOwner);
+            const oldOwners = [];
+            for (const oldOwnerData of recentDragInfo.oldOwners) {
+                const owner = await this.$umlWebClient.get(oldOwnerData.owner);
+                this.$umlWebClient.put(owner);
+                oldOwners.push(owner);
             }
             this.$umlWebClient.put(me);
-            this.$emit('elementUpdate', createElementUpdate(me, ...recentDragInfo.selectedElements, ...oldOwners))
+            this.$emit('elementUpdate', createElementUpdate(me, ...recentDragInfo.selectedElements, ...oldOwners));
+        },
+        async drop(recentDragInfo) {
+            await this.dropNoCommand(recentDragInfo);
             this.$emit('command', {
                 name: 'setDropElements',
                 element: this.umlid,
@@ -224,7 +194,6 @@ export default {
                 context: {
                     set: this.setData.id,
                     dragInfo: recentDragInfo,
-                    oldOwners: oldOwnersData
                 }
             });
         },
@@ -314,7 +283,10 @@ export default {
         <div class="setLabel">
             {{  setData.name }}
         </div>
-        <DragArea :readonly="setData.readonly" :type="setData.type" @drop="drop">
+        <DragArea   :readonly="setData.readonly" 
+                    :type="setData.type"
+                    :composition="setData.composition"
+                    @drop="drop">
             <ElementPanel v-for="el in data"
                           :key="el"
                           :umlid="el"
