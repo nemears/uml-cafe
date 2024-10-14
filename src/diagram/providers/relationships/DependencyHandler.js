@@ -15,7 +15,7 @@ export default class DependencyHandler extends RuleProvider {
                         modelElement: {
                             id: randomID(),
                             elementType() {
-                                'Dependency'
+                                return 'Dependency'
                             }
                         },
                         createModelElement: true,
@@ -30,7 +30,7 @@ export default class DependencyHandler extends RuleProvider {
             }
         });
         eventBus.on('edge.connect.create', (context) => {
-            if (context.connectType === 'Dependency') {
+            if (context.connectType === 'dependency') {
                 const client = context.connection.source.modelElement,
                 supplier = context.connection.target.modelElement;
                 const dependency = umlWebClient.post('Dependency', {id:context.connection.modelElement.id});
@@ -49,7 +49,7 @@ export default class DependencyHandler extends RuleProvider {
             const deleteModelElement = async () => {
                 const connection = context.connection;
                 const owner = await connection.modelElement.owner.get();
-                await umlWebClient.deleteElement(connection.modelElement);
+                await umlWebClient.delete(connection.modelElement);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
             }
             if (context.connectType === 'dependency') {

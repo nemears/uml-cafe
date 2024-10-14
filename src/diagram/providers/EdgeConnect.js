@@ -47,7 +47,7 @@ class EdgeConnectHandler {
             context: context,
         });
 
-        context.connectionData.elementType = 'edge';
+        context.connectionData.elementType = 'UMLEdge';
 
         // check connection
         if (!context.connectionData) {

@@ -40,7 +40,7 @@ export default class RealizationHandler extends RuleProvider {
                     modelElement: realization,
                     labelTarget: context.connection,
                     parent: context.connection,
-                    elementType: 'keywordLabel',
+                    elementType: 'UMLKeywordLabel',
                     text: textString,
                     placement: placement,
                 });
@@ -65,7 +65,7 @@ export default class RealizationHandler extends RuleProvider {
             const deleteModelElement = async () => {
                 const connection = context.connection;
                 const owner = await connection.modelElement.owner.get();
-                await umlWebClient.deleteElement(connection.modelElement);
+                await umlWebClient.delete(connection.modelElement);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
             }
             if (context.connectType === 'realization') {
