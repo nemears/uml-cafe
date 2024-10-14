@@ -415,18 +415,17 @@ Association.$inject = [
 ];
 
 class ShowMemberEndsHandler {
-    constructor(elementFactory, canvas, umlWebClient, diagramContext, umlRenderer) {
+    constructor(elementFactory, canvas, diagramContext, umlRenderer, diManager) {
         this._elementFactory = elementFactory;
         this._canvas = canvas;
-        this._umlWebClient = umlWebClient;
         this._diagramContext = diagramContext;
         this._umlRenderer = umlRenderer;
+        this._diManager = diManager;
     }
     execute(context) {
         const doLater = async () => {
             const elementFactory = this._elementFactory,
             canvas = this._canvas,
-            umlWebClient = this._umlWebClient,
             diagramContext = this._diagramContext,
             umlRenderer = this._umlRenderer;
             const edge = context.edge;
@@ -460,12 +459,12 @@ class ShowMemberEndsHandler {
                     placeEdgeLabel(ret, edge);
                     canvas.addShape(ret, edge);
                     switch (labelType) {
-                        case 'UMLAssociationEndLabel':
-                            await createAssociationEndLabel(ret, umlWebClient, diagramContext);
-                            break;
                         case 'UMLMultiplicityLabel':
-                            await createMultiplicityLabel(ret, umlWebClient, diagramContext);
+                        case 'UMLAssociationEndLabel': {
+                            const label = this._diManager.post('UML DI.' + labelType, { id : ret.id });
+                            await translateDJLabelToUMLLabel(ret, label, this._diManager, diagramContext.umlDiagram);
                             break;
+                        }
                         default:
                             throw Error('bad label for property update!');
                     }
@@ -503,10 +502,12 @@ class ShowMemberEndsHandler {
         doLater();
     }
     revert(context) {
-        const canvas = this._canvas,
-        umlWebClient = this._umlWebClient;
+        const canvas = this._canvas;
         const deleteLabel = (label) => {
-            deleteUmlDiagramElement(label.id, umlWebClient);
+            const doLater = async () => {
+                await this._diManager.delete(await this._diManager.get(label.id));
+            }
+            doLater();
             if (label.placement === 'source') {
                 context.edge.numSourceLabels -= 1;
             } else if (label.placement === 'target') {
@@ -532,7 +533,13 @@ class ShowMemberEndsHandler {
     }
 }
 
-ShowMemberEndsHandler.$inject = ['elementFactory', 'canvas', 'umlWebClient', 'diagramContext', 'umlRenderer'];
+ShowMemberEndsHandler.$inject = [
+    'elementFactory', 
+    'canvas', 
+    'diagramContext', 
+    'umlRenderer',
+    'diManager'
+];
 
 export function getLabelBounds(property, association, umlRenderer) {
     let labelName = property.name;
