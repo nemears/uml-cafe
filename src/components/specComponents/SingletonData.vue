@@ -72,6 +72,10 @@ export default {
                     await this.deleteElement(await this.$umlWebClient.get(newCommand.context.elementDirectlyDeleted));
                 } else if (newCommand.name === 'singletonSpecPageRemove') {
                     await this.removeElement(await this.$umlWebClient.get(newCommand.context.elementRemoved));
+                } else if (newCommand.name === 'singletonElementCreation') {
+                    const ourElement = await this.$umlWebClient.get(this.umlID);
+                    const newElement = this.$umlWebClient.post(newCommand.context.elementType, { id: newCommand.context.elementID });
+                    ourElement.typeInfo.getSet(this.singletonData.id).set(newElement);
                 }
             }
         },
@@ -95,6 +99,13 @@ export default {
                     this.$emit('elementUpdate', createElementUpdate(ourElement, val));
                     this.$umlWebClient.put(ourElement);
                     this.$umlWebClient.put(val);
+                } else if (undoneCommand.name === 'singletonElementCreation') {
+                    // delete the element removed
+                    const ourElement = await this.$umlWebClient.get(this.umlID);
+                    const val = await this.$umlWebClient.get(undoneCommand.context.elementID);
+                    await ourElement.typeInfo.getSet(this.singletonData.id).set(undefined);
+                    this.$umlWebClient.delete(val);
+                    this.$emit('elementUpdate', createElementUpdate(ourElement));
                 }
             }
         }
@@ -127,6 +138,16 @@ export default {
                 return;
             }
             this.valID = el.id;
+            this.$emit('command', {
+                name: 'singletonElementCreation',
+                element: this.umlID,
+                specification: this.umlID,
+                context: {
+                    set: this.singletonData.id,
+                    elementID: el.id,
+                    elementType: el.elementType()
+                }
+            });
         },
         onContextMenu(data) {
             const evt = data.evt;
@@ -159,6 +180,7 @@ export default {
                             this.$emit('command', {
                                 name: 'singletonSpecPageRemove',
                                 element: this.umlID,
+                                specification: this.umlID,
                                 context: {
                                     set: this.singletonData.id,
                                     elementRemoved: this.valID
@@ -175,6 +197,7 @@ export default {
                             this.$emit('command', {
                                 name: 'specificationPageDelete',
                                 element: this.umlID,
+                                specification: this.umlID,
                                 redo: false,
                                 context: {
                                     elementDirectlyDeleted: element.id,

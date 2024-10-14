@@ -6,7 +6,7 @@ import WelcomePage from './components/WelcomePage.vue';
 import DiagramPage from './components/DiagramPage.vue';
 import getImage from './GetUmlImage.vue';
 import classDiagramImage from './assets/icons/general/class_diagram.svg';
-import { computed } from 'vue';
+import { computed, nextTick } from 'vue';
 import { assignTabLabel } from './umlUtil';
 import TabContainer from './components/TabContainer.vue';
 import { nullID } from 'uml-client/lib/types/element';
@@ -44,7 +44,7 @@ export default {
             reload: 0,
             elementExplorerCommand: undefined,
             elementExplorerUndo: undefined,
-            treeGraph: new Map()
+            treeGraph: new Map(),
 		}
 	},
 	provide() {
@@ -419,10 +419,10 @@ export default {
                 this.selectedElements = [...this.selectedElements];
             }
         },
-        command(event) {
+        async command(event) {
             if (event.undo) {
                 // TODO do some handling
-                this.undo();
+                await this.undo();
             } else {
                 this.commandStack.unshift(event);
                 this.undoStack = [];
@@ -445,9 +445,16 @@ export default {
                 this.latestCommand = event;
             }
         },
-        undo() {
+        async undo() {
             if (this.commandStack.length > 0) {
                 const undoneCommand = this.commandStack.shift();
+                if (undoneCommand.specification && this.specificationTab !== undoneCommand.specification) {
+                    await this.focus({
+                        el: await this.$umlWebClient.get(undoneCommand.specification)
+                    });
+                    // await nextTick();
+                    await this.$refs.specificationPage.waitForLoad();
+                }
                 this.undoStack.unshift(undoneCommand);
                 if (undoneCommand !== this.specificationTab) {
                     if (undoneCommand.name === 'elementExplorerCreate' || undoneCommand.name === 'diagramCreate' || undoneCommand.name === 'elementExplorerRename') {
@@ -598,7 +605,8 @@ export default {
             </ElementExplorer>
 			<div class="editor">
 				<WelcomePage v-if="editorType==='Welcome'"></WelcomePage>
-				<SpecificationPage v-if="editorType=='Specification'" 
+				<SpecificationPage v-if="editorType=='Specification'"
+                        ref="specificationPage"
 						:uml-i-d="specificationTab" 
                         :selected-elements="selectedElements"
                         :users="users"

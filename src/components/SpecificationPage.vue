@@ -46,7 +46,14 @@ export default {
                     name: 'uml',
                     enabled: true
                 } 
-            ]
+            ],
+            initializationEmitter: {
+                fire() {
+                    if (this.on) {
+                        this.on();
+                    }
+                },
+            }
         }
     },
     mounted() {
@@ -87,6 +94,13 @@ export default {
         },
     },
     methods: {
+        waitForLoad() {
+            return new Promise((res) => {
+                this.initializationEmitter.on = () => {
+                    res();
+                }
+            }); 
+        },
         async reloadSpec() {
             this.isFetching = true;
             this.types = [];
@@ -268,8 +282,8 @@ export default {
                     this.filters[0].enabled = true;
                 }
             }
-
             this.isFetching = false;
+            this.initializationEmitter.fire();
         },
         propogateFocus(spec) {
             this.$emit('focus', spec);

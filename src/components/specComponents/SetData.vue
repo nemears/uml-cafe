@@ -160,6 +160,7 @@ export default {
             this.$emit('command', {
                 name: 'setElementCreation',
                 element: this.umlid,
+                specification: this.umlid,
                 context: {
                     set: this.setData.id,
                     elementID: element.id,
@@ -219,6 +220,7 @@ export default {
             this.$emit('command', {
                 name: 'setDropElements',
                 element: this.umlid,
+                specification: this.umlid,
                 context: {
                     set: this.setData.id,
                     dragInfo: recentDragInfo,
@@ -252,6 +254,7 @@ export default {
                         this.$emit('command', {
                             element: this.umlid,
                             name: 'setSpecPageRemove',
+                            specification: this.umlid,
                             context: {
                                 elementID: element.id,
                                 set: this.setData.id
@@ -268,6 +271,7 @@ export default {
                         this.$emit('command', {
                             name: 'specificationPageDelete',
                             element: this.umlid,
+                            specification: this.umlid,
                             redo: false,
                             context: {
                                 elementDirectlyDeleted: element.id,
