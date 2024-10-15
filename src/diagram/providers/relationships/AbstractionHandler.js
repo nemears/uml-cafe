@@ -57,8 +57,7 @@ export default class AbstractionHandler extends RuleProvider {
                 umlWebClient.put(client);
                 umlWebClient.put(diagramContext.context);
                 context.children.push(createAbstractionKeywordLabel(abstraction, 'center'));
-                diagramEmitter.fire('elementUpdate', createElementUpdate(client));
-                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));            
+                diagramEmitter.fire('elementUpdate', createElementUpdate(client, diagramContext.context));
             }
         });
         eventBus.on('edge.connect.undo', (context) => {

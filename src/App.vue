@@ -424,11 +424,18 @@ export default {
                 // TODO do some handling
                 await this.undo();
             } else {
-                this.commandStack.unshift(event);
+                const copyOfEvent = {
+                    name: event.name,
+                    element: event.element,
+                    redo: event.redo,
+                    context: event.context
+                };
+                this.latestCommand = copyOfEvent;
+                this.commandStack.unshift(copyOfEvent);
                 this.undoStack = [];
-                if (event.element !== this.specificationTab) {
-                    if (event.name === 'elementExplorerCreate' || event.name === 'diagramCreate' || event.name === 'elementExplorerRename') {
-                        this.elementExplorerCommand = event;
+                if (copyOfEvent.element !== this.specificationTab) {
+                    if (copyOfEvent.name === 'elementExplorerCreate' || event.name === 'diagramCreate' || event.name === 'elementExplorerRename') {
+                        this.elementExplorerCommand = copyOfEvent;
                         // const treeNode = this.treeGraph.get(event.element);
                         // let currNode = treeNode;
                         // const stack = [];
@@ -442,7 +449,6 @@ export default {
                         // }
                     }
                 }
-                this.latestCommand = event;
             }
         },
         async undo() {

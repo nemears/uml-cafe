@@ -203,9 +203,9 @@ export default class Association extends RuleProvider {
                     if (labelIndex >= 0) {
                         context.children.splice(labelIndex, 1);
                     }
-                    await umlWebClient.deleteElement(memberEnd);
+                    await umlWebClient.delete(memberEnd);
                 }
-                await umlWebClient.deleteElement(connection.modelElement);
+                await umlWebClient.delete(connection.modelElement);
                 umlWebClient.put(diagramContext.context);
                 diagramEmitter.fire('elementUpdate', createElementUpdate(...elsToDeleteOwners));
             }

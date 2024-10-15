@@ -197,11 +197,25 @@ export async function getElementAndChildrenString(el) {
     const owner = await el.owner.get();
     const queue = [el];
     const elementsData = [owner.emit()];
+    const visited = new Set([owner]);
     while (queue.length > 0) {
         const front = queue.shift();
-        elementsData.push(front.emit());
+        if (!visited.has(front)) {
+            elementsData.push(front.emit());
+        }
+        visited.add(front);
         for await (const ownedEl of front.ownedElements) {
             queue.push(ownedEl);
+        }
+        for (const referencePair of front.references) {
+            let reference = referencePair[1];
+            if (!reference) {
+                reference = await el.manager.get(referencePair[0]);
+            }
+            if (!visited.has(reference)) {
+                elementsData.push(reference.emit());
+            }
+            visited.add(reference);
         }
     }
     return elementsData;

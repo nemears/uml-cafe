@@ -234,7 +234,7 @@ export default class UMLRenderer extends BaseRenderer {
         // get style info
         let elementStyle = undefined;
         let currElement = element;
-        while (elementStyle === undefined && currElement !== undefined) {
+        while (elementStyle === undefined && currElement !== null && currElement !== undefined) {
             if (currElement.localStyle) {
                 elementStyle = currElement.localStyle;
             } else if (currElement.sharedStyle) {

@@ -11,7 +11,7 @@ class ProxyCommandHandler {
             delete command.context.proxy;
             return;
         }
-        command.redo = diagramContext.diagram.id;
+        command.redo = diagramContext.umlDiagram.id;
         diagramEmitter.fire('command', command);
     }
     revert(command) {

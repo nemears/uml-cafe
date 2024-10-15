@@ -18,8 +18,15 @@ export default class ModelElementMap {
             me.set(event.element.modelElement.id, event.element.id);
         });
         eventBus.on('shape.remove', (event) => {
-            if (event.element.modelElement) {
-                me.remove(event.element.modelElement.id, event.element.id);
+            const queue = [event.element];
+            while (queue.length > 0) {
+                const front = queue.shift();
+                if (front.modelElement) {
+                    me.remove(front.modelElement.id, front.id);
+                }
+                for (const child of front.children) {
+                    queue.push(child);
+                }
             }
         });
         eventBus.on('connection.remove', (event) => {
@@ -50,6 +57,6 @@ export default class ModelElementMap {
             }
         }
     }
-};
+}
 
 ModelElementMap.$inject = ['elementRegistry', 'eventBus'];

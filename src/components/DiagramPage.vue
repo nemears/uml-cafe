@@ -235,7 +235,7 @@ export default {
 
                         if (!umlShape.modelElement) {
                             // modelElement for shape has been deleted
-                            await deleteUmlDiagramElement(umlShape.id, this.$umlWebClient);
+                            await DIManager.delete(umlShape);
                             return undefined;
                         }
                         let parent = elementRegistry.get(umlShape.owningElement);
@@ -335,6 +335,12 @@ export default {
                             target = await drawDiagramElement(await umlEdge.target.get());
                         }
                         const modelElement = await this.$umlWebClient.get((await umlEdge.modelElement.front()).modelElementID);
+                        if (!modelElement) {
+                            // delete shape from the diagram
+                            await DIManager.delete(umlDiagramElement);
+                            return undefined;
+                            // throw Error('TODO delete shape from diagam');
+                        }
                         if (modelElement.is('Association')) {
                             for await (const memberEnd of modelElement.memberEnds) {
                                 await memberEnd.type.get()

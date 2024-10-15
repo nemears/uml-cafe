@@ -160,11 +160,14 @@ export default {
                 } else if (commandName === 'elementExplorerRename') {
                     await this.rename(context.oldName);
                 } else if (commandName === 'elementExplorerDelete') {
+                    const elsToUpdate = [];
                     for (const rawData of context.elementsData) {
-                        const parseData = this.$umlWebClient.parse(rawData);
-                        const remadeElement = parseData.newElement;
-                        this.$emit('elementUpdate', createElementUpdate(remadeElement));
+                        const remadeElement = await this.$umlWebClient.parse(rawData);
+                        elsToUpdate.push(remadeElement);
+                    }
+                    for (const remadeElement of elsToUpdate) {
                         this.$umlWebClient.put(remadeElement);
+                        this.$emit('elementUpdate', createElementUpdate(remadeElement));
                     }
                     this.$emit('updateTree', {
                         id: this.umlID,
@@ -237,10 +240,12 @@ export default {
         },
         async deleteElement(el) {
             const owner = await el.owner.get();
-            this.$emit('elementUpdate', deleteElementElementUpdate(el));
             await this.$umlWebClient.delete(el);
             this.$umlWebClient.put(owner);
-            this.$emit('elementUpdate', createElementUpdate(owner));
+            const deleteElUpdate = deleteElementElementUpdate(el); 
+            const updateElUpdate = createElementUpdate(owner);
+            updateElUpdate.updatedElements = updateElUpdate.updatedElements.concat(deleteElUpdate.updatedElements);
+            this.$emit('elementUpdate', updateElUpdate);
         },
         async createNewClassDiagram(el, diagramID) {
             const diagramPackage = await createUmlClassDiagram(diagramID, el, this.$umlWebClient, this.$umlCafeModule);

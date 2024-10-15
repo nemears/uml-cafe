@@ -41,8 +41,7 @@ export default class DependencyHandler extends RuleProvider {
                 umlWebClient.put(dependency);
                 umlWebClient.put(client);
                 umlWebClient.put(diagramContext.context);
-                diagramEmitter.fire('elementUpdate', createElementUpdate(client));
-                diagramEmitter.fire('elementUpdate', createElementUpdate(diagramContext.context));            
+                diagramEmitter.fire('elementUpdate', createElementUpdate(client, diagramContext.context));
             }
         });
         eventBus.on('edge.connect.undo', (context) => {
