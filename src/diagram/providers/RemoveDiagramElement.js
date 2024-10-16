@@ -185,6 +185,9 @@ class RemoveDiagramElementHandler {
                 this.addElement(edge, element, context);
             }
         }
+        if (element.parent) {
+            element.owningElement = element.parent;
+        }
     }
 
     async updateToServer(element, context) {
