@@ -5,7 +5,7 @@
         </div>
         <div class="information">
             <p>
-                This is an alpha stage open source, free to use, uml modeling client. Create a Class Diagram, and model the structure of your systems or code. You can sign up and have your Projects saved in the cloud. Make sure to model with your friends in real time as well, just share your url.
+                This is an alpha stage open source, free to use, uml modeling client with code generation capabilities. Create a Class Diagram, and model the structure of your systems or code. You can sign up and have your Projects saved in the cloud. Make sure to model with your friends in real time as well, just share your url. Generate code with our JavaScript API (soon C++ as well).
             </p>
             <h2>
                 Contents
@@ -109,6 +109,9 @@
             <h1 id="0_5_0_demo">
                 0.5.0 Demo Video
             </h1>
+            <p>
+                This is a demo from v0.5.0 in May 2024 that shows some of the general features.
+            </p>
             <div style="text-align: center;">
                 <video controls width="80%">
                     <source src="https://share.uml.cafe/demo_video_0_5_0.webm" type="video/mp4">
@@ -140,6 +143,10 @@
             <p>Did you find an issue? Submit it to our issues list <a href="https://github.com/nemears/uml-cafe/issues">here</a>!</p>
             <br/>
             <h1 id="release_notes">Release Notes</h1>
+            <h3>0.5.10</h3>
+            <p>
+                Added command stack (undo redo) implementations for Specification Page actions. Fixed many bugs in Diagram logic from old api.
+            </p>
             <h3>0.5.9</h3>
             <p>
                 Moved video and additional resources to https server "share.uml.cafe". Added Privacy Policy.
