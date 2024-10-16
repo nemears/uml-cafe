@@ -35,7 +35,7 @@ export default class EnumerationHandler {
                     const modelElement = await umlWebClient.get(element.modelElement.id);
                     const owner = await modelElement.owner.get();
                     diagramEmitter.fire('elementUpdate', deleteElementElementUpdate(modelElement));
-                    await umlWebClient.deleteElement(modelElement);
+                    await umlWebClient.delete(modelElement);
                     diagramEmitter.fire('elementUpdate', createElementUpdate(owner));
                 }
                 doLater(element);
