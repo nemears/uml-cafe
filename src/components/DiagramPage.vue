@@ -46,6 +46,9 @@ export default {
             }
         },
         latestCommand(newCommand) {
+            if (this.loading) {
+                return;
+            }
             if (newCommand.redo === this.umlID) {
                 return;
             }

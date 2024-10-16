@@ -433,22 +433,6 @@ export default {
                 this.latestCommand = copyOfEvent;
                 this.commandStack.unshift(copyOfEvent);
                 this.undoStack = [];
-                if (copyOfEvent.element !== this.specificationTab) {
-                    if (copyOfEvent.name === 'elementExplorerCreate' || event.name === 'diagramCreate' || event.name === 'elementExplorerRename') {
-                        this.elementExplorerCommand = copyOfEvent;
-                        // const treeNode = this.treeGraph.get(event.element);
-                        // let currNode = treeNode;
-                        // const stack = [];
-                        // while (currNode) {
-                        //     currNode.expanded = true;
-                        //     stack.unshift(currNode);
-                        //     currNode = currNode.parent;
-                        // }
-                        // for (const stackCurrNode of stack) {
-                        //     this.updateTree(stackCurrNode);
-                        // }
-                    }
-                }
             }
         },
         async undo() {
@@ -458,30 +442,9 @@ export default {
                     await this.focus({
                         el: await this.$umlWebClient.get(undoneCommand.specification)
                     });
-                    // await nextTick();
                     await this.$refs.specificationPage.waitForLoad();
                 }
                 this.undoStack.unshift(undoneCommand);
-                if (undoneCommand !== this.specificationTab) {
-                    if (undoneCommand.name === 'elementExplorerCreate' || undoneCommand.name === 'diagramCreate' || undoneCommand.name === 'elementExplorerRename') {
-                        this.elementExplorerUndo = undoneCommand;
-                        // // make sure the parent of the element is shown in the element explorer
-                        // const treeNode = this.treeGraph.get(undoneCommand.context.element);
-                        // let currNode = treeNode;
-                        // if (currNode) {
-                        //     currNode = currNode.parent;
-                        // }
-                        // const stack = [];
-                        // while (currNode) {
-                        //     currNode.expanded = true;
-                        //     stack.unshift(currNode);
-                        //     currNode = currNode.parent;
-                        // }
-                        // for (const stackCurrNode of stack) {
-                        //     this.updateTree(stackCurrNode);
-                        // }
-                    }
-                }
                 this.commandUndo = undoneCommand;
             }
         },
@@ -491,10 +454,6 @@ export default {
                 redoCommand.redo = true;
                 this.commandStack.unshift(redoCommand);
                 this.latestCommand = redoCommand;
-                if (redoCommand.name === 'elementExplorerCreate' || redoCommand.name === 'diagramCreate' || redoCommand.name === 'elementExplorerRename') {
-                    this.elementExplorerCommand = redoCommand;
-                }
-
             }
         },
         getColor(color) {
@@ -598,8 +557,6 @@ export default {
                                 :theme="theme"
                                 :selected-elements="selectedElements"
                                 :users="users"
-                                :new-command="elementExplorerCommand"
-                                :new-undo="elementExplorerUndo"
                                 :tree-graph="treeGraph"
                                 @focus="focus"
                                 @command="command"

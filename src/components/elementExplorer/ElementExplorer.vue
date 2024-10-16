@@ -10,9 +10,10 @@
             'theme',
             'selectedElements',
             'users',
-            'newCommand',
-            'newUndo',
             'treeGraph'
+        ],
+        inject: [
+            'latestCommand',
         ],
         emits: [
             'command',
@@ -44,35 +45,12 @@
             reload() {
                 this.getHeadFromServer();
             },
-            newCommand(event) {
-                const treeNode = this.treeGraph.get(event.element);
-                let currNode = treeNode;
-                const stack = [];
-                while (currNode) {
-                    currNode.expanded = true;
-                    stack.unshift(currNode);
-                    currNode = currNode.parent;
-                }
-                this.treeUpdate = stack;
-                // for (const stackCurrNode of stack) {
-                //     this.updateTree(stackCurrNode);
-                // } 
-            },
-            newUndo(undoneCommand) {
-                // make sure the parent of the element is shown in the element explorer
-                const treeNode = this.treeGraph.get(undoneCommand.element);
-                let currNode = treeNode;
-                // if (currNode) {
-                //     currNode = currNode.parent;
-                // }
-                const stack = [];
-                while (currNode) {
-                    currNode.expanded = true;
-                    stack.unshift(currNode);
-                    currNode = currNode.parent;
-                }
-                for (const stackCurrNode of stack) {
-                    this.updateTree(stackCurrNode);
+            latestCommand(newCommand) {
+                if (newCommand.name === 'diagramCreate') {
+                    // find it in the tree and expand it
+                    const parentTreeNode = this.treeGraph.get(newCommand.context.parentID);
+                    parentTreeNode.expanded = true;
+                    this.treeUpdate = [parentTreeNode];
                 }
             }
         },

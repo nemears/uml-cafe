@@ -9,6 +9,7 @@ import BannerButton from './bannerComponents/BannerButton.vue';
 import UserBubble from './bannerComponents/UserBubble.vue';
 import { getProjectLoginObject, createUmlClassDiagram, createElementUpdate } from '../umlUtil';
 import { randomID } from 'uml-client/lib/types/element';
+import { nextTick } from 'vue';
 export default {
     props: [
         'users',
@@ -370,6 +371,9 @@ export default {
             const head = await this.$umlWebClient.head();
             const diagramID = randomID();
             const diagramPackage = await createUmlClassDiagram(diagramID, head, this.$umlWebClient, this.$umlCafeModule);
+            this.$emit('diagram', diagramPackage);
+            this.$emit('elementUpdate', createElementUpdate(head));
+            await nextTick();
             this.$emit('command', {
                 name: 'diagramCreate',
                 element: head.id,
@@ -379,8 +383,6 @@ export default {
                     parentID: head.id,
                 }
             });
-            this.$emit('diagram', diagramPackage);
-            this.$emit('elementUpdate', createElementUpdate(head));
         },
         propogateElementUpdate(elementUpdate) {
             this.$emit('elementUpdate', elementUpdate);
