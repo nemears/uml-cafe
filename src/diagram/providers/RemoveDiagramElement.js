@@ -178,11 +178,12 @@ class RemoveDiagramElementHandler {
             for (const child of elementContext.children) {
                 this.addElement(child, element, context);
             }
+            const root = canvas.findRoot(element);
             for (const edge of elementContext.incoming) {
-                this.addElement(edge, element, context);
+                this.addElement(edge, root, context);
             }
             for (const edge of elementContext.outgoing) {
-                this.addElement(edge, element, context);
+                this.addElement(edge, root, context);
             }
         }
         if (element.parent) {
