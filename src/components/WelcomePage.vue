@@ -145,7 +145,7 @@
             <h1 id="release_notes">Release Notes</h1>
             <h3>0.5.10</h3>
             <p>
-                Added command stack (undo redo) implementations for Specification Page actions. Fixed many bugs in Diagram logic from old api.
+                Added command stack (undo redo) implementations for Specification Page actions. Fixed many bugs in Diagram logic from old api. Some code simplification in ElementExplorer.
             </p>
             <h3>0.5.9</h3>
             <p>
