@@ -10,7 +10,8 @@
             'theme',
             'selectedElements',
             'users',
-            'treeGraph'
+            'treeGraph',
+            'reload'
         ],
         inject: [
             'latestCommand',

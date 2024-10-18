@@ -558,6 +558,7 @@ export default {
                                 :selected-elements="selectedElements"
                                 :users="users"
                                 :tree-graph="treeGraph"
+                                :reload="reload"
                                 @focus="focus"
                                 @command="command"
                                 @select="select"
