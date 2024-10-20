@@ -143,6 +143,10 @@
             <p>Did you find an issue? Submit it to our issues list <a href="https://github.com/nemears/uml-cafe/issues">here</a>!</p>
             <br/>
             <h1 id="release_notes">Release Notes</h1>
+            <h3>0.5.11</h3>
+            <p>
+                Fixed loading from file, element explorer properly resets. Better error handling in DiagramPage loading if there is a bad state object, and fixes to association labels so they are shown on creation and other bugs.
+            </p>
             <h3>0.5.10</h3>
             <p>
                 Added command stack (undo redo) implementations for Specification Page actions. Fixed many bugs in Diagram logic from old api. Some code simplification in ElementExplorer.
