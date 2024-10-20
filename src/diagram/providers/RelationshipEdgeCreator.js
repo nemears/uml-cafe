@@ -77,7 +77,7 @@ export default class RelationshipEdgeCreator {
                         }
                         
                         for await (const end of association.memberEnds) {
-                            const createEndLabels = (end, placement) => {
+                            const createEndLabels = async (end, placement) => {
                                 if (end.name !== '') {
                                     const textDimensions = getTextDimensions(end.name, umlRenderer);
                                     elementsToCreate.push(elementFactory.createLabel({
@@ -94,12 +94,25 @@ export default class RelationshipEdgeCreator {
                                 }
                                 if (end.lowerValue.has() && end.upperValue.has()) {
                                     // TODO
+                                    const text = (await end.lowerValue.get()).value + '..' + (await end.upperValue.get()).value;
+                                    const textDimensions = getTextDimensions(end.name, umlRenderer);
+                                    elementsToCreate.push(elementFactory.createLabel({
+                                        id : randomID(),
+                                        text: text,
+                                        width: Math.round(textDimensions.width) + 15,
+                                        height: 24,
+                                        modelElement: end,
+                                        placement: placement,
+                                        elementType: 'UMLMultiplicityLabel',
+                                        labelTarget: associationEdge,
+                                        owningElement: associationEdge
+                                    }));
                                 } 
                             };
                             if (end.type.id() === source.modelElement.id) {
-                                createEndLabels(end, 'source');
+                                await createEndLabels(end, 'source');
                             } else if (end.type.id() === target.modelElement.id) {
-                                createEndLabels(end, 'target');
+                                await createEndLabels(end, 'target');
                             }
                         }
 

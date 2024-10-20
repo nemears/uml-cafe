@@ -217,6 +217,9 @@ class ElementCreationHandler {
                 case 'UMLEdge':
                     // TODO children
                     canvas.removeConnection(element);
+                    element.numCenterLabels = 0;
+                    element.numSourceLabels = 0;
+                    element.numTargetLabels = 0;
                     break;
                 case 'UMLNameLabel':
                 case 'UMLTypedElementLabel':

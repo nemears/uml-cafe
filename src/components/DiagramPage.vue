@@ -212,370 +212,374 @@ export default {
             {
                 
                 const drawDiagramElement = async (umlDiagramElement) => {
-                    const shapeAlreadyDrawn = elementRegistry.get(umlDiagramElement.id); 
-                    if (shapeAlreadyDrawn) {
-                        return shapeAlreadyDrawn;
-                    }
-                    const updateLabelTextAndBounds = (text, connection, placement) => {
-                        umlDiagramElement.text = text;
-                        const oldWidth = umlDiagramElement.bounds.width;
-                        umlDiagramElement.bounds.width = Math.round(getTextDimensions(text, umlRenderer).width) + 10;
-                        let lastPoint = undefined;
-                        if (placement === 'source') {
-                            lastPoint = connection.waypoints[0];
-                        } else if (placement === 'target') {
-                            lastPoint = connection.waypoints.slice(-1)[0];
+                    try {
+                        const shapeAlreadyDrawn = elementRegistry.get(umlDiagramElement.id); 
+                        if (shapeAlreadyDrawn) {
+                            return shapeAlreadyDrawn;
                         }
-                        if (lastPoint.x > umlDiagramElement.bounds.x) {
-                            umlDiagramElement.bounds.x += oldWidth - umlDiagramElement.bounds.width;
+                        const updateLabelTextAndBounds = (text, connection, placement) => {
+                            umlDiagramElement.text = text;
+                            const oldWidth = umlDiagramElement.bounds.width;
+                            umlDiagramElement.bounds.width = Math.round(getTextDimensions(text, umlRenderer).width) + 10;
+                            let lastPoint = undefined;
+                            if (placement === 'source') {
+                                lastPoint = connection.waypoints[0];
+                            } else if (placement === 'target') {
+                                lastPoint = connection.waypoints.slice(-1)[0];
+                            }
+                            if (lastPoint.x > umlDiagramElement.bounds.x) {
+                                umlDiagramElement.bounds.x += oldWidth - umlDiagramElement.bounds.width;
+                            }
+                        };
+                        if (umlDiagramElement.is('Diagram')) {
+                            return root;
                         }
-                    };
-                    if (umlDiagramElement.is('Diagram')) {
-                        return root;
-                    }
-                    if (umlDiagramElement.elementType() === 'UMLShape') {
-                        const umlShape = umlDiagramElement;
+                        if (umlDiagramElement.elementType() === 'UMLShape') {
+                            const umlShape = umlDiagramElement;
 
-                        if (!umlShape.modelElement) {
-                            // modelElement for shape has been deleted
-                            await DIManager.delete(umlShape);
-                            return undefined;
-                        }
-                        let parent = elementRegistry.get(umlShape.owningElement);
-                        if (!parent) {
-                            parent = await drawDiagramElement(await getUmlDiagramElement(umlShape.owningElement, this.$umlWebClient));
-                        }
-                        const shape = elementFactory.createShape({
-                            x: umlShape.bounds.x,
-                            y: umlShape.bounds.y,
-                            width: umlShape.bounds.width,
-                            height: umlShape.bounds.height,
-                            id: umlShape.id,
-                            modelElement: umlShape.modelElement,
-                            elementType: 'UMLShape',
-                        });
-                        canvas.addShape(shape, parent);
-                        return shape;
-                    } else if (umlDiagramElement.elementType() === 'UMLClassifierShape') {
-                        const umlClassifierShape = umlDiagramElement;
-                        if (umlClassifierShape.modelElement.size() === 0) {
-                            console.warn('classifier shape with no corresponding model element, deleting!');
-                            await DIManager.delete(umlClassifierShape);
-                            return undefined;
-                        }
-                        const modelElement = await this.$umlWebClient.get((await umlClassifierShape.modelElement.front()).modelElementID);
-                        await modelElement.owner.get();
-                        let parent = elementRegistry.get(umlClassifierShape.owningElement.id());
-                        if (!parent) {
-                            parent = await drawDiagramElement(await DIManager.get(umlClassifierShape.owningElement.id()));
-                        }
-                        if (parent.id === diagramContext.umlDiagram.id) {
-                            parent = canvas.findRoot(parent);
-                        }
-                        const bounds = await umlClassifierShape.bounds.get();
-                        // todo compartments
-                        const compartments = [];
-                        for await (const compartment of umlClassifierShape.compartment) {
-                            const compartmentShape = elementFactory.createShape({
-                                id: compartment.id,
-                                x: bounds.x,
-                                y: bounds.y + CLASS_SHAPE_HEADER_HEIGHT,
-                                width: bounds.width,
-                                height: bounds.height - CLASS_SHAPE_HEADER_HEIGHT,
-                                // modelElement: umlClassifierShape.modelElement,
-                                elementType: 'UMLCompartment',
-                                inselectable: true,
+                            if (!umlShape.modelElement) {
+                                // modelElement for shape has been deleted
+                                await DIManager.delete(umlShape);
+                                return undefined;
+                            }
+                            let parent = elementRegistry.get(umlShape.owningElement);
+                            if (!parent) {
+                                parent = await drawDiagramElement(await getUmlDiagramElement(umlShape.owningElement, this.$umlWebClient));
+                            }
+                            const shape = elementFactory.createShape({
+                                x: umlShape.bounds.x,
+                                y: umlShape.bounds.y,
+                                width: umlShape.bounds.width,
+                                height: umlShape.bounds.height,
+                                id: umlShape.id,
+                                modelElement: umlShape.modelElement,
+                                elementType: 'UMLShape',
                             });
-                            compartments.push(compartmentShape);
-                        }
-
-                        // styles
-                        let sharedStyle;
-                        let localStyle;
-                        if (umlClassifierShape.sharedStyle.has()) {
-                            sharedStyle = await umlClassifierShape.sharedStyle.get();
-                            await sharedStyle.fillColor.get();
-                            await sharedStyle.strokeColor.get();
-                        }
-                        if (umlClassifierShape.localStyle.has()) {
-                            localStyle = await umlClassifierShape.localStyle.get();
-                            await localStyle.fillColor.get();
-                            await localStyle.strokeColor.get();
-                            await localStyle.fontColor.get();
-                            elementUpdater._styles.set(localStyle.id, umlClassifierShape.id);
-                        }
-
-                        const shape = elementFactory.createShape({
-                            x: bounds.x,
-                            y: bounds.y,
-                            width: bounds.width,
-                            height: bounds.height,
-                            id: umlClassifierShape.id,
-                            modelElement: modelElement,
-                            compartments: compartments,
-                            sharedStyle: sharedStyle,
-                            localStyle: localStyle,
-                            elementType: 'UMLClassifierShape',
-                        });
-                        canvas.addShape(shape, parent);
-                        for (const compartmentShape of compartments) {
-                            canvas.addShape(compartmentShape, shape);
-                        }
-                    } else if (umlDiagramElement.elementType() === 'UMLEdge') {
-                        const umlEdge = umlDiagramElement;
-                        if (!umlEdge.modelElement.size() === 0) {
-                            // model element has been deleted
-                            await DIManager.delete(umlEdge);
-                            return undefined;
-                        }
-
-                        let source = elementRegistry.get(umlEdge.source.id());
-                        let target = elementRegistry.get(umlEdge.target.id());
-                        if (!source) {
-                            source = await drawDiagramElement(await umlEdge.source.get());
-                        }
-                        if (!target) {
-                            target = await drawDiagramElement(await umlEdge.target.get());
-                        }
-                        const modelElement = await this.$umlWebClient.get((await umlEdge.modelElement.front()).modelElementID);
-                        if (!modelElement) {
-                            // delete shape from the diagram
-                            await DIManager.delete(umlDiagramElement);
-                            return undefined;
-                            // throw Error('TODO delete shape from diagam');
-                        }
-                        if (modelElement.is('Association')) {
-                            for await (const memberEnd of modelElement.memberEnds) {
-                                await memberEnd.type.get()
+                            canvas.addShape(shape, parent);
+                            return shape;
+                        } else if (umlDiagramElement.elementType() === 'UMLClassifierShape') {
+                            const umlClassifierShape = umlDiagramElement;
+                            if (umlClassifierShape.modelElement.size() === 0) {
+                                console.warn('classifier shape with no corresponding model element, deleting!');
+                                await DIManager.delete(umlClassifierShape);
+                                return undefined;
                             }
-                        }
-                        const waypoints = [];
-                        for await (const point of umlEdge.waypoints) {
-                            waypoints.push({x : point.x, y: point.y});
-                        }
-                        var relationship = elementFactory.createConnection({
-                            waypoints: waypoints,
-                            id: umlEdge.id,
-                            modelElement: modelElement,
-                            source: source,
-                            target: target,
-                            children: [],
-                            elementType: 'UMLEdge',
-                            numTargetLabels: 0,
-                            numSourceLabels: 0,
-                            numCenterLabels: 0,
-                        });
-                        canvas.addConnection(relationship, diagramFrame ? diagramFrame : root);
-                        return relationship;
-                    } else if (umlDiagramElement.elementType() === 'UMLLabel') {
-                        const umlLabel = umlDiagramElement;
-                        if (!umlLabel.modelElement) {
-                            // TODO
-                            console.error('TODO diagramInterchange');
-
-                        }
-                        // TODO create label pointing to shape
-                        if ((await umlLabel.modelElement.front()).elementType() === 'Property' && umlLabel.modelElement.association.has()) {
-                            // it is a member end label
-                            const labelTarget = elementRegistry.get(umlLabel.owningElement);
-                            const label = elementFactory.createLabel({
-                                    id: umlLabel.id,
-                                    text: umlLabel.text,
-                                    modelElement: umlLabel.modelElement,
-                                    x: umlLabel.bounds.x,
-                                    y: umlLabel.bounds.y,
-                                    width: umlLabel.bounds.width,
-                                    height: umlLabel.bounds.height,
-                                    labelTarget: labelTarget,
-                                    elementType: 'UMLLabel',
+                            const modelElement = await this.$umlWebClient.get((await umlClassifierShape.modelElement.front()).modelElementID);
+                            await modelElement.owner.get();
+                            let parent = elementRegistry.get(umlClassifierShape.owningElement.id());
+                            if (!parent) {
+                                parent = await drawDiagramElement(await DIManager.get(umlClassifierShape.owningElement.id()));
+                            }
+                            if (parent.id === diagramContext.umlDiagram.id) {
+                                parent = canvas.findRoot(parent);
+                            }
+                            const bounds = await umlClassifierShape.bounds.get();
+                            // todo compartments
+                            const compartments = [];
+                            for await (const compartment of umlClassifierShape.compartment) {
+                                const compartmentShape = elementFactory.createShape({
+                                    id: compartment.id,
+                                    x: bounds.x,
+                                    y: bounds.y + CLASS_SHAPE_HEADER_HEIGHT,
+                                    width: bounds.width,
+                                    height: bounds.height - CLASS_SHAPE_HEADER_HEIGHT,
+                                    // modelElement: umlClassifierShape.modelElement,
+                                    elementType: 'UMLCompartment',
+                                    inselectable: true,
                                 });
-                                canvas.addShape(label, labelTarget);
-                                return label;
-                        }
-                    } else if (umlDiagramElement.elementType() === 'UMLNameLabel') {
-                        const umlNameLabel = umlDiagramElement;
-                        const labelTarget = elementRegistry.get(umlNameLabel.owningElement.id());
-
-                        // update name 
-                        let updatedName = false;
-                        const modelElement = await this.$umlWebClient.get((await umlNameLabel.modelElement.front()).modelElementID);
-                        if (umlNameLabel.text != modelElement.name) {
-                            umlNameLabel.text = modelElement.name;
-                            updatedName = true;
-                        }
-                        const bounds = await umlNameLabel.bounds.get();
-                        const label = elementFactory.createLabel({
-                            id: umlNameLabel.id,
-                            text: umlNameLabel.text,
-                            modelElement: modelElement,
-                            x: bounds.x,
-                            y: bounds.y,
-                            width: bounds.width,
-                            height: bounds.height,
-                            labelTarget: labelTarget,
-                            elementType: 'UMLNameLabel',
-                            inselectable: !labelTarget.waypoints, // TODO determine this elsewhere
-                        });
-                        canvas.addShape(label, labelTarget);
-                        if (updatedName) {
-                            await DIManager.put(umlNameLabel);
-                        }
-
-                        return label;
-                    } else if (umlDiagramElement.elementType() === 'UMLTypedElementLabel') {
-                        const umlTypedElementLabel = umlDiagramElement;
-                        const labelTarget = elementRegistry.get(umlTypedElementLabel.owningElement.id());
-
-                        // update text
-                        const modelElement = await this.$umlWebClient.get((await umlTypedElementLabel.modelElement.front()).modelElementID);
-                        await modelElement.type.get();
-                        let newText = getTypedElementText(modelElement);
-                        if (newText != umlTypedElementLabel.text) {
-                            umlTypedElementLabel.text = newText;
-                            umlTypedElementLabel.bounds.width = Math.round(getTextDimensions(newText, this.diagram.get('umlRenderer')).width) + 15;
-                        }
-                        let placement;
-                        if (labelTarget.waypoints) {
-                            placement = 'center';
-                        }
-                        const bounds = await umlTypedElementLabel.bounds.get();
-                        const label = elementFactory.createLabel({
-                            id: umlTypedElementLabel.id,
-                            text: umlTypedElementLabel.text,
-                            modelElement: modelElement,
-                            x: bounds.x,
-                            y: bounds.y,
-                            width: bounds.width,
-                            height: bounds.height,
-                            labelTarget: labelTarget,
-                            elementType: 'UMLTypedElementLabel',
-                            placement: placement,
-                        });
-                        if (newText) {
-                            await DIManager.put(umlTypedElementLabel);
-                        }
-                        canvas.addShape(label, labelTarget);
-                        return label;
-                    } else if (umlDiagramElement.elementType() === 'UMLKeywordLabel') {
-                        const labelTarget = elementRegistry.get(umlDiagramElement.owningElement.id());
-                        let placement;
-                        if (labelTarget.waypoints) {
-                            placement = 'center';
-                        }
-                        const bounds = await umlDiagramElement.bounds.get();
-                        const label = elementFactory.createLabel({
-                            id: umlDiagramElement.id,
-                            text: umlDiagramElement.text,
-                            modelElement: await this.$umlWebClient.get((await umlDiagramElement.modelElement.front()).modelElementID),
-                            x: bounds.x,
-                            y: bounds.y,
-                            width: bounds.width,
-                            height: bounds.height,
-                            elementType: 'UMLKeywordLabel',
-                            inselectable: true, // TODO determine this elsewhere
-                            placement: placement,
-                        });
-                        canvas.addShape(label, labelTarget);
-                        return label;
-                    } else if (umlDiagramElement.elementType() === 'UMLAssociationEndLabel') {
-                        const labelTarget = elementRegistry.get(umlDiagramElement.owningElement.id());
-                        const modelElement = await this.$umlWebClient.get((await umlDiagramElement.modelElement.front()).modelElementID);
-                        let placement;
-                        let placementIndex;
-                        if (labelTarget.waypoints) {
-                            // setup alignment
-                            placementIndex = 0; // always put it on top (Assumption) // get around this by having additional di
-                            if (modelElement.type.id() === labelTarget.source.modelElement.id) {
-                                placement = 'source'
-                                labelTarget.numSourceLabels += 1;
-                            } else if (modelElement.type.id() === labelTarget.target.modelElement.id) {
-                                placement = 'target';
-                                labelTarget.numTargetLabels += 1;
+                                compartments.push(compartmentShape);
                             }
-                        }
-                        // update name 
-                        let updatedName = false;
-                        if (modelElement.name === '') {
-                            // not valid, delete from diagram
-                            await DIManager.delete(umlDiagramElement);
-                            return undefined;
-                        }
 
-                        if (umlDiagramElement.text != modelElement.name) {
-                            updatedName = true;
-                            updateLabelTextAndBounds(modelElement.name, labelTarget, placement);
-                        }
-                        const bounds = await umlDiagramElement.bounds.get();
-                        const label = elementFactory.createLabel({
-                            id: umlDiagramElement.id,
-                            text: umlDiagramElement.text,
-                            modelElement: modelElement,
-                            labelTarget: labelTarget,
-                            x: bounds.x,
-                            y: bounds.y,
-                            width: bounds.width,
-                            height: bounds.height,
-                            elementType: 'UMLAssociationEndLabel',
-                            placement: placement,
-                            placementIndex: placementIndex,
-                        });
-                        if (updatedName) {
-                            throw Error('uh oh');
-                        }
-                        canvas.addShape(label, labelTarget);
-                        return label;
-                    } else if (umlDiagramElement.elementType() === 'UMLMultiplicityLabel') {
-                        const labelTarget = elementRegistry.get(umlDiagramElement.owningElement);
-                        const modelElement = await this.$umlWebClient.get((await umlDiagramElement.modelElement.front()).modelElementID);
-                        const bounds = await umlDiagramElement.bounds.get();
-                        let placement;
-                        let placementIndex;
-                        if (labelTarget.waypoints) {
-                            placementIndex = 1; // put on bottom // assumption since it is multiplicityLabel
-                            // setup alignment
-                            if (umlDiagramElement.modelElement.type.id() === labelTarget.source.modelElement.id) {
-                                placement = 'source'
-                                labelTarget.numSourceLabels += 1;
-                            } else if (umlDiagramElement.modelElement.type.id() === labelTarget.target.modelElement.id) {
-                                placement = 'target';
-                                labelTarget.numTargetLabels += 1;
+                            // styles
+                            let sharedStyle;
+                            let localStyle;
+                            if (umlClassifierShape.sharedStyle.has()) {
+                                sharedStyle = await umlClassifierShape.sharedStyle.get();
+                                await sharedStyle.fillColor.get();
+                                await sharedStyle.strokeColor.get();
                             }
-                        }
+                            if (umlClassifierShape.localStyle.has()) {
+                                localStyle = await umlClassifierShape.localStyle.get();
+                                await localStyle.fillColor.get();
+                                await localStyle.strokeColor.get();
+                                await localStyle.fontColor.get();
+                                elementUpdater._styles.set(localStyle.id, umlClassifierShape.id);
+                            }
 
-                        // TODO update label if changed
-                        if (!(await isPropertyValidForMultiplicityLabel(modelElement))) {
-                            // not valid, delete from diagram
-                            await DIManager.delete(umlDiagramElement);
-                            return undefined;
-                        }
+                            const shape = elementFactory.createShape({
+                                x: bounds.x,
+                                y: bounds.y,
+                                width: bounds.width,
+                                height: bounds.height,
+                                id: umlClassifierShape.id,
+                                modelElement: modelElement,
+                                compartments: compartments,
+                                sharedStyle: sharedStyle,
+                                localStyle: localStyle,
+                                elementType: 'UMLClassifierShape',
+                            });
+                            canvas.addShape(shape, parent);
+                            for (const compartmentShape of compartments) {
+                                canvas.addShape(compartmentShape, shape);
+                            }
+                        } else if (umlDiagramElement.elementType() === 'UMLEdge') {
+                            const umlEdge = umlDiagramElement;
+                            if (!umlEdge.modelElement.size() === 0) {
+                                // model element has been deleted
+                                await DIManager.delete(umlEdge);
+                                return undefined;
+                            }
 
-                        let multiplicityText = (await modelElement.lowerValue.get()).value + '..' + (await modelElement.upperValue.get()).value;
-                        let updateMultiplictyLabel = false;
-                        if (multiplicityText !== umlDiagramElement.text) {
-                            updateMultiplictyLabel = true;
-                            updateLabelTextAndBounds(multiplicityText, labelTarget, placement);
-                        }
+                            let source = elementRegistry.get(umlEdge.source.id());
+                            let target = elementRegistry.get(umlEdge.target.id());
+                            if (!source) {
+                                source = await drawDiagramElement(await umlEdge.source.get());
+                            }
+                            if (!target) {
+                                target = await drawDiagramElement(await umlEdge.target.get());
+                            }
+                            const modelElement = await this.$umlWebClient.get((await umlEdge.modelElement.front()).modelElementID);
+                            if (!modelElement) {
+                                // delete shape from the diagram
+                                await DIManager.delete(umlDiagramElement);
+                                return undefined;
+                                // throw Error('TODO delete shape from diagam');
+                            }
+                            if (modelElement.is('Association')) {
+                                for await (const memberEnd of modelElement.memberEnds) {
+                                    await memberEnd.type.get()
+                                }
+                            }
+                            const waypoints = [];
+                            for await (const point of umlEdge.waypoints) {
+                                waypoints.push({x : point.x, y: point.y});
+                            }
+                            var relationship = elementFactory.createConnection({
+                                waypoints: waypoints,
+                                id: umlEdge.id,
+                                modelElement: modelElement,
+                                source: source,
+                                target: target,
+                                children: [],
+                                elementType: 'UMLEdge',
+                                numTargetLabels: 0,
+                                numSourceLabels: 0,
+                                numCenterLabels: 0,
+                            });
+                            canvas.addConnection(relationship, diagramFrame ? diagramFrame : root);
+                            return relationship;
+                        } else if (umlDiagramElement.elementType() === 'UMLLabel') {
+                            const umlLabel = umlDiagramElement;
+                            if (!umlLabel.modelElement) {
+                                // TODO
+                                console.error('TODO diagramInterchange');
 
-                        const label = elementFactory.createLabel({
-                            id: umlDiagramElement.id,
-                            text: umlDiagramElement.text,
-                            modelElement: modelElement,
-                            labelTarget: labelTarget,
-                            x: bounds.x,
-                            y: bounds.y,
-                            width: bounds.width,
-                            height: bounds.height,
-                            elementType: 'UMLMultiplicityLabel',
-                            placement: placement,
-                            placementIndex: placementIndex,
-                        });
-                        if (updateMultiplictyLabel) {
-                            await DIManager.put(umlDiagramElement);
+                            }
+                            // TODO create label pointing to shape
+                            if ((await umlLabel.modelElement.front()).elementType() === 'Property' && umlLabel.modelElement.association.has()) {
+                                // it is a member end label
+                                const labelTarget = elementRegistry.get(umlLabel.owningElement);
+                                const label = elementFactory.createLabel({
+                                        id: umlLabel.id,
+                                        text: umlLabel.text,
+                                        modelElement: umlLabel.modelElement,
+                                        x: umlLabel.bounds.x,
+                                        y: umlLabel.bounds.y,
+                                        width: umlLabel.bounds.width,
+                                        height: umlLabel.bounds.height,
+                                        labelTarget: labelTarget,
+                                        elementType: 'UMLLabel',
+                                    });
+                                    canvas.addShape(label, labelTarget);
+                                    return label;
+                            }
+                        } else if (umlDiagramElement.elementType() === 'UMLNameLabel') {
+                            const umlNameLabel = umlDiagramElement;
+                            const labelTarget = elementRegistry.get(umlNameLabel.owningElement.id());
+
+                            // update name 
+                            let updatedName = false;
+                            const modelElement = await this.$umlWebClient.get((await umlNameLabel.modelElement.front()).modelElementID);
+                            if (umlNameLabel.text != modelElement.name) {
+                                umlNameLabel.text = modelElement.name;
+                                updatedName = true;
+                            }
+                            const bounds = await umlNameLabel.bounds.get();
+                            const label = elementFactory.createLabel({
+                                id: umlNameLabel.id,
+                                text: umlNameLabel.text,
+                                modelElement: modelElement,
+                                x: bounds.x,
+                                y: bounds.y,
+                                width: bounds.width,
+                                height: bounds.height,
+                                labelTarget: labelTarget,
+                                elementType: 'UMLNameLabel',
+                                inselectable: !labelTarget.waypoints, // TODO determine this elsewhere
+                            });
+                            canvas.addShape(label, labelTarget);
+                            if (updatedName) {
+                                await DIManager.put(umlNameLabel);
+                            }
+
+                            return label;
+                        } else if (umlDiagramElement.elementType() === 'UMLTypedElementLabel') {
+                            const umlTypedElementLabel = umlDiagramElement;
+                            const labelTarget = elementRegistry.get(umlTypedElementLabel.owningElement.id());
+
+                            // update text
+                            const modelElement = await this.$umlWebClient.get((await umlTypedElementLabel.modelElement.front()).modelElementID);
+                            await modelElement.type.get();
+                            let newText = getTypedElementText(modelElement);
+                            if (newText != umlTypedElementLabel.text) {
+                                umlTypedElementLabel.text = newText;
+                                umlTypedElementLabel.bounds.width = Math.round(getTextDimensions(newText, this.diagram.get('umlRenderer')).width) + 15;
+                            }
+                            let placement;
+                            if (labelTarget.waypoints) {
+                                placement = 'center';
+                            }
+                            const bounds = await umlTypedElementLabel.bounds.get();
+                            const label = elementFactory.createLabel({
+                                id: umlTypedElementLabel.id,
+                                text: umlTypedElementLabel.text,
+                                modelElement: modelElement,
+                                x: bounds.x,
+                                y: bounds.y,
+                                width: bounds.width,
+                                height: bounds.height,
+                                labelTarget: labelTarget,
+                                elementType: 'UMLTypedElementLabel',
+                                placement: placement,
+                            });
+                            if (newText) {
+                                await DIManager.put(umlTypedElementLabel);
+                            }
+                            canvas.addShape(label, labelTarget);
+                            return label;
+                        } else if (umlDiagramElement.elementType() === 'UMLKeywordLabel') {
+                            const labelTarget = elementRegistry.get(umlDiagramElement.owningElement.id());
+                            let placement;
+                            if (labelTarget.waypoints) {
+                                placement = 'center';
+                            }
+                            const bounds = await umlDiagramElement.bounds.get();
+                            const label = elementFactory.createLabel({
+                                id: umlDiagramElement.id,
+                                text: umlDiagramElement.text,
+                                modelElement: await this.$umlWebClient.get((await umlDiagramElement.modelElement.front()).modelElementID),
+                                x: bounds.x,
+                                y: bounds.y,
+                                width: bounds.width,
+                                height: bounds.height,
+                                elementType: 'UMLKeywordLabel',
+                                inselectable: true, // TODO determine this elsewhere
+                                placement: placement,
+                            });
+                            canvas.addShape(label, labelTarget);
+                            return label;
+                        } else if (umlDiagramElement.elementType() === 'UMLAssociationEndLabel') {
+                            const labelTarget = elementRegistry.get(umlDiagramElement.owningElement.id());
+                            const modelElement = await this.$umlWebClient.get((await umlDiagramElement.modelElement.front()).modelElementID);
+                            let placement;
+                            let placementIndex;
+                            if (labelTarget.waypoints) {
+                                // setup alignment
+                                placementIndex = 0; // always put it on top (Assumption) // get around this by having additional di
+                                if (modelElement.type.id() === labelTarget.source.modelElement.id) {
+                                    placement = 'source'
+                                    labelTarget.numSourceLabels += 1;
+                                } else if (modelElement.type.id() === labelTarget.target.modelElement.id) {
+                                    placement = 'target';
+                                    labelTarget.numTargetLabels += 1;
+                                }
+                            }
+                            // update name 
+                            let updatedName = false;
+                            if (modelElement.name === '') {
+                                // not valid, delete from diagram
+                                await DIManager.delete(umlDiagramElement);
+                                return undefined;
+                            }
+
+                            if (umlDiagramElement.text != modelElement.name) {
+                                updatedName = true;
+                                updateLabelTextAndBounds(modelElement.name, labelTarget, placement);
+                            }
+                            const bounds = await umlDiagramElement.bounds.get();
+                            const label = elementFactory.createLabel({
+                                id: umlDiagramElement.id,
+                                text: umlDiagramElement.text,
+                                modelElement: modelElement,
+                                labelTarget: labelTarget,
+                                x: bounds.x,
+                                y: bounds.y,
+                                width: bounds.width,
+                                height: bounds.height,
+                                elementType: 'UMLAssociationEndLabel',
+                                placement: placement,
+                                placementIndex: placementIndex,
+                            });
+                            if (updatedName) {
+                                throw Error('uh oh');
+                            }
+                            canvas.addShape(label, labelTarget);
+                            return label;
+                        } else if (umlDiagramElement.elementType() === 'UMLMultiplicityLabel') {
+                            const labelTarget = elementRegistry.get(umlDiagramElement.owningElement.id());
+                            const modelElement = await this.$umlWebClient.get((await umlDiagramElement.modelElement.front()).modelElementID);
+                            const bounds = await umlDiagramElement.bounds.get();
+                            let placement;
+                            let placementIndex;
+                            if (labelTarget.waypoints) {
+                                placementIndex = 1; // put on bottom // assumption since it is multiplicityLabel
+                                // setup alignment
+                                if (modelElement.type.id() === labelTarget.source.modelElement.id) {
+                                    placement = 'source'
+                                    labelTarget.numSourceLabels += 1;
+                                } else if (modelElement.type.id() === labelTarget.target.modelElement.id) {
+                                    placement = 'target';
+                                    labelTarget.numTargetLabels += 1;
+                                }
+                            }
+
+                            // TODO update label if changed
+                            if (!(await isPropertyValidForMultiplicityLabel(modelElement))) {
+                                // not valid, delete from diagram
+                                await DIManager.delete(umlDiagramElement);
+                                return undefined;
+                            }
+
+                            let multiplicityText = (await modelElement.lowerValue.get()).value + '..' + (await modelElement.upperValue.get()).value;
+                            let updateMultiplictyLabel = false;
+                            if (multiplicityText !== umlDiagramElement.text) {
+                                updateMultiplictyLabel = true;
+                                updateLabelTextAndBounds(multiplicityText, labelTarget, placement);
+                            }
+
+                            const label = elementFactory.createLabel({
+                                id: umlDiagramElement.id,
+                                text: umlDiagramElement.text,
+                                modelElement: modelElement,
+                                labelTarget: labelTarget,
+                                x: bounds.x,
+                                y: bounds.y,
+                                width: bounds.width,
+                                height: bounds.height,
+                                elementType: 'UMLMultiplicityLabel',
+                                placement: placement,
+                                placementIndex: placementIndex,
+                            });
+                            if (updateMultiplictyLabel) {
+                                await DIManager.put(umlDiagramElement);
+                            }
+                            canvas.addShape(label, labelTarget);
+                            return label;
+                        } else {
+                            throw Error('unhandled uml di type on diagram loading!');
                         }
-                        canvas.addShape(label, labelTarget);
-                        return label;
-                    } else {
-                        throw Error('unhandled uml di type on diagram loading!');
+                    } catch (exception) {
+                        console.error('error while creating shape! ' + exception);
                     }
                 }
 
