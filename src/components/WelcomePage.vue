@@ -33,6 +33,9 @@
                         <a href="#apis_and_software">APIs and Software Resources</a>
                     </li>
                     <li>
+                        <a href="#additional_documentation">Additional Documentation</a>
+                    </li>
+                    <li>
                         <a href="#known_issues">Known Issues</a>
                     </li>
                     <li>
@@ -134,6 +137,13 @@
                 <a href="https://github.com/nemears/uml-cafe">uml-cafe</a> The vue based application built for the browser that allows interaction with a managed model in the backend. The diagramming ability is built upon bpmn.io's <a href="https://github.com/bpmn-io/diagram-js">diagram-js</a>. It holds some addition diagramming interfaces that may be useful for development.
             </p>
             <br/>
+            <h1 id="additional_documentation">Additional Documentation</h1>
+            <p>
+                For more information on Uml-Cafe and it's features check out <a href="https://blog.uml.cafe">blog.uml.cafe</a> for extra information and tutorials on how to use the API.
+            </p>
+            <p>
+                If you would like to learn more about UML in general, check out it's actual specification. The document can be found <a href="https://www.omg.org/spec/UML/2.5.1/PDF">here</a>.
+            </p>
             <h1 id="known_issues">Known issues</h1>
             <ul>
                 <li>Context pad becomes unusable after some shapes are added</li>
