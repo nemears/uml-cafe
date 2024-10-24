@@ -3,11 +3,13 @@ export default {
     props: ['label', 'users', 'theme'],
     methods: {
         addUser() {
-            const userValue = this.$refs.userSelectorInput.value;
+            let userValue = this.$refs.userSelectorInput.value;
             if (userValue === undefined || userValue === '') {
                 // maybe show error to user
                 return;
             }
+
+            userValue = userValue.replace(/['"]+/g, '');
 
             // check if user exists
             // TODO

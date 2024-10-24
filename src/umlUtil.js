@@ -152,8 +152,9 @@ export function getPanelClass(selected, hover, currentUsers, umlWebClient, theme
 
 export function getProjectLoginObject(wholeProjectName, serverAddress) {
     const projectNameSplit = wholeProjectName.split('/');
-    const groupName = projectNameSplit[1];
-    const projectName = projectNameSplit[2];
+    const offset = projectNameSplit[0] == '' ? 1 : 0;
+    const groupName = projectNameSplit[offset];
+    const projectName = projectNameSplit[offset + 1];
 
     // check for stashed user and passwordHash
     let user = sessionStorage.getItem('user');
@@ -183,11 +184,15 @@ export class UmlCafeModule {
     // metaClient = Manager based on Model
     constructor(umlClient) {
         const initializationPromise = async () => {
+            try {
             await umlClient.initialization;
             const uml = await umlClient.get('UML_r67OnwwyTHCtCmWnZsd8ePh5');
             this.module = await generate(uml, umlClient);
             const metaModule = await generate(await umlClient.head(), umlClient);
             this.metaClient = new metaModule.ModelManager(await umlClient.get('YtPOIKBNW7KLXWz5DPHM9AQoz20u'));
+            } catch (exception) {
+                console.warn('could not start Uml Cafe Module because of error: ' + exception);
+            }
         };
         this.initialization = initializationPromise();
     }

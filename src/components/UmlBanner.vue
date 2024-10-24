@@ -147,6 +147,8 @@ export default {
                     address: this.$umlWebClient.address,
                     project: this.$umlWebClient.project,
                     group: this.$umlWebClient.group,
+                }).catch((err) => {
+                    console.warn('could not re-log in as prior user after failed login!');
                 });
                 this.loginErrorMessage = JSON.parse(err).error.message;
                 successfulLogin = false;
