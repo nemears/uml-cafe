@@ -20,6 +20,9 @@ if (location.pathname != "/") {
     if (projectUrl.charAt(projectUrl.length - 1) === '/') {
         projectUrl = projectUrl.slice(0, projectUrl.length - 1);
     }
+    if (projectUrl.charAt(0) === '/') {
+        projectUrl = projectUrl.slice(1, projectUrl.length);
+    }
 
     let loginObject = getProjectLoginObject(projectUrl, serverAddress); 
     let umlWebClient = new UmlWebClient(loginObject);

@@ -183,6 +183,9 @@ export class UmlCafeModule {
     // module = UML module
     // metaClient = Manager based on Model
     constructor(umlClient) {
+       this.reload(umlClient); 
+    }
+    reload(umlClient) {
         const initializationPromise = async () => {
             try {
             await umlClient.initialization;

@@ -147,8 +147,10 @@ export default {
                     address: this.$umlWebClient.address,
                     project: this.$umlWebClient.project,
                     group: this.$umlWebClient.group,
-                }).catch((err) => {
+                }).catch(() => {
                     console.warn('could not re-log in as prior user after failed login!');
+                }).then(() => {
+                    this.$umlCafeModule.reload(this.$umlWebClient);
                 });
                 this.loginErrorMessage = JSON.parse(err).error.message;
                 successfulLogin = false;
@@ -159,6 +161,7 @@ export default {
                         this.logoutEnabled = !this.logoutEnabled;
                     }
                     this.user = this.$umlWebClient.user;
+                    this.$umlCafeModule.reload(this.$umlWebClient);
                     this.loginEnabled = false;
                     this.$emit("newModelLoaded");
                     this.$emit('userUpdate');
@@ -276,6 +279,7 @@ export default {
                 project: this.$refs.projectIdentifier.value,
                 create: true,
             });
+            this.$umlCafeModule.reload(this.$umlWebClient);
 
             // get visibility
             let projectVisibility = this.getVisibility();
